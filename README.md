@@ -81,9 +81,16 @@ npm test
 
 For branching rules, PR expectations, and local verification steps, see `CONTRIBUTING.md`.
 
-## Future: CI
+## CI/CD
 
-CI is intentionally not configured yet. In a later phase, automated pipelines will enforce the same local checks (format, lint, typecheck, and verification) currently documented for developers.
+GitHub Actions are configured for `develop` and `main`.
+
+- Pull requests to `develop` and `main` run formatting, linting, type checking, unit tests, production build, and Docker image build.
+- Pushes to `develop` represent the Test deployment candidate.
+- Pushes to `main` represent the Production deployment candidate.
+- Deployment jobs use GitHub Environments named `test` and `production`; provider-specific deployment commands can be added after hosting credentials are configured.
+
+For the full branch and release policy, see `docs/devops/branching-strategy.md`.
 
 ## Package Manager Standard
 

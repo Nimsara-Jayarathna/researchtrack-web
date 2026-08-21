@@ -2,33 +2,31 @@
 
 ## Branching Model
 
-- `main`: stable/demo-ready branch, pull requests only.
-- `dev`: integration branch, pull requests preferred with lighter review rules.
-- Create feature branches from `dev` (or from `main` if `dev` does not exist).
+- `main`: stable production-ready branch, pull requests only.
+- `develop`: integration branch for completed sprint work, pull requests only.
+- Create feature and bugfix branches from `develop`.
 - Do not push directly to `main`.
-- Use Squash merge (recommended) to keep history clean.
+- Do not push directly to `develop` except for repository administration changes agreed by the team.
+- Use Squash and Merge for `feature/*` and `bugfix/*` pull requests into `develop`.
+- See `docs/devops/branching-strategy.md` for the full ResearchTrack Git strategy.
 
 ## Branch Naming Convention
 
 Use:
 
-- `<type>/<short-title>`
+- `<type>/RT-xx-short-title`
 
 Allowed types:
 
-- `feat`
-- `fix`
-- `chore`
-- `docs`
-- `refactor`
-- `test`
+- `feature`
+- `bugfix`
+- `hotfix`
 
 Examples:
 
-- `feat/project-crud`
-- `fix/login-redirect`
-- `docs/error-handling-contract`
-- `chore/update-gitignore`
+- `feature/RT-08-github-connection`
+- `bugfix/RT-41-login-validation`
+- `hotfix/RT-52-production-login-failure`
 
 ## Commit Message Convention
 
@@ -64,3 +62,4 @@ Keep messages short and meaningful.
 - Keep pull requests small and focused (single purpose).
 - Require at least 1 approval before merge (aligned with branch protection settings).
 - Clearly describe what changed and how it was tested locally.
+- Include Jira reference, affected areas, API/configuration changes, screenshots for UI changes, and known limitations.

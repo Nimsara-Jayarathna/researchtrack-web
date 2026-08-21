@@ -18,14 +18,14 @@ Current scope covers the public landing flow, auth screens, student workspace, a
 
 Default example:
 
-`VITE_API_BASE_URL=http://localhost:8081`
+`VITE_API_BASE_URL=http://localhost:5000`
 
 GitHub App setup/install links are now backend-managed via `GITHUB_APP_INSTALL_URL`
 in the backend environment.
 
 Local auth/refresh reliability notes:
 
-- Ensure backend `APP_PORT=8081` and frontend `VITE_API_BASE_URL` points to the same port.
+- Ensure the backend gateway runs on `http://localhost:5000` and frontend `VITE_API_BASE_URL` points to that gateway origin.
 - Ensure backend `CORS_ALLOWED_ORIGINS=http://localhost:5173`.
 - Use `localhost` consistently in FE and BE (do not mix with `127.0.0.1`).
 

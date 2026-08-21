@@ -1,10 +1,10 @@
-import { CalendarDays, Clock3, Users } from 'lucide-react';
-import { parseLocalDateOnly } from '@/lib/dateOnly';
+import { CalendarDays, Clock3, Users } from "lucide-react";
+import { parseLocalDateOnly } from "@/lib/dateOnly";
 
-const dateFormatter = new Intl.DateTimeFormat('en', {
-  month: 'short',
-  day: 'numeric',
-  year: 'numeric',
+const dateFormatter = new Intl.DateTimeFormat("en", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
 });
 
 type StudentProjectDetailsHighlightsProps = {
@@ -18,7 +18,9 @@ export function StudentProjectDetailsHighlights({
   membersCount,
   progressPercent,
 }: StudentProjectDetailsHighlightsProps) {
-  const parsedMilestoneDate = milestoneDate ? parseLocalDateOnly(milestoneDate) : null;
+  const parsedMilestoneDate = milestoneDate
+    ? parseLocalDateOnly(milestoneDate)
+    : null;
 
   return (
     <section className="flex flex-wrap items-center gap-3">
@@ -36,7 +38,7 @@ export function StudentProjectDetailsHighlights({
                 ? parsedMilestoneDate
                   ? dateFormatter.format(parsedMilestoneDate)
                   : milestoneDate
-                : 'Not set'}
+                : "Not set"}
             </span>
           </div>
         </div>
@@ -50,7 +52,7 @@ export function StudentProjectDetailsHighlights({
               Team
             </span>
             <span className="font-semibold text-slate-700">
-              {membersCount} member{membersCount === 1 ? '' : 's'}
+              {membersCount} member{membersCount === 1 ? "" : "s"}
             </span>
           </div>
         </div>
@@ -63,7 +65,9 @@ export function StudentProjectDetailsHighlights({
             <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
               Progress
             </span>
-            <span className="font-semibold text-slate-700">{progressPercent ?? 0}%</span>
+            <span className="font-semibold text-slate-700">
+              {progressPercent ?? 0}%
+            </span>
           </div>
         </div>
       </div>

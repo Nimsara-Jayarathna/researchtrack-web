@@ -9,13 +9,15 @@ import type {
   UpdateSupervisorProjectMilestoneRequest,
   UpdateSupervisorProjectRequest,
   UpdateSupervisorProjectStatusRequest,
-} from '../types';
-import { normalizeGitHubRepositoryUrl } from '../utils/githubRepositoryUrl';
+} from "../types";
+import { normalizeGitHubRepositoryUrl } from "../utils/githubRepositoryUrl";
 
-type ApiClient = typeof import('@/services/apiClient').apiClient;
+type ApiClient = typeof import("@/services/apiClient").apiClient;
 
 type SupervisorProjectCache = Partial<Record<string, SupervisorProjectDetail>>;
-type SupervisorProjectInFlight = Partial<Record<string, Promise<SupervisorProjectDetail>>>;
+type SupervisorProjectInFlight = Partial<
+  Record<string, Promise<SupervisorProjectDetail>>
+>;
 
 type CreateSupervisorProjectsApiDeps = {
   apiClient: ApiClient;
@@ -30,7 +32,9 @@ export function createSupervisorProjectsApi({
 }: CreateSupervisorProjectsApiDeps) {
   return {
     getProjects(): Promise<SupervisorProjectSummary[]> {
-      return apiClient.get<SupervisorProjectSummary[]>('/api/supervisor/projects');
+      return apiClient.get<SupervisorProjectSummary[]>(
+        "/api/supervisor/projects",
+      );
     },
 
     async getProjectById(
@@ -42,7 +46,9 @@ export function createSupervisorProjectsApi({
       }
 
       if (!forceRefresh && inFlightProjectRequests[projectId]) {
-        return inFlightProjectRequests[projectId] as Promise<SupervisorProjectDetail>;
+        return inFlightProjectRequests[
+          projectId
+        ] as Promise<SupervisorProjectDetail>;
       }
 
       const request = apiClient.get<SupervisorProjectDetail>(
@@ -59,8 +65,13 @@ export function createSupervisorProjectsApi({
       }
     },
 
-    createProject(body: CreateSupervisorProjectRequest): Promise<CreateSupervisorProjectResponse> {
-      return apiClient.post<CreateSupervisorProjectResponse>('/api/supervisor/projects', body);
+    createProject(
+      body: CreateSupervisorProjectRequest,
+    ): Promise<CreateSupervisorProjectResponse> {
+      return apiClient.post<CreateSupervisorProjectResponse>(
+        "/api/supervisor/projects",
+        body,
+      );
     },
 
     async updateProject(
@@ -92,8 +103,12 @@ export function createSupervisorProjectsApi({
       repositoryUrl: string | null,
     ): Promise<SupervisorProjectDetail> {
       const normalizedRepositoryUrl =
-        typeof repositoryUrl === 'string' ? normalizeGitHubRepositoryUrl(repositoryUrl) : null;
-      const body: UpdateRepositoryRequest = { repositoryUrl: normalizedRepositoryUrl };
+        typeof repositoryUrl === "string"
+          ? normalizeGitHubRepositoryUrl(repositoryUrl)
+          : null;
+      const body: UpdateRepositoryRequest = {
+        repositoryUrl: normalizedRepositoryUrl,
+      };
       const updated = await apiClient.patch<SupervisorProjectDetail>(
         `/api/supervisor/projects/${projectId}/repository`,
         body,

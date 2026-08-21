@@ -1,6 +1,6 @@
-import { StatusBadge } from '@/components/ui/StatusBadge';
-import type { StudentProjectLifecycle } from '../../types';
-import { getLifecycleTone } from '../../utils/projectDetails/presentation';
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import type { StudentProjectLifecycle } from "../../types";
+import { getLifecycleTone } from "../../utils/projectDetails/presentation";
 
 type StudentProjectDetailsHeaderProps = {
   title: string;
@@ -22,13 +22,13 @@ export function StudentProjectDetailsHeader({
         <p
           className="mt-1.5 text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7"
           style={{
-            display: '-webkit-box',
+            display: "-webkit-box",
             WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
           }}
         >
-          {summary ?? 'No summary has been recorded for this project yet.'}
+          {summary ?? "No summary has been recorded for this project yet."}
         </p>
       </div>
       <div className="inline-flex shrink-0 items-center rounded-2xl border border-slate-200 bg-white px-4 py-2 shadow-sm transition-all hover:shadow-md">
@@ -41,7 +41,7 @@ export function StudentProjectDetailsHeader({
               tone={getLifecycleTone(lifecycleStatus)}
               className="border-none bg-transparent p-0 text-[13px] font-black uppercase tracking-tight"
             >
-              {lifecycleStatus.replace('_', ' ')}
+              {lifecycleStatus.replace("_", " ")}
             </StatusBadge>
           </div>
         </div>

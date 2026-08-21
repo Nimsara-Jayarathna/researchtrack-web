@@ -1,9 +1,13 @@
-import { useCallback, useEffect, useState } from 'react';
-import type { SetURLSearchParams } from 'react-router-dom';
-import { parseGitHubSetupRedirect } from '../useGitHubSetupFlow';
+import { useCallback, useEffect, useState } from "react";
+import type { SetURLSearchParams } from "react-router-dom";
+import { parseGitHubSetupRedirect } from "../useGitHubSetupFlow";
 
 type RefreshModalControls = {
-  showError: (payload: { title: string; message: string; retryAction?: () => void }) => void;
+  showError: (payload: {
+    title: string;
+    message: string;
+    retryAction?: () => void;
+  }) => void;
 };
 
 type UseSupervisorProjectGitHubSetupRedirectParams = {
@@ -19,9 +23,11 @@ export function useSupervisorProjectGitHubSetupRedirect({
   setSearchParams,
   refreshModal,
 }: UseSupervisorProjectGitHubSetupRedirectParams) {
-  const [pendingGitHubSourceId, setPendingGitHubSourceId] = useState<string | null>(null);
+  const [pendingGitHubSourceId, setPendingGitHubSourceId] = useState<
+    string | null
+  >(null);
   const [pendingGitHubFlowType, setPendingGitHubFlowType] = useState<
-    'INSTALLATION_DIRECT' | 'INSTALLATION_REQUESTED' | null
+    "INSTALLATION_DIRECT" | "INSTALLATION_REQUESTED" | null
   >(null);
 
   const onPendingGitHubSourceHandled = useCallback(() => {
@@ -39,34 +45,35 @@ export function useSupervisorProjectGitHubSetupRedirect({
       return;
     }
 
-    if (redirectState.setupStatus === 'success') {
+    if (redirectState.setupStatus === "success") {
       if (redirectState.sourceId) {
         setPendingGitHubSourceId(redirectState.sourceId);
         setPendingGitHubFlowType(redirectState.flowType);
       }
 
       const nextParams = new URLSearchParams(searchParams);
-      nextParams.delete('githubSetup');
-      nextParams.delete('installationId');
-      nextParams.delete('githubSourceId');
-      nextParams.delete('githubFlow');
-      nextParams.delete('githubAccessUpdated');
-      nextParams.delete('tab');
+      nextParams.delete("githubSetup");
+      nextParams.delete("installationId");
+      nextParams.delete("githubSourceId");
+      nextParams.delete("githubFlow");
+      nextParams.delete("githubAccessUpdated");
+      nextParams.delete("tab");
       setSearchParams(nextParams, { replace: true });
       return;
     }
 
-    if (redirectState.setupStatus === 'failed') {
+    if (redirectState.setupStatus === "failed") {
       refreshModal.showError({
-        title: 'GitHub setup failed',
-        message: 'GitHub App connection did not complete. Please try connecting again.',
+        title: "GitHub setup failed",
+        message:
+          "GitHub App connection did not complete. Please try connecting again.",
       });
       const nextParams = new URLSearchParams(searchParams);
-      nextParams.delete('githubSetup');
-      nextParams.delete('installationId');
-      nextParams.delete('githubSourceId');
-      nextParams.delete('githubFlow');
-      nextParams.delete('githubAccessUpdated');
+      nextParams.delete("githubSetup");
+      nextParams.delete("installationId");
+      nextParams.delete("githubSourceId");
+      nextParams.delete("githubFlow");
+      nextParams.delete("githubAccessUpdated");
       setSearchParams(nextParams, { replace: true });
     }
   }, [projectId, refreshModal, searchParams, setSearchParams]);

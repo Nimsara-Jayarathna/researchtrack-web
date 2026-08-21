@@ -1,9 +1,9 @@
 // ResearchTrack-Frontend/src/features/supervisor/hooks/useSupervisorProjectCommits.ts
-import { useEffect, useState } from 'react';
-import { isApiException } from '@/services/apiClient';
-import type { ApiError } from '@/types';
-import { supervisorApi } from '../api/supervisorApi';
-import type { ProjectGitHubActivity } from '../types';
+import { useEffect, useState } from "react";
+import { isApiException } from "@/services/apiClient";
+import type { ApiError } from "@/types";
+import { supervisorApi } from "../api/supervisorApi";
+import type { ProjectGitHubActivity } from "../types";
 
 type SupervisorProjectCommitsState = {
   data: ProjectGitHubActivity | null;
@@ -31,7 +31,10 @@ export function useSupervisorProjectCommits(projectId: string | undefined) {
     setState((current) => ({ ...current, isLoading: true, error: null }));
 
     try {
-      const data = await supervisorApi.getProjectGitHubDashboard(projectId, forceRefresh);
+      const data = await supervisorApi.getProjectGitHubDashboard(
+        projectId,
+        forceRefresh,
+      );
       setState({
         data,
         isLoading: false,
@@ -44,13 +47,13 @@ export function useSupervisorProjectCommits(projectId: string | undefined) {
         error: isApiException(error)
           ? error.apiError
           : {
-              code: 'INTERNAL_ERROR',
-              message: 'Unable to load GitHub dashboard right now.',
+              code: "INTERNAL_ERROR",
+              message: "Unable to load GitHub dashboard right now.",
               details: [],
               timestamp: new Date().toISOString(),
               status: 0,
-              error: 'Unexpected Error',
-              path: '',
+              error: "Unexpected Error",
+              path: "",
               traceId: null,
             },
       });
@@ -94,13 +97,13 @@ export function useSupervisorProjectCommits(projectId: string | undefined) {
           error: isApiException(error)
             ? error.apiError
             : {
-                code: 'INTERNAL_ERROR',
-                message: 'Unable to load GitHub dashboard right now.',
+                code: "INTERNAL_ERROR",
+                message: "Unable to load GitHub dashboard right now.",
                 details: [],
                 timestamp: new Date().toISOString(),
                 status: 0,
-                error: 'Unexpected Error',
-                path: '',
+                error: "Unexpected Error",
+                path: "",
                 traceId: null,
               },
         });

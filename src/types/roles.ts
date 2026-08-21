@@ -1,6 +1,6 @@
 export const ROLES = {
-  SUPERVISOR: 'SUPERVISOR',
-  STUDENT: 'STUDENT',
+  SUPERVISOR: "SUPERVISOR",
+  STUDENT: "STUDENT",
 } as const;
 
 export type UserRole = (typeof ROLES)[keyof typeof ROLES];
@@ -8,12 +8,14 @@ export type UserRoleLower = Lowercase<UserRole>;
 export type RoleInput = UserRole | UserRoleLower;
 
 export const ROLE_LABELS: Record<UserRole, string> = {
-  [ROLES.SUPERVISOR]: 'Supervisor',
-  [ROLES.STUDENT]: 'Student',
+  [ROLES.SUPERVISOR]: "Supervisor",
+  [ROLES.STUDENT]: "Student",
 };
 
 export function normalizeUserRole(role: RoleInput): UserRole {
-  return role.toUpperCase() === ROLES.SUPERVISOR ? ROLES.SUPERVISOR : ROLES.STUDENT;
+  return role.toUpperCase() === ROLES.SUPERVISOR
+    ? ROLES.SUPERVISOR
+    : ROLES.STUDENT;
 }
 
 export function getRoleLabel(role: RoleInput, uppercase = false): string {

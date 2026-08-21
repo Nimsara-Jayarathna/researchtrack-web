@@ -1,16 +1,16 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { normalizeSyncStatus } from '@/lib/syncStatus';
-import type { CanonicalSyncStatus } from '@/lib/syncStatus';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { normalizeSyncStatus } from "@/lib/syncStatus";
+import type { CanonicalSyncStatus } from "@/lib/syncStatus";
 import type {
   PaginatedListResult,
   ProjectGitHubContributor,
   ProjectGitHubRecentCommit,
-} from '@/features/projects/types';
+} from "@/features/projects/types";
 import type {
   ProjectGitHubRepositories,
   ProjectRepositoryLink,
-} from '@/features/shared/types/github.types';
-import type { ProjectGitHubActivity } from '../../types';
+} from "@/features/shared/types/github.types";
+import type { ProjectGitHubActivity } from "../../types";
 
 type FetchProjectGitHubDashboard = (
   projectId: string,
@@ -49,8 +49,12 @@ type UseStudentProjectGitHubDashboardResult = {
   githubView: ProjectGitHubActivity | null;
   isGitHubViewLoading: boolean;
   selectRepository: (linkedRepositoryId: string) => Promise<void>;
-  loadActivityPage: (page: number) => Promise<PaginatedListResult<ProjectGitHubRecentCommit>>;
-  loadContributorsPage: (page: number) => Promise<PaginatedListResult<ProjectGitHubContributor>>;
+  loadActivityPage: (
+    page: number,
+  ) => Promise<PaginatedListResult<ProjectGitHubRecentCommit>>;
+  loadContributorsPage: (
+    page: number,
+  ) => Promise<PaginatedListResult<ProjectGitHubContributor>>;
 };
 
 export function useStudentProjectGitHubDashboard({
@@ -63,20 +67,30 @@ export function useStudentProjectGitHubDashboard({
 }: UseStudentProjectGitHubDashboardParams): UseStudentProjectGitHubDashboardResult {
   const [isRepoSelectorOpen, setRepoSelectorOpen] = useState(false);
   const [selectedRepoId, setSelectedRepoId] = useState<string | null>(null);
-  const [githubView, setGithubView] = useState<ProjectGitHubActivity | null>(projectGithubView);
+  const [githubView, setGithubView] = useState<ProjectGitHubActivity | null>(
+    projectGithubView,
+  );
   const [isGitHubViewLoading, setIsGitHubViewLoading] = useState(false);
 
   const enabledRepositories = useMemo(
-    () => githubRepositories?.repositories?.filter((repository) => repository.enabled) ?? [],
+    () =>
+      githubRepositories?.repositories?.filter(
+        (repository) => repository.enabled,
+      ) ?? [],
     [githubRepositories?.repositories],
   );
 
   const activeRepository = useMemo(
-    () => enabledRepositories.find((repository) => repository.id === selectedRepoId) ?? null,
+    () =>
+      enabledRepositories.find(
+        (repository) => repository.id === selectedRepoId,
+      ) ?? null,
     [enabledRepositories, selectedRepoId],
   );
 
-  const activeRepositorySyncStatus = normalizeSyncStatus(activeRepository?.syncStatus);
+  const activeRepositorySyncStatus = normalizeSyncStatus(
+    activeRepository?.syncStatus,
+  );
 
   useEffect(() => {
     setGithubView(projectGithubView ?? null);
@@ -100,7 +114,11 @@ export function useStudentProjectGitHubDashboard({
       setSelectedRepoId(linkedRepositoryId);
       setIsGitHubViewLoading(true);
       try {
-        const nextView = await fetchDashboard(projectId, false, linkedRepositoryId);
+        const nextView = await fetchDashboard(
+          projectId,
+          false,
+          linkedRepositoryId,
+        );
         setGithubView(nextView);
       } finally {
         setIsGitHubViewLoading(false);

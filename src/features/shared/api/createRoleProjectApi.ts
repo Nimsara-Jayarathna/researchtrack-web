@@ -1,33 +1,37 @@
-type ApiClient = typeof import('@/services/apiClient').apiClient;
-import { appendQuery, clearRecord, deleteKeysWithPrefix } from '@/services/apiCacheUtils';
+type ApiClient = typeof import("@/services/apiClient").apiClient;
+import {
+  appendQuery,
+  clearRecord,
+  deleteKeysWithPrefix,
+} from "@/services/apiCacheUtils";
 import {
   buildPagedUrl,
   fallbackSlicePage,
   normalizePaginatedPayload,
   shouldFallbackToDashboard,
-} from '@/features/projects/api/githubPagination';
+} from "@/features/projects/api/githubPagination";
 import type {
   PaginatedListResult,
   ProjectGitHubContributor,
   ProjectGitHubPreview,
   ProjectGitHubRecentCommit,
-} from '@/features/projects/types';
+} from "@/features/projects/types";
 import type {
   JiraHealth,
   JiraHierarchy,
   JiraSprintProgress,
   JiraWorkload,
-} from '@/features/shared/types/jira.types';
+} from "@/features/shared/types/jira.types";
 import type {
   MeetingChannel,
   MeetingChannelUpsertPayload,
   MeetingRecord,
   MeetingRecordUpsertPayload,
-} from '@/features/meetings/types';
-import { sortMeetingChannels } from '@/features/meetings/lib/sortMeetingChannels';
-import { sortMeetingRecords } from '@/features/meetings/lib/sortMeetingRecords';
+} from "@/features/meetings/types";
+import { sortMeetingChannels } from "@/features/meetings/lib/sortMeetingChannels";
+import { sortMeetingRecords } from "@/features/meetings/lib/sortMeetingRecords";
 
-type RoleBasePath = '/api/student' | '/api/supervisor';
+type RoleBasePath = "/api/student" | "/api/supervisor";
 
 type ProjectGitHubActivity = ProjectGitHubPreview;
 
@@ -43,16 +47,29 @@ type CreateRoleProjectApiOptions = {
   roleBasePath: RoleBasePath;
 };
 
-export function createRoleProjectApi({ apiClient, roleBasePath }: CreateRoleProjectApiOptions) {
-  const cachedProjectGitHubByKey: Partial<Record<string, ProjectGitHubActivity>> = {};
+export function createRoleProjectApi({
+  apiClient,
+  roleBasePath,
+}: CreateRoleProjectApiOptions) {
+  const cachedProjectGitHubByKey: Partial<
+    Record<string, ProjectGitHubActivity>
+  > = {};
   const inFlightProjectGitHubRequestsByKey: Partial<
     Record<string, Promise<ProjectGitHubActivity>>
   > = {};
   const cachedJiraByProjectId: Partial<Record<string, JiraCache>> = {};
-  const cachedMeetingChannelsByProjectId: Partial<Record<string, MeetingChannel[]>> = {};
-  const inFlightMeetingChannelsByProjectId: Partial<Record<string, Promise<MeetingChannel[]>>> = {};
-  const cachedMeetingRecordsByProjectId: Partial<Record<string, MeetingRecord[]>> = {};
-  const inFlightMeetingRecordsByProjectId: Partial<Record<string, Promise<MeetingRecord[]>>> = {};
+  const cachedMeetingChannelsByProjectId: Partial<
+    Record<string, MeetingChannel[]>
+  > = {};
+  const inFlightMeetingChannelsByProjectId: Partial<
+    Record<string, Promise<MeetingChannel[]>>
+  > = {};
+  const cachedMeetingRecordsByProjectId: Partial<
+    Record<string, MeetingRecord[]>
+  > = {};
+  const inFlightMeetingRecordsByProjectId: Partial<
+    Record<string, Promise<MeetingRecord[]>>
+  > = {};
 
   function clearCache(): void {
     clearRecord(cachedProjectGitHubByKey);
@@ -64,7 +81,9 @@ export function createRoleProjectApi({ apiClient, roleBasePath }: CreateRoleProj
     clearRecord(inFlightMeetingRecordsByProjectId);
   }
 
-  function invalidateProjectGitHubCaches(projectId: string | null | undefined): void {
+  function invalidateProjectGitHubCaches(
+    projectId: string | null | undefined,
+  ): void {
     if (!projectId) return;
     deleteKeysWithPrefix(cachedProjectGitHubByKey, `${projectId}:`);
     deleteKeysWithPrefix(inFlightProjectGitHubRequestsByKey, `${projectId}:`);
@@ -76,7 +95,10 @@ export function createRoleProjectApi({ apiClient, roleBasePath }: CreateRoleProj
   }
 
   function primeJiraHealth(projectId: string, health: JiraHealth): void {
-    cachedJiraByProjectId[projectId] = { ...cachedJiraByProjectId[projectId], health };
+    cachedJiraByProjectId[projectId] = {
+      ...cachedJiraByProjectId[projectId],
+      health,
+    };
   }
 
   async function getProjectGitHubDashboard(
@@ -84,21 +106,23 @@ export function createRoleProjectApi({ apiClient, roleBasePath }: CreateRoleProj
     forceRefresh = false,
     linkedRepositoryId?: string | null,
   ): Promise<ProjectGitHubActivity> {
-    const key = `${projectId}:${linkedRepositoryId ?? ''}`;
+    const key = `${projectId}:${linkedRepositoryId ?? ""}`;
 
     if (!forceRefresh && cachedProjectGitHubByKey[key]) {
       return cachedProjectGitHubByKey[key];
     }
 
     if (!forceRefresh && inFlightProjectGitHubRequestsByKey[key]) {
-      return inFlightProjectGitHubRequestsByKey[key] as Promise<ProjectGitHubActivity>;
+      return inFlightProjectGitHubRequestsByKey[
+        key
+      ] as Promise<ProjectGitHubActivity>;
     }
 
     const params = new URLSearchParams();
     if (linkedRepositoryId) {
-      params.set('linkedRepositoryId', linkedRepositoryId);
+      params.set("linkedRepositoryId", linkedRepositoryId);
     }
-    const suffix = params.toString() ? `?${params.toString()}` : '';
+    const suffix = params.toString() ? `?${params.toString()}` : "";
     const request = apiClient.get<ProjectGitHubActivity>(
       `${roleBasePath}/projects/${projectId}/github${suffix}`,
     );
@@ -120,22 +144,32 @@ export function createRoleProjectApi({ apiClient, roleBasePath }: CreateRoleProj
   ): Promise<PaginatedListResult<ProjectGitHubRecentCommit>> {
     const params = new URLSearchParams();
     if (linkedRepositoryId) {
-      params.set('linkedRepositoryId', linkedRepositoryId);
+      params.set("linkedRepositoryId", linkedRepositoryId);
     }
     try {
       const payload = await apiClient.get<unknown>(
         appendQuery(
-          buildPagedUrl(`${roleBasePath}/projects/${projectId}/github/activity`, page),
+          buildPagedUrl(
+            `${roleBasePath}/projects/${projectId}/github/activity`,
+            page,
+          ),
           params,
         ),
       );
-      return normalizePaginatedPayload<ProjectGitHubRecentCommit>(payload, page);
+      return normalizePaginatedPayload<ProjectGitHubRecentCommit>(
+        payload,
+        page,
+      );
     } catch (error) {
       if (!shouldFallbackToDashboard(error)) {
         throw error;
       }
 
-      const dashboard = await getProjectGitHubDashboard(projectId, false, linkedRepositoryId);
+      const dashboard = await getProjectGitHubDashboard(
+        projectId,
+        false,
+        linkedRepositoryId,
+      );
       return fallbackSlicePage<ProjectGitHubRecentCommit>(
         dashboard.recentCommitsPreview ?? [],
         page,
@@ -150,12 +184,15 @@ export function createRoleProjectApi({ apiClient, roleBasePath }: CreateRoleProj
   ): Promise<PaginatedListResult<ProjectGitHubContributor>> {
     const params = new URLSearchParams();
     if (linkedRepositoryId) {
-      params.set('linkedRepositoryId', linkedRepositoryId);
+      params.set("linkedRepositoryId", linkedRepositoryId);
     }
     try {
       const payload = await apiClient.get<unknown>(
         appendQuery(
-          buildPagedUrl(`${roleBasePath}/projects/${projectId}/github/contributors`, page),
+          buildPagedUrl(
+            `${roleBasePath}/projects/${projectId}/github/contributors`,
+            page,
+          ),
           params,
         ),
       );
@@ -165,8 +202,15 @@ export function createRoleProjectApi({ apiClient, roleBasePath }: CreateRoleProj
         throw error;
       }
 
-      const dashboard = await getProjectGitHubDashboard(projectId, false, linkedRepositoryId);
-      return fallbackSlicePage<ProjectGitHubContributor>(dashboard.contributorsPreview ?? [], page);
+      const dashboard = await getProjectGitHubDashboard(
+        projectId,
+        false,
+        linkedRepositoryId,
+      );
+      return fallbackSlicePage<ProjectGitHubContributor>(
+        dashboard.contributorsPreview ?? [],
+        page,
+      );
     }
   }
 
@@ -176,11 +220,16 @@ export function createRoleProjectApi({ apiClient, roleBasePath }: CreateRoleProj
     const data = await apiClient.get<JiraHealth>(
       `${roleBasePath}/projects/${projectId}/jira/health`,
     );
-    cachedJiraByProjectId[projectId] = { ...cachedJiraByProjectId[projectId], health: data };
+    cachedJiraByProjectId[projectId] = {
+      ...cachedJiraByProjectId[projectId],
+      health: data,
+    };
     return data;
   }
 
-  async function getJiraSprintProgress(projectId: string): Promise<JiraSprintProgress> {
+  async function getJiraSprintProgress(
+    projectId: string,
+  ): Promise<JiraSprintProgress> {
     const hit = cachedJiraByProjectId[projectId]?.sprintProgress;
     if (hit) return hit;
     const data = await apiClient.get<JiraSprintProgress>(
@@ -199,17 +248,25 @@ export function createRoleProjectApi({ apiClient, roleBasePath }: CreateRoleProj
     const data = await apiClient.get<JiraWorkload>(
       `${roleBasePath}/projects/${projectId}/jira/workload`,
     );
-    cachedJiraByProjectId[projectId] = { ...cachedJiraByProjectId[projectId], workload: data };
+    cachedJiraByProjectId[projectId] = {
+      ...cachedJiraByProjectId[projectId],
+      workload: data,
+    };
     return data;
   }
 
-  async function getProjectJiraHierarchy(projectId: string): Promise<JiraHierarchy> {
+  async function getProjectJiraHierarchy(
+    projectId: string,
+  ): Promise<JiraHierarchy> {
     const hit = cachedJiraByProjectId[projectId]?.hierarchy;
     if (hit) return hit;
     const data = await apiClient.get<JiraHierarchy>(
       `${roleBasePath}/projects/${projectId}/jira/hierarchy`,
     );
-    cachedJiraByProjectId[projectId] = { ...cachedJiraByProjectId[projectId], hierarchy: data };
+    cachedJiraByProjectId[projectId] = {
+      ...cachedJiraByProjectId[projectId],
+      hierarchy: data,
+    };
     return data;
   }
 
@@ -222,7 +279,9 @@ export function createRoleProjectApi({ apiClient, roleBasePath }: CreateRoleProj
     }
 
     if (!forceRefresh && inFlightMeetingChannelsByProjectId[projectId]) {
-      return inFlightMeetingChannelsByProjectId[projectId] as Promise<MeetingChannel[]>;
+      return inFlightMeetingChannelsByProjectId[projectId] as Promise<
+        MeetingChannel[]
+      >;
     }
 
     if (forceRefresh) {
@@ -281,7 +340,10 @@ export function createRoleProjectApi({ apiClient, roleBasePath }: CreateRoleProj
     return updated;
   }
 
-  async function deleteProjectMeetingChannel(projectId: string, channelId: string): Promise<void> {
+  async function deleteProjectMeetingChannel(
+    projectId: string,
+    channelId: string,
+  ): Promise<void> {
     await apiClient.del<void>(
       `${roleBasePath}/projects/${projectId}/meeting-channels/${channelId}`,
     );
@@ -321,7 +383,9 @@ export function createRoleProjectApi({ apiClient, roleBasePath }: CreateRoleProj
     }
 
     if (!forceRefresh && inFlightMeetingRecordsByProjectId[projectId]) {
-      return inFlightMeetingRecordsByProjectId[projectId] as Promise<MeetingRecord[]>;
+      return inFlightMeetingRecordsByProjectId[projectId] as Promise<
+        MeetingRecord[]
+      >;
     }
 
     if (forceRefresh) {
@@ -380,12 +444,19 @@ export function createRoleProjectApi({ apiClient, roleBasePath }: CreateRoleProj
     return updated;
   }
 
-  async function deleteProjectMeetingRecord(projectId: string, recordId: string): Promise<void> {
-    await apiClient.del<void>(`${roleBasePath}/projects/${projectId}/meeting-records/${recordId}`);
+  async function deleteProjectMeetingRecord(
+    projectId: string,
+    recordId: string,
+  ): Promise<void> {
+    await apiClient.del<void>(
+      `${roleBasePath}/projects/${projectId}/meeting-records/${recordId}`,
+    );
     delete inFlightMeetingRecordsByProjectId[projectId];
     const existing = cachedMeetingRecordsByProjectId[projectId];
     if (existing) {
-      cachedMeetingRecordsByProjectId[projectId] = existing.filter((item) => item.id !== recordId);
+      cachedMeetingRecordsByProjectId[projectId] = existing.filter(
+        (item) => item.id !== recordId,
+      );
     }
   }
 

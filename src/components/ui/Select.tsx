@@ -9,12 +9,12 @@ import {
   isValidElement,
   useMemo,
   useRef,
-} from 'react';
-import { createPortal } from 'react-dom';
-import type { DropdownAlign } from '@/lib/dropdownSizing';
-import { DropdownSurface } from '@/components/ui/DropdownSurface';
-import { useAnchoredMenu } from '@/components/ui/useAnchoredMenu';
-import { cn } from '@/lib/cn';
+} from "react";
+import { createPortal } from "react-dom";
+import type { DropdownAlign } from "@/lib/dropdownSizing";
+import { DropdownSurface } from "@/components/ui/DropdownSurface";
+import { useAnchoredMenu } from "@/components/ui/useAnchoredMenu";
+import { cn } from "@/lib/cn";
 
 type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
   children: ReactNode;
@@ -22,7 +22,7 @@ type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
   menuOffset?: number;
   menuMatchTriggerWidth?: boolean;
   menuAnchorRef?: RefObject<HTMLElement | null>;
-  triggerVariant?: 'default' | 'pill';
+  triggerVariant?: "default" | "pill";
 };
 
 type OptionItem = {
@@ -32,16 +32,16 @@ type OptionItem = {
 };
 
 function extractNodeText(node: ReactNode): string {
-  if (typeof node === 'string' || typeof node === 'number') {
+  if (typeof node === "string" || typeof node === "number") {
     return String(node);
   }
   if (Array.isArray(node)) {
-    return node.map(extractNodeText).join('');
+    return node.map(extractNodeText).join("");
   }
   if (isValidElement(node)) {
     return extractNodeText(node.props.children);
   }
-  return '';
+  return "";
 }
 
 export function Select(props: SelectProps) {
@@ -55,21 +55,26 @@ export function Select(props: SelectProps) {
     menuOffset,
     menuMatchTriggerWidth,
     menuAnchorRef,
-    triggerVariant = 'default',
+    triggerVariant = "default",
     ...rest
   } = props;
   const selectRef = useRef<HTMLSelectElement>(null);
-  const anchorRef = (menuAnchorRef ?? (selectRef as unknown as RefObject<HTMLElement | null>)) as
+  const anchorRef = (menuAnchorRef ??
+    (selectRef as unknown as RefObject<HTMLElement | null>)) as
     | RefObject<HTMLElement | null>
     | undefined;
 
   const options = useMemo<OptionItem[]>(() => {
     return Children.toArray(children)
-      .filter((child): child is ReactElement => isValidElement(child) && child.type === 'option')
+      .filter(
+        (child): child is ReactElement =>
+          isValidElement(child) && child.type === "option",
+      )
       .map((child) => {
         const valueProp = child.props.value;
         const extractedLabel = extractNodeText(child.props.children).trim();
-        const labelText = extractedLabel.length > 0 ? extractedLabel : String(valueProp ?? '');
+        const labelText =
+          extractedLabel.length > 0 ? extractedLabel : String(valueProp ?? "");
         return {
           value: valueProp != null ? String(valueProp) : labelText,
           label: labelText,
@@ -78,13 +83,17 @@ export function Select(props: SelectProps) {
       });
   }, [children]);
 
-  const selectedValue = selectRef.current?.value ?? String(props.value ?? '');
-  const labels = useMemo(() => options.map((option) => option.label), [options]);
+  const selectedValue = selectRef.current?.value ?? String(props.value ?? "");
+  const labels = useMemo(
+    () => options.map((option) => option.label),
+    [options],
+  );
 
   const { isOpen, open, close, menuRef, menuStyle } = useAnchoredMenu({
-    anchorRef: anchorRef ?? (selectRef as unknown as RefObject<HTMLElement | null>),
+    anchorRef:
+      anchorRef ?? (selectRef as unknown as RefObject<HTMLElement | null>),
     labels,
-    align: menuAlign ?? 'auto',
+    align: menuAlign ?? "auto",
     offset: menuOffset ?? 6,
     matchTriggerWidth: menuMatchTriggerWidth ?? true,
     getFontSourceEl: () => selectRef.current,
@@ -112,12 +121,12 @@ export function Select(props: SelectProps) {
     if (event.defaultPrevented) return;
     if (disabled) return;
 
-    if (event.key === 'Escape') {
+    if (event.key === "Escape") {
       close();
       return;
     }
 
-    if (event.key === 'Enter' || event.key === ' ') {
+    if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
       openMenu();
     }
@@ -128,7 +137,7 @@ export function Select(props: SelectProps) {
     if (!el) return;
 
     el.value = nextValue;
-    const changeEvent = new Event('change', { bubbles: true });
+    const changeEvent = new Event("change", { bubbles: true });
     el.dispatchEvent(changeEvent);
     close();
   };
@@ -139,8 +148,8 @@ export function Select(props: SelectProps) {
       ref={selectRef}
       disabled={disabled}
       className={cn(
-        triggerVariant === 'pill' &&
-          'h-12 w-full appearance-none rounded-2xl border border-slate-200 bg-slate-100 px-5 pr-12 text-base font-bold leading-none text-slate-900 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 focus:border-slate-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-100 disabled:cursor-not-allowed disabled:opacity-60',
+        triggerVariant === "pill" &&
+          "h-12 w-full appearance-none rounded-2xl border border-slate-200 bg-slate-100 px-5 pr-12 text-base font-bold leading-none text-slate-900 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 focus:border-slate-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-100 disabled:cursor-not-allowed disabled:opacity-60",
         className,
       )}
       onMouseDown={handleMouseDown}
@@ -152,7 +161,7 @@ export function Select(props: SelectProps) {
 
   return (
     <>
-      {triggerVariant === 'pill' ? (
+      {triggerVariant === "pill" ? (
         <span className="relative block w-full">
           {selectControl}
           <svg
@@ -186,9 +195,9 @@ export function Select(props: SelectProps) {
                     disabled={option.disabled}
                     className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
                       option.disabled
-                        ? 'cursor-not-allowed text-muted-foreground opacity-50'
-                        : 'cursor-pointer text-foreground hover:bg-slate-50'
-                    } ${isSelected ? 'bg-slate-50 font-semibold text-foreground' : 'font-medium'}`}
+                        ? "cursor-not-allowed text-muted-foreground opacity-50"
+                        : "cursor-pointer text-foreground hover:bg-slate-50"
+                    } ${isSelected ? "bg-slate-50 font-semibold text-foreground" : "font-medium"}`}
                     onMouseDown={(event) => event.preventDefault()}
                     onClick={() => {
                       if (!option.disabled) handleOptionSelect(option.value);
@@ -198,7 +207,13 @@ export function Select(props: SelectProps) {
                       {option.label}
                     </span>
                     <span className="shrink-0">
-                      <span className={isSelected ? 'text-amber-600' : 'text-transparent'}>✓</span>
+                      <span
+                        className={
+                          isSelected ? "text-amber-600" : "text-transparent"
+                        }
+                      >
+                        ✓
+                      </span>
                     </span>
                   </button>
                 </li>

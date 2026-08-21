@@ -1,11 +1,11 @@
-import { Menu, UserRound, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Logo } from '@/components/brand/Logo';
-import { Button } from '@/components/ui/Button';
-import { RoleBadge } from '@/components/ui/RoleBadge';
-import { cn } from '@/lib/cn';
-import type { UserRoleLower } from '@/types/roles';
+import { Menu, UserRound, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { Logo } from "@/components/brand/Logo";
+import { Button } from "@/components/ui/Button";
+import { RoleBadge } from "@/components/ui/RoleBadge";
+import { cn } from "@/lib/cn";
+import type { UserRoleLower } from "@/types/roles";
 
 type NavItem = {
   label: string;
@@ -16,11 +16,11 @@ type NavItem = {
 type PublicAction = {
   label: string;
   onClick: () => void;
-  variant: 'ghost' | 'primary';
+  variant: "ghost" | "primary";
 };
 
 type PrivateTopBarProps = {
-  mode?: 'private';
+  mode?: "private";
   role: UserRoleLower;
   homePath: string;
   navItems: NavItem[];
@@ -29,7 +29,7 @@ type PrivateTopBarProps = {
 };
 
 type PublicTopBarProps = {
-  mode: 'public';
+  mode: "public";
   homePath: string;
   actions: PublicAction[];
 };
@@ -44,7 +44,7 @@ export function TopBar(props: TopBarProps) {
     setIsMobileMenuOpen(false);
   }, [location.pathname, location.search, location.hash]);
 
-  if (props.mode === 'public') {
+  if (props.mode === "public") {
     return (
       <>
         <header className="sticky top-0 z-20 hidden border-b border-slate-200 bg-white/85 backdrop-blur md:block">
@@ -95,7 +95,7 @@ export function TopBar(props: TopBarProps) {
   }
 
   const { role, homePath, navItems, userName, onOpenAccount } = props;
-  const userInitial = userName.trim().charAt(0).toUpperCase() || 'U';
+  const userInitial = userName.trim().charAt(0).toUpperCase() || "U";
 
   return (
     <>
@@ -116,10 +116,10 @@ export function TopBar(props: TopBarProps) {
                     key={item.to}
                     to={item.to}
                     className={cn(
-                      'rounded-2xl px-4 py-2 text-sm font-medium transition-colors',
+                      "rounded-2xl px-4 py-2 text-sm font-medium transition-colors",
                       item.active
-                        ? 'bg-slate-900 text-white'
-                        : 'bg-white text-muted-foreground hover:bg-slate-100 hover:text-foreground',
+                        ? "bg-slate-900 text-white"
+                        : "bg-white text-muted-foreground hover:bg-slate-100 hover:text-foreground",
                     )}
                   >
                     {item.label}
@@ -136,7 +136,9 @@ export function TopBar(props: TopBarProps) {
                 <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-xs font-black text-emerald-700">
                   {userInitial}
                 </span>
-                <span className="text-sm font-semibold text-foreground">{userName}</span>
+                <span className="text-sm font-semibold text-foreground">
+                  {userName}
+                </span>
               </button>
             </div>
           </div>
@@ -164,18 +166,26 @@ export function TopBar(props: TopBarProps) {
               <button
                 type="button"
                 onClick={() => setIsMobileMenuOpen((current) => !current)}
-                aria-label={isMobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+                aria-label={
+                  isMobileMenuOpen
+                    ? "Close navigation menu"
+                    : "Open navigation menu"
+                }
                 aria-expanded={isMobileMenuOpen}
                 className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 transition-colors hover:bg-slate-50"
               >
-                {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+                {isMobileMenuOpen ? (
+                  <X className="h-4 w-4" />
+                ) : (
+                  <Menu className="h-4 w-4" />
+                )}
               </button>
             </div>
           </div>
           <div
             className={cn(
-              'mt-3 border-t border-slate-200/90 pt-3',
-              isMobileMenuOpen ? 'block' : 'hidden',
+              "mt-3 border-t border-slate-200/90 pt-3",
+              isMobileMenuOpen ? "block" : "hidden",
             )}
           >
             <nav className="grid gap-2">
@@ -184,10 +194,10 @@ export function TopBar(props: TopBarProps) {
                   key={item.to}
                   to={item.to}
                   className={cn(
-                    'rounded-2xl px-4 py-2 text-sm font-medium transition-colors',
+                    "rounded-2xl px-4 py-2 text-sm font-medium transition-colors",
                     item.active
-                      ? 'bg-slate-900 text-white'
-                      : 'bg-white text-muted-foreground hover:bg-slate-100 hover:text-foreground',
+                      ? "bg-slate-900 text-white"
+                      : "bg-white text-muted-foreground hover:bg-slate-100 hover:text-foreground",
                   )}
                 >
                   {item.label}

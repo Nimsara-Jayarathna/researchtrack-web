@@ -1,15 +1,15 @@
-import { useCallback } from 'react';
-import { ErrorState } from '@/components/feedback/ErrorState';
-import { PageHeader } from '@/components/ui/PageHeader';
-import { isBlockingError } from '@/utils/errorSeverity';
-import { useSupervisorDashboard } from '../hooks/useSupervisorDashboard';
-import { DashboardAttentionSection } from '../components/dashboard/DashboardAttentionSection';
-import { DashboardProjectHealthSection } from '../components/dashboard/DashboardProjectHealthSection';
-import { DashboardSearchInput } from '../components/dashboard/DashboardSearchInput';
-import { DashboardStatsSection } from '../components/dashboard/DashboardStatsSection';
-import { DashboardUpcomingMilestonesSection } from '../components/dashboard/DashboardUpcomingMilestonesSection';
-import { useSupervisorDashboardBlockingError } from '../hooks/dashboard/useSupervisorDashboardBlockingError';
-import { useSupervisorDashboardViewModel } from '../hooks/dashboard/useSupervisorDashboardViewModel';
+import { useCallback } from "react";
+import { ErrorState } from "@/components/feedback/ErrorState";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { isBlockingError } from "@/utils/errorSeverity";
+import { useSupervisorDashboard } from "../hooks/useSupervisorDashboard";
+import { DashboardAttentionSection } from "../components/dashboard/DashboardAttentionSection";
+import { DashboardProjectHealthSection } from "../components/dashboard/DashboardProjectHealthSection";
+import { DashboardSearchInput } from "../components/dashboard/DashboardSearchInput";
+import { DashboardStatsSection } from "../components/dashboard/DashboardStatsSection";
+import { DashboardUpcomingMilestonesSection } from "../components/dashboard/DashboardUpcomingMilestonesSection";
+import { useSupervisorDashboardBlockingError } from "../hooks/dashboard/useSupervisorDashboardBlockingError";
+import { useSupervisorDashboardViewModel } from "../hooks/dashboard/useSupervisorDashboardViewModel";
 
 export function SupervisorDashboardPage() {
   const { dashboard, isLoading, error, reload } = useSupervisorDashboard();
@@ -32,7 +32,12 @@ export function SupervisorDashboardPage() {
       <PageHeader
         title="Supervisor Dashboard"
         subtitle="Monitor delivery health across every supervised project."
-        actions={<DashboardSearchInput query={viewModel.query} onChange={viewModel.setQuery} />}
+        actions={
+          <DashboardSearchInput
+            query={viewModel.query}
+            onChange={viewModel.setQuery}
+          />
+        }
       />
 
       <DashboardStatsSection dashboard={dashboard} isLoading={isLoading} />

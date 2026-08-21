@@ -1,27 +1,31 @@
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { tokenStorage } from '@/services/tokenStorage';
-import { ROLE_HOME } from './roleHome';
-import { useAuthStateValue } from '@/features/auth/state/authState';
+import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { tokenStorage } from "@/services/tokenStorage";
+import { ROLE_HOME } from "./roleHome";
+import { useAuthStateValue } from "@/features/auth/state/authState";
 
 // UI-only preview mode: allow authenticated users to inspect either role's shell locally.
 // Enabled only in dev builds (import.meta.env.DEV = true during `vite dev`, false after `vite build`).
 // Backend authorization must still enforce the real role restrictions.
 const ALLOW_CROSS_ROLE_PREVIEW = import.meta.env.DEV;
 
-function buildLoginRedirectPath(pathname: string, search: string, hash: string): string {
+function buildLoginRedirectPath(
+  pathname: string,
+  search: string,
+  hash: string,
+): string {
   const returnTo = `${pathname}${search}${hash}`;
   try {
     const key = `login-return:${Date.now()}:${Math.random().toString(36).slice(2)}`;
     sessionStorage.setItem(key, returnTo);
     return `/login?returnToKey=${encodeURIComponent(key)}`;
   } catch {
-    return '/login';
+    return "/login";
   }
 }
 
 function useResolvedGuardUser() {
   const authState = useAuthStateValue();
-  if (authState.status === 'bootstrapping') {
+  if (authState.status === "bootstrapping") {
     return tokenStorage.getUser();
   }
   return authState.user;
@@ -37,7 +41,11 @@ export function RequireAuth() {
   if (!user) {
     return (
       <Navigate
-        to={buildLoginRedirectPath(location.pathname, location.search, location.hash)}
+        to={buildLoginRedirectPath(
+          location.pathname,
+          location.search,
+          location.hash,
+        )}
         replace
       />
     );
@@ -56,13 +64,18 @@ export function RequireRole({ role }: { role: string }) {
   if (!user) {
     return (
       <Navigate
-        to={buildLoginRedirectPath(location.pathname, location.search, location.hash)}
+        to={buildLoginRedirectPath(
+          location.pathname,
+          location.search,
+          location.hash,
+        )}
         replace
       />
     );
   }
   if (ALLOW_CROSS_ROLE_PREVIEW) return <Outlet />;
-  if (user.role !== role) return <Navigate to={ROLE_HOME[user.role] ?? '/'} replace />;
+  if (user.role !== role)
+    return <Navigate to={ROLE_HOME[user.role] ?? "/"} replace />;
   return <Outlet />;
 }
 
@@ -73,5 +86,5 @@ export function RequireRole({ role }: { role: string }) {
 export function RequireGuest() {
   const user = useResolvedGuardUser();
   if (!user) return <Outlet />;
-  return <Navigate to={ROLE_HOME[user.role] ?? '/'} replace />;
+  return <Navigate to={ROLE_HOME[user.role] ?? "/"} replace />;
 }

@@ -1,29 +1,29 @@
-import { act, renderHook, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
-import { ApiException } from '@/services/apiClient';
-import type { ApiError } from '@/types';
-import type { SupervisorDashboard } from '../types';
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
+import { ApiException } from "@/services/apiClient";
+import type { ApiError } from "@/types";
+import type { SupervisorDashboard } from "../types";
 
-vi.mock('@/services/sessionCache', () => ({
+vi.mock("@/services/sessionCache", () => ({
   registerSessionCacheClearer: () => () => {},
 }));
 
-vi.mock('@/services/sessionState', () => ({
+vi.mock("@/services/sessionState", () => ({
   getSessionVersion: () => 0,
   isCurrentSession: () => true,
 }));
 
-vi.mock('../api/supervisorApi', () => ({
+vi.mock("../api/supervisorApi", () => ({
   supervisorApi: {
     getDashboard: vi.fn(),
   },
 }));
 
-import { supervisorApi } from '../api/supervisorApi';
+import { supervisorApi } from "../api/supervisorApi";
 import {
   invalidateSupervisorDashboardCache,
   useSupervisorDashboard,
-} from './useSupervisorDashboard';
+} from "./useSupervisorDashboard";
 
 function deferred<T>() {
   let resolve!: (value: T) => void;
@@ -35,7 +35,9 @@ function deferred<T>() {
   return { promise, resolve, reject };
 }
 
-function buildDashboard(overrides?: Partial<SupervisorDashboard>): SupervisorDashboard {
+function buildDashboard(
+  overrides?: Partial<SupervisorDashboard>,
+): SupervisorDashboard {
   return {
     totalProjects: 1,
     planningProjects: 0,
@@ -52,15 +54,15 @@ function buildDashboard(overrides?: Partial<SupervisorDashboard>): SupervisorDas
   };
 }
 
-describe('useSupervisorDashboard', () => {
+describe("useSupervisorDashboard", () => {
   const dummyError: ApiError = {
-    code: 'ERROR',
-    message: 'Test error',
+    code: "ERROR",
+    message: "Test error",
     details: [],
-    timestamp: '2026-04-21T00:00:00Z',
+    timestamp: "2026-04-21T00:00:00Z",
     status: 400,
-    error: 'Bad Request',
-    path: '/api/supervisor/dashboard',
+    error: "Bad Request",
+    path: "/api/supervisor/dashboard",
     traceId: null,
   };
 
@@ -69,8 +71,10 @@ describe('useSupervisorDashboard', () => {
     vi.clearAllMocks();
   });
 
-  it('loads dashboard successfully', async () => {
-    (supervisorApi.getDashboard as Mock).mockResolvedValue(buildDashboard({ totalProjects: 5 }));
+  it("loads dashboard successfully", async () => {
+    (supervisorApi.getDashboard as Mock).mockResolvedValue(
+      buildDashboard({ totalProjects: 5 }),
+    );
 
     const { result } = renderHook(() => useSupervisorDashboard());
 
@@ -82,8 +86,10 @@ describe('useSupervisorDashboard', () => {
     expect(result.current.dashboard?.totalProjects).toBe(5);
   });
 
-  it('maps ApiException into error state and clears loading', async () => {
-    (supervisorApi.getDashboard as Mock).mockRejectedValue(new ApiException(dummyError));
+  it("maps ApiException into error state and clears loading", async () => {
+    (supervisorApi.getDashboard as Mock).mockRejectedValue(
+      new ApiException(dummyError),
+    );
 
     const { result } = renderHook(() => useSupervisorDashboard());
 
@@ -95,7 +101,7 @@ describe('useSupervisorDashboard', () => {
     expect(result.current.error).toEqual(dummyError);
   });
 
-  it('shares an in-flight request between hook instances (success)', async () => {
+  it("shares an in-flight request between hook instances (success)", async () => {
     const gate = deferred<SupervisorDashboard>();
     (supervisorApi.getDashboard as Mock).mockReturnValue(gate.promise);
 
@@ -124,7 +130,7 @@ describe('useSupervisorDashboard', () => {
     expect(hookB.result.current.dashboard?.totalProjects).toBe(2);
   });
 
-  it('shares an in-flight request between hook instances (failure) and allows retry', async () => {
+  it("shares an in-flight request between hook instances (failure) and allows retry", async () => {
     const gate = deferred<SupervisorDashboard>();
     (supervisorApi.getDashboard as Mock).mockReturnValueOnce(gate.promise);
 
@@ -162,7 +168,7 @@ describe('useSupervisorDashboard', () => {
     expect(hookA.result.current.dashboard?.totalProjects).toBe(9);
   });
 
-  it('does not allow stale async results to override a newer reload', async () => {
+  it("does not allow stale async results to override a newer reload", async () => {
     const gateA = deferred<SupervisorDashboard>();
     const gateB = deferred<SupervisorDashboard>();
 

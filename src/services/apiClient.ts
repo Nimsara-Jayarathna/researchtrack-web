@@ -1,9 +1,9 @@
-import { env } from '@/app/config/env';
-import type { ApiError, ApiErrorBody, ApiMeta, ApiResponse } from '@/types';
-import { tokenStorage } from './tokenStorage';
-import type { StoredUser } from './tokenStorage';
-import { beginSessionTransition, resetSessionState } from './sessionState';
-import { createManagedAbortSignal } from './requestRegistry';
+import { env } from "@/app/config/env";
+import type { ApiError, ApiErrorBody, ApiMeta, ApiResponse } from "@/types";
+import { tokenStorage } from "./tokenStorage";
+import type { StoredUser } from "./tokenStorage";
+import { beginSessionTransition, resetSessionState } from "./sessionState";
+import { createManagedAbortSignal } from "./requestRegistry";
 
 /** Thrown by `apiClient` on non-2xx responses and network failures. Carries the typed `ApiError`. */
 export class ApiException extends Error {
@@ -11,7 +11,7 @@ export class ApiException extends Error {
 
   constructor(apiError: ApiError) {
     super(apiError.message);
-    this.name = 'ApiException';
+    this.name = "ApiException";
     this.apiError = apiError;
   }
 }
@@ -21,8 +21,8 @@ export function isApiException(error: unknown): error is ApiException {
   return error instanceof ApiException;
 }
 
-const REFRESH_PATH = '/api/auth/refresh';
-const AUTH_PATH_PREFIX = '/api/auth/';
+const REFRESH_PATH = "/api/auth/refresh";
+const AUTH_PATH_PREFIX = "/api/auth/";
 let inFlightRefresh: Promise<boolean> | null = null;
 type WrappedApiErrorResponse = {
   success: false;
@@ -44,9 +44,9 @@ type WrappedApiErrorResponse = {
 async function tryRefresh(): Promise<boolean> {
   try {
     const response = await fetch(`${env.apiBaseUrl}${REFRESH_PATH}`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({}),
     });
     if (!response.ok) return false;
@@ -85,23 +85,23 @@ async function parseJsonSafely(response: Response): Promise<unknown | null> {
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
+  return typeof value === "object" && value !== null;
 }
 
 function hasApiMetaShape(value: unknown): value is ApiMeta {
   return (
     isRecord(value) &&
-    typeof value.timestamp === 'string' &&
-    typeof value.path === 'string' &&
-    (typeof value.traceId === 'string' || value.traceId === null)
+    typeof value.timestamp === "string" &&
+    typeof value.path === "string" &&
+    (typeof value.traceId === "string" || value.traceId === null)
   );
 }
 
 function hasApiErrorBodyShape(value: unknown): value is ApiErrorBody {
   return (
     isRecord(value) &&
-    typeof value.code === 'string' &&
-    typeof value.status === 'number' &&
+    typeof value.code === "string" &&
+    typeof value.status === "number" &&
     Array.isArray(value.details)
   );
 }
@@ -109,60 +109,80 @@ function hasApiErrorBodyShape(value: unknown): value is ApiErrorBody {
 function hasApiEnvelopeShape(value: unknown): value is ApiResponse<unknown> {
   return (
     isRecord(value) &&
-    typeof value.success === 'boolean' &&
-    typeof value.message === 'string' &&
-    'data' in value &&
-    'error' in value &&
+    typeof value.success === "boolean" &&
+    typeof value.message === "string" &&
+    "data" in value &&
+    "error" in value &&
     hasApiMetaShape(value.meta)
   );
 }
 
-function hasWrappedApiErrorShape(value: unknown): value is WrappedApiErrorResponse {
-  return hasApiEnvelopeShape(value) && value.success === false && hasApiErrorBodyShape(value.error);
+function hasWrappedApiErrorShape(
+  value: unknown,
+): value is WrappedApiErrorResponse {
+  return (
+    hasApiEnvelopeShape(value) &&
+    value.success === false &&
+    hasApiErrorBodyShape(value.error)
+  );
 }
 
 function hasLegacyApiErrorShape(value: unknown): value is ApiError {
   return (
     isRecord(value) &&
-    typeof value.status === 'number' &&
-    typeof value.code === 'string' &&
-    typeof value.message === 'string'
+    typeof value.status === "number" &&
+    typeof value.code === "string" &&
+    typeof value.message === "string"
   );
 }
 
-function normalizeDetails(value: unknown): ApiError['details'] {
+function normalizeDetails(value: unknown): ApiError["details"] {
   if (!Array.isArray(value)) {
     return [];
   }
 
   return value
-    .filter((detail) => isRecord(detail) && typeof detail.field === 'string')
+    .filter((detail) => isRecord(detail) && typeof detail.field === "string")
     .map((detail) => ({
       field: detail.field as string,
-      issue: typeof detail.issue === 'string' ? detail.issue : undefined,
-      message: typeof detail.message === 'string' ? detail.message : undefined,
+      issue: typeof detail.issue === "string" ? detail.issue : undefined,
+      message: typeof detail.message === "string" ? detail.message : undefined,
     }));
 }
 
-function createFallbackError(path: string, status: number, statusText: string): ApiError {
+function createFallbackError(
+  path: string,
+  status: number,
+  statusText: string,
+): ApiError {
   return {
     timestamp: new Date().toISOString(),
     status,
-    error: statusText || (status === 401 ? 'Unauthorized' : 'Internal Server Error'),
-    code: status === 401 ? 'UNAUTHORIZED' : 'INTERNAL_ERROR',
-    message: status === 401 ? 'Authentication failed.' : 'An unexpected error occurred.',
+    error:
+      statusText || (status === 401 ? "Unauthorized" : "Internal Server Error"),
+    code: status === 401 ? "UNAUTHORIZED" : "INTERNAL_ERROR",
+    message:
+      status === 401
+        ? "Authentication failed."
+        : "An unexpected error occurred.",
     path,
     traceId: null,
     details: [],
   };
 }
 
-function normalizeError(path: string, response: Response, body: unknown): ApiError {
+function normalizeError(
+  path: string,
+  response: Response,
+  body: unknown,
+): ApiError {
   if (hasWrappedApiErrorShape(body)) {
     return {
       timestamp: body.meta.timestamp,
       status: body.error.status,
-      error: response.statusText || (body.error.status === 401 ? 'Unauthorized' : 'Request Failed'),
+      error:
+        response.statusText ||
+        (body.error.status === 401 ? "Unauthorized" : "Request Failed"),
       code: body.error.code,
       message: body.message,
       path: body.meta.path || path,
@@ -185,13 +205,21 @@ function normalizeError(path: string, response: Response, body: unknown): ApiErr
   }
 
   if (hasApiEnvelopeShape(body) && body.success === false) {
-    const fallbackStatus = hasApiErrorBodyShape(body.error) ? body.error.status : response.status;
-    const fallbackCode = hasApiErrorBodyShape(body.error) ? body.error.code : 'INTERNAL_ERROR';
-    const fallbackDetails = hasApiErrorBodyShape(body.error) ? body.error.details : [];
+    const fallbackStatus = hasApiErrorBodyShape(body.error)
+      ? body.error.status
+      : response.status;
+    const fallbackCode = hasApiErrorBodyShape(body.error)
+      ? body.error.code
+      : "INTERNAL_ERROR";
+    const fallbackDetails = hasApiErrorBodyShape(body.error)
+      ? body.error.details
+      : [];
     return {
       timestamp: body.meta.timestamp,
       status: fallbackStatus,
-      error: response.statusText || (fallbackStatus === 401 ? 'Unauthorized' : 'Request Failed'),
+      error:
+        response.statusText ||
+        (fallbackStatus === 401 ? "Unauthorized" : "Request Failed"),
       code: fallbackCode,
       message: body.message,
       path: body.meta.path || path,
@@ -214,10 +242,14 @@ function normalizeError(path: string, response: Response, body: unknown): ApiErr
  *
  * @param isRetry - true when this call is the post-refresh retry; prevents infinite loops.
  */
-async function request<T>(path: string, init: RequestInit = {}, isRetry = false): Promise<T> {
+async function request<T>(
+  path: string,
+  init: RequestInit = {},
+  isRetry = false,
+): Promise<T> {
   // Use Headers to safely normalise any init.headers format (object, Headers instance, or tuples).
   const headers = new Headers(init.headers);
-  headers.set('Content-Type', 'application/json');
+  headers.set("Content-Type", "application/json");
 
   const managed = createManagedAbortSignal();
   let response: Response;
@@ -227,16 +259,16 @@ async function request<T>(path: string, init: RequestInit = {}, isRetry = false)
       ...init,
       signal: managed.signal,
       headers,
-      credentials: 'include', // send httpOnly cookies on every request
+      credentials: "include", // send httpOnly cookies on every request
     });
   } catch (error) {
-    if (error instanceof DOMException && error.name === 'AbortError') {
+    if (error instanceof DOMException && error.name === "AbortError") {
       throw new ApiException({
         timestamp: new Date().toISOString(),
         status: 499,
-        error: 'Client Closed Request',
-        code: 'INTERNAL_ERROR',
-        message: 'Request was cancelled.',
+        error: "Client Closed Request",
+        code: "INTERNAL_ERROR",
+        message: "Request was cancelled.",
         path,
         traceId: null,
         details: [],
@@ -247,9 +279,10 @@ async function request<T>(path: string, init: RequestInit = {}, isRetry = false)
     throw new ApiException({
       timestamp: new Date().toISOString(),
       status: 503,
-      error: 'Service Unavailable',
-      code: 'SERVICE_UNAVAILABLE',
-      message: 'Unable to reach the server. Please check your connection and try again.',
+      error: "Service Unavailable",
+      code: "SERVICE_UNAVAILABLE",
+      message:
+        "Unable to reach the server. Please check your connection and try again.",
       path,
       traceId: null,
       details: [],
@@ -267,15 +300,15 @@ async function request<T>(path: string, init: RequestInit = {}, isRetry = false)
       return request<T>(path, init, true);
     }
     // Refresh also failed — session is fully expired.
-    beginSessionTransition('session-expired');
+    beginSessionTransition("session-expired");
     resetSessionState();
-    window.location.href = '/login';
+    window.location.href = "/login";
     throw new ApiException({
       timestamp: new Date().toISOString(),
       status: 401,
-      error: 'Unauthorized',
-      code: 'UNAUTHORIZED',
-      message: 'Your session has expired. Please log in again.',
+      error: "Unauthorized",
+      code: "UNAUTHORIZED",
+      message: "Your session has expired. Please log in again.",
       path,
       traceId: null,
       details: [],
@@ -308,22 +341,22 @@ async function request<T>(path: string, init: RequestInit = {}, isRetry = false)
 /** HTTP client for all backend API calls. Throws `ApiException` on failure. */
 export const apiClient = {
   get<T>(path: string): Promise<T> {
-    return request<T>(path, { method: 'GET' });
+    return request<T>(path, { method: "GET" });
   },
 
   post<T>(path: string, body: unknown): Promise<T> {
-    return request<T>(path, { method: 'POST', body: JSON.stringify(body) });
+    return request<T>(path, { method: "POST", body: JSON.stringify(body) });
   },
 
   put<T>(path: string, body: unknown): Promise<T> {
-    return request<T>(path, { method: 'PUT', body: JSON.stringify(body) });
+    return request<T>(path, { method: "PUT", body: JSON.stringify(body) });
   },
 
   patch<T>(path: string, body: unknown): Promise<T> {
-    return request<T>(path, { method: 'PATCH', body: JSON.stringify(body) });
+    return request<T>(path, { method: "PATCH", body: JSON.stringify(body) });
   },
 
   del<T>(path: string): Promise<T> {
-    return request<T>(path, { method: 'DELETE' });
+    return request<T>(path, { method: "DELETE" });
   },
 };

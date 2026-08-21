@@ -1,8 +1,8 @@
-import { useSyncExternalStore } from 'react';
-import type { ApiError } from '@/types';
-import { tokenStorage, type StoredUser } from '@/services/tokenStorage';
+import { useSyncExternalStore } from "react";
+import type { ApiError } from "@/types";
+import { tokenStorage, type StoredUser } from "@/services/tokenStorage";
 
-export type AuthStatus = 'bootstrapping' | 'authenticated' | 'unauthenticated';
+export type AuthStatus = "bootstrapping" | "authenticated" | "unauthenticated";
 
 type AuthState = {
   status: AuthStatus;
@@ -12,7 +12,7 @@ type AuthState = {
 };
 
 let state: AuthState = {
-  status: 'bootstrapping',
+  status: "bootstrapping",
   user: null,
   isLoading: false,
   error: null,
@@ -32,13 +32,13 @@ function update(next: AuthState): void {
 }
 
 function bootstrapIfNeeded(): void {
-  if (state.status !== 'bootstrapping') {
+  if (state.status !== "bootstrapping") {
     return;
   }
 
   const user = tokenStorage.getUser();
   state = {
-    status: user ? 'authenticated' : 'unauthenticated',
+    status: user ? "authenticated" : "unauthenticated",
     user,
     isLoading: false,
     error: null,
@@ -81,7 +81,7 @@ export function setAuthError(error: ApiError | null): void {
 
 export function setAuthenticatedUser(user: StoredUser): void {
   update({
-    status: 'authenticated',
+    status: "authenticated",
     user,
     isLoading: false,
     error: null,
@@ -90,7 +90,7 @@ export function setAuthenticatedUser(user: StoredUser): void {
 
 export function clearInMemoryAuthState(): void {
   update({
-    status: 'unauthenticated',
+    status: "unauthenticated",
     user: null,
     isLoading: false,
     error: null,

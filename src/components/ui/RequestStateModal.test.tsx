@@ -1,18 +1,23 @@
-import { act, render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { vi } from 'vitest';
-import { RequestStateModal } from './RequestStateModal';
+import { act, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { vi } from "vitest";
+import { RequestStateModal } from "./RequestStateModal";
 
-describe('RequestStateModal', () => {
-  it('does not render when closed', () => {
+describe("RequestStateModal", () => {
+  it("does not render when closed", () => {
     render(
-      <RequestStateModal isOpen={false} status="error" title="Error" message="Something failed" />,
+      <RequestStateModal
+        isOpen={false}
+        status="error"
+        title="Error"
+        message="Something failed"
+      />,
     );
 
-    expect(screen.queryByText('Something failed')).not.toBeInTheDocument();
+    expect(screen.queryByText("Something failed")).not.toBeInTheDocument();
   });
 
-  it('shows retry and close actions for error state when handlers are provided', async () => {
+  it("shows retry and close actions for error state when handlers are provided", async () => {
     const user = userEvent.setup();
     const onRetry = vi.fn();
     const onClose = vi.fn();
@@ -28,14 +33,14 @@ describe('RequestStateModal', () => {
       />,
     );
 
-    await user.click(screen.getByRole('button', { name: 'Retry' }));
-    await user.click(screen.getByRole('button', { name: 'Close' }));
+    await user.click(screen.getByRole("button", { name: "Retry" }));
+    await user.click(screen.getByRole("button", { name: "Close" }));
 
     expect(onRetry).toHaveBeenCalledTimes(1);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('hides footer actions in loading state', () => {
+  it("hides footer actions in loading state", () => {
     render(
       <RequestStateModal
         isOpen={true}
@@ -47,11 +52,15 @@ describe('RequestStateModal', () => {
       />,
     );
 
-    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Retry" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Close" }),
+    ).not.toBeInTheDocument();
   });
 
-  it('auto closes success status after timeout when enabled', () => {
+  it("auto closes success status after timeout when enabled", () => {
     vi.useFakeTimers();
     const onClose = vi.fn();
 

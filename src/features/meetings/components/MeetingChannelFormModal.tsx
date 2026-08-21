@@ -1,19 +1,19 @@
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
-import { cn } from '@/lib/cn';
-import { useEffect, useMemo, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { X } from 'lucide-react';
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
+import { cn } from "@/lib/cn";
+import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
+import { X } from "lucide-react";
 import {
   MEETING_CHANNEL_PLATFORMS,
   type MeetingChannel,
   type MeetingChannelUpsertPayload,
-} from '../types';
+} from "../types";
 
 type MeetingChannelFormModalProps = {
   isOpen: boolean;
-  mode: 'add' | 'edit';
+  mode: "add" | "edit";
   initialChannel: MeetingChannel | null;
   onClose: () => void;
   onSubmit: (payload: MeetingChannelUpsertPayload) => void;
@@ -22,7 +22,7 @@ type MeetingChannelFormModalProps = {
 };
 
 function toPlatformLabel(value: string) {
-  return value.replace('_', ' ');
+  return value.replace("_", " ");
 }
 
 function isValidHttpLink(value: string) {
@@ -50,11 +50,12 @@ export function MeetingChannelFormModal({
   maxLinkLength = 1024,
 }: MeetingChannelFormModalProps) {
   const [isMounted, setIsMounted] = useState(false);
-  const [platform, setPlatform] = useState<MeetingChannelUpsertPayload['platform']>('GOOGLE_MEET');
-  const [channelName, setChannelName] = useState('');
-  const [linkOrIdentifier, setLinkOrIdentifier] = useState('');
+  const [platform, setPlatform] =
+    useState<MeetingChannelUpsertPayload["platform"]>("GOOGLE_MEET");
+  const [channelName, setChannelName] = useState("");
+  const [linkOrIdentifier, setLinkOrIdentifier] = useState("");
 
-  const title = mode === 'add' ? 'Add channel' : 'Edit channel';
+  const title = mode === "add" ? "Add channel" : "Edit channel";
 
   useEffect(() => {
     if (!isOpen) {
@@ -74,16 +75,16 @@ export function MeetingChannelFormModal({
       return;
     }
 
-    if (mode === 'edit' && initialChannel) {
+    if (mode === "edit" && initialChannel) {
       setPlatform(initialChannel.platform);
       setChannelName(initialChannel.channelName);
       setLinkOrIdentifier(initialChannel.linkOrIdentifier);
       return;
     }
 
-    setPlatform('GOOGLE_MEET');
-    setChannelName('');
-    setLinkOrIdentifier('');
+    setPlatform("GOOGLE_MEET");
+    setChannelName("");
+    setLinkOrIdentifier("");
   }, [initialChannel, isOpen, mode]);
 
   const canSubmit = useMemo(() => {
@@ -109,8 +110,8 @@ export function MeetingChannelFormModal({
   const modal = (
     <div
       className={cn(
-        'fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/60 px-4 backdrop-blur-sm transition-opacity duration-200',
-        isMounted ? 'opacity-100' : 'opacity-0',
+        "fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/60 px-4 backdrop-blur-sm transition-opacity duration-200",
+        isMounted ? "opacity-100" : "opacity-0",
       )}
       onClick={onClose}
       role="dialog"
@@ -119,10 +120,10 @@ export function MeetingChannelFormModal({
     >
       <div
         className={cn(
-          'w-full max-w-lg overflow-hidden rounded-3xl border border-border bg-white shadow-[0_24px_56px_rgba(15,23,42,0.24)] transition-all duration-200',
+          "w-full max-w-lg overflow-hidden rounded-3xl border border-border bg-white shadow-[0_24px_56px_rgba(15,23,42,0.24)] transition-all duration-200",
           isMounted
-            ? 'translate-y-0 scale-100 opacity-100'
-            : 'translate-y-1 scale-[0.99] opacity-0',
+            ? "translate-y-0 scale-100 opacity-100"
+            : "translate-y-1 scale-[0.99] opacity-0",
         )}
         onClick={(event) => event.stopPropagation()}
       >
@@ -146,7 +147,9 @@ export function MeetingChannelFormModal({
             <Select
               value={platform}
               onChange={(event) =>
-                setPlatform(event.target.value as MeetingChannelUpsertPayload['platform'])
+                setPlatform(
+                  event.target.value as MeetingChannelUpsertPayload["platform"],
+                )
               }
               className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none transition-all focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50"
               aria-label="Select platform"
@@ -186,7 +189,8 @@ export function MeetingChannelFormModal({
               placeholder="https://meet.google.com/..."
               className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none transition-all focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50"
             />
-            {!isValidHttpLink(linkOrIdentifier) && linkOrIdentifier.trim().length > 0 ? (
+            {!isValidHttpLink(linkOrIdentifier) &&
+            linkOrIdentifier.trim().length > 0 ? (
               <p className="text-[11px] font-semibold text-amber-600">
                 Enter a valid link starting with http:// or https://
               </p>
@@ -201,15 +205,20 @@ export function MeetingChannelFormModal({
           <Button type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="button" variant="primary" onClick={handleSubmit} disabled={!canSubmit}>
-            {mode === 'add' ? 'Add channel' : 'Save changes'}
+          <Button
+            type="button"
+            variant="primary"
+            onClick={handleSubmit}
+            disabled={!canSubmit}
+          >
+            {mode === "add" ? "Add channel" : "Save changes"}
           </Button>
         </div>
       </div>
     </div>
   );
 
-  if (typeof document === 'undefined') {
+  if (typeof document === "undefined") {
     return modal;
   }
 

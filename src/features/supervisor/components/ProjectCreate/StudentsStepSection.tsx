@@ -1,11 +1,11 @@
-import { BlockingState } from '@/components/ui/BlockingState';
-import { Button } from '@/components/ui/Button';
-import { Select } from '@/components/ui/Select';
-import type { SupervisorStudentSearchResult } from '../../types';
+import { BlockingState } from "@/components/ui/BlockingState";
+import { Button } from "@/components/ui/Button";
+import { Select } from "@/components/ui/Select";
+import type { SupervisorStudentSearchResult } from "../../types";
 
 type StudentsStepSectionProps = {
   studentQuery: string;
-  searchState: 'idle' | 'loading' | 'results' | 'empty' | 'error';
+  searchState: "idle" | "loading" | "results" | "empty" | "error";
   searchError: string | null;
   searchResults: SupervisorStudentSearchResult[];
   selectedStudents: SupervisorStudentSearchResult[];
@@ -43,7 +43,9 @@ export function StudentsStepSection({
   return (
     <section className="space-y-6 rounded-3xl border border-border bg-white p-6 shadow-sm">
       <div>
-        <h2 className="text-lg font-semibold text-foreground">Student assignment</h2>
+        <h2 className="text-lg font-semibold text-foreground">
+          Student assignment
+        </h2>
         <p className="mt-1 text-sm leading-7 text-muted-foreground">
           Search registered students by email and add them to the project.
         </p>
@@ -66,12 +68,12 @@ export function StudentsStepSection({
         {shouldShowSearchPanel && (
           <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-3">
             <BlockingState
-              isActive={searchState === 'loading'}
+              isActive={searchState === "loading"}
               mode="inline"
               message="Searching registered students..."
               className="border-0 px-0 py-2"
             />
-            {searchState === 'results' && (
+            {searchState === "results" && (
               <div className="space-y-2">
                 {searchResults.map((student) => (
                   <button
@@ -81,8 +83,12 @@ export function StudentsStepSection({
                     className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-left transition-colors hover:bg-slate-50"
                     disabled={isSubmitting}
                   >
-                    <p className="font-medium text-foreground">{buildStudentLabel(student)}</p>
-                    <p className="mt-1 text-sm text-muted-foreground">{student.email}</p>
+                    <p className="font-medium text-foreground">
+                      {buildStudentLabel(student)}
+                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {student.email}
+                    </p>
                     <p className="mt-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">
                       {student.registrationNumber}
                     </p>
@@ -90,14 +96,14 @@ export function StudentsStepSection({
                 ))}
               </div>
             )}
-            {searchState === 'empty' && (
+            {searchState === "empty" && (
               <p className="px-1 py-2 text-sm text-muted-foreground">
                 No registered student found.
               </p>
             )}
-            {searchState === 'error' && (
+            {searchState === "error" && (
               <p className="px-1 py-2 text-sm text-rose-600">
-                {searchError ?? 'Unable to search students right now.'}
+                {searchError ?? "Unable to search students right now."}
               </p>
             )}
           </div>
@@ -105,7 +111,9 @@ export function StudentsStepSection({
 
         <div className="mt-5">
           <div className="flex items-center justify-between gap-3">
-            <h3 className="text-sm font-semibold text-foreground">Selected students</h3>
+            <h3 className="text-sm font-semibold text-foreground">
+              Selected students
+            </h3>
             <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
               {selectedStudents.length} selected
             </span>
@@ -144,7 +152,7 @@ export function StudentsStepSection({
                   Project leader (optional)
                 </span>
                 <Select
-                  value={selectedLeaderId ?? ''}
+                  value={selectedLeaderId ?? ""}
                   onChange={(event) => {
                     const nextValue = event.target.value;
                     onSetLeaderId(nextValue.length > 0 ? nextValue : null);
@@ -155,17 +163,21 @@ export function StudentsStepSection({
                   <option value="">No leader selected</option>
                   {selectedStudents.map((student) => (
                     <option key={student.id} value={student.id}>
-                      {buildStudentLabel(student)} ({student.registrationNumber})
+                      {buildStudentLabel(student)} ({student.registrationNumber}
+                      )
                     </option>
                   ))}
                 </Select>
                 <p className="mt-2 text-xs text-muted-foreground">
-                  You can assign or change the leader later from Project Details.
+                  You can assign or change the leader later from Project
+                  Details.
                 </p>
               </label>
             </div>
           ) : (
-            <p className="mt-3 text-sm text-muted-foreground">No students selected yet.</p>
+            <p className="mt-3 text-sm text-muted-foreground">
+              No students selected yet.
+            </p>
           )}
         </div>
       </div>
@@ -174,7 +186,13 @@ export function StudentsStepSection({
         <Button type="button" variant="secondary" size="md" onClick={onBack}>
           ← Back
         </Button>
-        <Button type="button" variant="primary" size="md" disabled={!step2Valid} onClick={onNext}>
+        <Button
+          type="button"
+          variant="primary"
+          size="md"
+          disabled={!step2Valid}
+          onClick={onNext}
+        >
           Next: Add milestones →
         </Button>
       </div>

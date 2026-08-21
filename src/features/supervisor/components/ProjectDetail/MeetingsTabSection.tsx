@@ -1,18 +1,18 @@
-import { useState } from 'react';
-import { SupervisorMeetingChannelsSection } from '@/features/meetings/components/SupervisorMeetingChannelsSection';
-import { SupervisorMeetingRecordsSection } from '@/features/meetings/components/SupervisorMeetingRecordsSection';
+import { useState } from "react";
+import { SupervisorMeetingChannelsSection } from "@/features/meetings/components/SupervisorMeetingChannelsSection";
+import { SupervisorMeetingRecordsSection } from "@/features/meetings/components/SupervisorMeetingRecordsSection";
 
 type MeetingsTabSectionProps = {
   projectId: string;
 };
 
-type MeetingsInnerTab = 'channels' | 'records';
+type MeetingsInnerTab = "channels" | "records";
 
 export function MeetingsTabSection({ projectId }: MeetingsTabSectionProps) {
-  const [activeTab, setActiveTab] = useState<MeetingsInnerTab>('channels');
+  const [activeTab, setActiveTab] = useState<MeetingsInnerTab>("channels");
   const tabs: Array<{ value: MeetingsInnerTab; label: string }> = [
-    { value: 'channels', label: 'Channels' },
-    { value: 'records', label: 'Records' },
+    { value: "channels", label: "Channels" },
+    { value: "records", label: "Records" },
   ];
 
   return (
@@ -34,8 +34,8 @@ export function MeetingsTabSection({ projectId }: MeetingsTabSectionProps) {
                   onClick={() => setActiveTab(tab.value)}
                   className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[13px] font-medium transition-all ${
                     isActive
-                      ? 'border-indigo-200 bg-indigo-50 text-indigo-700 shadow-sm'
-                      : 'border-transparent bg-transparent text-slate-500 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-700'
+                      ? "border-indigo-200 bg-indigo-50 text-indigo-700 shadow-sm"
+                      : "border-transparent bg-transparent text-slate-500 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-700"
                   }`}
                 >
                   {tab.label}
@@ -46,15 +46,18 @@ export function MeetingsTabSection({ projectId }: MeetingsTabSectionProps) {
         </ul>
       </section>
 
-      <div hidden={activeTab !== 'channels'}>
+      <div hidden={activeTab !== "channels"}>
         <SupervisorMeetingChannelsSection
           projectId={projectId}
-          enabled={activeTab === 'channels'}
+          enabled={activeTab === "channels"}
         />
       </div>
 
-      <div hidden={activeTab !== 'records'}>
-        <SupervisorMeetingRecordsSection projectId={projectId} enabled={activeTab === 'records'} />
+      <div hidden={activeTab !== "records"}>
+        <SupervisorMeetingRecordsSection
+          projectId={projectId}
+          enabled={activeTab === "records"}
+        />
       </div>
     </section>
   );

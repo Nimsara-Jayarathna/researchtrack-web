@@ -12,7 +12,11 @@ export type ProjectStepperProps = {
   onStepClick?: (step: StepId) => void;
 };
 
-export function ProjectStepper({ currentStep, steps, onStepClick }: ProjectStepperProps) {
+export function ProjectStepper({
+  currentStep,
+  steps,
+  onStepClick,
+}: ProjectStepperProps) {
   return (
     <div className="rounded-3xl border border-border bg-white px-8 pb-6 pt-6 shadow-sm">
       <div className="flex justify-between">
@@ -29,16 +33,22 @@ export function ProjectStepper({ currentStep, steps, onStepClick }: ProjectStepp
             >
               <div
                 className={[
-                  'relative flex h-10 w-10 items-center justify-center rounded-full border-2 text-sm font-semibold transition-all duration-200',
+                  "relative flex h-10 w-10 items-center justify-center rounded-full border-2 text-sm font-semibold transition-all duration-200",
                   isDone
-                    ? 'border-slate-900 bg-slate-900 text-white'
+                    ? "border-slate-900 bg-slate-900 text-white"
                     : isActive
-                      ? 'border-slate-900 bg-white text-slate-900 shadow-[0_0_0_4px_rgba(15,23,42,0.08)]'
-                      : 'border-border bg-white text-muted-foreground',
-                ].join(' ')}
+                      ? "border-slate-900 bg-white text-slate-900 shadow-[0_0_0_4px_rgba(15,23,42,0.08)]"
+                      : "border-border bg-white text-muted-foreground",
+                ].join(" ")}
               >
                 {isDone ? (
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 14 14"
+                    fill="none"
+                    aria-hidden="true"
+                  >
                     <path
                       d="M2.5 7L5.5 10L11.5 4"
                       stroke="currentColor"
@@ -48,7 +58,7 @@ export function ProjectStepper({ currentStep, steps, onStepClick }: ProjectStepp
                     />
                   </svg>
                 ) : (
-                  <span>{String(step.id).padStart(2, '0')}</span>
+                  <span>{String(step.id).padStart(2, "0")}</span>
                 )}
 
                 {isActive ? (
@@ -59,11 +69,11 @@ export function ProjectStepper({ currentStep, steps, onStepClick }: ProjectStepp
               <div className="space-y-0.5">
                 <p
                   className={[
-                    'text-sm transition-colors',
+                    "text-sm transition-colors",
                     isActive
-                      ? 'font-semibold text-foreground'
-                      : 'font-normal text-muted-foreground',
-                  ].join(' ')}
+                      ? "font-semibold text-foreground"
+                      : "font-normal text-muted-foreground",
+                  ].join(" ")}
                 >
                   {step.label}
                 </p>
@@ -82,13 +92,13 @@ export function ProjectStepper({ currentStep, steps, onStepClick }: ProjectStepp
           <div
             key={step.id}
             className={[
-              'h-1 flex-1 rounded-full transition-all duration-500',
+              "h-1 flex-1 rounded-full transition-all duration-500",
               step.id < currentStep
-                ? 'bg-slate-900 opacity-40'
+                ? "bg-slate-900 opacity-40"
                 : step.id === currentStep
-                  ? 'bg-slate-900'
-                  : 'bg-border',
-            ].join(' ')}
+                  ? "bg-slate-900"
+                  : "bg-border",
+            ].join(" ")}
           />
         ))}
       </div>

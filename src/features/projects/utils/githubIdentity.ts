@@ -10,7 +10,7 @@ function trimToNull(value: string | null | undefined) {
 }
 
 export function getGeneratedAvatarUrl(name: string | null | undefined) {
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(trimToNull(name) ?? 'Unknown')}&background=f1f5f9&color=94a3b8`;
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(trimToNull(name) ?? "Unknown")}&background=f1f5f9&color=94a3b8`;
 }
 
 export function getGitHubAvatarUrl(identity: GitHubIdentity) {

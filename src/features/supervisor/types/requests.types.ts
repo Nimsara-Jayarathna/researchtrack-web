@@ -1,4 +1,7 @@
-import type { SupervisorProjectLifecycle, SupervisorProjectLeader } from './project.types';
+import type {
+  SupervisorProjectLifecycle,
+  SupervisorProjectLeader,
+} from "./project.types";
 
 export type SupervisorStudentSearchResult = {
   id: string;
@@ -28,7 +31,7 @@ export type CreateSupervisorProjectResponse = {
   summary: string;
   batch: string;
   semester: string;
-  lifecycleStatus: SupervisorProjectLifecycle | 'PLANNING';
+  lifecycleStatus: SupervisorProjectLifecycle | "PLANNING";
   progressPercent: number;
   milestoneDate: string;
   students: SupervisorStudentSearchResult[];
@@ -38,7 +41,7 @@ export type CreateSupervisorProjectResponse = {
     title: string;
     description: string | null;
     dueDate: string;
-    status: 'PLANNED' | 'IN_PROGRESS' | 'COMPLETED' | 'MISSED' | 'CANCELLED';
+    status: "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "MISSED" | "CANCELLED";
     sequenceNo: number;
   }>;
 };
@@ -66,7 +69,7 @@ export type UpdateSupervisorProjectMilestoneRequest = {
   title: string;
   description: string | null;
   dueDate: string;
-  status: import('./project.types').SupervisorProjectDetailMilestone['status'];
+  status: import("./project.types").SupervisorProjectDetailMilestone["status"];
 };
 
 export type UpdateSupervisorProjectStatusRequest = {

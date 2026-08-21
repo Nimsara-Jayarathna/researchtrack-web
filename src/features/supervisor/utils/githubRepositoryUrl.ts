@@ -1,4 +1,4 @@
-const GITHUB_HOSTS = new Set(['github.com', 'www.github.com']);
+const GITHUB_HOSTS = new Set(["github.com", "www.github.com"]);
 
 function tryParseUrl(value: string): URL | null {
   try {
@@ -14,7 +14,9 @@ export function normalizeGitHubRepositoryUrl(rawValue: string): string | null {
     return null;
   }
 
-  const withScheme = /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(trimmed) ? trimmed : `https://${trimmed}`;
+  const withScheme = /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(trimmed)
+    ? trimmed
+    : `https://${trimmed}`;
 
   const parsed = tryParseUrl(withScheme);
   if (!parsed) {
@@ -23,17 +25,17 @@ export function normalizeGitHubRepositoryUrl(rawValue: string): string | null {
 
   const protocol = parsed.protocol.toLowerCase();
   const host = parsed.hostname.toLowerCase();
-  if (protocol !== 'https:' || !GITHUB_HOSTS.has(host)) {
+  if (protocol !== "https:" || !GITHUB_HOSTS.has(host)) {
     return null;
   }
 
-  const segments = parsed.pathname.split('/').filter(Boolean);
+  const segments = parsed.pathname.split("/").filter(Boolean);
   if (segments.length !== 2) {
     return null;
   }
 
   const owner = segments[0];
-  const repository = segments[1].replace(/\.git$/i, '');
+  const repository = segments[1].replace(/\.git$/i, "");
   if (!owner || !repository) {
     return null;
   }

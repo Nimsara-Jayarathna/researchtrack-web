@@ -1,26 +1,31 @@
-import { Card } from '@/components/ui/Card';
-import { cn } from '@/lib/cn';
-import type { LandingFeatureCard } from '../types';
+import { Card } from "@/components/ui/Card";
+import { cn } from "@/lib/cn";
+import type { LandingFeatureCard } from "../types";
 
-type FeatureCardProps = Omit<LandingFeatureCard, 'id'> & {
+type FeatureCardProps = Omit<LandingFeatureCard, "id"> & {
   onClick?: () => void;
 };
 
-export function FeatureCard({ icon: Icon, title, description, onClick }: FeatureCardProps) {
+export function FeatureCard({
+  icon: Icon,
+  title,
+  description,
+  onClick,
+}: FeatureCardProps) {
   return (
     <Card
       surface="frosted"
       className={cn(
-        'relative flex h-full flex-col rounded-2xl border-transparent',
-        onClick && 'cursor-pointer',
+        "relative flex h-full flex-col rounded-2xl border-transparent",
+        onClick && "cursor-pointer",
       )}
       padding="md"
       onClick={onClick}
-      role={onClick ? 'button' : undefined}
+      role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
       onKeyDown={(e) => {
         if (!onClick) return;
-        if (e.key === 'Enter' || e.key === ' ') {
+        if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           onClick();
         }
@@ -31,8 +36,12 @@ export function FeatureCard({ icon: Icon, title, description, onClick }: Feature
         <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
           <Icon size={20} />
         </div>
-        <h3 className="mb-1.5 text-sm font-semibold text-foreground">{title}</h3>
-        <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
+        <h3 className="mb-1.5 text-sm font-semibold text-foreground">
+          {title}
+        </h3>
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          {description}
+        </p>
       </div>
     </Card>
   );

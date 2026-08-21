@@ -134,18 +134,18 @@ The Jira feature is supervisor-only. It consists of two main parts:
 
 **Jira health components** (all in `src/features/supervisor/components/ProjectDetail/jira/`):
 
-| Component | Description |
-|---|---|
-| `JiraHealthOverview` | Top-level orchestrator: workspace context bar, tab switcher (Health / Sprint Progress / Team Workload), refresh action |
-| `JiraStatCards` | Four stat tiles: Completion %, Open Issues, Overdue, High Priority Open |
-| `JiraBugRatioBar` | Bug ratio gauge with risk zones (Healthy / At Risk / Critical) |
-| `JiraStatusDonut` | Recharts donut chart for status breakdown (Done / In Progress / To Do) |
-| `JiraTypeDistribution` | Horizontal progress bars for issue type distribution (hierarchical sorting) |
+| Component                   | Description                                                                                                             |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `JiraHealthOverview`        | Top-level orchestrator: workspace context bar, tab switcher (Health / Sprint Progress / Team Workload), refresh action  |
+| `JiraStatCards`             | Four stat tiles: Completion %, Open Issues, Overdue, High Priority Open                                                 |
+| `JiraBugRatioBar`           | Bug ratio gauge with risk zones (Healthy / At Risk / Critical)                                                          |
+| `JiraStatusDonut`           | Recharts donut chart for status breakdown (Done / In Progress / To Do)                                                  |
+| `JiraTypeDistribution`      | Horizontal progress bars for issue type distribution (hierarchical sorting)                                             |
 | `JiraSprintProgressSection` | Sprint selector (4 most recent), completion rings, story point bars, weekly velocity metrics, and sprint velocity chart |
-| `JiraWorkloadPanel` | Team workload orchestrator: unassigned warnings, imbalance alerts, comparison table, and distribution bar charts |
-| `JiraWorkloadTable` | Member-wise workload metrics (Open, Completed, Overdue, Story Points, Recency) |
-| `JiraWorkloadBarChart` | Proportional bar chart showing issue type distribution per team member |
-| `JiraHealthSkeleton` | Loading skeleton for the full Jira tab |
+| `JiraWorkloadPanel`         | Team workload orchestrator: unassigned warnings, imbalance alerts, comparison table, and distribution bar charts        |
+| `JiraWorkloadTable`         | Member-wise workload metrics (Open, Completed, Overdue, Story Points, Recency)                                          |
+| `JiraWorkloadBarChart`      | Proportional bar chart showing issue type distribution per team member                                                  |
+| `JiraHealthSkeleton`        | Loading skeleton for the full Jira tab                                                                                  |
 
 ## UI Architecture Notes
 

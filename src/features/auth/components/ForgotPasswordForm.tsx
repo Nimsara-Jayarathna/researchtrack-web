@@ -1,11 +1,11 @@
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { useEffect, useMemo, useState } from 'react';
-import type { RegisterConfig } from '../types';
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { useEffect, useMemo, useState } from "react";
+import type { RegisterConfig } from "../types";
 import {
   getForgotPasswordValidationState,
   validateForgotPasswordForm,
-} from '../utils/forgotPasswordValidation';
+} from "../utils/forgotPasswordValidation";
 
 export type ForgotPasswordFormProps = {
   onSubmit: (email: string) => Promise<void>;
@@ -24,7 +24,7 @@ export function ForgotPasswordForm({
   startCooldownKey,
   config,
 }: ForgotPasswordFormProps) {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [cooldown, setCooldown] = useState(0);
 
   useEffect(() => {
@@ -70,13 +70,16 @@ export function ForgotPasswordForm({
   );
   const domainWarning =
     allowedDomains.length > 0
-      ? `Allowed domains: ${allowedDomains.join(' · ')}.`
-      : 'Your email domain is not permitted.';
+      ? `Allowed domains: ${allowedDomains.join(" · ")}.`
+      : "Your email domain is not permitted.";
 
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
-        <label htmlFor="forgot-password-email" className="text-sm font-medium text-foreground">
+        <label
+          htmlFor="forgot-password-email"
+          className="text-sm font-medium text-foreground"
+        >
           Email
         </label>
         <Input
@@ -106,8 +109,14 @@ export function ForgotPasswordForm({
         </p>
       )}
 
-      <Button type="submit" variant="primary" size="lg" fullWidth disabled={isDisabled}>
-        {cooldown > 0 ? `Resend in ${cooldown}s...` : 'Send reset link'}
+      <Button
+        type="submit"
+        variant="primary"
+        size="lg"
+        fullWidth
+        disabled={isDisabled}
+      >
+        {cooldown > 0 ? `Resend in ${cooldown}s...` : "Send reset link"}
       </Button>
     </form>
   );

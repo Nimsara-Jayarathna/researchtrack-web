@@ -1,13 +1,13 @@
-import { useNavigate } from 'react-router-dom';
-import { PageHeader } from '@/components/ui/PageHeader';
-import { RequestStateModal } from '@/components/ui/RequestStateModal';
-import { CreateProjectWizard } from '../components/ProjectCreate/CreateProjectWizard';
-import { useCreateProjectPageState } from '../hooks/useCreateProjectPageState';
+import { useNavigate } from "react-router-dom";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { RequestStateModal } from "@/components/ui/RequestStateModal";
+import { CreateProjectWizard } from "../components/ProjectCreate/CreateProjectWizard";
+import { useCreateProjectPageState } from "../hooks/useCreateProjectPageState";
 
 export function CreateProjectPage() {
   const navigate = useNavigate();
   const state = useCreateProjectPageState({
-    onSuccessNavigate: () => navigate('/supervisor/projects'),
+    onSuccessNavigate: () => navigate("/supervisor/projects"),
   });
 
   return (
@@ -22,8 +22,16 @@ export function CreateProjectPage() {
         status={state.requestModal.status}
         title={state.requestModal.title}
         message={state.requestModal.message}
-        onClose={state.requestModal.status === 'loading' ? undefined : state.closeRequestModal}
-        onRetry={state.requestModal.status === 'error' ? state.closeRequestModal : undefined}
+        onClose={
+          state.requestModal.status === "loading"
+            ? undefined
+            : state.closeRequestModal
+        }
+        onRetry={
+          state.requestModal.status === "error"
+            ? state.closeRequestModal
+            : undefined
+        }
       />
 
       <CreateProjectWizard state={state} />

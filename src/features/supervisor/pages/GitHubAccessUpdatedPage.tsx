@@ -1,7 +1,7 @@
-import { buttonStyles } from '@/components/ui/Button';
-import { RequestStateModal } from '@/components/ui/RequestStateModal';
-import { GitHubAccessUpdatedSuccessContent } from '../components/GitHubAccessUpdated/GitHubAccessUpdatedSuccessContent';
-import { useGitHubAccessUpdatedPageState } from '../hooks/useGitHubAccessUpdatedPageState';
+import { buttonStyles } from "@/components/ui/Button";
+import { RequestStateModal } from "@/components/ui/RequestStateModal";
+import { GitHubAccessUpdatedSuccessContent } from "../components/GitHubAccessUpdated/GitHubAccessUpdatedSuccessContent";
+import { useGitHubAccessUpdatedPageState } from "../hooks/useGitHubAccessUpdatedPageState";
 
 export function GitHubAccessUpdatedPage() {
   const state = useGitHubAccessUpdatedPageState();
@@ -17,7 +17,7 @@ export function GitHubAccessUpdatedPage() {
         onClose={state.onClose}
         onRetry={state.onRetry}
         content={
-          state.status === 'success' && state.summary ? (
+          state.status === "success" && state.summary ? (
             <GitHubAccessUpdatedSuccessContent
               summary={state.summary}
               scopeLabel={state.scopeLabel}
@@ -25,15 +25,17 @@ export function GitHubAccessUpdatedPage() {
           ) : undefined
         }
         footer={
-          state.status === 'success' ? (
+          state.status === "success" ? (
             <div className="flex flex-wrap justify-center gap-3">
               <button
                 type="button"
-                className={buttonStyles({ variant: 'primary', size: 'md' })}
+                className={buttonStyles({ variant: "primary", size: "md" })}
                 onClick={() => void state.handleConfirmAndContinue()}
                 disabled={state.isAcknowledging}
               >
-                {state.isAcknowledging ? 'Opening repository selection...' : 'Review repositories'}
+                {state.isAcknowledging
+                  ? "Opening repository selection..."
+                  : "Review repositories"}
               </button>
             </div>
           ) : undefined

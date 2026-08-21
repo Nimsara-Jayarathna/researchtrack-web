@@ -5,7 +5,7 @@ export type ProjectFile = {
   fileSize: number;
   uploadedBy: string;
   uploadedByName: string;
-  uploadedByRole: 'SUPERVISOR' | 'STUDENT';
+  uploadedByRole: "SUPERVISOR" | "STUDENT";
   createdAt: string;
   updatedAt: string | null;
 };

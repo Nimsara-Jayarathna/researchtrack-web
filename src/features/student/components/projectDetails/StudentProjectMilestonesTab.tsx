@@ -1,24 +1,31 @@
-import { CalendarDays, Flag } from 'lucide-react';
-import { StatusBadge } from '@/components/ui/StatusBadge';
-import { parseLocalDateOnly } from '@/lib/dateOnly';
-import type { StudentProjectDetailMilestone } from '../../types';
-import { getMilestoneStatusIcon, getMilestoneTone } from '../../utils/projectDetails/presentation';
+import { CalendarDays, Flag } from "lucide-react";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { parseLocalDateOnly } from "@/lib/dateOnly";
+import type { StudentProjectDetailMilestone } from "../../types";
+import {
+  getMilestoneStatusIcon,
+  getMilestoneTone,
+} from "../../utils/projectDetails/presentation";
 
-const dateFormatter = new Intl.DateTimeFormat('en', {
-  month: 'short',
-  day: 'numeric',
-  year: 'numeric',
+const dateFormatter = new Intl.DateTimeFormat("en", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
 });
 
 type StudentProjectMilestonesTabProps = {
   milestones: StudentProjectDetailMilestone[];
 };
 
-export function StudentProjectMilestonesTab({ milestones }: StudentProjectMilestonesTabProps) {
+export function StudentProjectMilestonesTab({
+  milestones,
+}: StudentProjectMilestonesTabProps) {
   return (
     <section className="rounded-3xl border border-border bg-white p-6 shadow-sm transition-all hover:shadow-md">
       <div className="flex flex-col">
-        <h2 className="text-lg font-bold tracking-tight text-slate-800">Project Milestones</h2>
+        <h2 className="text-lg font-bold tracking-tight text-slate-800">
+          Project Milestones
+        </h2>
         <p className="text-xs font-medium text-slate-400">
           Total {milestones.length} milestones defined
         </p>
@@ -34,7 +41,7 @@ export function StudentProjectMilestonesTab({ milestones }: StudentProjectMilest
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                 <div className="flex shrink-0 items-center justify-center">
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-base font-black text-slate-400 shadow-inner group-hover:bg-indigo-50 group-hover:text-indigo-500 transition-colors">
-                    {String(milestone.sequenceNo).padStart(2, '0')}
+                    {String(milestone.sequenceNo).padStart(2, "0")}
                   </div>
                 </div>
 
@@ -50,7 +57,10 @@ export function StudentProjectMilestonesTab({ milestones }: StudentProjectMilest
                           const dueDate = parseLocalDateOnly(milestone.dueDate);
                           return (
                             <span>
-                              Due {dueDate ? dateFormatter.format(dueDate) : milestone.dueDate}
+                              Due{" "}
+                              {dueDate
+                                ? dateFormatter.format(dueDate)
+                                : milestone.dueDate}
                             </span>
                           );
                         })()}
@@ -58,15 +68,19 @@ export function StudentProjectMilestonesTab({ milestones }: StudentProjectMilest
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {getMilestoneStatusIcon(milestone.status, 'h-4 w-4 text-slate-300')}
+                      {getMilestoneStatusIcon(
+                        milestone.status,
+                        "h-4 w-4 text-slate-300",
+                      )}
                       <StatusBadge tone={getMilestoneTone(milestone.status)}>
-                        {milestone.status.replace('_', ' ')}
+                        {milestone.status.replace("_", " ")}
                       </StatusBadge>
                     </div>
                   </div>
 
                   <p className="mt-3 text-sm leading-relaxed text-slate-500 line-clamp-2">
-                    {milestone.description ?? 'No description provided for this milestone.'}
+                    {milestone.description ??
+                      "No description provided for this milestone."}
                   </p>
                 </div>
               </div>

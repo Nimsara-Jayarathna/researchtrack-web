@@ -1,4 +1,4 @@
-import type { GitHubAccessUpdatedSummary } from '../../types';
+import type { GitHubAccessUpdatedSummary } from "../../types";
 
 type GitHubAccessUpdatedSuccessContentProps = {
   summary: GitHubAccessUpdatedSummary;
@@ -12,9 +12,15 @@ export function GitHubAccessUpdatedSuccessContent({
   return (
     <div className="space-y-3 text-left">
       <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3">
-        <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Project</p>
-        <p className="mt-1 text-sm font-semibold text-foreground">{summary.projectTitle}</p>
-        {scopeLabel ? <p className="mt-2 text-xs text-muted-foreground">{scopeLabel}</p> : null}
+        <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+          Project
+        </p>
+        <p className="mt-1 text-sm font-semibold text-foreground">
+          {summary.projectTitle}
+        </p>
+        {scopeLabel ? (
+          <p className="mt-2 text-xs text-muted-foreground">{scopeLabel}</p>
+        ) : null}
       </div>
 
       <div className="rounded-xl border border-slate-200 bg-white/80 p-3">
@@ -32,7 +38,9 @@ export function GitHubAccessUpdatedSuccessContent({
                 key={repository.repositoryId}
                 className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2"
               >
-                <p className="text-sm font-medium text-foreground">{repository.fullName}</p>
+                <p className="text-sm font-medium text-foreground">
+                  {repository.fullName}
+                </p>
                 <a
                   href={repository.url}
                   target="_blank"

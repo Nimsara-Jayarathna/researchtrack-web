@@ -1,35 +1,38 @@
-import { useEffect, useState } from 'react';
-import { supervisorApi } from '../api/supervisorApi';
-import type { SupervisorProjectDetail } from '../types';
-import { useRequestModalControls } from './projectDetails/useRequestModalControls';
-import { useProjectTeamState, type TeamState } from './projectDetails/useProjectTeamState';
+import { useEffect, useState } from "react";
+import { supervisorApi } from "../api/supervisorApi";
+import type { SupervisorProjectDetail } from "../types";
+import { useRequestModalControls } from "./projectDetails/useRequestModalControls";
+import {
+  useProjectTeamState,
+  type TeamState,
+} from "./projectDetails/useProjectTeamState";
 import {
   useProjectLifecycleState,
   type ProjectLifecycleState,
-} from './projectDetails/useProjectLifecycleState';
+} from "./projectDetails/useProjectLifecycleState";
 import {
   useProjectMilestonesState,
   type MilestonesState,
-} from './projectDetails/useProjectMilestonesState';
+} from "./projectDetails/useProjectMilestonesState";
 import {
   useProjectOverviewState,
   type OverviewState,
-} from './projectDetails/useProjectOverviewState';
+} from "./projectDetails/useProjectOverviewState";
 
 type UseProjectDetailsPageStateParams = {
   projectId: string | undefined;
   loadedProject: SupervisorProjectDetail | null;
 };
 
-export type { OverviewState } from './projectDetails/useProjectOverviewState';
-export type { MilestonesState } from './projectDetails/useProjectMilestonesState';
+export type { OverviewState } from "./projectDetails/useProjectOverviewState";
+export type { MilestonesState } from "./projectDetails/useProjectMilestonesState";
 
-export type { TeamState } from './projectDetails/useProjectTeamState';
+export type { TeamState } from "./projectDetails/useProjectTeamState";
 
 export type ProjectDetailsActions = {
-  quickLifecycleStatus: ProjectLifecycleState['quickLifecycleStatus'];
-  isUpdatingStatus: ProjectLifecycleState['isUpdatingStatus'];
-  handleQuickStatusChange: ProjectLifecycleState['handleQuickStatusChange'];
+  quickLifecycleStatus: ProjectLifecycleState["quickLifecycleStatus"];
+  isUpdatingStatus: ProjectLifecycleState["isUpdatingStatus"];
+  handleQuickStatusChange: ProjectLifecycleState["handleQuickStatusChange"];
   handleProjectUpdate: (updatedProject: SupervisorProjectDetail) => void;
 };
 

@@ -1,9 +1,17 @@
-import type { ProjectGitHubPreview } from '@/features/projects/types';
-import type { ProjectGitHubRepositories } from '@/features/shared/types/github.types';
-import type { UserRole } from '@/types/roles';
-import type { ProjectFile, ProjectFileConfig } from '@/features/projectfiles/types';
+import type { ProjectGitHubPreview } from "@/features/projects/types";
+import type { ProjectGitHubRepositories } from "@/features/shared/types/github.types";
+import type { UserRole } from "@/types/roles";
+import type {
+  ProjectFile,
+  ProjectFileConfig,
+} from "@/features/projectfiles/types";
 
-export type StudentProjectLifecycle = 'PLANNING' | 'ACTIVE' | 'AT_RISK' | 'BEHIND' | 'COMPLETED';
+export type StudentProjectLifecycle =
+  | "PLANNING"
+  | "ACTIVE"
+  | "AT_RISK"
+  | "BEHIND"
+  | "COMPLETED";
 
 export type StudentProjectSummary = {
   id: string;
@@ -34,7 +42,7 @@ export type StudentProjectDetailMilestone = {
   title: string;
   description: string | null;
   dueDate: string;
-  status: 'PLANNED' | 'IN_PROGRESS' | 'COMPLETED' | 'MISSED' | 'CANCELLED';
+  status: "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "MISSED" | "CANCELLED";
   sequenceNo: number;
 };
 
@@ -76,10 +84,10 @@ export type StudentProjectDetail = {
 };
 
 export type StudentProjectDetailTab =
-  | 'overview'
-  | 'team'
-  | 'milestones'
-  | 'files'
-  | 'github'
-  | 'jira'
-  | 'meetings';
+  | "overview"
+  | "team"
+  | "milestones"
+  | "files"
+  | "github"
+  | "jira"
+  | "meetings";

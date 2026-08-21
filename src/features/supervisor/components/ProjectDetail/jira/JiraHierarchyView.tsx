@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import { AlertCircle } from 'lucide-react';
-import type { JiraHierarchy } from '@/features/supervisor/types';
-import { JiraHierarchyNode } from './JiraHierarchyNode';
-import { JiraHierarchySkeleton } from './JiraHierarchySkeleton';
-import { sortNodes } from './jiraHierarchySort';
+import { useState } from "react";
+import { AlertCircle } from "lucide-react";
+import type { JiraHierarchy } from "@/features/supervisor/types";
+import { JiraHierarchyNode } from "./JiraHierarchyNode";
+import { JiraHierarchySkeleton } from "./JiraHierarchySkeleton";
+import { sortNodes } from "./jiraHierarchySort";
 
 type Props = {
   isLoading: boolean;
@@ -11,10 +11,10 @@ type Props = {
   data: JiraHierarchy | null;
 };
 
-function sortRootNodes(nodes: JiraHierarchy['roots']): JiraHierarchy['roots'] {
+function sortRootNodes(nodes: JiraHierarchy["roots"]): JiraHierarchy["roots"] {
   return [...nodes].sort((a, b) => {
-    const aEpic = a.issueType === 'Epic';
-    const bEpic = b.issueType === 'Epic';
+    const aEpic = a.issueType === "Epic";
+    const bEpic = b.issueType === "Epic";
     if (aEpic !== bEpic) {
       return aEpic ? -1 : 1;
     }

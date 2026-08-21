@@ -1,19 +1,19 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { isApiException } from '@/services/apiClient';
-import type { ApiError } from '@/types';
-import { studentApi } from '../api/studentApi';
-import type { StudentProjectSummary } from '../types';
-import { getSessionVersion, isCurrentSession } from '@/services/sessionState';
-import { registerSessionCacheClearer } from '@/services/sessionCache';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { isApiException } from "@/services/apiClient";
+import type { ApiError } from "@/types";
+import { studentApi } from "../api/studentApi";
+import type { StudentProjectSummary } from "../types";
+import { getSessionVersion, isCurrentSession } from "@/services/sessionState";
+import { registerSessionCacheClearer } from "@/services/sessionCache";
 
 const UNKNOWN_ERROR_BASE: ApiError = {
-  code: 'INTERNAL_ERROR',
-  message: 'Unable to load projects right now.',
+  code: "INTERNAL_ERROR",
+  message: "Unable to load projects right now.",
   details: [],
   timestamp: new Date().toISOString(),
   status: 0,
-  error: 'Unexpected Error',
-  path: '',
+  error: "Unexpected Error",
+  path: "",
   traceId: null,
 };
 
@@ -94,7 +94,7 @@ export function useStudentProjects() {
       if (!isCurrentSession(requestSessionVersion)) {
         if (import.meta.env.DEV) {
           // eslint-disable-next-line no-console
-          console.info('[useStudentProjects] discarded stale response');
+          console.info("[useStudentProjects] discarded stale response");
         }
         if (latestRequestId.current === requestId) {
           setState((current) => ({ ...current, isLoading: false }));
@@ -109,7 +109,7 @@ export function useStudentProjects() {
       if (!isCurrentSession(requestSessionVersion)) {
         if (import.meta.env.DEV) {
           // eslint-disable-next-line no-console
-          console.info('[useStudentProjects] discarded stale error');
+          console.info("[useStudentProjects] discarded stale error");
         }
         if (latestRequestId.current === requestId) {
           setState((current) => ({ ...current, isLoading: false }));

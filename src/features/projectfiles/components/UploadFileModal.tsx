@@ -1,20 +1,20 @@
-import { useMemo } from 'react';
-import { createPortal } from 'react-dom';
-import { RequestStateModal } from '@/components/ui/RequestStateModal';
-import { Button } from '@/components/ui/Button';
-import { AlertCircle, X } from 'lucide-react';
+import { useMemo } from "react";
+import { createPortal } from "react-dom";
+import { RequestStateModal } from "@/components/ui/RequestStateModal";
+import { Button } from "@/components/ui/Button";
+import { AlertCircle, X } from "lucide-react";
 import {
   bytesToHumanSize,
   normalizeAllowedTypes,
   resolveExpectedExtension,
-} from '../lib/uploadFileUtils';
+} from "../lib/uploadFileUtils";
 import type {
   ConfirmUploadRequest,
   ProjectFile,
   UploadUrlRequest,
   UploadUrlResponse,
-} from '../types';
-import { useUploadFileModalState } from '../hooks/useUploadFileModalState';
+} from "../types";
+import { useUploadFileModalState } from "../hooks/useUploadFileModalState";
 
 type UploadFileModalProps = {
   isOpen: boolean;
@@ -33,7 +33,7 @@ const DEFAULT_MAX_FILE_NAME_LENGTH = 50;
 
 export function UploadFileModal({
   isOpen,
-  title = 'Upload file',
+  title = "Upload file",
   onClose,
   onUploaded,
   getUploadUrl,
@@ -42,12 +42,23 @@ export function UploadFileModal({
   maxFileNameLength,
   allowedTypes,
 }: UploadFileModalProps) {
-  const resolvedMaxFileSizeBytes = Math.max(1, maxFileSizeBytes ?? DEFAULT_MAX_FILE_SIZE_BYTES);
-  const resolvedMaxFileNameLength = Math.max(1, maxFileNameLength ?? DEFAULT_MAX_FILE_NAME_LENGTH);
+  const resolvedMaxFileSizeBytes = Math.max(
+    1,
+    maxFileSizeBytes ?? DEFAULT_MAX_FILE_SIZE_BYTES,
+  );
+  const resolvedMaxFileNameLength = Math.max(
+    1,
+    maxFileNameLength ?? DEFAULT_MAX_FILE_NAME_LENGTH,
+  );
   const resolvedAllowedTypes = normalizeAllowedTypes(allowedTypes);
-  const allowedTypesSet = useMemo(() => new Set(resolvedAllowedTypes), [resolvedAllowedTypes]);
-  const acceptedInputValue = resolvedAllowedTypes.map((type) => `.${type}`).join(',');
-  const acceptedFileTypesText = `${resolvedAllowedTypes.map((type) => type.toUpperCase()).join(', ')} • Max ${bytesToHumanSize(resolvedMaxFileSizeBytes)}`;
+  const allowedTypesSet = useMemo(
+    () => new Set(resolvedAllowedTypes),
+    [resolvedAllowedTypes],
+  );
+  const acceptedInputValue = resolvedAllowedTypes
+    .map((type) => `.${type}`)
+    .join(",");
+  const acceptedFileTypesText = `${resolvedAllowedTypes.map((type) => type.toUpperCase()).join(", ")} • Max ${bytesToHumanSize(resolvedMaxFileSizeBytes)}`;
   const state = useUploadFileModalState({
     isOpen,
     onClose,
@@ -67,10 +78,14 @@ export function UploadFileModal({
     : resolvedMaxFileNameLength;
 
   const isUploadDisabled =
-    state.isSubmitting || !state.selectedFile || state.fileNameDraft.trim().length === 0;
+    state.isSubmitting ||
+    !state.selectedFile ||
+    state.fileNameDraft.trim().length === 0;
   const inlineMessage =
     state.error ??
-    (state.hasSubmitAttempted && !state.selectedFile ? 'Select a file to continue.' : null);
+    (state.hasSubmitAttempted && !state.selectedFile
+      ? "Select a file to continue."
+      : null);
 
   if (!isOpen) {
     return null;
@@ -91,7 +106,9 @@ export function UploadFileModal({
           <div className="flex items-start justify-between gap-3">
             <div>
               <h3 className="text-lg font-bold text-slate-900">{title}</h3>
-              <p className="mt-1 text-xs font-medium text-slate-500">{acceptedFileTypesText}</p>
+              <p className="mt-1 text-xs font-medium text-slate-500">
+                {acceptedFileTypesText}
+              </p>
             </div>
             <Button
               type="button"
@@ -111,17 +128,19 @@ export function UploadFileModal({
               onDrop={state.onDrop}
               className={`rounded-2xl border-2 border-dashed p-6 text-center transition-colors ${
                 state.isDragActive
-                  ? 'border-slate-500 bg-slate-50'
-                  : 'border-slate-300 bg-slate-50/40'
+                  ? "border-slate-500 bg-slate-50"
+                  : "border-slate-300 bg-slate-50/40"
               }`}
             >
               <p className="text-sm font-semibold text-slate-700">
-                {state.selectedFile ? 'File selected' : 'Drag and drop a file here'}
+                {state.selectedFile
+                  ? "File selected"
+                  : "Drag and drop a file here"}
               </p>
               <p className="mt-1 text-xs text-slate-500">
                 {state.selectedFile
-                  ? 'You can choose a different file anytime'
-                  : 'or browse from your device'}
+                  ? "You can choose a different file anytime"
+                  : "or browse from your device"}
               </p>
               <Button
                 type="button"
@@ -131,7 +150,7 @@ export function UploadFileModal({
                 onClick={() => state.hiddenInputRef.current?.click()}
                 disabled={state.isSubmitting}
               >
-                {state.selectedFile ? 'Select different file' : 'Choose file'}
+                {state.selectedFile ? "Select different file" : "Choose file"}
               </Button>
               <input
                 ref={state.hiddenInputRef}
@@ -154,7 +173,9 @@ export function UploadFileModal({
               <input
                 type="text"
                 value={state.fileNameDraft}
-                onChange={(event) => state.onFileNameDraftChange(event.target.value)}
+                onChange={(event) =>
+                  state.onFileNameDraftChange(event.target.value)
+                }
                 maxLength={maxNameInputLength}
                 disabled={!state.selectedFile || state.isSubmitting}
                 placeholder="Select a file first"
@@ -166,7 +187,10 @@ export function UploadFileModal({
               <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
                 <p className="flex items-center gap-2 text-xs text-slate-600">
                   <span className="shrink-0 font-medium">Selected:</span>
-                  <span className="min-w-0 flex-1 truncate" title={state.selectedFile.name}>
+                  <span
+                    className="min-w-0 flex-1 truncate"
+                    title={state.selectedFile.name}
+                  >
                     {state.selectedFile.name}
                   </span>
                   <span className="shrink-0">
@@ -206,7 +230,7 @@ export function UploadFileModal({
         message={state.requestModal.message}
         autoCloseOnSuccess
         onClose={
-          state.requestModal.status === 'success'
+          state.requestModal.status === "success"
             ? state.closeSuccessModalAndExit
             : state.closeRequestModal
         }

@@ -1,22 +1,22 @@
-import type { ApiError } from '@/types';
-import { isApiException } from '@/services/apiClient';
+import type { ApiError } from "@/types";
+import { isApiException } from "@/services/apiClient";
 
 export type RequestModalState = {
   isOpen: boolean;
-  status: 'loading' | 'success' | 'error';
+  status: "loading" | "success" | "error";
   title: string;
   message: string;
   retryAction: (() => void) | null;
 };
 
 const UNKNOWN_ERROR: ApiError = {
-  code: 'INTERNAL_ERROR',
-  message: 'An unexpected error occurred.',
+  code: "INTERNAL_ERROR",
+  message: "An unexpected error occurred.",
   details: [],
   timestamp: new Date().toISOString(),
   status: 0,
-  error: 'Unexpected Error',
-  path: '',
+  error: "Unexpected Error",
+  path: "",
   traceId: null,
 };
 

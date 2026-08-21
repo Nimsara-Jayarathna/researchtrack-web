@@ -1,16 +1,16 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { cn } from '@/lib/cn';
-import { useAuth } from '../hooks/useAuth';
-import { LoginForm } from './LoginForm';
-import { RegistrationPanel } from './registration/RegistrationPanel';
-import { RequestStateModal } from '@/components/ui/RequestStateModal';
-import { getBlockingErrorTitle } from '@/utils/errorSeverity';
-import { useNavigate } from 'react-router-dom';
-import { ModalShell } from '@/components/ui/ModalShell';
-import { useRegisterConfig } from '../hooks/useRegisterConfig';
-import { AuthDialogCard } from './shell/AuthDialogCard';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { cn } from "@/lib/cn";
+import { useAuth } from "../hooks/useAuth";
+import { LoginForm } from "./LoginForm";
+import { RegistrationPanel } from "./registration/RegistrationPanel";
+import { RequestStateModal } from "@/components/ui/RequestStateModal";
+import { getBlockingErrorTitle } from "@/utils/errorSeverity";
+import { useNavigate } from "react-router-dom";
+import { ModalShell } from "@/components/ui/ModalShell";
+import { useRegisterConfig } from "../hooks/useRegisterConfig";
+import { AuthDialogCard } from "./shell/AuthDialogCard";
 
-type AuthTab = 'login' | 'register';
+type AuthTab = "login" | "register";
 
 type AuthModalProps = {
   isOpen: boolean;
@@ -18,7 +18,11 @@ type AuthModalProps = {
   initialTab?: AuthTab;
 };
 
-export function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
+export function AuthModal({
+  isOpen,
+  onClose,
+  initialTab = "login",
+}: AuthModalProps) {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<AuthTab>(initialTab);
   const {
@@ -29,7 +33,8 @@ export function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalPr
     reload: reloadRegisterConfig,
   } = useRegisterConfig({
     autoLoad: false,
-    fallbackMessage: 'Unable to prepare registration right now. Please try again.',
+    fallbackMessage:
+      "Unable to prepare registration right now. Please try again.",
   });
   const dialogRef = useRef<HTMLElement>(null);
   const {
@@ -45,7 +50,7 @@ export function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalPr
     }
     const config = await reloadRegisterConfig();
     if (config) {
-      setActiveTab('register');
+      setActiveTab("register");
     }
   }, [registerConfigLoading, reloadRegisterConfig]);
 
@@ -55,7 +60,7 @@ export function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalPr
       return;
     }
 
-    if (initialTab === 'register') {
+    if (initialTab === "register") {
       void openRegisterTab();
       return;
     }
@@ -72,7 +77,7 @@ export function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalPr
         containerClassName="fixed inset-0 z-50 flex items-center justify-center p-4"
         backdropClassName="absolute inset-0 bg-foreground/40 backdrop-blur-sm"
         onBackdropClick={onClose}
-        ariaLabel={activeTab === 'login' ? 'Sign in' : 'Create account'}
+        ariaLabel={activeTab === "login" ? "Sign in" : "Create account"}
         closeOnEscape
         lockBodyScroll
         autoFocus
@@ -87,30 +92,30 @@ export function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalPr
           headerVariant="modal"
         >
           <div className="mb-6 flex rounded-lg bg-muted p-1">
-            {(['login', 'register'] as AuthTab[]).map((tab) => (
+            {(["login", "register"] as AuthTab[]).map((tab) => (
               <button
                 key={tab}
                 type="button"
                 onClick={() => {
-                  if (tab === 'register') {
+                  if (tab === "register") {
                     void openRegisterTab();
                     return;
                   }
                   setActiveTab(tab);
                 }}
                 className={cn(
-                  'flex-1 rounded-md py-1.5 text-center text-sm font-medium transition-colors',
+                  "flex-1 rounded-md py-1.5 text-center text-sm font-medium transition-colors",
                   activeTab === tab
-                    ? 'bg-background text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground',
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                {tab === 'login' ? 'Sign In' : 'Register'}
+                {tab === "login" ? "Sign In" : "Register"}
               </button>
             ))}
           </div>
 
-          {activeTab === 'login' ? (
+          {activeTab === "login" ? (
             <LoginForm
               onSubmit={login}
               isLoading={loginLoading}
@@ -119,43 +124,51 @@ export function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalPr
               onSuccess={onClose}
               onForgotPassword={() => {
                 onClose();
-                navigate('/forgot-password');
+                navigate("/forgot-password");
               }}
             />
           ) : registerConfig ? (
-            <RegistrationPanel inModal={true} config={registerConfig} onClose={onClose} />
+            <RegistrationPanel
+              inModal={true}
+              config={registerConfig}
+              onClose={onClose}
+            />
           ) : null}
 
-          {activeTab === 'register' && registerConfigLoading && (
-            <p className="text-sm text-muted-foreground">Preparing registration...</p>
+          {activeTab === "register" && registerConfigLoading && (
+            <p className="text-sm text-muted-foreground">
+              Preparing registration...
+            </p>
           )}
         </AuthDialogCard>
       </ModalShell>
 
       <RequestStateModal
         isOpen={loginLoading || !!loginError}
-        status={loginLoading ? 'loading' : loginError ? 'error' : 'success'}
-        title={loginLoading ? 'Signing in...' : 'Sign in failed'}
+        status={loginLoading ? "loading" : loginError ? "error" : "success"}
+        title={loginLoading ? "Signing in..." : "Sign in failed"}
         message={
           loginLoading
-            ? 'We are verifying your credentials.'
-            : loginError?.message || 'Check your internet connection and try again.'
+            ? "We are verifying your credentials."
+            : loginError?.message ||
+              "Check your internet connection and try again."
         }
         onClose={clearLoginError}
       />
 
       <RequestStateModal
         isOpen={registerConfigLoading || Boolean(registerConfigError)}
-        status={registerConfigLoading ? 'loading' : 'error'}
+        status={registerConfigLoading ? "loading" : "error"}
         title={
           registerConfigLoading
-            ? 'Preparing registration'
+            ? "Preparing registration"
             : getBlockingErrorTitle(registerConfigError)
         }
         message={
           registerConfigLoading
-            ? 'Checking registration configuration...'
-            : (registerConfigError?.message ?? 'Unable to prepare registration right now.')
+            ? "Checking registration configuration..."
+            : (registerConfigError?.message ??
+              "Unable to prepare registration right now.")
         }
         onClose={registerConfigLoading ? undefined : clearRegisterConfigError}
         onRetry={

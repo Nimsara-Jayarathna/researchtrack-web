@@ -1,8 +1,8 @@
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { vi } from 'vitest';
-import { ProjectDetailsPage } from './ProjectDetailsPage';
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { vi } from "vitest";
+import { ProjectDetailsPage } from "./ProjectDetailsPage";
 
 const {
   useSupervisorProjectMock,
@@ -16,19 +16,19 @@ const {
   getProjectGitHubDashboardMock: vi.fn(),
 }));
 
-vi.mock('../hooks/useSupervisorProject', () => ({
+vi.mock("../hooks/useSupervisorProject", () => ({
   useSupervisorProject: useSupervisorProjectMock,
 }));
 
-vi.mock('../hooks/useProjectDetailsPageState', () => ({
+vi.mock("../hooks/useProjectDetailsPageState", () => ({
   useProjectDetailsPageState: useProjectDetailsPageStateMock,
 }));
 
-vi.mock('../hooks/useProjectRepositories', () => ({
+vi.mock("../hooks/useProjectRepositories", () => ({
   useProjectRepositories: useProjectRepositoriesMock,
 }));
 
-vi.mock('../api/supervisorApi', () => ({
+vi.mock("../api/supervisorApi", () => ({
   supervisorApi: {
     getProjectGitHubDashboard: getProjectGitHubDashboardMock,
     getProjectGitHubActivityPage: vi.fn(),
@@ -41,39 +41,39 @@ vi.mock('../api/supervisorApi', () => ({
   },
 }));
 
-vi.mock('@/features/projects/components/CommitActivitySection', () => ({
+vi.mock("@/features/projects/components/CommitActivitySection", () => ({
   CommitActivitySection: () => <div>commit-activity</div>,
 }));
 
-vi.mock('../components/ProjectDetail/OverviewTabSection', () => ({
+vi.mock("../components/ProjectDetail/OverviewTabSection", () => ({
   OverviewTabSection: () => <div>overview-tab</div>,
 }));
 
-vi.mock('../components/ProjectDetail/TeamTabSection', () => ({
+vi.mock("../components/ProjectDetail/TeamTabSection", () => ({
   TeamTabSection: () => <div>team-tab</div>,
 }));
 
-vi.mock('../components/ProjectDetail/MilestonesTabSection', () => ({
+vi.mock("../components/ProjectDetail/MilestonesTabSection", () => ({
   MilestonesTabSection: () => <div>milestones-tab</div>,
 }));
 
-vi.mock('../components/ProjectDetail/FilesTabSection', () => ({
+vi.mock("../components/ProjectDetail/FilesTabSection", () => ({
   FilesTabSection: () => <div>files-tab</div>,
 }));
 
-vi.mock('../components/ProjectDetail/MeetingsTabSection', () => ({
+vi.mock("../components/ProjectDetail/MeetingsTabSection", () => ({
   MeetingsTabSection: () => <div>meetings-tab</div>,
 }));
 
-vi.mock('../components/ProjectDetail/JiraTabSection', () => ({
+vi.mock("../components/ProjectDetail/JiraTabSection", () => ({
   JiraTabSection: () => <div>jira-tab</div>,
 }));
 
-vi.mock('../components/ProjectDetail/IntegrationsTabSection', () => ({
+vi.mock("../components/ProjectDetail/IntegrationsTabSection", () => ({
   IntegrationsTabSection: () => <div>integrations-tab</div>,
 }));
 
-vi.mock('@/components/ui/PageTabs', () => ({
+vi.mock("@/components/ui/PageTabs", () => ({
   PageTabs: ({ value }: { value: string }) => <div>tabs:{value}</div>,
 }));
 
@@ -81,13 +81,16 @@ function renderPage(initialEntry: string) {
   return render(
     <MemoryRouter initialEntries={[initialEntry]}>
       <Routes>
-        <Route path="/supervisor/projects/:projectId" element={<ProjectDetailsPage />} />
+        <Route
+          path="/supervisor/projects/:projectId"
+          element={<ProjectDetailsPage />}
+        />
       </Routes>
     </MemoryRouter>,
   );
 }
 
-describe('ProjectDetailsPage', () => {
+describe("ProjectDetailsPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
@@ -95,16 +98,20 @@ describe('ProjectDetailsPage', () => {
       repositoryLinked: true,
       repositories: [],
       primaryRepositoryUrl: null,
-      activitySummary: { totalCommits: 0, lastActivityAt: null, status: 'idle' },
+      activitySummary: {
+        totalCommits: 0,
+        lastActivityAt: null,
+        status: "idle",
+      },
       contributorsPreview: [],
       recentCommitsPreview: [],
     };
 
     const project = {
-      id: 'project-1',
-      title: 'My project',
-      summary: 'Summary',
-      lifecycleStatus: 'ACTIVE',
+      id: "project-1",
+      title: "My project",
+      summary: "Summary",
+      lifecycleStatus: "ACTIVE",
       batch: null,
       semester: null,
       milestoneDate: null,
@@ -133,12 +140,18 @@ describe('ProjectDetailsPage', () => {
       team: {},
       milestones: {},
       requestModal: {
-        state: { isOpen: false, status: 'loading', title: '', message: '', retryAction: null },
+        state: {
+          isOpen: false,
+          status: "loading",
+          title: "",
+          message: "",
+          retryAction: null,
+        },
         close: vi.fn(),
         retryLastRequest: vi.fn(),
       },
       actions: {
-        quickLifecycleStatus: 'ACTIVE',
+        quickLifecycleStatus: "ACTIVE",
         isUpdatingStatus: false,
         handleQuickStatusChange: vi.fn(),
         handleProjectUpdate: vi.fn(),
@@ -147,46 +160,46 @@ describe('ProjectDetailsPage', () => {
 
     useProjectRepositoriesMock.mockReturnValue({
       data: {
-        projectId: 'project-1',
+        projectId: "project-1",
         maxLinkedRepositories: 3,
         maxEnabledRepositories: 2,
         accessSources: [],
         repositories: [
           {
-            id: 'link-1',
+            id: "link-1",
             sourceId: null,
             accessType: null,
             githubRepositoryId: null,
             githubRepoId: 1,
-            fullName: 'org/repo-one',
-            name: 'Repo One',
+            fullName: "org/repo-one",
+            name: "Repo One",
             customName: null,
-            ownerLogin: 'org',
-            defaultBranch: 'main',
-            url: 'https://example.com/repo-one',
+            ownerLogin: "org",
+            defaultBranch: "main",
+            url: "https://example.com/repo-one",
             primary: true,
             enabled: true,
-            linkedAt: '2026-04-01T00:00:00Z',
+            linkedAt: "2026-04-01T00:00:00Z",
             lastSyncedAt: null,
-            syncStatus: 'SUCCESS',
+            syncStatus: "SUCCESS",
           },
           {
-            id: 'link-2',
+            id: "link-2",
             sourceId: null,
             accessType: null,
             githubRepositoryId: null,
             githubRepoId: 2,
-            fullName: 'org/repo-two',
-            name: 'Repo Two',
+            fullName: "org/repo-two",
+            name: "Repo Two",
             customName: null,
-            ownerLogin: 'org',
-            defaultBranch: 'main',
-            url: 'https://example.com/repo-two',
+            ownerLogin: "org",
+            defaultBranch: "main",
+            url: "https://example.com/repo-two",
             primary: false,
             enabled: true,
-            linkedAt: '2026-04-01T00:00:00Z',
+            linkedAt: "2026-04-01T00:00:00Z",
             lastSyncedAt: null,
-            syncStatus: 'SUCCESS',
+            syncStatus: "SUCCESS",
           },
         ],
       },
@@ -198,21 +211,25 @@ describe('ProjectDetailsPage', () => {
     getProjectGitHubDashboardMock.mockResolvedValue(githubView);
   });
 
-  it('defaults invalid tab to overview', async () => {
-    renderPage('/supervisor/projects/project-1?tab=zzz');
+  it("defaults invalid tab to overview", async () => {
+    renderPage("/supervisor/projects/project-1?tab=zzz");
 
-    expect(await screen.findByText('overview-tab')).toBeInTheDocument();
+    expect(await screen.findByText("overview-tab")).toBeInTheDocument();
   });
 
-  it('fetches dashboard when switching GitHub repositories', async () => {
-    renderPage('/supervisor/projects/project-1?tab=github');
+  it("fetches dashboard when switching GitHub repositories", async () => {
+    renderPage("/supervisor/projects/project-1?tab=github");
 
     const user = userEvent.setup();
-    await user.click(await screen.findByRole('button', { name: 'Switch' }));
-    await user.click(await screen.findByRole('button', { name: /Repo Two/i }));
+    await user.click(await screen.findByRole("button", { name: "Switch" }));
+    await user.click(await screen.findByRole("button", { name: /Repo Two/i }));
 
     await waitFor(() => {
-      expect(getProjectGitHubDashboardMock).toHaveBeenCalledWith('project-1', false, 'link-2');
+      expect(getProjectGitHubDashboardMock).toHaveBeenCalledWith(
+        "project-1",
+        false,
+        "link-2",
+      );
     });
   });
 });

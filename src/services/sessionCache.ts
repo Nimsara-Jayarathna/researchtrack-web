@@ -5,7 +5,9 @@ const sessionCacheClearers = new Set<SessionCacheClearer>();
 /**
  * Registers an in-memory cache clearer that should run when auth session changes.
  */
-export function registerSessionCacheClearer(clearer: SessionCacheClearer): () => void {
+export function registerSessionCacheClearer(
+  clearer: SessionCacheClearer,
+): () => void {
   sessionCacheClearers.add(clearer);
 
   return () => {

@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
-import { isApiException } from '@/services/apiClient';
-import type { ApiError } from '@/types';
-import { studentApi } from '../api/studentApi';
-import type { StudentProjectDetail } from '../types';
+import { useEffect, useState } from "react";
+import { isApiException } from "@/services/apiClient";
+import type { ApiError } from "@/types";
+import { studentApi } from "../api/studentApi";
+import type { StudentProjectDetail } from "../types";
 
 type StudentProjectState = {
   project: StudentProjectDetail | null;
@@ -43,13 +43,13 @@ export function useStudentProject(projectId: string | undefined) {
         error: isApiException(error)
           ? error.apiError
           : {
-              code: 'INTERNAL_ERROR',
-              message: 'Unable to load the project right now.',
+              code: "INTERNAL_ERROR",
+              message: "Unable to load the project right now.",
               details: [],
               timestamp: new Date().toISOString(),
               status: 0,
-              error: 'Unexpected Error',
-              path: '',
+              error: "Unexpected Error",
+              path: "",
               traceId: null,
             },
       });
@@ -93,13 +93,13 @@ export function useStudentProject(projectId: string | undefined) {
           error: isApiException(error)
             ? error.apiError
             : {
-                code: 'INTERNAL_ERROR',
-                message: 'Unable to load the project right now.',
+                code: "INTERNAL_ERROR",
+                message: "Unable to load the project right now.",
                 details: [],
                 timestamp: new Date().toISOString(),
                 status: 0,
-                error: 'Unexpected Error',
-                path: '',
+                error: "Unexpected Error",
+                path: "",
                 traceId: null,
               },
         });

@@ -1,16 +1,20 @@
-import { ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { EmptyState } from '@/components/feedback/EmptyState';
-import { buttonStyles } from '@/components/ui/Button';
-import type { SupervisorDashboardProjectItem } from '../../types';
+import { ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
+import { EmptyState } from "@/components/feedback/EmptyState";
+import { buttonStyles } from "@/components/ui/Button";
+import type { SupervisorDashboardProjectItem } from "../../types";
 import {
   formatMilestoneDate,
   jiraIndicatorClasses,
   jiraIndicatorLabel,
   statusClasses,
-} from '../../utils/dashboard/presentation';
+} from "../../utils/dashboard/presentation";
 
-function ProjectHealthMobileCard({ project }: { project: SupervisorDashboardProjectItem }) {
+function ProjectHealthMobileCard({
+  project,
+}: {
+  project: SupervisorDashboardProjectItem;
+}) {
   return (
     <article className="rounded-2xl border border-slate-200 bg-white px-4 py-3.5 shadow-sm">
       <div className="flex items-start justify-between gap-3">
@@ -21,21 +25,21 @@ function ProjectHealthMobileCard({ project }: { project: SupervisorDashboardProj
           <p
             className="mt-1 text-sm leading-5 text-muted-foreground"
             style={{
-              display: '-webkit-box',
+              display: "-webkit-box",
               WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
             }}
           >
-            {project.summary ?? 'No summary provided yet.'}
+            {project.summary ?? "No summary provided yet."}
           </p>
         </div>
         <Link
           to={`/supervisor/projects/${project.id}`}
           className={buttonStyles({
-            variant: 'primary',
-            size: 'sm',
-            className: 'h-8 rounded-full px-3 text-xs font-bold',
+            variant: "primary",
+            size: "sm",
+            className: "h-8 rounded-full px-3 text-xs font-bold",
           })}
         >
           Open
@@ -44,29 +48,37 @@ function ProjectHealthMobileCard({ project }: { project: SupervisorDashboardProj
 
       <dl className="mt-3 grid grid-cols-2 gap-x-5 gap-y-3 border-t border-slate-100 pt-3 text-xs">
         <div className="space-y-1">
-          <dt className="font-medium uppercase tracking-wide text-slate-500">Status</dt>
+          <dt className="font-medium uppercase tracking-wide text-slate-500">
+            Status
+          </dt>
           <dd className="mt-1">
             <span
               className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold ${statusClasses(project.lifecycleStatus)}`}
             >
-              {project.lifecycleStatus.replace('_', ' ')}
+              {project.lifecycleStatus.replace("_", " ")}
             </span>
           </dd>
         </div>
         <div className="space-y-1">
-          <dt className="font-medium uppercase tracking-wide text-slate-500">Progress</dt>
+          <dt className="font-medium uppercase tracking-wide text-slate-500">
+            Progress
+          </dt>
           <dd className="text-base font-bold leading-none text-foreground">
             {project.progressPercent ?? 0}%
           </dd>
         </div>
         <div className="space-y-1">
-          <dt className="font-medium uppercase tracking-wide text-slate-500">Milestone</dt>
+          <dt className="font-medium uppercase tracking-wide text-slate-500">
+            Milestone
+          </dt>
           <dd className="text-sm font-semibold text-foreground">
             {formatMilestoneDate(project.milestoneDate)}
           </dd>
         </div>
         <div className="space-y-1">
-          <dt className="font-medium uppercase tracking-wide text-slate-500">Jira Health</dt>
+          <dt className="font-medium uppercase tracking-wide text-slate-500">
+            Jira Health
+          </dt>
           <dd className="mt-1">
             <span
               className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold ${jiraIndicatorClasses(project.jiraHealthIndicator)}`}
@@ -109,12 +121,17 @@ export function DashboardProjectHealthSection({
     <section className="rounded-3xl border border-border bg-white p-4 shadow-sm sm:p-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-foreground">Project health</h2>
+          <h2 className="text-xl font-semibold text-foreground">
+            Project health
+          </h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Searchable overview with quick links into each project workspace.
           </p>
         </div>
-        <Link to="/supervisor/projects" className={buttonStyles({ variant: 'ghost', size: 'md' })}>
+        <Link
+          to="/supervisor/projects"
+          className={buttonStyles({ variant: "ghost", size: "md" })}
+        >
           View all projects
           <ArrowRight className="h-4 w-4" />
         </Link>
@@ -153,23 +170,29 @@ export function DashboardProjectHealthSection({
               </thead>
               <tbody>
                 {pagedProjects.map((project) => (
-                  <tr key={project.id} className="border-b border-slate-100 last:border-0">
+                  <tr
+                    key={project.id}
+                    className="border-b border-slate-100 last:border-0"
+                  >
                     <td className="min-w-0 px-3 py-4 align-top">
-                      <p className="truncate font-medium text-foreground" title={project.title}>
+                      <p
+                        className="truncate font-medium text-foreground"
+                        title={project.title}
+                      >
                         {project.title}
                       </p>
                       <p
                         className="mt-1 truncate text-muted-foreground"
-                        title={project.summary ?? 'No summary provided yet.'}
+                        title={project.summary ?? "No summary provided yet."}
                       >
-                        {project.summary ?? 'No summary provided yet.'}
+                        {project.summary ?? "No summary provided yet."}
                       </p>
                     </td>
                     <td className="px-3 py-4 align-top whitespace-nowrap">
                       <span
                         className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${statusClasses(project.lifecycleStatus)}`}
                       >
-                        {project.lifecycleStatus.replace('_', ' ')}
+                        {project.lifecycleStatus.replace("_", " ")}
                       </span>
                     </td>
                     <td className="px-3 py-4 align-top whitespace-nowrap text-muted-foreground">
@@ -188,7 +211,10 @@ export function DashboardProjectHealthSection({
                     <td className="px-3 py-4 align-top whitespace-nowrap">
                       <Link
                         to={`/supervisor/projects/${project.id}`}
-                        className={buttonStyles({ variant: 'primary', size: 'sm' })}
+                        className={buttonStyles({
+                          variant: "primary",
+                          size: "sm",
+                        })}
                       >
                         Open
                       </Link>
@@ -206,13 +232,13 @@ export function DashboardProjectHealthSection({
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-muted-foreground">
               Showing {(safeCurrentPage - 1) * pageSize + 1}-
-              {Math.min(safeCurrentPage * pageSize, visibleProjects.length)} of{' '}
+              {Math.min(safeCurrentPage * pageSize, visibleProjects.length)} of{" "}
               {visibleProjects.length}
             </p>
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                className={buttonStyles({ variant: 'secondary', size: 'sm' })}
+                className={buttonStyles({ variant: "secondary", size: "sm" })}
                 onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
                 disabled={safeCurrentPage <= 1}
               >
@@ -223,8 +249,10 @@ export function DashboardProjectHealthSection({
               </span>
               <button
                 type="button"
-                className={buttonStyles({ variant: 'secondary', size: 'sm' })}
-                onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                className={buttonStyles({ variant: "secondary", size: "sm" })}
+                onClick={() =>
+                  setCurrentPage((page) => Math.min(totalPages, page + 1))
+                }
                 disabled={safeCurrentPage >= totalPages}
               >
                 Next

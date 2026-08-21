@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
-import { isApiException } from '@/services/apiClient';
-import type { ApiError } from '@/types';
-import { supervisorApi } from '../api/supervisorApi';
-import type { SupervisorProjectDetail } from '../types';
+import { useEffect, useState } from "react";
+import { isApiException } from "@/services/apiClient";
+import type { ApiError } from "@/types";
+import { supervisorApi } from "../api/supervisorApi";
+import type { SupervisorProjectDetail } from "../types";
 
 type SupervisorProjectState = {
   project: SupervisorProjectDetail | null;
@@ -30,7 +30,10 @@ export function useSupervisorProject(projectId: string | undefined) {
     setState((current) => ({ ...current, isLoading: true, error: null }));
 
     try {
-      const project = await supervisorApi.getProjectById(projectId, forceRefresh);
+      const project = await supervisorApi.getProjectById(
+        projectId,
+        forceRefresh,
+      );
       setState({
         project,
         isLoading: false,
@@ -43,13 +46,13 @@ export function useSupervisorProject(projectId: string | undefined) {
         error: isApiException(error)
           ? error.apiError
           : {
-              code: 'INTERNAL_ERROR',
-              message: 'Unable to load the project right now.',
+              code: "INTERNAL_ERROR",
+              message: "Unable to load the project right now.",
               details: [],
               timestamp: new Date().toISOString(),
               status: 0,
-              error: 'Unexpected Error',
-              path: '',
+              error: "Unexpected Error",
+              path: "",
               traceId: null,
             },
       });
@@ -93,13 +96,13 @@ export function useSupervisorProject(projectId: string | undefined) {
           error: isApiException(error)
             ? error.apiError
             : {
-                code: 'INTERNAL_ERROR',
-                message: 'Unable to load the project right now.',
+                code: "INTERNAL_ERROR",
+                message: "Unable to load the project right now.",
                 details: [],
                 timestamp: new Date().toISOString(),
                 status: 0,
-                error: 'Unexpected Error',
-                path: '',
+                error: "Unexpected Error",
+                path: "",
                 traceId: null,
               },
         });

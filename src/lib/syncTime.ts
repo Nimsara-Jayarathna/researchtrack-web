@@ -4,19 +4,19 @@ const HOUR_MS = 60 * MINUTE_MS;
 const DAY_MS = 24 * HOUR_MS;
 const RELATIVE_THRESHOLD_DAYS = 7;
 
-const absoluteDisplayFormatter = new Intl.DateTimeFormat('en-US', {
-  month: 'short',
-  day: 'numeric',
-  hour: 'numeric',
-  minute: '2-digit',
+const absoluteDisplayFormatter = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
 });
 
-const tooltipFormatter = new Intl.DateTimeFormat('en-US', {
-  year: 'numeric',
-  month: 'long',
-  day: 'numeric',
-  hour: 'numeric',
-  minute: '2-digit',
+const tooltipFormatter = new Intl.DateTimeFormat("en-US", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
 });
 
 export type LastSyncedDisplay = {
@@ -32,7 +32,7 @@ export function formatLastSynced(
   if (!lastSyncedAt) {
     return {
       isSynced: false,
-      displayText: '',
+      displayText: "",
       tooltipText: null,
     };
   }
@@ -41,7 +41,7 @@ export function formatLastSynced(
   if (Number.isNaN(parsed.getTime())) {
     return {
       isSynced: false,
-      displayText: '',
+      displayText: "",
       tooltipText: null,
     };
   }
@@ -52,7 +52,7 @@ export function formatLastSynced(
   if (diffMs < MINUTE_MS) {
     return {
       isSynced: true,
-      displayText: 'just now',
+      displayText: "just now",
       tooltipText: tooltipFormatter.format(parsed),
     };
   }

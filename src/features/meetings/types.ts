@@ -1,14 +1,14 @@
 export const MEETING_CHANNEL_PLATFORMS = [
-  'GOOGLE_MEET',
-  'ZOOM',
-  'TEAMS',
-  'WHATSAPP',
-  'OTHER',
+  "GOOGLE_MEET",
+  "ZOOM",
+  "TEAMS",
+  "WHATSAPP",
+  "OTHER",
 ] as const;
 
 export type MeetingChannelPlatform = (typeof MEETING_CHANNEL_PLATFORMS)[number];
 
-export type MeetingChannelStatus = 'PENDING' | 'APPROVED';
+export type MeetingChannelStatus = "PENDING" | "APPROVED";
 
 export type MeetingChannel = {
   id: string;
@@ -18,7 +18,7 @@ export type MeetingChannel = {
   linkOrIdentifier: string;
   addedBy: string;
   addedByName: string;
-  addedByRole: 'SUPERVISOR' | 'STUDENT';
+  addedByRole: "SUPERVISOR" | "STUDENT";
   status: MeetingChannelStatus;
   approvedBy: string | null;
   approvedByName: string | null;
@@ -33,7 +33,7 @@ export type MeetingChannelUpsertPayload = {
   linkOrIdentifier: string;
 };
 
-export type MeetingRecordStatus = 'PENDING' | 'APPROVED';
+export type MeetingRecordStatus = "PENDING" | "APPROVED";
 
 export type MeetingRecord = {
   id: string;
@@ -45,7 +45,7 @@ export type MeetingRecord = {
   channelId: string | null;
   addedBy: string;
   addedByName: string;
-  addedByRole: 'SUPERVISOR' | 'STUDENT';
+  addedByRole: "SUPERVISOR" | "STUDENT";
   status: MeetingRecordStatus;
   approvedBy: string | null;
   approvedByName: string | null;

@@ -1,7 +1,7 @@
-import type { MeetingRecord } from '../types';
+import type { MeetingRecord } from "../types";
 
-function statusRank(status: MeetingRecord['status']) {
-  return status === 'PENDING' ? 0 : 1;
+function statusRank(status: MeetingRecord["status"]) {
+  return status === "PENDING" ? 0 : 1;
 }
 
 function meetingDateRank(value: string) {
@@ -13,10 +13,12 @@ export function sortMeetingRecords(records: MeetingRecord[]) {
     const rankDiff = statusRank(left.status) - statusRank(right.status);
     if (rankDiff !== 0) return rankDiff;
 
-    const meetingDiff = meetingDateRank(right.meetingDate) - meetingDateRank(left.meetingDate);
+    const meetingDiff =
+      meetingDateRank(right.meetingDate) - meetingDateRank(left.meetingDate);
     if (meetingDiff !== 0) return meetingDiff;
 
-    const createdDiff = new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime();
+    const createdDiff =
+      new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime();
     if (createdDiff !== 0) return createdDiff;
 
     return left.id.localeCompare(right.id);

@@ -1,9 +1,9 @@
-import { useCallback, useState } from 'react';
-import type { MeetingRecord } from '../../types';
+import { useCallback, useState } from "react";
+import type { MeetingRecord } from "../../types";
 
 type MeetingRecordFormState = {
   isFormOpen: boolean;
-  formMode: 'add' | 'edit';
+  formMode: "add" | "edit";
   editingRecord: MeetingRecord | null;
   openAdd: () => void;
   openEdit: (record: MeetingRecord) => void;
@@ -12,17 +12,19 @@ type MeetingRecordFormState = {
 
 export function useMeetingRecordFormState(): MeetingRecordFormState {
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [formMode, setFormMode] = useState<'add' | 'edit'>('add');
-  const [editingRecord, setEditingRecord] = useState<MeetingRecord | null>(null);
+  const [formMode, setFormMode] = useState<"add" | "edit">("add");
+  const [editingRecord, setEditingRecord] = useState<MeetingRecord | null>(
+    null,
+  );
 
   const openAdd = useCallback(() => {
-    setFormMode('add');
+    setFormMode("add");
     setEditingRecord(null);
     setIsFormOpen(true);
   }, []);
 
   const openEdit = useCallback((record: MeetingRecord) => {
-    setFormMode('edit');
+    setFormMode("edit");
     setEditingRecord(record);
     setIsFormOpen(true);
   }, []);
@@ -30,7 +32,7 @@ export function useMeetingRecordFormState(): MeetingRecordFormState {
   const closeForm = useCallback(() => {
     setIsFormOpen(false);
     setEditingRecord(null);
-    setFormMode('add');
+    setFormMode("add");
   }, []);
 
   return {

@@ -1,5 +1,5 @@
-import type { ApiError } from '@/types';
-import { createContext, useContext } from 'react';
+import type { ApiError } from "@/types";
+import { createContext, useContext } from "react";
 
 export type BlockingErrorRequest = {
   error: ApiError;
@@ -8,7 +8,10 @@ export type BlockingErrorRequest = {
 
 type BlockingErrorContextValue = {
   blockingError: BlockingErrorRequest | null;
-  showBlockingError: (error: ApiError, onRetry?: () => void | Promise<void>) => void;
+  showBlockingError: (
+    error: ApiError,
+    onRetry?: () => void | Promise<void>,
+  ) => void;
   clearBlockingError: () => void;
 };
 

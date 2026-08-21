@@ -1,10 +1,10 @@
-import { EmptyState } from '@/components/feedback/EmptyState';
-import { ErrorState } from '@/components/feedback/ErrorState';
-import { buttonStyles } from '@/components/ui/Button';
-import { Select } from '@/components/ui/Select';
-import type { ApiError } from '@/types';
-import type { ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { EmptyState } from "@/components/feedback/EmptyState";
+import { ErrorState } from "@/components/feedback/ErrorState";
+import { buttonStyles } from "@/components/ui/Button";
+import { Select } from "@/components/ui/Select";
+import type { ApiError } from "@/types";
+import type { ReactNode } from "react";
+import { Link } from "react-router-dom";
 
 type ProjectsPageAction = {
   to: string;
@@ -72,9 +72,9 @@ export function ProjectsPageView<TItem>({
   renderItem,
   renderSkeleton,
   skeletonCount = 4,
-  listGridClassName = 'grid gap-4 xl:grid-cols-2 2xl:grid-cols-3',
+  listGridClassName = "grid gap-4 xl:grid-cols-2 2xl:grid-cols-3",
   emptyState,
-  rootClassName = 'space-y-6',
+  rootClassName = "space-y-6",
 }: ProjectsPageViewProps<TItem>) {
   return (
     <div className={rootClassName}>
@@ -91,9 +91,9 @@ export function ProjectsPageView<TItem>({
           <Link
             to={action.to}
             className={buttonStyles({
-              variant: 'primary',
-              size: 'md',
-              className: 'shrink-0 whitespace-nowrap',
+              variant: "primary",
+              size: "md",
+              className: "shrink-0 whitespace-nowrap",
             })}
           >
             {action.icon}
@@ -103,7 +103,7 @@ export function ProjectsPageView<TItem>({
       </section>
 
       <section
-        className={`grid gap-2.5 sm:gap-3 ${filter ? 'md:grid-cols-[minmax(0,1fr)_210px]' : ''} md:gap-4`}
+        className={`grid gap-2.5 sm:gap-3 ${filter ? "md:grid-cols-[minmax(0,1fr)_210px]" : ""} md:gap-4`}
       >
         <input
           value={searchValue}
@@ -129,12 +129,16 @@ export function ProjectsPageView<TItem>({
 
       {isLoading ? (
         <section className={listGridClassName}>
-          {Array.from({ length: skeletonCount }).map((_, index) => renderSkeleton(index))}
+          {Array.from({ length: skeletonCount }).map((_, index) =>
+            renderSkeleton(index),
+          )}
         </section>
       ) : error ? (
         <ErrorState error={error} onRetry={onRetry} />
       ) : items.length > 0 ? (
-        <section className={listGridClassName}>{items.map((item) => renderItem(item))}</section>
+        <section className={listGridClassName}>
+          {items.map((item) => renderItem(item))}
+        </section>
       ) : (
         <EmptyState
           title={emptyState.title}

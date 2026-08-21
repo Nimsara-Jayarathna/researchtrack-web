@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react';
-import { LandingPage } from '@/features/landing';
-import { cn } from '@/lib/cn';
+import type { ReactNode } from "react";
+import { LandingPage } from "@/features/landing";
+import { cn } from "@/lib/cn";
 
 type AuthPageShellProps = {
   children: ReactNode;
@@ -19,11 +19,14 @@ export function AuthPageShell({
     <>
       <LandingPage />
       {showBackdrop ? (
-        <div className="fixed inset-0 z-50 bg-foreground/40 backdrop-blur-sm" aria-hidden="true" />
+        <div
+          className="fixed inset-0 z-50 bg-foreground/40 backdrop-blur-sm"
+          aria-hidden="true"
+        />
       ) : null}
       <div
         className={cn(
-          'fixed inset-0 z-50 flex items-center justify-center p-4',
+          "fixed inset-0 z-50 flex items-center justify-center p-4",
           containerClassName,
         )}
       >

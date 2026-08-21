@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { apiClientMock } = vi.hoisted(() => ({
   apiClientMock: {
@@ -7,104 +7,109 @@ const { apiClientMock } = vi.hoisted(() => ({
   },
 }));
 
-vi.mock('../../../services/apiClient', () => ({
+vi.mock("../../../services/apiClient", () => ({
   apiClient: apiClientMock,
 }));
 
 async function loadAuthApi() {
-  const module = await import('./authApi');
+  const module = await import("./authApi");
   return module.authApi;
 }
 
-describe('authApi.registerSupervisor', () => {
+describe("authApi.registerSupervisor", () => {
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
   });
 
-  it('posts to /api/auth/register/supervisor with the provided payload', async () => {
+  it("posts to /api/auth/register/supervisor with the provided payload", async () => {
     const authApi = await loadAuthApi();
     const payload = {
-      firstName: 'Jane',
-      lastName: 'Doe',
-      email: 'jane.doe@sliit.lk',
-      password: 'Test@1234',
+      firstName: "Jane",
+      lastName: "Doe",
+      email: "jane.doe@sliit.lk",
+      password: "Test@1234",
     };
 
     vi.mocked(apiClientMock.post).mockResolvedValue({
-      id: 'user-id',
-      email: 'jane.doe@sliit.lk',
-      firstName: 'Jane',
-      lastName: 'Doe',
+      id: "user-id",
+      email: "jane.doe@sliit.lk",
+      firstName: "Jane",
+      lastName: "Doe",
       registrationNumber: null,
-      role: 'SUPERVISOR',
+      role: "SUPERVISOR",
     });
 
     await authApi.registerSupervisor(payload);
 
-    expect(apiClientMock.post).toHaveBeenCalledWith('/api/auth/register/supervisor', payload);
+    expect(apiClientMock.post).toHaveBeenCalledWith(
+      "/api/auth/register/supervisor",
+      payload,
+    );
   });
 
-  it('returns the backend RegisterResponse payload', async () => {
+  it("returns the backend RegisterResponse payload", async () => {
     const authApi = await loadAuthApi();
     const response = {
-      id: 'user-id',
-      email: 'jane.doe@sliit.lk',
-      firstName: 'Jane',
-      lastName: 'Doe',
+      id: "user-id",
+      email: "jane.doe@sliit.lk",
+      firstName: "Jane",
+      lastName: "Doe",
       registrationNumber: null,
-      role: 'SUPERVISOR',
+      role: "SUPERVISOR",
     } as const;
 
     vi.mocked(apiClientMock.post).mockResolvedValue(response);
 
     const result = await authApi.registerSupervisor({
-      firstName: 'Jane',
-      lastName: 'Doe',
-      email: 'jane.doe@sliit.lk',
-      password: 'Test@1234',
+      firstName: "Jane",
+      lastName: "Doe",
+      email: "jane.doe@sliit.lk",
+      password: "Test@1234",
     });
 
     expect(result).toEqual(response);
   });
 
-  it('rejects when registration config request fails', async () => {
+  it("rejects when registration config request fails", async () => {
     const authApi = await loadAuthApi();
-    vi.mocked(apiClientMock.get).mockRejectedValueOnce(new Error('network error'));
+    vi.mocked(apiClientMock.get).mockRejectedValueOnce(
+      new Error("network error"),
+    );
 
-    await expect(authApi.getRegisterConfig()).rejects.toThrow('network error');
+    await expect(authApi.getRegisterConfig()).rejects.toThrow("network error");
   });
 
-  it('fetches registration config with prefix metadata', async () => {
+  it("fetches registration config with prefix metadata", async () => {
     const authApi = await loadAuthApi();
     vi.mocked(apiClientMock.get).mockResolvedValue({
       domainRestrictionEnabled: true,
-      studentDomain: '@my.sliit.lk',
-      supervisorDomain: '@gmail.com',
+      studentDomain: "@my.sliit.lk",
+      supervisorDomain: "@gmail.com",
       studentEmailPrefixRestrictionEnabled: true,
-      studentEmailPrefixRegex: '^IT(1[5-9]|[2-4][0-9]|50)\\d{6}$',
+      studentEmailPrefixRegex: "^IT(1[5-9]|[2-4][0-9]|50)\\d{6}$",
     });
 
     const result = await authApi.getRegisterConfig();
 
-    expect(apiClientMock.get).toHaveBeenCalledWith('/api/auth/register/config');
+    expect(apiClientMock.get).toHaveBeenCalledWith("/api/auth/register/config");
     expect(result).toEqual({
       domainRestrictionEnabled: true,
-      studentDomain: '@my.sliit.lk',
-      supervisorDomain: '@gmail.com',
+      studentDomain: "@my.sliit.lk",
+      supervisorDomain: "@gmail.com",
       studentEmailPrefixRestrictionEnabled: true,
-      studentEmailPrefixRegex: '^IT(1[5-9]|[2-4][0-9]|50)\\d{6}$',
+      studentEmailPrefixRegex: "^IT(1[5-9]|[2-4][0-9]|50)\\d{6}$",
     });
   });
 
-  it('deduplicates concurrent register config requests', async () => {
+  it("deduplicates concurrent register config requests", async () => {
     const authApi = await loadAuthApi();
     const registerConfig = {
       domainRestrictionEnabled: true,
-      studentDomain: '@my.sliit.lk',
-      supervisorDomain: '@gmail.com',
+      studentDomain: "@my.sliit.lk",
+      supervisorDomain: "@gmail.com",
       studentEmailPrefixRestrictionEnabled: true,
-      studentEmailPrefixRegex: '^IT',
+      studentEmailPrefixRegex: "^IT",
     };
 
     let resolveConfig: ((value: typeof registerConfig) => void) | null = null;
@@ -126,14 +131,14 @@ describe('authApi.registerSupervisor', () => {
     await expect(second).resolves.toEqual(registerConfig);
   });
 
-  it('reuses cached register config after first successful fetch', async () => {
+  it("reuses cached register config after first successful fetch", async () => {
     const authApi = await loadAuthApi();
     const registerConfig = {
       domainRestrictionEnabled: true,
-      studentDomain: '@my.sliit.lk',
-      supervisorDomain: '@gmail.com',
+      studentDomain: "@my.sliit.lk",
+      supervisorDomain: "@gmail.com",
       studentEmailPrefixRestrictionEnabled: true,
-      studentEmailPrefixRegex: '^IT',
+      studentEmailPrefixRegex: "^IT",
     };
 
     vi.mocked(apiClientMock.get).mockResolvedValue(registerConfig);
@@ -146,21 +151,23 @@ describe('authApi.registerSupervisor', () => {
     expect(apiClientMock.get).toHaveBeenCalledTimes(1);
   });
 
-  it('clears cache on failure so subsequent retry performs a new request', async () => {
+  it("clears cache on failure so subsequent retry performs a new request", async () => {
     const authApi = await loadAuthApi();
     const registerConfig = {
       domainRestrictionEnabled: true,
-      studentDomain: '@my.sliit.lk',
-      supervisorDomain: '@gmail.com',
+      studentDomain: "@my.sliit.lk",
+      supervisorDomain: "@gmail.com",
       studentEmailPrefixRestrictionEnabled: true,
-      studentEmailPrefixRegex: '^IT',
+      studentEmailPrefixRegex: "^IT",
     };
 
     vi.mocked(apiClientMock.get)
-      .mockRejectedValueOnce(new Error('transient failure'))
+      .mockRejectedValueOnce(new Error("transient failure"))
       .mockResolvedValueOnce(registerConfig);
 
-    await expect(authApi.getRegisterConfig()).rejects.toThrow('transient failure');
+    await expect(authApi.getRegisterConfig()).rejects.toThrow(
+      "transient failure",
+    );
     await expect(authApi.getRegisterConfig()).resolves.toEqual(registerConfig);
 
     expect(apiClientMock.get).toHaveBeenCalledTimes(2);

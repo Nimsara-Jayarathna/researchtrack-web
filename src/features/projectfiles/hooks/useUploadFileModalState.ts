@@ -1,10 +1,10 @@
-import { useRef, useState } from 'react';
+import { useRef, useState } from "react";
 import type {
   ConfirmUploadRequest,
   ProjectFile,
   UploadUrlRequest,
   UploadUrlResponse,
-} from '../types';
+} from "../types";
 import {
   baseNameFromFileName,
   enforceExpectedExtension,
@@ -13,11 +13,11 @@ import {
   resolveUploadContentType,
   uploadFileToPresignedUrl,
   validateSelectedFile,
-} from '../lib/uploadFileUtils';
+} from "../lib/uploadFileUtils";
 
 type RequestModalState = {
   isOpen: boolean;
-  status: 'loading' | 'success' | 'error';
+  status: "loading" | "success" | "error";
   title: string;
   message: string;
 };
@@ -45,22 +45,24 @@ export function useUploadFileModalState({
 }: UseUploadFileModalStateParams) {
   const hiddenInputRef = useRef<HTMLInputElement | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [fileNameDraft, setFileNameDraft] = useState('');
-  const [expectedExtension, setExpectedExtension] = useState<string | null>(null);
+  const [fileNameDraft, setFileNameDraft] = useState("");
+  const [expectedExtension, setExpectedExtension] = useState<string | null>(
+    null,
+  );
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDragActive, setIsDragActive] = useState(false);
   const [hasSubmitAttempted, setHasSubmitAttempted] = useState(false);
   const [requestModal, setRequestModal] = useState<RequestModalState>({
     isOpen: false,
-    status: 'loading',
-    title: '',
-    message: '',
+    status: "loading",
+    title: "",
+    message: "",
   });
 
   function resetModalState() {
     setSelectedFile(null);
-    setFileNameDraft('');
+    setFileNameDraft("");
     setExpectedExtension(null);
     setError(null);
     setIsSubmitting(false);
@@ -82,23 +84,38 @@ export function useUploadFileModalState({
       return;
     }
 
-    const validationError = validateSelectedFile(file, maxFileSizeBytes, allowedTypesSet);
+    const validationError = validateSelectedFile(
+      file,
+      maxFileSizeBytes,
+      allowedTypesSet,
+    );
     if (validationError) {
       setSelectedFile(null);
-      setFileNameDraft('');
+      setFileNameDraft("");
       setError(validationError);
       return;
     }
 
     setSelectedFile(file);
-    const resolvedExpectedExtension = resolveExpectedExtension(file, allowedTypesSet);
+    const resolvedExpectedExtension = resolveExpectedExtension(
+      file,
+      allowedTypesSet,
+    );
     setExpectedExtension(resolvedExpectedExtension);
 
     const maxBaseNameLength =
       resolvedExpectedExtension !== null
-        ? Math.max(0, maxFileNameLength - (resolvedExpectedExtension.length + 1))
+        ? Math.max(
+            0,
+            maxFileNameLength - (resolvedExpectedExtension.length + 1),
+          )
         : maxFileNameLength;
-    setFileNameDraft(normalizeFileNameDraft(baseNameFromFileName(file.name), maxBaseNameLength));
+    setFileNameDraft(
+      normalizeFileNameDraft(
+        baseNameFromFileName(file.name),
+        maxBaseNameLength,
+      ),
+    );
     setError(null);
   }
 
@@ -107,11 +124,15 @@ export function useUploadFileModalState({
     setHasSubmitAttempted(true);
 
     if (!selectedFile) {
-      setError('Select a file to continue.');
+      setError("Select a file to continue.");
       return;
     }
 
-    const validationError = validateSelectedFile(selectedFile, maxFileSizeBytes, allowedTypesSet);
+    const validationError = validateSelectedFile(
+      selectedFile,
+      maxFileSizeBytes,
+      allowedTypesSet,
+    );
     if (validationError) {
       setError(validationError);
       return;
@@ -120,10 +141,14 @@ export function useUploadFileModalState({
     const baseDraft = fileNameDraft.trim();
     const finalFileName =
       expectedExtension !== null
-        ? enforceExpectedExtension(baseDraft, expectedExtension, maxFileNameLength)
+        ? enforceExpectedExtension(
+            baseDraft,
+            expectedExtension,
+            maxFileNameLength,
+          )
         : baseDraft;
     if (finalFileName.length === 0) {
-      setError('File name is required.');
+      setError("File name is required.");
       return;
     }
     if (finalFileName.length > maxFileNameLength) {
@@ -135,9 +160,9 @@ export function useUploadFileModalState({
     setIsSubmitting(true);
     setRequestModal({
       isOpen: true,
-      status: 'loading',
-      title: 'Uploading file',
-      message: 'Uploading to storage and saving file metadata.',
+      status: "loading",
+      title: "Uploading file",
+      message: "Uploading to storage and saving file metadata.",
     });
 
     try {
@@ -147,7 +172,11 @@ export function useUploadFileModalState({
         contentType,
       });
 
-      await uploadFileToPresignedUrl(uploadMeta.presignedUrl, selectedFile, contentType);
+      await uploadFileToPresignedUrl(
+        uploadMeta.presignedUrl,
+        selectedFile,
+        contentType,
+      );
 
       const uploadedFile = await confirmUpload({
         s3Key: uploadMeta.s3Key,
@@ -159,17 +188,20 @@ export function useUploadFileModalState({
       await onUploaded(uploadedFile);
       setRequestModal({
         isOpen: true,
-        status: 'success',
-        title: 'Upload complete',
-        message: 'File uploaded successfully.',
+        status: "success",
+        title: "Upload complete",
+        message: "File uploaded successfully.",
       });
     } catch (uploadError) {
-      const message = uploadError instanceof Error ? uploadError.message : 'Unable to upload file.';
+      const message =
+        uploadError instanceof Error
+          ? uploadError.message
+          : "Unable to upload file.";
       setError(message);
       setRequestModal({
         isOpen: true,
-        status: 'error',
-        title: 'Upload failed',
+        status: "error",
+        title: "Upload failed",
         message,
       });
     } finally {

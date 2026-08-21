@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
-import type { ApiError } from '@/types';
-import { isApiException } from '@/services/apiClient';
-import { supervisorApi } from '../api/supervisorApi';
-import type { GitHubAvailableRepositories } from '../types';
+import { useCallback, useEffect, useState } from "react";
+import type { ApiError } from "@/types";
+import { isApiException } from "@/services/apiClient";
+import { supervisorApi } from "../api/supervisorApi";
+import type { GitHubAvailableRepositories } from "../types";
 
 type UseAvailableRepositoriesState = {
   data: GitHubAvailableRepositories | null;
@@ -11,7 +11,9 @@ type UseAvailableRepositoriesState = {
   reload: () => Promise<void>;
 };
 
-export function useAvailableRepositories(sourceId: string | null): UseAvailableRepositoriesState {
+export function useAvailableRepositories(
+  sourceId: string | null,
+): UseAvailableRepositoriesState {
   const [data, setData] = useState<GitHubAvailableRepositories | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<ApiError | null>(null);
@@ -38,10 +40,10 @@ export function useAvailableRepositories(sourceId: string | null): UseAvailableR
           : {
               timestamp: new Date().toISOString(),
               status: 500,
-              error: 'Internal Server Error',
-              code: 'INTERNAL_ERROR',
-              message: 'Unable to load available repositories right now.',
-              path: '/api/github/repositories/available',
+              error: "Internal Server Error",
+              code: "INTERNAL_ERROR",
+              message: "Unable to load available repositories right now.",
+              path: "/api/github/repositories/available",
               traceId: null,
               details: [],
             },

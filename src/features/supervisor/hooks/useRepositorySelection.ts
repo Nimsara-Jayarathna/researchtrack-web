@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 type SelectionPayload = {
   githubRepositoryId: string;
@@ -7,11 +7,15 @@ type SelectionPayload = {
 };
 
 export function useRepositorySelection(maxSelectable: number) {
-  const [selectedRepositoryIds, setSelectedRepositoryIds] = useState<string[]>([]);
-  const [primaryRepositoryId, setPrimaryRepositoryId] = useState<string | null>(null);
-  const [customNameByRepositoryId, setCustomNameByRepositoryId] = useState<Record<string, string>>(
-    {},
+  const [selectedRepositoryIds, setSelectedRepositoryIds] = useState<string[]>(
+    [],
   );
+  const [primaryRepositoryId, setPrimaryRepositoryId] = useState<string | null>(
+    null,
+  );
+  const [customNameByRepositoryId, setCustomNameByRepositoryId] = useState<
+    Record<string, string>
+  >({});
 
   const safeMaxSelectable = Math.max(0, maxSelectable);
 
@@ -28,7 +32,8 @@ export function useRepositorySelection(maxSelectable: number) {
   }, [primaryRepositoryId, safeMaxSelectable, selectedRepositoryIds]);
 
   const isSelected = useCallback(
-    (repositoryId: string): boolean => selectedRepositoryIds.includes(repositoryId),
+    (repositoryId: string): boolean =>
+      selectedRepositoryIds.includes(repositoryId),
     [selectedRepositoryIds],
   );
 
@@ -62,13 +67,18 @@ export function useRepositorySelection(maxSelectable: number) {
       if (!selectedRepositoryIds.includes(repositoryId)) {
         return;
       }
-      setPrimaryRepositoryId((current) => (current === repositoryId ? null : repositoryId));
+      setPrimaryRepositoryId((current) =>
+        current === repositoryId ? null : repositoryId,
+      );
     },
     [selectedRepositoryIds],
   );
 
   const setCustomName = useCallback((repositoryId: string, value: string) => {
-    setCustomNameByRepositoryId((current) => ({ ...current, [repositoryId]: value }));
+    setCustomNameByRepositoryId((current) => ({
+      ...current,
+      [repositoryId]: value,
+    }));
   }, []);
 
   const clear = useCallback(() => {
@@ -82,7 +92,8 @@ export function useRepositorySelection(maxSelectable: number) {
       const customName = customNameByRepositoryId[repositoryId]?.trim();
       return {
         githubRepositoryId: repositoryId,
-        customName: customName && customName.length > 0 ? customName : undefined,
+        customName:
+          customName && customName.length > 0 ? customName : undefined,
         primary: primaryRepositoryId === repositoryId ? true : undefined,
       };
     });

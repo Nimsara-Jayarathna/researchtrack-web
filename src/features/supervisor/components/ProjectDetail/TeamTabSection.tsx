@@ -8,15 +8,15 @@ import {
   Plus,
   RefreshCw,
   AlertCircle,
-} from 'lucide-react';
-import { createPortal } from 'react-dom';
-import { RoleBadge } from '@/components/ui/RoleBadge';
-import { buttonStyles } from '@/components/ui/Button';
-import { Select } from '@/components/ui/Select';
-import { StatusBadge } from '@/components/ui/StatusBadge';
-import { memberDisplayName } from '../../projectDetails.shared';
-import type { TeamState } from '../../hooks/useProjectDetailsPageState';
-import type { SupervisorProjectDetail } from '../../types';
+} from "lucide-react";
+import { createPortal } from "react-dom";
+import { RoleBadge } from "@/components/ui/RoleBadge";
+import { buttonStyles } from "@/components/ui/Button";
+import { Select } from "@/components/ui/Select";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { memberDisplayName } from "../../projectDetails.shared";
+import type { TeamState } from "../../hooks/useProjectDetailsPageState";
+import type { SupervisorProjectDetail } from "../../types";
 
 type TeamTabSectionProps = {
   project: SupervisorProjectDetail;
@@ -28,7 +28,9 @@ export function TeamTabSection({ project, team }: TeamTabSectionProps) {
     <section className="rounded-3xl border border-border bg-white p-6 shadow-sm transition-all hover:shadow-md">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-col">
-          <h2 className="text-lg font-bold tracking-tight text-slate-800">Project Team</h2>
+          <h2 className="text-lg font-bold tracking-tight text-slate-800">
+            Project Team
+          </h2>
           <p className="text-xs font-medium text-slate-400">
             Total {project.members.length} members assigned
           </p>
@@ -37,9 +39,9 @@ export function TeamTabSection({ project, team }: TeamTabSectionProps) {
           <button
             type="button"
             className={buttonStyles({
-              variant: 'primary',
-              size: 'sm',
-              className: 'rounded-xl shadow-lg shadow-indigo-100',
+              variant: "primary",
+              size: "sm",
+              className: "rounded-xl shadow-lg shadow-indigo-100",
             })}
             onClick={team.startManagement}
           >
@@ -52,7 +54,9 @@ export function TeamTabSection({ project, team }: TeamTabSectionProps) {
       <div className="mt-6 flex flex-col gap-4 rounded-2xl border border-slate-100 bg-slate-50/50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-5">
         <div className="flex items-center gap-3">
           <Crown className="h-4 w-4 text-slate-400" />
-          <span className="text-sm font-bold text-slate-500">Project leader</span>
+          <span className="text-sm font-bold text-slate-500">
+            Project leader
+          </span>
         </div>
 
         {project.leader ? (
@@ -90,15 +94,18 @@ export function TeamTabSection({ project, team }: TeamTabSectionProps) {
                 <button
                   type="button"
                   onClick={() => void team.submitLeaderUpdate()}
-                  disabled={team.isUpdatingLeader || team.leaderDraftId === project.leader?.id}
+                  disabled={
+                    team.isUpdatingLeader ||
+                    team.leaderDraftId === project.leader?.id
+                  }
                   className={buttonStyles({
-                    variant: 'primary',
-                    size: 'sm',
+                    variant: "primary",
+                    size: "sm",
                     className:
-                      'h-10 w-full rounded-xl bg-emerald-600 shadow-lg shadow-emerald-100 hover:bg-emerald-700 sm:w-auto',
+                      "h-10 w-full rounded-xl bg-emerald-600 shadow-lg shadow-emerald-100 hover:bg-emerald-700 sm:w-auto",
                   })}
                 >
-                  {team.isUpdatingLeader ? 'Saving...' : 'Change'}
+                  {team.isUpdatingLeader ? "Saving..." : "Change"}
                 </button>
               </div>
             ) : null}
@@ -124,12 +131,13 @@ export function TeamTabSection({ project, team }: TeamTabSectionProps) {
               onClick={() => void team.submitLeaderUpdate()}
               disabled={team.isUpdatingLeader || !team.leaderDraftId}
               className={buttonStyles({
-                variant: 'primary',
-                size: 'md',
-                className: 'w-full rounded-2xl shadow-lg shadow-indigo-100 sm:w-auto',
+                variant: "primary",
+                size: "md",
+                className:
+                  "w-full rounded-2xl shadow-lg shadow-indigo-100 sm:w-auto",
               })}
             >
-              {team.isUpdatingLeader ? 'Assigning...' : 'Assign leader'}
+              {team.isUpdatingLeader ? "Assigning..." : "Assign leader"}
             </button>
           </div>
         ) : (
@@ -183,25 +191,28 @@ export function TeamTabSection({ project, team }: TeamTabSectionProps) {
 
                 {team.studentQuery.trim().length >= 3 && (
                   <div className="rounded-3xl border border-slate-100 bg-white p-4 shadow-inner">
-                    {team.studentSearchState === 'loading' && (
+                    {team.studentSearchState === "loading" && (
                       <div className="flex items-center justify-center py-8">
                         <RefreshCw className="h-6 w-6 animate-spin text-indigo-400" />
                       </div>
                     )}
-                    {team.studentSearchState === 'error' && (
+                    {team.studentSearchState === "error" && (
                       <div className="flex items-center gap-3 rounded-2xl bg-rose-50 p-4 text-rose-700">
                         <AlertCircle className="h-5 w-5 shrink-0" />
                         <p className="text-sm font-bold">
-                          {team.studentSearchError?.message ?? 'Unable to search students.'}
+                          {team.studentSearchError?.message ??
+                            "Unable to search students."}
                         </p>
                       </div>
                     )}
-                    {team.studentSearchState === 'empty' && (
+                    {team.studentSearchState === "empty" && (
                       <div className="py-8 text-center text-slate-400">
-                        <p className="text-sm font-bold">No available students found.</p>
+                        <p className="text-sm font-bold">
+                          No available students found.
+                        </p>
                       </div>
                     )}
-                    {team.studentSearchState === 'results' && (
+                    {team.studentSearchState === "results" && (
                       <div className="grid gap-2 sm:grid-cols-2">
                         {team.studentSearchResults.map((student) => (
                           <button
@@ -212,13 +223,14 @@ export function TeamTabSection({ project, team }: TeamTabSectionProps) {
                           >
                             <div className="min-w-0">
                               <p className="block truncate text-sm font-black text-slate-800">
-                                {`${student.firstName} ${student.lastName}`.trim() || student.email}
+                                {`${student.firstName} ${student.lastName}`.trim() ||
+                                  student.email}
                               </p>
                               <p className="block truncate text-xs font-bold text-slate-400 group-hover:text-indigo-500">
                                 {student.email}
                                 {student.registrationNumber
                                   ? ` • ${student.registrationNumber}`
-                                  : ''}
+                                  : ""}
                               </p>
                             </div>
                             <Plus className="h-4 w-4 shrink-0 text-slate-300 group-hover:text-indigo-600 transition-colors" />
@@ -241,12 +253,15 @@ export function TeamTabSection({ project, team }: TeamTabSectionProps) {
                           className="inline-flex items-center gap-2 rounded-2xl border border-indigo-100 bg-white pl-4 pr-2 py-1.5 shadow-sm animate-in fade-in zoom-in-95 duration-200"
                         >
                           <span className="text-xs font-black text-slate-700">
-                            {`${student.firstName} ${student.lastName}`.trim() || student.email}
+                            {`${student.firstName} ${student.lastName}`.trim() ||
+                              student.email}
                           </span>
                           <button
                             type="button"
                             className="flex h-6 w-6 items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
-                            onClick={() => team.removeSelectedStudent(student.id)}
+                            onClick={() =>
+                              team.removeSelectedStudent(student.id)
+                            }
                             disabled={team.isAddingStudents}
                           >
                             <X className="h-3.5 w-3.5" />
@@ -262,9 +277,9 @@ export function TeamTabSection({ project, team }: TeamTabSectionProps) {
                 <button
                   type="button"
                   className={buttonStyles({
-                    variant: 'secondary',
-                    size: 'md',
-                    className: 'rounded-xl',
+                    variant: "secondary",
+                    size: "md",
+                    className: "rounded-xl",
                   })}
                   onClick={team.cancelManagement}
                   disabled={team.isAddingStudents}
@@ -274,12 +289,15 @@ export function TeamTabSection({ project, team }: TeamTabSectionProps) {
                 <button
                   type="button"
                   className={buttonStyles({
-                    variant: 'primary',
-                    size: 'md',
-                    className: 'rounded-xl shadow-lg shadow-indigo-100',
+                    variant: "primary",
+                    size: "md",
+                    className: "rounded-xl shadow-lg shadow-indigo-100",
                   })}
                   onClick={team.addStudents}
-                  disabled={team.isAddingStudents || team.selectedStudentsToAdd.length === 0}
+                  disabled={
+                    team.isAddingStudents ||
+                    team.selectedStudentsToAdd.length === 0
+                  }
                 >
                   {team.isAddingStudents ? (
                     <>
@@ -304,15 +322,17 @@ export function TeamTabSection({ project, team }: TeamTabSectionProps) {
           <div
             key={member.id}
             className={`group relative overflow-hidden rounded-3xl border p-5 transition-all hover:shadow-lg ${
-              member.memberRole === 'SUPERVISOR'
-                ? 'border-indigo-100 bg-indigo-50/20'
-                : 'border-slate-100 bg-white'
+              member.memberRole === "SUPERVISOR"
+                ? "border-indigo-100 bg-indigo-50/20"
+                : "border-slate-100 bg-white"
             }`}
           >
             {/* Background pattern */}
             <div
               className={`absolute -right-4 -top-4 h-20 w-20 rounded-full opacity-10 transition-transform group-hover:scale-150 ${
-                member.memberRole === 'SUPERVISOR' ? 'bg-indigo-600' : 'bg-slate-400'
+                member.memberRole === "SUPERVISOR"
+                  ? "bg-indigo-600"
+                  : "bg-slate-400"
               }`}
             />
 
@@ -320,9 +340,9 @@ export function TeamTabSection({ project, team }: TeamTabSectionProps) {
               <div className="flex items-center gap-3">
                 <div
                   className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-xs font-black shadow-inner ${
-                    member.memberRole === 'SUPERVISOR'
-                      ? 'bg-indigo-100 text-indigo-600'
-                      : 'bg-slate-50 text-slate-500'
+                    member.memberRole === "SUPERVISOR"
+                      ? "bg-indigo-100 text-indigo-600"
+                      : "bg-slate-50 text-slate-500"
                   }`}
                 >
                   {memberDisplayName(member).charAt(0).toUpperCase()}

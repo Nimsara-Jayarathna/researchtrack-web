@@ -1,11 +1,11 @@
-import { RoleBadge } from '@/components/ui/RoleBadge';
-import { useIsMobileLayout } from '@/components/ui/useIsMobileLayout';
-import { Download, Trash2 } from 'lucide-react';
-import type { ProjectFile } from '../types';
-import { getFileTypeDisplay } from '../fileTypeDisplay';
-import { FileListItem } from './FileListItem';
-import { EmptyStateCard } from '@/components/ui/EmptyStateCard';
-import { DataTable } from '@/components/ui/DataTable';
+import { RoleBadge } from "@/components/ui/RoleBadge";
+import { useIsMobileLayout } from "@/components/ui/useIsMobileLayout";
+import { Download, Trash2 } from "lucide-react";
+import type { ProjectFile } from "../types";
+import { getFileTypeDisplay } from "../fileTypeDisplay";
+import { FileListItem } from "./FileListItem";
+import { EmptyStateCard } from "@/components/ui/EmptyStateCard";
+import { DataTable } from "@/components/ui/DataTable";
 
 type FileListProps = {
   files: ProjectFile[];
@@ -14,7 +14,12 @@ type FileListProps = {
   onDelete: (file: ProjectFile) => void;
 };
 
-export function FileList({ files, canDelete, onDownload, onDelete }: FileListProps) {
+export function FileList({
+  files,
+  canDelete,
+  onDownload,
+  onDelete,
+}: FileListProps) {
   const isMobileLayout = useIsMobileLayout();
 
   if (files.length === 0) {
@@ -108,12 +113,21 @@ export function FileList({ files, canDelete, onDownload, onDelete }: FileListPro
         </colgroup>
       }
       columns={[
-        { key: 'file', header: 'File', className: 'whitespace-nowrap' },
-        { key: 'type', header: 'Type', className: 'whitespace-nowrap' },
-        { key: 'size', header: 'Size', className: 'whitespace-nowrap' },
-        { key: 'uploadedBy', header: 'Uploaded By', className: 'whitespace-nowrap' },
-        { key: 'uploaded', header: 'Uploaded', className: 'whitespace-nowrap' },
-        { key: 'actions', header: 'Actions', align: 'right', className: 'whitespace-nowrap' },
+        { key: "file", header: "File", className: "whitespace-nowrap" },
+        { key: "type", header: "Type", className: "whitespace-nowrap" },
+        { key: "size", header: "Size", className: "whitespace-nowrap" },
+        {
+          key: "uploadedBy",
+          header: "Uploaded By",
+          className: "whitespace-nowrap",
+        },
+        { key: "uploaded", header: "Uploaded", className: "whitespace-nowrap" },
+        {
+          key: "actions",
+          header: "Actions",
+          align: "right",
+          className: "whitespace-nowrap",
+        },
       ]}
     >
       {files.map((file) => (
@@ -129,19 +143,19 @@ export function FileList({ files, canDelete, onDownload, onDelete }: FileListPro
   );
 }
 
-const dateTimeFormatter = new Intl.DateTimeFormat('en', {
-  month: 'short',
-  day: 'numeric',
-  year: 'numeric',
-  hour: 'numeric',
-  minute: '2-digit',
+const dateTimeFormatter = new Intl.DateTimeFormat("en", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
 });
 
 function formatFileSize(bytes: number) {
   if (bytes < 1024) {
     return `${bytes} B`;
   }
-  const units = ['KB', 'MB', 'GB', 'TB'];
+  const units = ["KB", "MB", "GB", "TB"];
   let size = bytes / 1024;
   let unitIndex = 0;
   while (size >= 1024 && unitIndex < units.length - 1) {

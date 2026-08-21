@@ -1,4 +1,4 @@
-import type { JiraWorkload } from '../../../../types';
+import type { JiraWorkload } from "../../../../types";
 
 type JiraWorkloadBarChartProps = {
   workload: JiraWorkload;
@@ -10,7 +10,7 @@ const TYPE_PRIORITY: Record<string, number> = {
   bug: 3,
   defect: 3,
   task: 4,
-  'sub-task': 5,
+  "sub-task": 5,
   subtask: 5,
 };
 
@@ -24,22 +24,22 @@ function getSortWeight(type: string): number {
 
 function getBadgeColors(type: string): string {
   const normType = type.toLowerCase();
-  if (normType.includes('bug') || normType.includes('defect')) {
-    return 'bg-rose-50/80 text-rose-700';
+  if (normType.includes("bug") || normType.includes("defect")) {
+    return "bg-rose-50/80 text-rose-700";
   }
-  if (normType.includes('story')) {
-    return 'bg-emerald-50/80 text-emerald-700';
+  if (normType.includes("story")) {
+    return "bg-emerald-50/80 text-emerald-700";
   }
-  if (normType.includes('epic')) {
-    return 'bg-purple-50/80 text-purple-700';
+  if (normType.includes("epic")) {
+    return "bg-purple-50/80 text-purple-700";
   }
-  if (normType.includes('sub-task') || normType.includes('subtask')) {
-    return 'bg-sky-50/80 text-sky-700';
+  if (normType.includes("sub-task") || normType.includes("subtask")) {
+    return "bg-sky-50/80 text-sky-700";
   }
-  if (normType.includes('task')) {
-    return 'bg-indigo-50/80 text-indigo-700';
+  if (normType.includes("task")) {
+    return "bg-indigo-50/80 text-indigo-700";
   }
-  return 'bg-slate-50/80 text-slate-700';
+  return "bg-slate-50/80 text-slate-700";
 }
 
 export function JiraWorkloadBarChart({ workload }: JiraWorkloadBarChartProps) {
@@ -48,7 +48,9 @@ export function JiraWorkloadBarChart({ workload }: JiraWorkloadBarChartProps) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-slate-300 hover:shadow-md">
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-slate-900">Work Distribution</h3>
+        <h3 className="text-sm font-semibold text-slate-900">
+          Work Distribution
+        </h3>
         <div className="flex items-center gap-4 text-[11px] font-bold uppercase tracking-wider text-slate-500">
           <div className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-sm" />
@@ -116,13 +118,15 @@ export function JiraWorkloadBarChart({ workload }: JiraWorkloadBarChartProps) {
                   <div className="flex pl-[9rem] pt-0.5">
                     <div className="flex overflow-hidden rounded-md border border-slate-200/50 shadow-sm divide-x divide-slate-200/50">
                       {Object.entries(member.issueTypeCounts)
-                        .sort((a, b) => getSortWeight(a[0]) - getSortWeight(b[0]))
+                        .sort(
+                          (a, b) => getSortWeight(a[0]) - getSortWeight(b[0]),
+                        )
                         .map(([type, count]) => (
                           <span
                             key={type}
                             className={`inline-flex items-center px-2 py-[2px] text-[10px] font-semibold tracking-wide ${getBadgeColors(type)}`}
                           >
-                            {type}{' '}
+                            {type}{" "}
                             <span className="ml-1 opacity-70 px-1 border-l border-current">
                               {count}
                             </span>

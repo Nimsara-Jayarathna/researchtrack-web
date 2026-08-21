@@ -5,7 +5,7 @@ export function JiraHierarchySkeleton() {
         <div
           key={`jira-hierarchy-skeleton-${index}`}
           className={`rounded-xl border border-slate-200 bg-white px-3 py-3 shadow-sm ${
-            index > 0 ? 'ml-5' : ''
+            index > 0 ? "ml-5" : ""
           }`}
         >
           <div className="flex items-center gap-2">

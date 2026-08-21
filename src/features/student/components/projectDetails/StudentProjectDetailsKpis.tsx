@@ -14,10 +14,10 @@ export function StudentProjectDetailsKpis({
   return (
     <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       {[
-        { label: 'Batch', value: batch ?? 'Not set' },
-        { label: 'Semester', value: semester ?? 'Not set' },
-        { label: 'Milestones', value: String(milestonesCount) },
-        { label: 'Progress', value: `${progressPercent ?? 0}%` },
+        { label: "Batch", value: batch ?? "Not set" },
+        { label: "Semester", value: semester ?? "Not set" },
+        { label: "Milestones", value: String(milestonesCount) },
+        { label: "Progress", value: `${progressPercent ?? 0}%` },
       ].map(({ label, value }) => (
         <div
           key={label}

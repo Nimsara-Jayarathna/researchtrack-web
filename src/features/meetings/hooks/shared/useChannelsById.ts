@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import type { MeetingChannel } from '../../types';
+import { useMemo } from "react";
+import type { MeetingChannel } from "../../types";
 
 export function useChannelsById(channels: MeetingChannel[]) {
   return useMemo(() => {

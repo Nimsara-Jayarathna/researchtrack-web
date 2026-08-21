@@ -1,7 +1,7 @@
-import { LifecycleBlock } from './LifecycleBlock';
-import { LifecycleChip } from './LifecycleChip';
-import { LifecycleTiles } from './LifecycleTiles';
-import { LIFECYCLE_VALUES, type LifecycleValue } from './lifecycleConstants';
+import { LifecycleBlock } from "./LifecycleBlock";
+import { LifecycleChip } from "./LifecycleChip";
+import { LifecycleTiles } from "./LifecycleTiles";
+import { LIFECYCLE_VALUES, type LifecycleValue } from "./lifecycleConstants";
 
 type LifecycleStatusProps = {
   value: LifecycleValue | string;

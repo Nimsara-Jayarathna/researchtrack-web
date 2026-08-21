@@ -1,11 +1,13 @@
-import { HelpCircle } from 'lucide-react';
-import type { JiraWorkload } from '../../../../types';
+import { HelpCircle } from "lucide-react";
+import type { JiraWorkload } from "../../../../types";
 
 type JiraWorkloadUnassignedCardProps = {
   workload: JiraWorkload;
 };
 
-export function JiraWorkloadUnassignedCard({ workload }: JiraWorkloadUnassignedCardProps) {
+export function JiraWorkloadUnassignedCard({
+  workload,
+}: JiraWorkloadUnassignedCardProps) {
   if (workload.unassignedCount === 0) {
     return null;
   }

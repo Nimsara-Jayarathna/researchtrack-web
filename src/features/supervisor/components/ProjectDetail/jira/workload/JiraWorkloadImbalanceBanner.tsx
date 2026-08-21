@@ -1,11 +1,13 @@
-import { AlertTriangle } from 'lucide-react';
-import type { JiraWorkload } from '../../../../types';
+import { AlertTriangle } from "lucide-react";
+import type { JiraWorkload } from "../../../../types";
 
 type JiraWorkloadImbalanceBannerProps = {
   workload: JiraWorkload;
 };
 
-export function JiraWorkloadImbalanceBanner({ workload }: JiraWorkloadImbalanceBannerProps) {
+export function JiraWorkloadImbalanceBanner({
+  workload,
+}: JiraWorkloadImbalanceBannerProps) {
   if (!workload.imbalanceDetected || !workload.imbalanceMessage) {
     return null;
   }

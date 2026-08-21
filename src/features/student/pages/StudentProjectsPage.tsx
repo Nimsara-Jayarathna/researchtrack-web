@@ -1,15 +1,15 @@
-import { useCallback, useDeferredValue, useEffect, useState } from 'react';
-import { useBlockingError } from '@/app/layout/BlockingErrorContext';
-import { ProjectsPageView } from '@/features/projects/components/ProjectsPageView';
-import { isBlockingError } from '@/utils/errorSeverity';
-import { StudentProjectCard } from '../components/StudentProjectCard';
-import { StudentProjectCardSkeleton } from '../components/StudentProjectCardSkeleton';
-import { useStudentProjects } from '../hooks/useStudentProjects';
+import { useCallback, useDeferredValue, useEffect, useState } from "react";
+import { useBlockingError } from "@/app/layout/BlockingErrorContext";
+import { ProjectsPageView } from "@/features/projects/components/ProjectsPageView";
+import { isBlockingError } from "@/utils/errorSeverity";
+import { StudentProjectCard } from "../components/StudentProjectCard";
+import { StudentProjectCardSkeleton } from "../components/StudentProjectCardSkeleton";
+import { useStudentProjects } from "../hooks/useStudentProjects";
 
 export function StudentProjectsPage() {
   const { projects, isLoading, error, reload } = useStudentProjects();
   const { showBlockingError, clearBlockingError } = useBlockingError();
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   // Defer filtering slightly so the list stays responsive while typing.
   const deferredQuery = useDeferredValue(query);
   const normalizedQuery = deferredQuery.trim().toLowerCase();
@@ -20,7 +20,7 @@ export function StudentProjectsPage() {
   const visibleProjects = projects.filter((project) =>
     normalizedQuery.length === 0
       ? true
-      : `${project.title} ${project.summary ?? ''} ${project.supervisorName ?? ''} ${project.batch ?? ''} ${project.semester ?? ''}`
+      : `${project.title} ${project.summary ?? ""} ${project.supervisorName ?? ""} ${project.batch ?? ""} ${project.semester ?? ""}`
           .toLowerCase()
           .includes(normalizedQuery),
   );
@@ -50,14 +50,17 @@ export function StudentProjectsPage() {
       renderSkeleton={(index) => (
         <StudentProjectCardSkeleton key={`student-project-skeleton-${index}`} />
       )}
-      renderItem={(project) => <StudentProjectCard key={project.id} project={project} />}
+      renderItem={(project) => (
+        <StudentProjectCard key={project.id} project={project} />
+      )}
       listGridClassName="grid gap-4 xl:grid-cols-2 2xl:grid-cols-3"
       emptyState={{
-        title: 'No projects found',
-        description: "You don't have any assigned projects matching your filters yet.",
+        title: "No projects found",
+        description:
+          "You don't have any assigned projects matching your filters yet.",
         secondaryAction: {
-          label: hasActiveFilters ? 'Clear filters' : 'Refresh',
-          onClick: hasActiveFilters ? () => setQuery('') : () => void reload(),
+          label: hasActiveFilters ? "Clear filters" : "Refresh",
+          onClick: hasActiveFilters ? () => setQuery("") : () => void reload(),
         },
       }}
     />

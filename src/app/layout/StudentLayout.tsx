@@ -1,15 +1,17 @@
-import type { ReactNode } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
-import { useAuth } from '@/features/auth';
-import { AppShell } from './AppShell';
+import type { ReactNode } from "react";
+import { Outlet, useLocation } from "react-router-dom";
+import { useAuth } from "@/features/auth";
+import { AppShell } from "./AppShell";
 
 export function StudentLayout({ children }: { children?: ReactNode }) {
   const location = useLocation();
   const { user, logout } = useAuth();
   const content = children ?? <Outlet />;
 
-  const userName = user ? `${user.firstName} ${user.lastName}`.trim() : 'Student';
-  const userEmail = user?.email ?? 'student@researchtrack.app';
+  const userName = user
+    ? `${user.firstName} ${user.lastName}`.trim()
+    : "Student";
+  const userEmail = user?.email ?? "student@researchtrack.app";
 
   return (
     <AppShell
@@ -21,9 +23,9 @@ export function StudentLayout({ children }: { children?: ReactNode }) {
       onLogout={logout}
       navItems={[
         {
-          label: 'Projects',
-          to: '/student/projects',
-          active: location.pathname.startsWith('/student/projects'),
+          label: "Projects",
+          to: "/student/projects",
+          active: location.pathname.startsWith("/student/projects"),
         },
       ]}
     >

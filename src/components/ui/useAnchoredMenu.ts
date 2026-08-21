@@ -1,17 +1,27 @@
-import type { RefObject } from 'react';
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { calculateDropdownLayout, type DropdownAlign } from '@/lib/dropdownSizing';
+import type { RefObject } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
+  calculateDropdownLayout,
+  type DropdownAlign,
+} from "@/lib/dropdownSizing";
 
 type AnchoredMenuLayout = {
   top: number;
   left: number;
   width: number;
   maxHeight: number;
-  placement: 'up' | 'down';
+  placement: "up" | "down";
 };
 
 type AnchoredMenuStyle = {
-  position: 'absolute';
+  position: "absolute";
   top: number;
   left: number;
   width: number;
@@ -32,7 +42,7 @@ type UseAnchoredMenuParams = {
 export function useAnchoredMenu({
   anchorRef,
   labels,
-  align = 'auto',
+  align = "auto",
   offset = 6,
   matchTriggerWidth = true,
   getFontSourceEl,
@@ -150,7 +160,7 @@ export function useAnchoredMenu({
     };
 
     const onDocKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         onRequestCloseRef.current?.();
         close();
       }
@@ -163,23 +173,23 @@ export function useAnchoredMenu({
       scheduleUpdate();
     };
 
-    document.addEventListener('mousedown', onDocMouseDown);
-    document.addEventListener('keydown', onDocKeyDown);
-    window.addEventListener('resize', onResize);
-    window.addEventListener('scroll', onAnyScroll, true);
+    document.addEventListener("mousedown", onDocMouseDown);
+    document.addEventListener("keydown", onDocKeyDown);
+    window.addEventListener("resize", onResize);
+    window.addEventListener("scroll", onAnyScroll, true);
 
     return () => {
-      document.removeEventListener('mousedown', onDocMouseDown);
-      document.removeEventListener('keydown', onDocKeyDown);
-      window.removeEventListener('resize', onResize);
-      window.removeEventListener('scroll', onAnyScroll, true);
+      document.removeEventListener("mousedown", onDocMouseDown);
+      document.removeEventListener("keydown", onDocKeyDown);
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("scroll", onAnyScroll, true);
     };
   }, [anchorRef, close, isOpen, scheduleUpdate]);
 
   const menuStyle = useMemo<AnchoredMenuStyle | null>(() => {
     if (!layout) return null;
     return {
-      position: 'absolute',
+      position: "absolute",
       top: layout.top,
       left: layout.left,
       width: layout.width,

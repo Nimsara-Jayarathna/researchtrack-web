@@ -1,5 +1,5 @@
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import type { MeetingRecord } from '../types';
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import type { MeetingRecord } from "../types";
 
 type MeetingRecordDeleteConfirmModalProps = {
   isOpen: boolean;
@@ -20,8 +20,10 @@ export function MeetingRecordDeleteConfirmModal({
       title="Delete record?"
       description={
         <p>
-          This will permanently remove{' '}
-          <span className="font-semibold">{record ? 'this meeting record' : 'the record'}</span>{' '}
+          This will permanently remove{" "}
+          <span className="font-semibold">
+            {record ? "this meeting record" : "the record"}
+          </span>{" "}
           from the project.
         </p>
       }

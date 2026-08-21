@@ -1,4 +1,4 @@
-import { LogoMark } from '@/components/brand/Logo';
+import { LogoMark } from "@/components/brand/Logo";
 
 export function HeroSection() {
   return (
@@ -6,14 +6,16 @@ export function HeroSection() {
       <div className="pointer-events-none absolute -right-10 top-6 hidden h-32 w-32 rounded-full bg-sky-100/60 blur-3xl lg:block" />
       <div className="max-w-4xl">
         <h1 className="text-4xl font-semibold leading-tight tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-          Streamline Your <span className="gradient-text">Research Supervision.</span>
+          Streamline Your{" "}
+          <span className="gradient-text">Research Supervision.</span>
         </h1>
         <p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
-          The all-in-one dashboard connecting Supervisors and Students. Track GitHub commits, manage
-          meeting minutes, and sync directly with Jira.
+          The all-in-one dashboard connecting Supervisors and Students. Track
+          GitHub commits, manage meeting minutes, and sync directly with Jira.
         </p>
         <p className="mt-3 text-xs text-muted-foreground">
-          Used by university supervisors and final-year students to manage research projects.
+          Used by university supervisors and final-year students to manage
+          research projects.
         </p>
       </div>
 

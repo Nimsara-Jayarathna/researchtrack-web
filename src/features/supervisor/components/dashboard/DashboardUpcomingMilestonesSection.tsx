@@ -1,9 +1,15 @@
-import { Link } from 'react-router-dom';
-import { buttonStyles } from '@/components/ui/Button';
-import { UPCOMING_WINDOW_DAYS } from '../../utils/dashboard/constants';
-import type { UpcomingMilestoneItem } from '../../utils/dashboard/scoring';
-import { upcomingWindowClasses, upcomingWindowLabel } from '../../utils/dashboard/scoring';
-import { formatMilestoneDate, jiraIndicatorLabel } from '../../utils/dashboard/presentation';
+import { Link } from "react-router-dom";
+import { buttonStyles } from "@/components/ui/Button";
+import { UPCOMING_WINDOW_DAYS } from "../../utils/dashboard/constants";
+import type { UpcomingMilestoneItem } from "../../utils/dashboard/scoring";
+import {
+  upcomingWindowClasses,
+  upcomingWindowLabel,
+} from "../../utils/dashboard/scoring";
+import {
+  formatMilestoneDate,
+  jiraIndicatorLabel,
+} from "../../utils/dashboard/presentation";
 
 type DashboardUpcomingMilestonesSectionProps = {
   isLoading: boolean;
@@ -16,14 +22,20 @@ export function DashboardUpcomingMilestonesSection({
 }: DashboardUpcomingMilestonesSectionProps) {
   return (
     <div className="rounded-3xl border border-border bg-white p-4 shadow-sm sm:p-6">
-      <h2 className="text-lg font-semibold text-foreground">Upcoming milestones</h2>
+      <h2 className="text-lg font-semibold text-foreground">
+        Upcoming milestones
+      </h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Showing overdue items and milestones due within the next {UPCOMING_WINDOW_DAYS} days.
+        Showing overdue items and milestones due within the next{" "}
+        {UPCOMING_WINDOW_DAYS} days.
       </p>
       {isLoading ? (
         <div className="mt-5 space-y-4 animate-pulse">
           {Array.from({ length: 3 }).map((_, index) => (
-            <div key={`upcoming-skeleton-${index}`} className="h-16 rounded-2xl bg-slate-100" />
+            <div
+              key={`upcoming-skeleton-${index}`}
+              className="h-16 rounded-2xl bg-slate-100"
+            />
           ))}
         </div>
       ) : upcomingProjects.length > 0 ? (
@@ -51,7 +63,7 @@ export function DashboardUpcomingMilestonesSection({
 
               <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
                 <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 font-semibold text-slate-600">
-                  {item.project.lifecycleStatus.replace('_', ' ')}
+                  {item.project.lifecycleStatus.replace("_", " ")}
                 </span>
                 <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 font-semibold text-slate-600">
                   Jira {jiraIndicatorLabel(item.project.jiraHealthIndicator)}
@@ -64,7 +76,7 @@ export function DashboardUpcomingMilestonesSection({
               <div className="mt-3">
                 <Link
                   to={`/supervisor/projects/${item.project.id}`}
-                  className={buttonStyles({ variant: 'ghost', size: 'sm' })}
+                  className={buttonStyles({ variant: "ghost", size: "sm" })}
                 >
                   Review milestone
                 </Link>

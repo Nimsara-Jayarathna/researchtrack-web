@@ -1,7 +1,7 @@
-import { Button } from '@/components/ui/Button';
-import { getRoleLabel, type UserRole } from '@/types/roles';
-import { X } from 'lucide-react';
-import { ModalShell } from '@/components/ui/ModalShell';
+import { Button } from "@/components/ui/Button";
+import { getRoleLabel, type UserRole } from "@/types/roles";
+import { X } from "lucide-react";
+import { ModalShell } from "@/components/ui/ModalShell";
 
 type AccountModalProps = {
   isOpen: boolean;
@@ -24,11 +24,11 @@ export function AccountModal({
   onLogout,
   isLogoutPending = false,
 }: AccountModalProps) {
-  if (!isOpen || typeof document === 'undefined') {
+  if (!isOpen || typeof document === "undefined") {
     return null;
   }
 
-  const initial = name.trim().charAt(0).toUpperCase() || 'U';
+  const initial = name.trim().charAt(0).toUpperCase() || "U";
 
   return (
     <ModalShell
@@ -54,7 +54,9 @@ export function AccountModal({
           </span>
           <div>
             <h2 className="text-xl font-bold text-slate-900">Account</h2>
-            <p className="text-sm text-slate-500">Manage profile and security</p>
+            <p className="text-sm text-slate-500">
+              Manage profile and security
+            </p>
           </div>
         </div>
 
@@ -65,7 +67,9 @@ export function AccountModal({
             <span className="font-semibold text-slate-500">Email</span>
             <span className="font-medium text-slate-800">{email}</span>
             <span className="font-semibold text-slate-500">Role</span>
-            <span className="font-medium text-slate-800">{getRoleLabel(role)}</span>
+            <span className="font-medium text-slate-800">
+              {getRoleLabel(role)}
+            </span>
           </div>
         </div>
 
@@ -87,7 +91,7 @@ export function AccountModal({
             onClick={onLogout}
             disabled={isLogoutPending}
           >
-            {isLogoutPending ? 'Logging out…' : 'Log out'}
+            {isLogoutPending ? "Logging out…" : "Log out"}
           </Button>
         </div>
       </div>

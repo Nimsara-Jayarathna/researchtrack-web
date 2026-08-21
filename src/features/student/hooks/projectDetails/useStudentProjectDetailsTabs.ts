@@ -1,17 +1,17 @@
-import { useCallback, useMemo } from 'react';
-import type { SetURLSearchParams } from 'react-router-dom';
-import type { StudentProjectDetailTab } from '../../types';
+import { useCallback, useMemo } from "react";
+import type { SetURLSearchParams } from "react-router-dom";
+import type { StudentProjectDetailTab } from "../../types";
 
-const DEFAULT_TAB: StudentProjectDetailTab = 'overview';
+const DEFAULT_TAB: StudentProjectDetailTab = "overview";
 
 const ALLOWED_TABS: StudentProjectDetailTab[] = [
-  'overview',
-  'team',
-  'milestones',
-  'files',
-  'github',
-  'jira',
-  'meetings',
+  "overview",
+  "team",
+  "milestones",
+  "files",
+  "github",
+  "jira",
+  "meetings",
 ];
 
 type UseStudentProjectDetailsTabsResult = {
@@ -26,7 +26,9 @@ export function useStudentProjectDetailsTabs(
 ): UseStudentProjectDetailsTabsResult {
   const tabs = useMemo(() => [...ALLOWED_TABS], []);
   const activeTab = useMemo(() => {
-    const requestedTab = searchParams.get('tab') as StudentProjectDetailTab | null;
+    const requestedTab = searchParams.get(
+      "tab",
+    ) as StudentProjectDetailTab | null;
     if (requestedTab && tabs.includes(requestedTab)) {
       return requestedTab;
     }
@@ -37,9 +39,9 @@ export function useStudentProjectDetailsTabs(
     (tab: StudentProjectDetailTab) => {
       const nextParams = new URLSearchParams(searchParams);
       if (tab === DEFAULT_TAB) {
-        nextParams.delete('tab');
+        nextParams.delete("tab");
       } else {
-        nextParams.set('tab', tab);
+        nextParams.set("tab", tab);
       }
       setSearchParams(nextParams, { replace: true });
     },

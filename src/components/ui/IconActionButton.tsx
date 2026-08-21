@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import { buttonStyles } from '@/components/ui/Button';
+import type { ReactNode } from "react";
+import { buttonStyles } from "@/components/ui/Button";
 
 type IconActionButtonProps = {
   label: string;
@@ -19,7 +19,7 @@ export function IconActionButton({
   return (
     <button
       type="button"
-      className={buttonStyles({ variant: 'secondary', size: 'sm' })}
+      className={buttonStyles({ variant: "secondary", size: "sm" })}
       onClick={onClick}
       disabled={disabled}
       title={title ?? label}

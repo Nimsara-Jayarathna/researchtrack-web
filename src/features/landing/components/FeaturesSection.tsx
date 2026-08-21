@@ -1,25 +1,25 @@
-import { FileText, GitCommitHorizontal, Webhook } from 'lucide-react';
-import type { LandingFeatureCard } from '../types';
-import { FeatureCard } from './FeatureCard';
+import { FileText, GitCommitHorizontal, Webhook } from "lucide-react";
+import type { LandingFeatureCard } from "../types";
+import { FeatureCard } from "./FeatureCard";
 
 const FEATURE_CARDS: LandingFeatureCard[] = [
   {
-    id: 'github-tracking',
+    id: "github-tracking",
     icon: GitCommitHorizontal,
-    title: 'GitHub Tracking',
-    description: 'Monitor commits, branches, and pull requests in real time.',
+    title: "GitHub Tracking",
+    description: "Monitor commits, branches, and pull requests in real time.",
   },
   {
-    id: 'jira-integration',
+    id: "jira-integration",
     icon: Webhook,
-    title: 'Jira Integration',
-    description: 'Sync tasks and action items directly with your Jira board.',
+    title: "Jira Integration",
+    description: "Sync tasks and action items directly with your Jira board.",
   },
   {
-    id: 'meeting-minutes',
+    id: "meeting-minutes",
     icon: FileText,
-    title: 'Meeting Minutes',
-    description: 'Record, organize, and share meeting notes effortlessly.',
+    title: "Meeting Minutes",
+    description: "Record, organize, and share meeting notes effortlessly.",
   },
 ];
 
@@ -34,8 +34,8 @@ export function FeaturesSection() {
           Keep progress, meetings, and delivery in one shared workflow.
         </h2>
         <p className="mt-3 text-sm leading-7 text-muted-foreground sm:text-base">
-          Bring project tracking, supervisor reviews, and student updates into the same working
-          space without jumping between separate tools.
+          Bring project tracking, supervisor reviews, and student updates into
+          the same working space without jumping between separate tools.
         </p>
       </div>
 

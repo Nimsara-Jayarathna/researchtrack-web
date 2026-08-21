@@ -1,4 +1,4 @@
-import type { SupervisorProjectLifecycle } from './project.types';
+import type { SupervisorProjectLifecycle } from "./project.types";
 
 export type SupervisorDashboardStats = {
   total: number;
@@ -16,7 +16,12 @@ export type SupervisorDashboardProjectItem = {
   milestoneDate: string | null;
   lastActivityAt: string | null;
   progressPercent: number | null;
-  jiraHealthIndicator: 'AT_RISK' | 'BEHIND' | 'HEALTHY' | 'NOT_CONNECTED' | null;
+  jiraHealthIndicator:
+    | "AT_RISK"
+    | "BEHIND"
+    | "HEALTHY"
+    | "NOT_CONNECTED"
+    | null;
 };
 
 export type SupervisorDashboard = {

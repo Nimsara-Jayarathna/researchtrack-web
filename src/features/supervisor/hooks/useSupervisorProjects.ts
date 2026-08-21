@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { isApiException } from '@/services/apiClient';
-import type { ApiError } from '@/types';
-import { supervisorApi } from '../api/supervisorApi';
-import type { SupervisorProjectSummary } from '../types';
-import { getSessionVersion, isCurrentSession } from '@/services/sessionState';
-import { registerSessionCacheClearer } from '@/services/sessionCache';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { isApiException } from "@/services/apiClient";
+import type { ApiError } from "@/types";
+import { supervisorApi } from "../api/supervisorApi";
+import type { SupervisorProjectSummary } from "../types";
+import { getSessionVersion, isCurrentSession } from "@/services/sessionState";
+import { registerSessionCacheClearer } from "@/services/sessionCache";
 
 type SupervisorProjectsState = {
   projects: SupervisorProjectSummary[];
@@ -16,13 +16,13 @@ let cachedProjects: SupervisorProjectSummary[] | null = null;
 let inFlightProjectsRequest: Promise<SupervisorProjectSummary[]> | null = null;
 
 const UNKNOWN_ERROR_BASE: ApiError = {
-  code: 'INTERNAL_ERROR',
-  message: 'Unable to load projects right now.',
+  code: "INTERNAL_ERROR",
+  message: "Unable to load projects right now.",
   details: [],
   timestamp: new Date().toISOString(),
   status: 0,
-  error: 'Unexpected Error',
-  path: '',
+  error: "Unexpected Error",
+  path: "",
   traceId: null,
 };
 
@@ -99,7 +99,7 @@ export function useSupervisorProjects() {
       if (!isCurrentSession(requestSessionVersion)) {
         if (import.meta.env.DEV) {
           // eslint-disable-next-line no-console
-          console.info('[useSupervisorProjects] discarded stale response');
+          console.info("[useSupervisorProjects] discarded stale response");
         }
         if (latestRequestId.current === requestId) {
           setState((current) => ({ ...current, isLoading: false }));
@@ -114,7 +114,7 @@ export function useSupervisorProjects() {
       if (!isCurrentSession(requestSessionVersion)) {
         if (import.meta.env.DEV) {
           // eslint-disable-next-line no-console
-          console.info('[useSupervisorProjects] discarded stale error');
+          console.info("[useSupervisorProjects] discarded stale error");
         }
         if (latestRequestId.current === requestId) {
           setState((current) => ({ ...current, isLoading: false }));

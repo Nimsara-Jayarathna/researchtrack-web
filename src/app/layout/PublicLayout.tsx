@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import { TopBar } from '@/components/ui/TopBar';
+import type { ReactNode } from "react";
+import { TopBar } from "@/components/ui/TopBar";
 
 type PublicLayoutProps = {
   onLogin: () => void;
@@ -7,7 +7,11 @@ type PublicLayoutProps = {
   children?: ReactNode;
 };
 
-export function PublicLayout({ onLogin, onRegister, children }: PublicLayoutProps) {
+export function PublicLayout({
+  onLogin,
+  onRegister,
+  children,
+}: PublicLayoutProps) {
   return (
     <div className="relative min-h-screen overflow-hidden bg-slate-50">
       <div className="pointer-events-none absolute -left-24 top-16 h-72 w-72 rounded-full bg-sky-200/40 blur-3xl" />
@@ -16,12 +20,12 @@ export function PublicLayout({ onLogin, onRegister, children }: PublicLayoutProp
         mode="public"
         homePath="/"
         actions={[
-          { label: 'Login', onClick: onLogin, variant: 'ghost' },
-          { label: 'Register', onClick: onRegister, variant: 'primary' },
+          { label: "Login", onClick: onLogin, variant: "ghost" },
+          { label: "Register", onClick: onRegister, variant: "primary" },
         ]}
       />
       <main className="relative z-10 mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {children ?? 'Public Layout Placeholder'}
+        {children ?? "Public Layout Placeholder"}
       </main>
     </div>
   );

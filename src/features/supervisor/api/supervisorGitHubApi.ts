@@ -1,4 +1,4 @@
-import type { createRoleProjectApi } from '@/features/shared/api/createRoleProjectApi';
+import type { createRoleProjectApi } from "@/features/shared/api/createRoleProjectApi";
 import type {
   GitHubAccessRequestCreateV2,
   GitHubAvailableRepositories,
@@ -15,11 +15,14 @@ import type {
   LinkProjectGitHubRepositoryRequest,
   ProjectGitHubRepositoryLink,
   SupervisorProjectDetail,
-} from '../types';
-import { normalizeGitHubRepositoryUrl } from '../utils/githubRepositoryUrl';
+} from "../types";
+import { normalizeGitHubRepositoryUrl } from "../utils/githubRepositoryUrl";
 
-type RoleProjectApi = Omit<ReturnType<typeof createRoleProjectApi>, 'clearCache'>;
-type ApiClient = typeof import('@/services/apiClient').apiClient;
+type RoleProjectApi = Omit<
+  ReturnType<typeof createRoleProjectApi>,
+  "clearCache"
+>;
+type ApiClient = typeof import("@/services/apiClient").apiClient;
 
 type SupervisorProjectCache = Partial<Record<string, SupervisorProjectDetail>>;
 
@@ -38,37 +41,54 @@ export function createSupervisorGitHubApi({
 }: CreateSupervisorGitHubApiDeps) {
   return {
     refreshProjectGitHub(projectId: string): Promise<void> {
-      return apiClient.post<void>(`/api/supervisor/projects/${projectId}/github/refresh`, {});
+      return apiClient.post<void>(
+        `/api/supervisor/projects/${projectId}/github/refresh`,
+        {},
+      );
     },
 
     startGitHubAccessSourceInstall(body: {
       projectId?: string;
       requestToken?: string;
     }): Promise<GitHubInstallStart> {
-      return apiClient.post<GitHubInstallStart>('/api/github/access-source/install/start', body);
+      return apiClient.post<GitHubInstallStart>(
+        "/api/github/access-source/install/start",
+        body,
+      );
     },
 
     createPublicGitHubAccessSource(
       projectId: string,
       repositoryUrl: string,
     ): Promise<GitHubAvailableRepositories> {
-      const normalizedRepositoryUrl = normalizeGitHubRepositoryUrl(repositoryUrl);
+      const normalizedRepositoryUrl =
+        normalizeGitHubRepositoryUrl(repositoryUrl);
       if (!normalizedRepositoryUrl) {
-        throw new Error('Invalid GitHub repository URL.');
+        throw new Error("Invalid GitHub repository URL.");
       }
-      return apiClient.post<GitHubAvailableRepositories>('/api/github/access-source/public', {
-        projectId,
-        repositoryUrl: normalizedRepositoryUrl,
-      });
+      return apiClient.post<GitHubAvailableRepositories>(
+        "/api/github/access-source/public",
+        {
+          projectId,
+          repositoryUrl: normalizedRepositoryUrl,
+        },
+      );
     },
 
-    createGitHubAccessSourceRequest(projectId: string): Promise<GitHubAccessRequestCreateV2> {
-      return apiClient.post<GitHubAccessRequestCreateV2>('/api/github/access-source/request', {
-        projectId,
-      });
+    createGitHubAccessSourceRequest(
+      projectId: string,
+    ): Promise<GitHubAccessRequestCreateV2> {
+      return apiClient.post<GitHubAccessRequestCreateV2>(
+        "/api/github/access-source/request",
+        {
+          projectId,
+        },
+      );
     },
 
-    getAvailableGitHubRepositories(sourceId: string): Promise<GitHubAvailableRepositories> {
+    getAvailableGitHubRepositories(
+      sourceId: string,
+    ): Promise<GitHubAvailableRepositories> {
       const params = new URLSearchParams({ sourceId });
       return apiClient.get<GitHubAvailableRepositories>(
         `/api/github/repositories/available?${params.toString()}`,
@@ -79,20 +99,24 @@ export function createSupervisorGitHubApi({
       payload: LinkGitHubRepositoriesPayload,
     ): Promise<ProjectGitHubRepositories> {
       const data = await apiClient.post<ProjectGitHubRepositories>(
-        '/api/github/repositories/link',
+        "/api/github/repositories/link",
         payload,
       );
       invalidateProjectCaches(data.projectId);
       return data;
     },
 
-    getProjectGitHubRepositories(projectId: string): Promise<ProjectGitHubRepositories> {
+    getProjectGitHubRepositories(
+      projectId: string,
+    ): Promise<ProjectGitHubRepositories> {
       return apiClient.get<ProjectGitHubRepositories>(
         `/api/projects/${projectId}/github-repositories`,
       );
     },
 
-    async unlinkGitHubRepository(linkedRepositoryId: string): Promise<ProjectGitHubRepositories> {
+    async unlinkGitHubRepository(
+      linkedRepositoryId: string,
+    ): Promise<ProjectGitHubRepositories> {
       const data = await apiClient.del<ProjectGitHubRepositories>(
         `/api/github/repositories/${linkedRepositoryId}`,
       );
@@ -100,7 +124,9 @@ export function createSupervisorGitHubApi({
       return data;
     },
 
-    async enableGitHubRepository(linkedRepositoryId: string): Promise<ProjectGitHubRepositories> {
+    async enableGitHubRepository(
+      linkedRepositoryId: string,
+    ): Promise<ProjectGitHubRepositories> {
       const data = await apiClient.post<ProjectGitHubRepositories>(
         `/api/github/repositories/${linkedRepositoryId}/enable`,
         {},
@@ -109,7 +135,9 @@ export function createSupervisorGitHubApi({
       return data;
     },
 
-    async disableGitHubRepository(linkedRepositoryId: string): Promise<ProjectGitHubRepositories> {
+    async disableGitHubRepository(
+      linkedRepositoryId: string,
+    ): Promise<ProjectGitHubRepositories> {
       const data = await apiClient.post<ProjectGitHubRepositories>(
         `/api/github/repositories/${linkedRepositoryId}/disable`,
         {},
@@ -118,7 +146,9 @@ export function createSupervisorGitHubApi({
       return data;
     },
 
-    async disconnectGitHubAccessSource(sourceId: string): Promise<ProjectGitHubRepositories> {
+    async disconnectGitHubAccessSource(
+      sourceId: string,
+    ): Promise<ProjectGitHubRepositories> {
       const data = await apiClient.del<ProjectGitHubRepositories>(
         `/api/github/access-source/${sourceId}`,
       );
@@ -126,7 +156,9 @@ export function createSupervisorGitHubApi({
       return data;
     },
 
-    async refreshGitHubRepository(linkedRepositoryId: string): Promise<ProjectGitHubRepositories> {
+    async refreshGitHubRepository(
+      linkedRepositoryId: string,
+    ): Promise<ProjectGitHubRepositories> {
       const data = await apiClient.post<ProjectGitHubRepositories>(
         `/api/github/repositories/${linkedRepositoryId}/refresh`,
         {},
@@ -165,9 +197,9 @@ export function createSupervisorGitHubApi({
       size?: number,
     ): Promise<GitHubInstallationRepositoriesPage> {
       const params = new URLSearchParams();
-      params.set('page', String(page));
-      if (typeof size === 'number' && Number.isFinite(size) && size > 0) {
-        params.set('size', String(Math.floor(size)));
+      params.set("page", String(page));
+      if (typeof size === "number" && Number.isFinite(size) && size > 0) {
+        params.set("size", String(Math.floor(size)));
       }
 
       return apiClient.get<GitHubInstallationRepositoriesPage>(
@@ -175,7 +207,9 @@ export function createSupervisorGitHubApi({
       );
     },
 
-    getProjectRepositoriesInventory(projectId: string): Promise<ProjectGitHubRepositoryListing> {
+    getProjectRepositoriesInventory(
+      projectId: string,
+    ): Promise<ProjectGitHubRepositoryListing> {
       return apiClient.get<ProjectGitHubRepositoryListing>(
         `/api/supervisor/projects/${projectId}/github/repositories/inventory`,
       );
@@ -230,14 +264,18 @@ export function createSupervisorGitHubApi({
       );
     },
 
-    getPublicGitHubAccessUpdatedSummary(token: string): Promise<GitHubAccessUpdatedSummary> {
+    getPublicGitHubAccessUpdatedSummary(
+      token: string,
+    ): Promise<GitHubAccessUpdatedSummary> {
       const params = new URLSearchParams({ token });
       return apiClient.get<GitHubAccessUpdatedSummary>(
         `/api/github/access-updated/summary?${params.toString()}`,
       );
     },
 
-    acknowledgePublicGitHubAccessUpdated(token: string): Promise<GitHubAccessUpdatedAcknowledge> {
+    acknowledgePublicGitHubAccessUpdated(
+      token: string,
+    ): Promise<GitHubAccessUpdatedAcknowledge> {
       const params = new URLSearchParams({ token });
       return apiClient.post<GitHubAccessUpdatedAcknowledge>(
         `/api/github/access-updated/acknowledge?${params.toString()}`,
@@ -245,7 +283,9 @@ export function createSupervisorGitHubApi({
       );
     },
 
-    getProjectGitHubAccessUpdatedSummary(projectId: string): Promise<GitHubAccessUpdatedSummary> {
+    getProjectGitHubAccessUpdatedSummary(
+      projectId: string,
+    ): Promise<GitHubAccessUpdatedSummary> {
       return apiClient.get<GitHubAccessUpdatedSummary>(
         `/api/supervisor/projects/${projectId}/access-updated/summary`,
       );

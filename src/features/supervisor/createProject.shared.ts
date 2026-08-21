@@ -1,6 +1,9 @@
-import type { ProjectStepperStep } from './components/ProjectStepper';
-import type { CreateSupervisorProjectResponse, SupervisorStudentSearchResult } from './types';
-import { parseLocalDateOnly } from '@/lib/dateOnly';
+import type { ProjectStepperStep } from "./components/ProjectStepper";
+import type {
+  CreateSupervisorProjectResponse,
+  SupervisorStudentSearchResult,
+} from "./types";
+import { parseLocalDateOnly } from "@/lib/dateOnly";
 
 export type DraftState = {
   title: string;
@@ -15,28 +18,28 @@ export type MilestoneDraft = {
   dueDate: string;
 };
 
-export type SearchState = 'idle' | 'loading' | 'results' | 'empty' | 'error';
+export type SearchState = "idle" | "loading" | "results" | "empty" | "error";
 
 export type CreateProjectStepId = 1 | 2 | 3;
 
 export type RequestModalState = {
   isOpen: boolean;
-  status: 'loading' | 'success' | 'error';
+  status: "loading" | "success" | "error";
   title: string;
   message: string;
 };
 
 export const INITIAL_DRAFT: DraftState = {
-  title: '',
-  batch: '2026',
-  semester: 'Semester 1',
-  summary: '',
+  title: "",
+  batch: "2026",
+  semester: "Semester 1",
+  summary: "",
 };
 
 export const INITIAL_MILESTONE: MilestoneDraft = {
-  title: '',
-  description: '',
-  dueDate: '',
+  title: "",
+  description: "",
+  dueDate: "",
 };
 
 export const FIELD_LIMITS = {
@@ -51,25 +54,26 @@ export const FIELD_LIMITS = {
 export const CREATE_PROJECT_STEPS: readonly ProjectStepperStep[] = [
   {
     id: 1,
-    label: 'Project basics',
-    description: 'Capture the core project information first.',
+    label: "Project basics",
+    description: "Capture the core project information first.",
   },
   {
     id: 2,
-    label: 'Student assignment',
-    description: 'Choose the registered students assigned to this project.',
+    label: "Student assignment",
+    description: "Choose the registered students assigned to this project.",
   },
   {
     id: 3,
-    label: 'Milestones',
-    description: 'Add every milestone now, then create the project in one final request.',
+    label: "Milestones",
+    description:
+      "Add every milestone now, then create the project in one final request.",
   },
 ];
 
-export const dateFormatter = new Intl.DateTimeFormat('en', {
-  month: 'short',
-  day: 'numeric',
-  year: 'numeric',
+export const dateFormatter = new Intl.DateTimeFormat("en", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
 });
 
 export function buildStudentLabel(student: SupervisorStudentSearchResult) {
@@ -82,13 +86,15 @@ export function isMilestoneComplete(milestone: MilestoneDraft) {
 
 export function milestoneSummaryTitle(milestone: MilestoneDraft) {
   const title = milestone.title.trim();
-  return title.length > 0 ? title : 'Untitled milestone';
+  return title.length > 0 ? title : "Untitled milestone";
 }
 
 export function milestoneSummaryDescription(milestone: MilestoneDraft) {
   const description = milestone.description.trim();
   if (description.length > 0) return description;
-  return isMilestoneComplete(milestone) ? 'No description added.' : 'Needs a title and due date.';
+  return isMilestoneComplete(milestone)
+    ? "No description added."
+    : "Needs a title and due date.";
 }
 
 export function milestoneSummaryDate(milestone: MilestoneDraft): string | null {
@@ -103,8 +109,8 @@ export function collapsePreview(text: string, maxChars = 60) {
 }
 
 export function earliestMilestone(
-  milestones: CreateSupervisorProjectResponse['milestones'],
-): CreateSupervisorProjectResponse['milestones'][number] | null {
+  milestones: CreateSupervisorProjectResponse["milestones"],
+): CreateSupervisorProjectResponse["milestones"][number] | null {
   if (milestones.length === 0) return null;
   return milestones.reduce((earliest, milestone) => {
     const milestoneDate = parseLocalDateOnly(milestone.dueDate);
@@ -118,6 +124,8 @@ export function earliestMilestone(
       return milestone;
     }
 
-    return milestoneDate.getTime() < earliestDate.getTime() ? milestone : earliest;
+    return milestoneDate.getTime() < earliestDate.getTime()
+      ? milestone
+      : earliest;
   }, milestones[0]);
 }

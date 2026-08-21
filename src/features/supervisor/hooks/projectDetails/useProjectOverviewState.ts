@@ -1,8 +1,8 @@
-import type { FormEvent } from 'react';
-import { useEffect, useMemo, useState } from 'react';
-import { buildOverviewEditForm, toApiError } from '../../projectDetails.shared';
-import type { OverviewEditForm } from '../../projectDetails.shared';
-import type { SupervisorProjectDetail } from '../../types';
+import type { FormEvent } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { buildOverviewEditForm, toApiError } from "../../projectDetails.shared";
+import type { OverviewEditForm } from "../../projectDetails.shared";
+import type { SupervisorProjectDetail } from "../../types";
 
 export type OverviewState = {
   isEditingOverview: boolean;
@@ -21,7 +21,11 @@ type UseProjectOverviewStateParams = {
   setProject: (next: SupervisorProjectDetail) => void;
   showLoadingModal: (title: string, message: string) => void;
   showSuccessModal: (title: string, message: string) => void;
-  showErrorModal: (title: string, message: string, retryAction: () => Promise<void>) => void;
+  showErrorModal: (
+    title: string,
+    message: string,
+    retryAction: () => Promise<void>,
+  ) => void;
   api: {
     updateProject: (
       projectId: string,
@@ -30,7 +34,7 @@ type UseProjectOverviewStateParams = {
         summary: string;
         batch: string;
         semester: string;
-        lifecycleStatus: SupervisorProjectDetail['lifecycleStatus'];
+        lifecycleStatus: SupervisorProjectDetail["lifecycleStatus"];
         leaderStudentId: string | null;
       },
     ) => Promise<SupervisorProjectDetail>;
@@ -48,10 +52,13 @@ export function useProjectOverviewState({
 }: UseProjectOverviewStateParams): OverviewState {
   const [isEditingOverview, setIsEditingOverview] = useState(false);
   const [isSavingOverview, setIsSavingOverview] = useState(false);
-  const [overviewForm, setOverviewForm] = useState<OverviewEditForm | null>(null);
+  const [overviewForm, setOverviewForm] = useState<OverviewEditForm | null>(
+    null,
+  );
 
   useEffect(() => {
-    if (project && !isEditingOverview) setOverviewForm(buildOverviewEditForm(project));
+    if (project && !isEditingOverview)
+      setOverviewForm(buildOverviewEditForm(project));
   }, [project, isEditingOverview]);
 
   const initialOverviewForm = project ? buildOverviewEditForm(project) : null;
@@ -78,13 +85,18 @@ export function useProjectOverviewState({
   }
 
   function setOverviewField(field: keyof OverviewEditForm, value: string) {
-    setOverviewForm((current) => (current ? { ...current, [field]: value } : current));
+    setOverviewForm((current) =>
+      current ? { ...current, [field]: value } : current,
+    );
   }
 
   async function submitOverviewUpdate() {
     if (!project || !overviewForm || !projectId) return;
     setIsSavingOverview(true);
-    showLoadingModal('Saving project details', 'Updating the project summary and overview fields.');
+    showLoadingModal(
+      "Saving project details",
+      "Updating the project summary and overview fields.",
+    );
     try {
       const updatedProject = await api.updateProject(projectId, {
         title: overviewForm.title.trim(),
@@ -97,12 +109,19 @@ export function useProjectOverviewState({
       setProject(updatedProject);
       setIsEditingOverview(false);
       showSuccessModal(
-        'Project details updated',
-        'The project summary and overview details were updated successfully.',
+        "Project details updated",
+        "The project summary and overview details were updated successfully.",
       );
     } catch (saveException) {
-      const apiError = toApiError(saveException, 'Unable to update the project right now.');
-      showErrorModal('Unable to save project details', apiError.message, submitOverviewUpdate);
+      const apiError = toApiError(
+        saveException,
+        "Unable to update the project right now.",
+      );
+      showErrorModal(
+        "Unable to save project details",
+        apiError.message,
+        submitOverviewUpdate,
+      );
     } finally {
       setIsSavingOverview(false);
     }

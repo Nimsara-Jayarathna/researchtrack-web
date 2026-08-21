@@ -1,15 +1,19 @@
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
-import { cn } from '@/lib/cn';
-import { useEffect, useMemo, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { X } from 'lucide-react';
-import type { MeetingChannel, MeetingRecord, MeetingRecordUpsertPayload } from '../types';
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
+import { cn } from "@/lib/cn";
+import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
+import { X } from "lucide-react";
+import type {
+  MeetingChannel,
+  MeetingRecord,
+  MeetingRecordUpsertPayload,
+} from "../types";
 
 type MeetingRecordFormModalProps = {
   isOpen: boolean;
-  mode: 'add' | 'edit';
+  mode: "add" | "edit";
   initialRecord: MeetingRecord | null;
   channels: MeetingChannel[];
   onClose: () => void;
@@ -23,8 +27,8 @@ const DEFAULT_MAX_DETAILS_LENGTH = 5000;
 
 function toLocalIsoDate(date: Date) {
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
 
@@ -39,13 +43,13 @@ export function MeetingRecordFormModal({
   maxDetailsLength = DEFAULT_MAX_DETAILS_LENGTH,
 }: MeetingRecordFormModalProps) {
   const [isMounted, setIsMounted] = useState(false);
-  const [meetingDate, setMeetingDate] = useState('');
-  const [durationMinutes, setDurationMinutes] = useState('');
-  const [discussionSummary, setDiscussionSummary] = useState('');
-  const [discussionDetails, setDiscussionDetails] = useState('');
-  const [channelId, setChannelId] = useState('');
+  const [meetingDate, setMeetingDate] = useState("");
+  const [durationMinutes, setDurationMinutes] = useState("");
+  const [discussionSummary, setDiscussionSummary] = useState("");
+  const [discussionDetails, setDiscussionDetails] = useState("");
+  const [channelId, setChannelId] = useState("");
 
-  const title = mode === 'add' ? 'Add record' : 'Edit record';
+  const title = mode === "add" ? "Add record" : "Edit record";
 
   useEffect(() => {
     if (!isOpen) {
@@ -62,20 +66,20 @@ export function MeetingRecordFormModal({
       return;
     }
 
-    if (mode === 'edit' && initialRecord) {
+    if (mode === "edit" && initialRecord) {
       setMeetingDate(initialRecord.meetingDate);
       setDurationMinutes(String(initialRecord.durationMinutes));
       setDiscussionSummary(initialRecord.discussionSummary);
-      setDiscussionDetails(initialRecord.discussionDetails ?? '');
-      setChannelId(initialRecord.channelId ?? '');
+      setDiscussionDetails(initialRecord.discussionDetails ?? "");
+      setChannelId(initialRecord.channelId ?? "");
       return;
     }
 
     setMeetingDate(toLocalIsoDate(new Date()));
-    setDurationMinutes('');
-    setDiscussionSummary('');
-    setDiscussionDetails('');
-    setChannelId('');
+    setDurationMinutes("");
+    setDiscussionSummary("");
+    setDiscussionDetails("");
+    setChannelId("");
   }, [initialRecord, isOpen, mode]);
 
   const parsedDuration = useMemo(() => {
@@ -102,7 +106,9 @@ export function MeetingRecordFormModal({
       meetingDate: meetingDate.trim(),
       durationMinutes: parsedDuration ?? 0,
       discussionSummary: discussionSummary.trim(),
-      discussionDetails: discussionDetails.trim().length ? discussionDetails.trim() : null,
+      discussionDetails: discussionDetails.trim().length
+        ? discussionDetails.trim()
+        : null,
       channelId: channelId.trim().length ? channelId : null,
     };
     onSubmit(payload);
@@ -111,8 +117,8 @@ export function MeetingRecordFormModal({
   const modal = (
     <div
       className={cn(
-        'fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/60 px-4 backdrop-blur-sm transition-opacity duration-200',
-        isMounted ? 'opacity-100' : 'opacity-0',
+        "fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/60 px-4 backdrop-blur-sm transition-opacity duration-200",
+        isMounted ? "opacity-100" : "opacity-0",
       )}
       onClick={onClose}
       role="dialog"
@@ -121,10 +127,10 @@ export function MeetingRecordFormModal({
     >
       <div
         className={cn(
-          'w-full max-w-2xl overflow-hidden rounded-3xl border border-border bg-white shadow-[0_24px_56px_rgba(15,23,42,0.24)] transition-all duration-200',
+          "w-full max-w-2xl overflow-hidden rounded-3xl border border-border bg-white shadow-[0_24px_56px_rgba(15,23,42,0.24)] transition-all duration-200",
           isMounted
-            ? 'translate-y-0 scale-100 opacity-100'
-            : 'translate-y-1 scale-[0.99] opacity-0',
+            ? "translate-y-0 scale-100 opacity-100"
+            : "translate-y-1 scale-[0.99] opacity-0",
         )}
         onClick={(event) => event.stopPropagation()}
       >
@@ -228,15 +234,20 @@ export function MeetingRecordFormModal({
           <Button type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="button" variant="primary" onClick={handleSubmit} disabled={!canSubmit}>
-            {mode === 'add' ? 'Add record' : 'Save changes'}
+          <Button
+            type="button"
+            variant="primary"
+            onClick={handleSubmit}
+            disabled={!canSubmit}
+          >
+            {mode === "add" ? "Add record" : "Save changes"}
           </Button>
         </div>
       </div>
     </div>
   );
 
-  if (typeof document === 'undefined') {
+  if (typeof document === "undefined") {
     return modal;
   }
 

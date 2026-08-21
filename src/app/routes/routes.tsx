@@ -1,10 +1,17 @@
-import { SupervisorLayout } from '@/app/layout/SupervisorLayout';
-import { StudentLayout } from '@/app/layout/StudentLayout';
-import { LandingPage } from '@/features/landing';
-import { PrivacyPolicyPage, SupportPage, TermsOfServicePage } from '@/features/legal';
-import { StudentProjectDetailsPage, StudentProjectsPage } from '@/features/student';
-import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage';
-import { ResetPasswordPage } from '@/features/auth/pages/ResetPasswordPage';
+import { SupervisorLayout } from "@/app/layout/SupervisorLayout";
+import { StudentLayout } from "@/app/layout/StudentLayout";
+import { LandingPage } from "@/features/landing";
+import {
+  PrivacyPolicyPage,
+  SupportPage,
+  TermsOfServicePage,
+} from "@/features/legal";
+import {
+  StudentProjectDetailsPage,
+  StudentProjectsPage,
+} from "@/features/student";
+import { ForgotPasswordPage } from "@/features/auth/pages/ForgotPasswordPage";
+import { ResetPasswordPage } from "@/features/auth/pages/ResetPasswordPage";
 import {
   CreateProjectPage,
   GitHubAccessUpdatedPage,
@@ -13,16 +20,23 @@ import {
   RequestGitHubRepositoryAccessPage,
   SupervisorDashboardPage,
   SupervisorProjectsPage,
-} from '@/features/supervisor';
-import { tokenStorage } from '@/services/tokenStorage';
-import { Navigate, Route, Routes, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { RequireGuest, RequireRole } from './route-guards';
-import { ROLE_HOME } from './roleHome';
-import { useAuthStateValue } from '@/features/auth/state/authState';
+} from "@/features/supervisor";
+import { tokenStorage } from "@/services/tokenStorage";
+import {
+  Navigate,
+  Route,
+  Routes,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
+import { RequireGuest, RequireRole } from "./route-guards";
+import { ROLE_HOME } from "./roleHome";
+import { useAuthStateValue } from "@/features/auth/state/authState";
 
 function useResolvedUser() {
   const authState = useAuthStateValue();
-  if (authState.status === 'bootstrapping') {
+  if (authState.status === "bootstrapping") {
     return tokenStorage.getUser();
   }
   return authState.user;
@@ -35,15 +49,15 @@ function RootRoute() {
     return <LandingPage />;
   }
 
-  return <Navigate to={ROLE_HOME[user.role] ?? '/'} replace />;
+  return <Navigate to={ROLE_HOME[user.role] ?? "/"} replace />;
 }
 
 function LoginRoute() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const returnToKey = searchParams.get('returnToKey');
-  const returnToFromQuery = searchParams.get('returnTo');
-  const RETURN_TO_KEY_PREFIX = 'login-return:';
+  const returnToKey = searchParams.get("returnToKey");
+  const returnToFromQuery = searchParams.get("returnTo");
+  const RETURN_TO_KEY_PREFIX = "login-return:";
   let returnTo: string | undefined;
 
   if (returnToKey?.startsWith(RETURN_TO_KEY_PREFIX)) {
@@ -61,7 +75,7 @@ function LoginRoute() {
     <LandingPage
       initialLoginOpen={true}
       initialLoginReturnTo={returnTo}
-      onLoginClose={() => navigate('/')}
+      onLoginClose={() => navigate("/")}
     />
   );
 }
@@ -69,7 +83,12 @@ function LoginRoute() {
 function RegisterRoute() {
   const navigate = useNavigate();
 
-  return <LandingPage initialRegistrationOpen={true} onRegistrationClose={() => navigate('/')} />;
+  return (
+    <LandingPage
+      initialRegistrationOpen={true}
+      onRegistrationClose={() => navigate("/")}
+    />
+  );
 }
 
 function LegacyDashboardRedirect() {
@@ -79,7 +98,12 @@ function LegacyDashboardRedirect() {
     return <Navigate to="/login" replace />;
   }
 
-  return <Navigate to={user.role === 'SUPERVISOR' ? '/supervisor' : '/student/projects'} replace />;
+  return (
+    <Navigate
+      to={user.role === "SUPERVISOR" ? "/supervisor" : "/student/projects"}
+      replace
+    />
+  );
 }
 
 function LegacyProjectListRedirect() {
@@ -91,7 +115,11 @@ function LegacyProjectListRedirect() {
 
   return (
     <Navigate
-      to={user.role === 'SUPERVISOR' ? '/supervisor/projects' : '/student/projects'}
+      to={
+        user.role === "SUPERVISOR"
+          ? "/supervisor/projects"
+          : "/student/projects"
+      }
       replace
     />
   );
@@ -106,7 +134,11 @@ function LegacyProjectCreateRedirect() {
 
   return (
     <Navigate
-      to={user.role === 'SUPERVISOR' ? '/supervisor/projects/new' : '/student/projects'}
+      to={
+        user.role === "SUPERVISOR"
+          ? "/supervisor/projects/new"
+          : "/student/projects"
+      }
       replace
     />
   );
@@ -121,7 +153,7 @@ function LegacyProjectDetailsRedirect() {
   }
 
   const target =
-    user.role === 'SUPERVISOR'
+    user.role === "SUPERVISOR"
       ? `/supervisor/projects/${projectId}`
       : `/student/projects/${projectId}`;
 
@@ -137,8 +169,14 @@ export function AppRoutes() {
       <Route path="/legal/terms" element={<TermsOfServicePage />} />
       <Route path="/support" element={<SupportPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
-      <Route path="/github/request-access" element={<RequestGitHubRepositoryAccessPage />} />
-      <Route path="/github/access-updated" element={<GitHubAccessUpdatedPage />} />
+      <Route
+        path="/github/request-access"
+        element={<RequestGitHubRepositoryAccessPage />}
+      />
+      <Route
+        path="/github/access-updated"
+        element={<GitHubAccessUpdatedPage />}
+      />
 
       {/* Guest-only — redirect authenticated users to their dashboard */}
       <Route element={<RequireGuest />}>
@@ -152,7 +190,10 @@ export function AppRoutes() {
         <Route path="/student" element={<StudentLayout />}>
           <Route index element={<Navigate to="projects" replace />} />
           <Route path="projects" element={<StudentProjectsPage />} />
-          <Route path="projects/:projectId" element={<StudentProjectDetailsPage />} />
+          <Route
+            path="projects/:projectId"
+            element={<StudentProjectDetailsPage />}
+          />
         </Route>
       </Route>
 
@@ -162,8 +203,14 @@ export function AppRoutes() {
           <Route path="jira/callback" element={<JiraOAuthCallbackPage />} />
           <Route index element={<SupervisorDashboardPage />} />
           <Route path="dashboard" element={<SupervisorDashboardPage />} />
-          <Route path="project" element={<Navigate to="/supervisor/projects" replace />} />
-          <Route path="project/new" element={<Navigate to="/supervisor/projects/new" replace />} />
+          <Route
+            path="project"
+            element={<Navigate to="/supervisor/projects" replace />}
+          />
+          <Route
+            path="project/new"
+            element={<Navigate to="/supervisor/projects/new" replace />}
+          />
           <Route path="project/:projectId" element={<ProjectDetailsPage />} />
           <Route path="projects" element={<SupervisorProjectsPage />} />
           <Route path="projects/new" element={<CreateProjectPage />} />
@@ -175,10 +222,16 @@ export function AppRoutes() {
       <Route path="/dashboard" element={<LegacyDashboardRedirect />} />
       <Route path="/project" element={<LegacyProjectListRedirect />} />
       <Route path="/project/new" element={<LegacyProjectCreateRedirect />} />
-      <Route path="/project/:projectId" element={<LegacyProjectDetailsRedirect />} />
+      <Route
+        path="/project/:projectId"
+        element={<LegacyProjectDetailsRedirect />}
+      />
       <Route path="/projects" element={<LegacyProjectListRedirect />} />
       <Route path="/projects/new" element={<LegacyProjectCreateRedirect />} />
-      <Route path="/projects/:projectId" element={<LegacyProjectDetailsRedirect />} />
+      <Route
+        path="/projects/:projectId"
+        element={<LegacyProjectDetailsRedirect />}
+      />
 
       {/* Catch-all — authenticated users go to their role home, others to /login */}
       <Route path="*" element={<LegacyDashboardRedirect />} />

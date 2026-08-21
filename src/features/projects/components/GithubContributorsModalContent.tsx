@@ -1,14 +1,19 @@
-import { useCallback, useEffect, useState } from 'react';
-import { ChevronDown } from 'lucide-react';
-import { buttonStyles } from '@/components/ui/Button';
-import { isApiException } from '@/services/apiClient';
-import type { ProjectGitHubContributor } from '../types';
-import type { PaginatedListResult } from '../types';
-import { getGeneratedAvatarUrl, getGitHubAvatarUrl } from '../utils/githubIdentity';
+import { useCallback, useEffect, useState } from "react";
+import { ChevronDown } from "lucide-react";
+import { buttonStyles } from "@/components/ui/Button";
+import { isApiException } from "@/services/apiClient";
+import type { ProjectGitHubContributor } from "../types";
+import type { PaginatedListResult } from "../types";
+import {
+  getGeneratedAvatarUrl,
+  getGitHubAvatarUrl,
+} from "../utils/githubIdentity";
 
 type GithubContributorsModalContentProps = {
   isOpen: boolean;
-  fetchPage: (page: number) => Promise<PaginatedListResult<ProjectGitHubContributor>>;
+  fetchPage: (
+    page: number,
+  ) => Promise<PaginatedListResult<ProjectGitHubContributor>>;
 };
 
 function ContributorItemSkeleton() {
@@ -54,7 +59,7 @@ export function GithubContributorsModalContent({
         setErrorMessage(
           isApiException(error)
             ? error.apiError.message
-            : 'Unable to load GitHub contributors right now.',
+            : "Unable to load GitHub contributors right now.",
         );
       } finally {
         if (append) {
@@ -101,7 +106,7 @@ export function GithubContributorsModalContent({
         <button
           type="button"
           onClick={() => void loadPage(1, false)}
-          className={buttonStyles({ variant: 'secondary', size: 'sm' })}
+          className={buttonStyles({ variant: "secondary", size: "sm" })}
         >
           Retry
         </button>
@@ -110,7 +115,9 @@ export function GithubContributorsModalContent({
   }
 
   if (items.length === 0) {
-    return <p className="text-sm text-muted-foreground">No contributors found.</p>;
+    return (
+      <p className="text-sm text-muted-foreground">No contributors found.</p>
+    );
   }
 
   return (
@@ -135,7 +142,9 @@ export function GithubContributorsModalContent({
                   alt={contributor.name}
                   className="h-full w-full object-cover"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = getGeneratedAvatarUrl(contributor.name);
+                    (e.target as HTMLImageElement).src = getGeneratedAvatarUrl(
+                      contributor.name,
+                    );
                   }}
                 />
               </div>
@@ -153,7 +162,9 @@ export function GithubContributorsModalContent({
                   {contributor.commitCount} Total Commits
                 </span>
                 <div className="h-1 w-1 rounded-full bg-slate-300" />
-                <span className="text-[10px] font-bold text-emerald-600">Active Contributor</span>
+                <span className="text-[10px] font-bold text-emerald-600">
+                  Active Contributor
+                </span>
               </div>
             </div>
           </article>
@@ -163,7 +174,9 @@ export function GithubContributorsModalContent({
       {isLoadingMore ? (
         <div className="space-y-3 pt-1">
           {Array.from({ length: 2 }).map((_, index) => (
-            <ContributorItemSkeleton key={`contributors-bottom-skeleton-${index}`} />
+            <ContributorItemSkeleton
+              key={`contributors-bottom-skeleton-${index}`}
+            />
           ))}
         </div>
       ) : null}
@@ -174,9 +187,9 @@ export function GithubContributorsModalContent({
             type="button"
             onClick={() => void handleLoadMore()}
             className={buttonStyles({
-              variant: 'secondary',
-              size: 'sm',
-              className: 'rounded-full px-4 font-medium',
+              variant: "secondary",
+              size: "sm",
+              className: "rounded-full px-4 font-medium",
             })}
             disabled={isInitialLoading || isLoadingMore}
           >

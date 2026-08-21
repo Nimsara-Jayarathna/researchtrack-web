@@ -1,17 +1,17 @@
-import { useEffect, useState } from 'react';
-import { PublicLayout } from '@/app/layout/PublicLayout';
-import { RequestStateModal } from '@/components/ui/RequestStateModal';
-import { authApi } from '@/features/auth/api/authApi';
-import { LoginPanel } from '@/features/auth/components/LoginPanel';
-import { RegistrationPanel } from '@/features/auth/components/registration/RegistrationPanel';
-import type { RegisterConfig } from '@/features/auth/types';
-import type { ApiError } from '@/types';
-import { isApiException } from '@/services/apiClient';
-import { getBlockingErrorTitle } from '@/utils/errorSeverity';
-import { FeaturesSection } from '../components/FeaturesSection';
-import { HeroSection } from '../components/HeroSection';
-import { HowItWorksSection } from '../components/HowItWorksSection';
-import { WhoItsForSection } from '../components/WhoItsForSection';
+import { useEffect, useState } from "react";
+import { PublicLayout } from "@/app/layout/PublicLayout";
+import { RequestStateModal } from "@/components/ui/RequestStateModal";
+import { authApi } from "@/features/auth/api/authApi";
+import { LoginPanel } from "@/features/auth/components/LoginPanel";
+import { RegistrationPanel } from "@/features/auth/components/registration/RegistrationPanel";
+import type { RegisterConfig } from "@/features/auth/types";
+import type { ApiError } from "@/types";
+import { isApiException } from "@/services/apiClient";
+import { getBlockingErrorTitle } from "@/utils/errorSeverity";
+import { FeaturesSection } from "../components/FeaturesSection";
+import { HeroSection } from "../components/HeroSection";
+import { HowItWorksSection } from "../components/HowItWorksSection";
+import { WhoItsForSection } from "../components/WhoItsForSection";
 
 type LandingPageProps = {
   initialLoginOpen?: boolean;
@@ -29,11 +29,17 @@ export function LandingPage({
   onRegistrationClose,
 }: LandingPageProps = {}) {
   const [registrationLoading, setRegistrationLoading] = useState(false);
-  const [registrationOpen, setRegistrationOpen] = useState(initialRegistrationOpen);
+  const [registrationOpen, setRegistrationOpen] = useState(
+    initialRegistrationOpen,
+  );
   const [loginOpen, setLoginOpen] = useState(initialLoginOpen);
-  const [registerConfig, setRegisterConfig] = useState<RegisterConfig | null>(null);
-  const [registerConfigError, setRegisterConfigError] = useState<ApiError | null>(null);
-  const [initialRegistrationAttempted, setInitialRegistrationAttempted] = useState(false);
+  const [registerConfig, setRegisterConfig] = useState<RegisterConfig | null>(
+    null,
+  );
+  const [registerConfigError, setRegisterConfigError] =
+    useState<ApiError | null>(null);
+  const [initialRegistrationAttempted, setInitialRegistrationAttempted] =
+    useState(false);
 
   function toRegisterConfigError(error: unknown): ApiError {
     if (isApiException(error)) {
@@ -41,13 +47,13 @@ export function LandingPage({
     }
 
     return {
-      code: 'SERVICE_UNAVAILABLE',
-      message: 'Unable to prepare registration right now. Please try again.',
+      code: "SERVICE_UNAVAILABLE",
+      message: "Unable to prepare registration right now. Please try again.",
       details: [],
       timestamp: new Date().toISOString(),
       status: 503,
-      error: 'Service Unavailable',
-      path: '/api/auth/register/config',
+      error: "Service Unavailable",
+      path: "/api/auth/register/config",
       traceId: null,
     };
   }
@@ -96,7 +102,12 @@ export function LandingPage({
     }
     // This should only auto-open for route-driven initial state.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialRegistrationOpen, registerConfig, registrationLoading, initialRegistrationAttempted]);
+  }, [
+    initialRegistrationOpen,
+    registerConfig,
+    registrationLoading,
+    initialRegistrationAttempted,
+  ]);
 
   return (
     <PublicLayout
@@ -115,7 +126,10 @@ export function LandingPage({
         isOpen={Boolean(registerConfigError)}
         status="error"
         title={getBlockingErrorTitle(registerConfigError)}
-        message={registerConfigError?.message ?? 'Unable to prepare registration right now.'}
+        message={
+          registerConfigError?.message ??
+          "Unable to prepare registration right now."
+        }
         onClose={() => {
           setRegisterConfigError(null);
           handleRegistrationClose();
@@ -124,7 +138,12 @@ export function LandingPage({
           void handleRegister();
         }}
       />
-      {loginOpen && <LoginPanel returnTo={initialLoginReturnTo} onClose={handleLoginClose} />}
+      {loginOpen && (
+        <LoginPanel
+          returnTo={initialLoginReturnTo}
+          onClose={handleLoginClose}
+        />
+      )}
       {registrationOpen && registerConfig && (
         <RegistrationPanel
           config={registerConfig}

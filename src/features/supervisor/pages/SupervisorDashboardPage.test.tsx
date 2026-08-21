@@ -1,62 +1,64 @@
-import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import { vi } from 'vitest';
-import { SupervisorDashboardPage } from './SupervisorDashboardPage';
+import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import { vi } from "vitest";
+import { SupervisorDashboardPage } from "./SupervisorDashboardPage";
 
-const { useSupervisorDashboardMock, showBlockingErrorMock, clearBlockingErrorMock } = vi.hoisted(
-  () => ({
-    useSupervisorDashboardMock: vi.fn(),
-    showBlockingErrorMock: vi.fn(),
-    clearBlockingErrorMock: vi.fn(),
-  }),
-);
+const {
+  useSupervisorDashboardMock,
+  showBlockingErrorMock,
+  clearBlockingErrorMock,
+} = vi.hoisted(() => ({
+  useSupervisorDashboardMock: vi.fn(),
+  showBlockingErrorMock: vi.fn(),
+  clearBlockingErrorMock: vi.fn(),
+}));
 
-vi.mock('../hooks/useSupervisorDashboard', () => ({
+vi.mock("../hooks/useSupervisorDashboard", () => ({
   useSupervisorDashboard: useSupervisorDashboardMock,
 }));
 
-vi.mock('@/app/layout/BlockingErrorContext', () => ({
+vi.mock("@/app/layout/BlockingErrorContext", () => ({
   useBlockingError: () => ({
     showBlockingError: showBlockingErrorMock,
     clearBlockingError: clearBlockingErrorMock,
   }),
 }));
 
-vi.mock('@/components/ui/PageHeader', () => ({
+vi.mock("@/components/ui/PageHeader", () => ({
   PageHeader: ({ title }: { title: string }) => <h1>{title}</h1>,
 }));
 
-vi.mock('@/components/ui/Card', () => ({
+vi.mock("@/components/ui/Card", () => ({
   Card: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
-vi.mock('@/components/ui/Button', () => ({
-  buttonStyles: () => 'btn',
+vi.mock("@/components/ui/Button", () => ({
+  buttonStyles: () => "btn",
 }));
 
-vi.mock('@/components/feedback/ErrorState', () => ({
+vi.mock("@/components/feedback/ErrorState", () => ({
   ErrorState: ({ error }: { error: { message: string } }) => (
     <div>inline-error:{error.message}</div>
   ),
 }));
 
-vi.mock('@/components/feedback/EmptyState', () => ({
+vi.mock("@/components/feedback/EmptyState", () => ({
   EmptyState: ({ title }: { title: string }) => <div>{title}</div>,
 }));
 
-describe('SupervisorDashboardPage error routing', () => {
+describe("SupervisorDashboardPage error routing", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('routes blocking errors to global blocking modal callback', () => {
+  it("routes blocking errors to global blocking modal callback", () => {
     const error = {
-      timestamp: '2026-04-12T00:00:00Z',
+      timestamp: "2026-04-12T00:00:00Z",
       status: 503,
-      error: 'Service Unavailable',
-      code: 'SERVICE_UNAVAILABLE',
-      message: 'Service down',
-      path: '/api/supervisor/dashboard',
+      error: "Service Unavailable",
+      code: "SERVICE_UNAVAILABLE",
+      message: "Service down",
+      path: "/api/supervisor/dashboard",
       traceId: null,
       details: [],
     };
@@ -75,18 +77,23 @@ describe('SupervisorDashboardPage error routing', () => {
     );
 
     expect(showBlockingErrorMock).toHaveBeenCalledTimes(1);
-    expect(showBlockingErrorMock).toHaveBeenCalledWith(error, expect.any(Function));
-    expect(screen.queryByText('inline-error:Service down')).not.toBeInTheDocument();
+    expect(showBlockingErrorMock).toHaveBeenCalledWith(
+      error,
+      expect.any(Function),
+    );
+    expect(
+      screen.queryByText("inline-error:Service down"),
+    ).not.toBeInTheDocument();
   });
 
-  it('shows inline error for non-blocking failures', () => {
+  it("shows inline error for non-blocking failures", () => {
     const error = {
-      timestamp: '2026-04-12T00:00:00Z',
+      timestamp: "2026-04-12T00:00:00Z",
       status: 400,
-      error: 'Bad Request',
-      code: 'BAD_REQUEST',
-      message: 'Bad dashboard filters',
-      path: '/api/supervisor/dashboard',
+      error: "Bad Request",
+      code: "BAD_REQUEST",
+      message: "Bad dashboard filters",
+      path: "/api/supervisor/dashboard",
       traceId: null,
       details: [],
     };
@@ -105,6 +112,8 @@ describe('SupervisorDashboardPage error routing', () => {
     );
 
     expect(showBlockingErrorMock).not.toHaveBeenCalled();
-    expect(screen.getByText('inline-error:Bad dashboard filters')).toBeInTheDocument();
+    expect(
+      screen.getByText("inline-error:Bad dashboard filters"),
+    ).toBeInTheDocument();
   });
 });

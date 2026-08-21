@@ -1,4 +1,4 @@
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 type DeleteConfirmModalProps = {
   isOpen: boolean;
@@ -19,8 +19,9 @@ export function DeleteConfirmModal({
       title="Delete file?"
       description={
         <p>
-          This will permanently remove{' '}
-          <span className="font-semibold">{fileName ?? 'this file'}</span> from project storage.
+          This will permanently remove{" "}
+          <span className="font-semibold">{fileName ?? "this file"}</span> from
+          project storage.
         </p>
       }
       confirmLabel="Delete"

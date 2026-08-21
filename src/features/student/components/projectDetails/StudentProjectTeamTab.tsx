@@ -1,19 +1,24 @@
-import { Crown, ShieldCheck } from 'lucide-react';
-import { RoleBadge } from '@/components/ui/RoleBadge';
-import { StatusBadge } from '@/components/ui/StatusBadge';
-import type { StudentProjectDetailMember } from '../../types';
-import { memberDisplayName } from '../../utils/projectDetails/presentation';
+import { Crown, ShieldCheck } from "lucide-react";
+import { RoleBadge } from "@/components/ui/RoleBadge";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import type { StudentProjectDetailMember } from "../../types";
+import { memberDisplayName } from "../../utils/projectDetails/presentation";
 
 type StudentProjectTeamTabProps = {
   members: StudentProjectDetailMember[];
   leaderId: string | null;
 };
 
-export function StudentProjectTeamTab({ members, leaderId }: StudentProjectTeamTabProps) {
+export function StudentProjectTeamTab({
+  members,
+  leaderId,
+}: StudentProjectTeamTabProps) {
   return (
     <section className="rounded-3xl border border-border bg-white p-6 shadow-sm transition-all hover:shadow-md">
       <div className="flex flex-col">
-        <h2 className="text-lg font-bold tracking-tight text-slate-800">Project Team</h2>
+        <h2 className="text-lg font-bold tracking-tight text-slate-800">
+          Project Team
+        </h2>
         <p className="text-xs font-medium text-slate-400">
           Total {members.length} members assigned
         </p>
@@ -24,15 +29,17 @@ export function StudentProjectTeamTab({ members, leaderId }: StudentProjectTeamT
           <div
             key={member.id}
             className={`group relative overflow-hidden rounded-3xl border p-5 transition-all hover:shadow-lg ${
-              member.memberRole === 'SUPERVISOR'
-                ? 'border-indigo-100 bg-indigo-50/20'
-                : 'border-slate-100 bg-white'
+              member.memberRole === "SUPERVISOR"
+                ? "border-indigo-100 bg-indigo-50/20"
+                : "border-slate-100 bg-white"
             }`}
           >
             {/* Background pattern */}
             <div
               className={`absolute -right-4 -top-4 h-20 w-20 rounded-full opacity-10 transition-transform group-hover:scale-150 ${
-                member.memberRole === 'SUPERVISOR' ? 'bg-indigo-600' : 'bg-slate-400'
+                member.memberRole === "SUPERVISOR"
+                  ? "bg-indigo-600"
+                  : "bg-slate-400"
               }`}
             />
 
@@ -40,9 +47,9 @@ export function StudentProjectTeamTab({ members, leaderId }: StudentProjectTeamT
               <div className="flex items-center gap-3">
                 <div
                   className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-xs font-black shadow-inner ${
-                    member.memberRole === 'SUPERVISOR'
-                      ? 'bg-indigo-100 text-indigo-600'
-                      : 'bg-slate-50 text-slate-500'
+                    member.memberRole === "SUPERVISOR"
+                      ? "bg-indigo-100 text-indigo-600"
+                      : "bg-slate-50 text-slate-500"
                   }`}
                 >
                   {memberDisplayName(member).charAt(0).toUpperCase()}

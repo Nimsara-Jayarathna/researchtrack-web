@@ -1,5 +1,5 @@
-import { mergeConfig } from 'vitest/config';
-import viteConfig from './vite.config';
+import { mergeConfig } from "vitest/config";
+import viteConfig from "./vite.config";
 
 /**
  * Vitest configuration — extends the base Vite config so the @/ alias,
@@ -9,9 +9,9 @@ import viteConfig from './vite.config';
  */
 export default mergeConfig(viteConfig, {
   test: {
-    environment: 'jsdom',
+    environment: "jsdom",
     globals: true,
-    setupFiles: ['./src/test/setup.ts'],
+    setupFiles: ["./src/test/setup.ts"],
     passWithNoTests: true,
     testTimeout: 10000,
     hookTimeout: 10000,

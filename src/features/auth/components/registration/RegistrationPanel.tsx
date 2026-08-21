@@ -1,16 +1,16 @@
-import { Button } from '@/components/ui/Button';
-import { RequestStateModal } from '@/components/ui/RequestStateModal';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import type { RegisterConfig } from '../../types';
-import { Step1EmailInput } from './Step1EmailInput';
-import { Step2OTPVerify } from './Step2OTPVerify';
-import { Step3RoleSelect } from './Step3RoleSelect';
-import { Step4ProfileDetails } from './Step4ProfileDetails';
-import { useRegistrationFlow } from '../../hooks/useRegistrationFlow';
-import { getBlockingErrorTitle, isBlockingError } from '@/utils/errorSeverity';
-import { ModalShell } from '@/components/ui/ModalShell';
-import { AuthDialogCard } from '../shell/AuthDialogCard';
+import { Button } from "@/components/ui/Button";
+import { RequestStateModal } from "@/components/ui/RequestStateModal";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import type { RegisterConfig } from "../../types";
+import { Step1EmailInput } from "./Step1EmailInput";
+import { Step2OTPVerify } from "./Step2OTPVerify";
+import { Step3RoleSelect } from "./Step3RoleSelect";
+import { Step4ProfileDetails } from "./Step4ProfileDetails";
+import { useRegistrationFlow } from "../../hooks/useRegistrationFlow";
+import { getBlockingErrorTitle, isBlockingError } from "@/utils/errorSeverity";
+import { ModalShell } from "@/components/ui/ModalShell";
+import { AuthDialogCard } from "../shell/AuthDialogCard";
 
 type RegistrationPanelProps = {
   config?: RegisterConfig;
@@ -19,18 +19,18 @@ type RegistrationPanelProps = {
   onSwitchToLogin?: () => void;
 };
 
-const STEP_NUMBER: Record<'email' | 'otp' | 'role' | 'profile', number> = {
+const STEP_NUMBER: Record<"email" | "otp" | "role" | "profile", number> = {
   email: 1,
   otp: 2,
   role: 3,
   profile: 4,
 };
 
-const STEP_TITLE: Record<'email' | 'otp' | 'role' | 'profile', string> = {
-  email: 'Enter your email',
-  otp: 'Verify your email',
-  role: 'Select your role',
-  profile: 'Enter your details',
+const STEP_TITLE: Record<"email" | "otp" | "role" | "profile", string> = {
+  email: "Enter your email",
+  otp: "Verify your email",
+  role: "Select your role",
+  profile: "Enter your details",
 };
 
 export function RegistrationPanel({
@@ -48,16 +48,18 @@ export function RegistrationPanel({
       onSwitchToLogin();
       return;
     }
-    navigate('/login');
+    navigate("/login");
   };
-  const flow = useRegistrationFlow({ onSuccess: onSwitchToLogin ? switchToLogin : undefined });
+  const flow = useRegistrationFlow({
+    onSuccess: onSwitchToLogin ? switchToLogin : undefined,
+  });
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const currentStep = STEP_NUMBER[flow.step];
   const stepTitle = STEP_TITLE[flow.step];
   const lastStepRef = useRef(currentStep);
-  const [direction, setDirection] = useState<'right' | 'left'>('right');
+  const [direction, setDirection] = useState<"right" | "left">("right");
   const progressed =
-    flow.step !== 'email' ||
+    flow.step !== "email" ||
     Boolean(flow.registrationToken) ||
     Boolean(flow.inferredRole) ||
     Boolean(flow.selectedRole);
@@ -73,15 +75,16 @@ export function RegistrationPanel({
     [config],
   );
   const showProfileStateModal =
-    flow.step === 'profile' && (flow.isLoading || !!flow.error || flow.isSuccess);
+    flow.step === "profile" &&
+    (flow.isLoading || !!flow.error || flow.isSuccess);
   const blockingError = isBlockingError(flow.error) ? flow.error : null;
-  const showBlockingStateModal = flow.step !== 'profile' && !!blockingError;
+  const showBlockingStateModal = flow.step !== "profile" && !!blockingError;
 
   useEffect(() => {
     if (currentStep > lastStepRef.current) {
-      setDirection('right');
+      setDirection("right");
     } else if (currentStep < lastStepRef.current) {
-      setDirection('left');
+      setDirection("left");
     }
     lastStepRef.current = currentStep;
   }, [currentStep]);
@@ -89,12 +92,12 @@ export function RegistrationPanel({
   useEffect(() => {
     if (inModal) return;
     function handleEsc(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         handleDismissRequest();
       }
     }
-    document.addEventListener('keydown', handleEsc);
-    return () => document.removeEventListener('keydown', handleEsc);
+    document.addEventListener("keydown", handleEsc);
+    return () => document.removeEventListener("keydown", handleEsc);
   });
 
   function closeHard() {
@@ -103,7 +106,7 @@ export function RegistrationPanel({
   }
 
   function handleDismissRequest() {
-    if (flow.step === 'email' && !progressed) {
+    if (flow.step === "email" && !progressed) {
       closeHard();
       return;
     }
@@ -112,13 +115,13 @@ export function RegistrationPanel({
 
   const stepContent = useMemo(() => {
     switch (flow.step) {
-      case 'email':
+      case "email":
         return <Step1EmailInput flow={flow} config={effectiveConfig} />;
-      case 'otp':
+      case "otp":
         return <Step2OTPVerify flow={flow} />;
-      case 'role':
+      case "role":
         return <Step3RoleSelect flow={flow} />;
-      case 'profile':
+      case "profile":
         return <Step4ProfileDetails flow={flow} config={effectiveConfig} />;
       default:
         return null;
@@ -146,10 +149,10 @@ export function RegistrationPanel({
               key={flow.step}
               className={
                 flow.isSuccess
-                  ? ''
-                  : direction === 'right'
-                    ? 'motion-safe:animate-[slideInFromRight_220ms_ease-out]'
-                    : 'motion-safe:animate-[slideInFromLeft_220ms_ease-out]'
+                  ? ""
+                  : direction === "right"
+                    ? "motion-safe:animate-[slideInFromRight_220ms_ease-out]"
+                    : "motion-safe:animate-[slideInFromLeft_220ms_ease-out]"
               }
             >
               {stepContent}
@@ -166,10 +169,10 @@ export function RegistrationPanel({
             key={flow.step}
             className={
               flow.isSuccess
-                ? ''
-                : direction === 'right'
-                  ? 'motion-safe:animate-[slideInFromRight_220ms_ease-out]'
-                  : 'motion-safe:animate-[slideInFromLeft_220ms_ease-out]'
+                ? ""
+                : direction === "right"
+                  ? "motion-safe:animate-[slideInFromRight_220ms_ease-out]"
+                  : "motion-safe:animate-[slideInFromLeft_220ms_ease-out]"
             }
           >
             {stepContent}
@@ -194,7 +197,12 @@ export function RegistrationPanel({
             >
               Cancel
             </Button>
-            <Button type="button" variant="danger" size="md" onClick={closeHard}>
+            <Button
+              type="button"
+              variant="danger"
+              size="md"
+              onClick={closeHard}
+            >
               Close anyway
             </Button>
           </div>
@@ -205,26 +213,29 @@ export function RegistrationPanel({
         isOpen={showBlockingStateModal}
         status="error"
         title={getBlockingErrorTitle(blockingError)}
-        message={blockingError?.message ?? 'Please try again later.'}
+        message={blockingError?.message ?? "Please try again later."}
         onClose={flow.clearError}
       />
 
       <RequestStateModal
         isOpen={showProfileStateModal}
-        status={flow.isLoading ? 'loading' : flow.isSuccess ? 'success' : 'error'}
+        status={
+          flow.isLoading ? "loading" : flow.isSuccess ? "success" : "error"
+        }
         title={
           flow.isLoading
-            ? 'Creating your account'
+            ? "Creating your account"
             : flow.isSuccess
-              ? 'Account created'
-              : 'Registration failed'
+              ? "Account created"
+              : "Registration failed"
         }
         message={
           flow.isLoading
-            ? 'Please wait while we create your account.'
+            ? "Please wait while we create your account."
             : flow.isSuccess
-              ? 'Your account is ready. Redirecting to sign in...'
-              : (flow.error?.message ?? 'Something went wrong. Please try again.')
+              ? "Your account is ready. Redirecting to sign in..."
+              : (flow.error?.message ??
+                "Something went wrong. Please try again.")
         }
         onClose={flow.isSuccess ? switchToLogin : flow.clearError}
       />

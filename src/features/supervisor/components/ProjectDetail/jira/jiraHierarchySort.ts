@@ -1,4 +1,4 @@
-import type { JiraHierarchyNode } from '@/features/supervisor/types';
+import type { JiraHierarchyNode } from "@/features/supervisor/types";
 
 export const ISSUE_TYPE_ORDER: Record<string, number> = {
   Epic: -1,

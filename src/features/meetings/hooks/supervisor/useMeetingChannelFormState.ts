@@ -1,9 +1,9 @@
-import { useCallback, useState } from 'react';
-import type { MeetingChannel } from '../../types';
+import { useCallback, useState } from "react";
+import type { MeetingChannel } from "../../types";
 
 type MeetingChannelFormState = {
   isFormOpen: boolean;
-  formMode: 'add' | 'edit';
+  formMode: "add" | "edit";
   editingChannel: MeetingChannel | null;
   pendingDelete: MeetingChannel | null;
   openAdd: () => void;
@@ -15,18 +15,22 @@ type MeetingChannelFormState = {
 
 export function useMeetingChannelFormState(): MeetingChannelFormState {
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [formMode, setFormMode] = useState<'add' | 'edit'>('add');
-  const [editingChannel, setEditingChannel] = useState<MeetingChannel | null>(null);
-  const [pendingDelete, setPendingDelete] = useState<MeetingChannel | null>(null);
+  const [formMode, setFormMode] = useState<"add" | "edit">("add");
+  const [editingChannel, setEditingChannel] = useState<MeetingChannel | null>(
+    null,
+  );
+  const [pendingDelete, setPendingDelete] = useState<MeetingChannel | null>(
+    null,
+  );
 
   const openAdd = useCallback(() => {
-    setFormMode('add');
+    setFormMode("add");
     setEditingChannel(null);
     setIsFormOpen(true);
   }, []);
 
   const openEdit = useCallback((channel: MeetingChannel) => {
-    setFormMode('edit');
+    setFormMode("edit");
     setEditingChannel(channel);
     setIsFormOpen(true);
   }, []);
@@ -34,7 +38,7 @@ export function useMeetingChannelFormState(): MeetingChannelFormState {
   const closeForm = useCallback(() => {
     setIsFormOpen(false);
     setEditingChannel(null);
-    setFormMode('add');
+    setFormMode("add");
   }, []);
 
   const openDelete = useCallback((channel: MeetingChannel) => {

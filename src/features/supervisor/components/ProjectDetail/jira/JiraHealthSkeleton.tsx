@@ -39,7 +39,10 @@ export function JiraHealthSkeleton() {
           <div className="mx-auto mt-5 h-32 w-32 rounded-full bg-slate-100" />
           <div className="mt-4 space-y-2">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={`jira-legend-skeleton-${i}`} className="flex items-center gap-2">
+              <div
+                key={`jira-legend-skeleton-${i}`}
+                className="flex items-center gap-2"
+              >
                 <div className="h-2.5 w-2.5 rounded-full bg-slate-200" />
                 <div className="h-2.5 flex-1 rounded bg-slate-100" />
               </div>

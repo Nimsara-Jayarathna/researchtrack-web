@@ -1,4 +1,4 @@
-import type { UserRole } from '@/types/roles';
+import type { UserRole } from "@/types/roles";
 
 /** Authenticated user shape returned by the backend */
 export type AuthUser = {
@@ -53,7 +53,7 @@ export type LoginResponse = {
   user: AuthUser;
 };
 
-export type RegistrationStep = 'email' | 'otp' | 'role' | 'profile';
+export type RegistrationStep = "email" | "otp" | "role" | "profile";
 
 export type RegisterInitRequest = { email: string };
 export type RegisterVerifyRequest = { email: string; otp: string };

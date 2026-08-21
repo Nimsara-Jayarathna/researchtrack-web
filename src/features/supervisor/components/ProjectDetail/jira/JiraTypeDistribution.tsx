@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { Layers } from 'lucide-react';
-import type { JiraHealth } from '@/features/supervisor/types';
+import { useState } from "react";
+import { Layers } from "lucide-react";
+import type { JiraHealth } from "@/features/supervisor/types";
 
 type JiraTypeDistributionProps = {
   health: JiraHealth;
@@ -8,12 +8,36 @@ type JiraTypeDistributionProps = {
 
 // Color palette — each type gets a slot
 const PALETTE = [
-  { bar: '#6366F1', track: '#E0E7FF', badge: 'bg-indigo-50 border-indigo-200 text-indigo-700' },
-  { bar: '#06B6D4', track: '#CFFAFE', badge: 'bg-cyan-50 border-cyan-200 text-cyan-700' },
-  { bar: '#8B5CF6', track: '#EDE9FE', badge: 'bg-violet-50 border-violet-200 text-violet-700' },
-  { bar: '#F59E0B', track: '#FEF3C7', badge: 'bg-amber-50 border-amber-200 text-amber-700' },
-  { bar: '#10B981', track: '#D1FAE5', badge: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
-  { bar: '#F43F5E', track: '#FFE4E6', badge: 'bg-rose-50 border-rose-200 text-rose-700' },
+  {
+    bar: "#6366F1",
+    track: "#E0E7FF",
+    badge: "bg-indigo-50 border-indigo-200 text-indigo-700",
+  },
+  {
+    bar: "#06B6D4",
+    track: "#CFFAFE",
+    badge: "bg-cyan-50 border-cyan-200 text-cyan-700",
+  },
+  {
+    bar: "#8B5CF6",
+    track: "#EDE9FE",
+    badge: "bg-violet-50 border-violet-200 text-violet-700",
+  },
+  {
+    bar: "#F59E0B",
+    track: "#FEF3C7",
+    badge: "bg-amber-50 border-amber-200 text-amber-700",
+  },
+  {
+    bar: "#10B981",
+    track: "#D1FAE5",
+    badge: "bg-emerald-50 border-emerald-200 text-emerald-700",
+  },
+  {
+    bar: "#F43F5E",
+    track: "#FFE4E6",
+    badge: "bg-rose-50 border-rose-200 text-rose-700",
+  },
 ];
 
 function truncate(s: string, max = 18): string {
@@ -24,7 +48,9 @@ export function JiraTypeDistribution({ health }: JiraTypeDistributionProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   // Sort descending, cap at 6
-  const items = [...health.typeDistribution].sort((a, b) => b.count - a.count).slice(0, 6);
+  const items = [...health.typeDistribution]
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 6);
 
   const total = items.reduce((sum, item) => sum + item.count, 0);
 
@@ -37,7 +63,9 @@ export function JiraTypeDistribution({ health }: JiraTypeDistributionProps) {
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-indigo-500 text-white shadow-sm">
             <Layers className="h-4 w-4" />
           </span>
-          <p className="text-sm font-bold tracking-wide text-slate-800">Issue Types</p>
+          <p className="text-sm font-bold tracking-wide text-slate-800">
+            Issue Types
+          </p>
         </div>
         <div className="flex flex-1 items-center justify-center">
           <p className="text-sm text-slate-400">No issue type data</p>
@@ -54,7 +82,9 @@ export function JiraTypeDistribution({ health }: JiraTypeDistributionProps) {
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-indigo-500 text-white shadow-sm">
           <Layers className="h-4 w-4" />
         </span>
-        <p className="text-sm font-bold tracking-wide text-slate-800">Issue Types</p>
+        <p className="text-sm font-bold tracking-wide text-slate-800">
+          Issue Types
+        </p>
         <span className="ml-auto rounded-full border border-slate-200 bg-white px-2.5 py-0.5 text-xs font-semibold tabular-nums text-slate-500 shadow-sm">
           {total} issues
         </span>
@@ -74,7 +104,7 @@ export function JiraTypeDistribution({ health }: JiraTypeDistributionProps) {
             <li
               key={`${item.type}-${index}`}
               className={`group cursor-default rounded-xl px-3 py-2.5 transition-all duration-200 ${
-                isHovered ? 'bg-slate-50 shadow-sm' : 'hover:bg-slate-50/60'
+                isHovered ? "bg-slate-50 shadow-sm" : "hover:bg-slate-50/60"
               }`}
               onMouseEnter={() => setHoveredIndex(index)}
               onMouseLeave={() => setHoveredIndex(null)}
@@ -90,7 +120,7 @@ export function JiraTypeDistribution({ health }: JiraTypeDistributionProps) {
                 {/* Type label */}
                 <span
                   className={`flex-1 truncate text-sm font-medium transition-colors duration-200 ${
-                    isHovered ? 'text-slate-900' : 'text-slate-700'
+                    isHovered ? "text-slate-900" : "text-slate-700"
                   }`}
                   title={item.type}
                 >

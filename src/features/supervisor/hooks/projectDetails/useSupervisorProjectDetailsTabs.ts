@@ -1,9 +1,9 @@
-import { useCallback, useMemo } from 'react';
-import type { SetURLSearchParams } from 'react-router-dom';
-import { TABS } from '../../projectDetails.shared';
-import type { SupervisorProjectDetailTab } from '../../types';
+import { useCallback, useMemo } from "react";
+import type { SetURLSearchParams } from "react-router-dom";
+import { TABS } from "../../projectDetails.shared";
+import type { SupervisorProjectDetailTab } from "../../types";
 
-const DEFAULT_TAB: SupervisorProjectDetailTab = 'overview';
+const DEFAULT_TAB: SupervisorProjectDetailTab = "overview";
 
 type UseSupervisorProjectDetailsTabsResult = {
   tabs: SupervisorProjectDetailTab[];
@@ -18,7 +18,9 @@ export function useSupervisorProjectDetailsTabs(
   const tabs = useMemo(() => [...TABS], []);
 
   const activeTab = useMemo(() => {
-    const requestedTab = searchParams.get('tab') as SupervisorProjectDetailTab | null;
+    const requestedTab = searchParams.get(
+      "tab",
+    ) as SupervisorProjectDetailTab | null;
     if (requestedTab && tabs.includes(requestedTab)) {
       return requestedTab;
     }
@@ -29,9 +31,9 @@ export function useSupervisorProjectDetailsTabs(
     (tab: SupervisorProjectDetailTab) => {
       const nextParams = new URLSearchParams(searchParams);
       if (tab === DEFAULT_TAB) {
-        nextParams.delete('tab');
+        nextParams.delete("tab");
       } else {
-        nextParams.set('tab', tab);
+        nextParams.set("tab", tab);
       }
       setSearchParams(nextParams, { replace: true });
     },

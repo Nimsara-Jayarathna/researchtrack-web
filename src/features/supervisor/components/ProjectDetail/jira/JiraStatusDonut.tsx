@@ -1,8 +1,8 @@
-import { useState, useCallback } from 'react';
-import { CheckCircle2 } from 'lucide-react';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
-import type { PieSectorDataItem } from 'recharts/types/polar/Pie';
-import type { JiraHealth } from '@/features/supervisor/types';
+import { useState, useCallback } from "react";
+import { CheckCircle2 } from "lucide-react";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
+import type { PieSectorDataItem } from "recharts/types/polar/Pie";
+import type { JiraHealth } from "@/features/supervisor/types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type JiraStatusDonutProps = {
@@ -16,40 +16,48 @@ type ActiveShapeProps = PieSectorDataItem & {
 // ─── Config ───────────────────────────────────────────────────────────────────
 const SEGMENTS = [
   {
-    key: 'done' as const,
-    label: 'Done',
-    color: '#10B981',
-    trackColor: '#D1FAE5',
-    badgeBg: 'bg-emerald-50',
-    badgeBorder: 'border-emerald-200',
-    badgeText: 'text-emerald-700',
-    dotGlow: '#10B98144',
+    key: "done" as const,
+    label: "Done",
+    color: "#10B981",
+    trackColor: "#D1FAE5",
+    badgeBg: "bg-emerald-50",
+    badgeBorder: "border-emerald-200",
+    badgeText: "text-emerald-700",
+    dotGlow: "#10B98144",
   },
   {
-    key: 'inProgress' as const,
-    label: 'In Progress',
-    color: '#6366F1',
-    trackColor: '#E0E7FF',
-    badgeBg: 'bg-indigo-50',
-    badgeBorder: 'border-indigo-200',
-    badgeText: 'text-indigo-700',
-    dotGlow: '#6366F144',
+    key: "inProgress" as const,
+    label: "In Progress",
+    color: "#6366F1",
+    trackColor: "#E0E7FF",
+    badgeBg: "bg-indigo-50",
+    badgeBorder: "border-indigo-200",
+    badgeText: "text-indigo-700",
+    dotGlow: "#6366F144",
   },
   {
-    key: 'toDo' as const,
-    label: 'To Do',
-    color: '#94A3B8',
-    trackColor: '#F1F5F9',
-    badgeBg: 'bg-slate-50',
-    badgeBorder: 'border-slate-200',
-    badgeText: 'text-slate-600',
-    dotGlow: '#94A3B844',
+    key: "toDo" as const,
+    label: "To Do",
+    color: "#94A3B8",
+    trackColor: "#F1F5F9",
+    badgeBg: "bg-slate-50",
+    badgeBorder: "border-slate-200",
+    badgeText: "text-slate-600",
+    dotGlow: "#94A3B844",
   },
 ] as const;
 
 // ─── Active (hovered) slice shape ─────────────────────────────────────────────
 function ActiveShape(props: ActiveShapeProps) {
-  const { cx = 0, cy = 0, innerRadius = 0, outerRadius = 0, startAngle, endAngle, color } = props;
+  const {
+    cx = 0,
+    cy = 0,
+    innerRadius = 0,
+    outerRadius = 0,
+    startAngle,
+    endAngle,
+    color,
+  } = props;
 
   // Draw a slightly expanded arc via SVG path using recharts internals.
   // We leverage the sector geometry that recharts already computed for us.
@@ -108,14 +116,18 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
   return (
     <div
       className="flex items-center gap-2 rounded-xl border border-slate-100 bg-white px-3 py-2 shadow-xl"
-      style={{ backdropFilter: 'blur(8px)' }}
+      style={{ backdropFilter: "blur(8px)" }}
     >
       <span
         className="h-2.5 w-2.5 shrink-0 rounded-full"
         style={{ backgroundColor: entry.color }}
       />
-      <span className="text-xs font-semibold text-slate-800">{entry.label}</span>
-      <span className="text-xs font-bold tabular-nums text-slate-900">{entry.value}</span>
+      <span className="text-xs font-semibold text-slate-800">
+        {entry.label}
+      </span>
+      <span className="text-xs font-bold tabular-nums text-slate-900">
+        {entry.value}
+      </span>
       <span className="text-[10px] font-medium text-slate-400">
         {Math.round(entry.percent * 100)}%
       </span>
@@ -141,14 +153,14 @@ function describeArc(
   const e = polarToCartesian(cx, cy, outerR, startAngle);
   const si = polarToCartesian(cx, cy, innerR, endAngle);
   const ei = polarToCartesian(cx, cy, innerR, startAngle);
-  const largeArc = endAngle - startAngle <= 180 ? '0' : '1';
+  const largeArc = endAngle - startAngle <= 180 ? "0" : "1";
   return [
     `M ${s.x} ${s.y}`,
     `A ${outerR} ${outerR} 0 ${largeArc} 0 ${e.x} ${e.y}`,
     `L ${ei.x} ${ei.y}`,
     `A ${innerR} ${innerR} 0 ${largeArc} 1 ${si.x} ${si.y}`,
-    'Z',
-  ].join(' ');
+    "Z",
+  ].join(" ");
 }
 
 // ─── Main component ────────────────────────────────────────────────────────────
@@ -156,7 +168,9 @@ export function JiraStatusDonut({ health }: JiraStatusDonutProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   const total =
-    health.statusBreakdown.done + health.statusBreakdown.inProgress + health.statusBreakdown.toDo;
+    health.statusBreakdown.done +
+    health.statusBreakdown.inProgress +
+    health.statusBreakdown.toDo;
 
   const completionPct = Math.round(health.completionPercent);
 
@@ -168,7 +182,10 @@ export function JiraStatusDonut({ health }: JiraStatusDonutProps) {
     percent: total > 0 ? health.statusBreakdown[seg.key] / total : 0,
   }));
 
-  const onEnter = useCallback((_: unknown, index: number) => setActiveIndex(index), []);
+  const onEnter = useCallback(
+    (_: unknown, index: number) => setActiveIndex(index),
+    [],
+  );
   const onLeave = useCallback(() => setActiveIndex(null), []);
 
   return (
@@ -178,7 +195,9 @@ export function JiraStatusDonut({ health }: JiraStatusDonutProps) {
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-sm">
           <CheckCircle2 className="h-4 w-4" />
         </span>
-        <p className="text-sm font-bold tracking-wide text-slate-800">Status Breakdown</p>
+        <p className="text-sm font-bold tracking-wide text-slate-800">
+          Status Breakdown
+        </p>
         <span className="ml-auto rounded-full border border-slate-200 bg-white px-2.5 py-0.5 text-xs font-semibold tabular-nums text-slate-500 shadow-sm">
           {total} issues
         </span>
@@ -196,9 +215,19 @@ export function JiraStatusDonut({ health }: JiraStatusDonutProps) {
             <PieChart>
               <defs>
                 {SEGMENTS.map((seg) => (
-                  <radialGradient key={seg.key} id={`grad-${seg.key}`} r="50%" cx="50%" cy="50%">
+                  <radialGradient
+                    key={seg.key}
+                    id={`grad-${seg.key}`}
+                    r="50%"
+                    cx="50%"
+                    cy="50%"
+                  >
                     <stop offset="0%" stopColor={seg.color} stopOpacity={1} />
-                    <stop offset="100%" stopColor={seg.color} stopOpacity={0.8} />
+                    <stop
+                      offset="100%"
+                      stopColor={seg.color}
+                      stopOpacity={0.8}
+                    />
                   </radialGradient>
                 ))}
               </defs>
@@ -223,8 +252,8 @@ export function JiraStatusDonut({ health }: JiraStatusDonutProps) {
                       {...props}
                       color={
                         activeIndex !== null
-                          ? (SEGMENTS[activeIndex]?.color ?? '#10B981')
-                          : '#10B981'
+                          ? (SEGMENTS[activeIndex]?.color ?? "#10B981")
+                          : "#10B981"
                       }
                     />
                   ) as React.ReactElement
@@ -234,13 +263,21 @@ export function JiraStatusDonut({ health }: JiraStatusDonutProps) {
                   <Cell
                     key={`cell-${index}`}
                     fill={`url(#grad-${SEGMENTS[index].key})`}
-                    opacity={activeIndex === null || activeIndex === index ? 1 : 0.35}
-                    style={{ cursor: 'pointer', transition: 'opacity 200ms ease' }}
+                    opacity={
+                      activeIndex === null || activeIndex === index ? 1 : 0.35
+                    }
+                    style={{
+                      cursor: "pointer",
+                      transition: "opacity 200ms ease",
+                    }}
                   />
                 ))}
               </Pie>
 
-              <Tooltip content={<CustomTooltip />} wrapperStyle={{ outline: 'none' }} />
+              <Tooltip
+                content={<CustomTooltip />}
+                wrapperStyle={{ outline: "none" }}
+              />
             </PieChart>
           </ResponsiveContainer>
 
@@ -267,8 +304,8 @@ export function JiraStatusDonut({ health }: JiraStatusDonutProps) {
                 key={seg.key}
                 className={`cursor-default rounded-xl border px-3 py-2.5 transition-all duration-200 ${
                   isActive
-                    ? 'border-slate-200 bg-slate-50 shadow-sm'
-                    : 'border-transparent hover:border-slate-100 hover:bg-slate-50/70'
+                    ? "border-slate-200 bg-slate-50 shadow-sm"
+                    : "border-transparent hover:border-slate-100 hover:bg-slate-50/70"
                 }`}
                 onMouseEnter={() => setActiveIndex(i)}
                 onMouseLeave={() => setActiveIndex(null)}
@@ -280,14 +317,14 @@ export function JiraStatusDonut({ health }: JiraStatusDonutProps) {
                     className="h-2.5 w-2.5 shrink-0 rounded-full transition-all duration-300"
                     style={{
                       backgroundColor: seg.color,
-                      boxShadow: isActive ? `0 0 0 4px ${seg.dotGlow}` : 'none',
-                      transform: isActive ? 'scale(1.25)' : 'scale(1)',
+                      boxShadow: isActive ? `0 0 0 4px ${seg.dotGlow}` : "none",
+                      transform: isActive ? "scale(1.25)" : "scale(1)",
                     }}
                   />
 
                   <span
                     className={`flex-1 truncate text-sm font-medium transition-colors duration-200 ${
-                      isActive ? 'text-slate-900' : 'text-slate-600'
+                      isActive ? "text-slate-900" : "text-slate-600"
                     }`}
                   >
                     {seg.label}
@@ -296,7 +333,7 @@ export function JiraStatusDonut({ health }: JiraStatusDonutProps) {
                   {/* Count */}
                   <span
                     className={`text-sm font-bold tabular-nums transition-colors duration-200 ${
-                      isActive ? 'text-slate-900' : 'text-slate-700'
+                      isActive ? "text-slate-900" : "text-slate-700"
                     }`}
                   >
                     {count}

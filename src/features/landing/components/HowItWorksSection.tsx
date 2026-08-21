@@ -1,34 +1,38 @@
-import { Activity, Calendar, FolderPlus, Link2 } from 'lucide-react';
-import type { LandingStepCard } from '../types';
+import { Activity, Calendar, FolderPlus, Link2 } from "lucide-react";
+import type { LandingStepCard } from "../types";
 
 const STEPS: LandingStepCard[] = [
   {
-    id: 'create-project',
+    id: "create-project",
     icon: FolderPlus,
     stepNumber: 1,
-    title: 'Create Your Project',
-    description: 'Students register their research project and connect GitHub repository.',
+    title: "Create Your Project",
+    description:
+      "Students register their research project and connect GitHub repository.",
   },
   {
-    id: 'track-development',
+    id: "track-development",
     icon: Activity,
     stepNumber: 2,
-    title: 'Track Development',
-    description: 'Supervisors review commits, branches, and pull requests in real-time.',
+    title: "Track Development",
+    description:
+      "Supervisors review commits, branches, and pull requests in real-time.",
   },
   {
-    id: 'manage-meetings',
+    id: "manage-meetings",
     icon: Calendar,
     stepNumber: 3,
-    title: 'Manage Meetings',
-    description: 'Record meeting minutes and track action items with your supervisor.',
+    title: "Manage Meetings",
+    description:
+      "Record meeting minutes and track action items with your supervisor.",
   },
   {
-    id: 'sync-jira',
+    id: "sync-jira",
     icon: Link2,
     stepNumber: 4,
-    title: 'Sync with Jira',
-    description: 'Ensure research milestones align with development tasks automatically.',
+    title: "Sync with Jira",
+    description:
+      "Ensure research milestones align with development tasks automatically.",
   },
 ];
 
@@ -56,9 +60,15 @@ export function HowItWorksSection() {
                 <Icon className="h-5 w-5 text-sky-700" />
               </div>
               <div>
-                <div className="text-xs font-medium text-sky-700">Step {stepNumber}</div>
-                <h3 className="mt-1 text-base font-semibold text-foreground">{title}</h3>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">{description}</p>
+                <div className="text-xs font-medium text-sky-700">
+                  Step {stepNumber}
+                </div>
+                <h3 className="mt-1 text-base font-semibold text-foreground">
+                  {title}
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  {description}
+                </p>
               </div>
             </div>
           </div>

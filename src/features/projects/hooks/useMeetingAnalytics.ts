@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
 type MeetingChannelLike = {
   status?: string | null;
@@ -36,7 +36,8 @@ export function useMeetingAnalytics(
   projectId: string | null | undefined,
   fetchers: MeetingAnalyticsFetchers,
 ): MeetingAnalyticsState {
-  const [analytics, setAnalytics] = useState<MeetingAnalyticsState>(EMPTY_ANALYTICS);
+  const [analytics, setAnalytics] =
+    useState<MeetingAnalyticsState>(EMPTY_ANALYTICS);
   const { getMeetingChannels, getMeetingRecords } = fetchers;
 
   useEffect(() => {
@@ -57,8 +58,12 @@ export function useMeetingAnalytics(
           loading: false,
           channels: channels.length,
           records: records.length,
-          approvedChannels: channels.filter((channel) => channel.status === 'APPROVED').length,
-          pendingRecords: records.filter((record) => record.status === 'PENDING').length,
+          approvedChannels: channels.filter(
+            (channel) => channel.status === "APPROVED",
+          ).length,
+          pendingRecords: records.filter(
+            (record) => record.status === "PENDING",
+          ).length,
           platformTypes: new Set(
             channels
               .map((channel) => channel.platform)

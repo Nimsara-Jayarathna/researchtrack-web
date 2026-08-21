@@ -1,38 +1,49 @@
-import { useState } from 'react';
-import type { FormEvent } from 'react';
-import { isApiException } from '@/services/apiClient';
-import { supervisorApi } from '../api/supervisorApi';
-import { invalidateSupervisorProjectsCache } from './useSupervisorProjects';
-import type { CreateSupervisorProjectResponse, SupervisorStudentSearchResult } from '../types';
-import { INITIAL_DRAFT } from '../createProject.shared';
-import type { CreateProjectStepId, DraftState, RequestModalState } from '../createProject.shared';
-import { useCreateProjectMilestonesState } from './projectCreate/useCreateProjectMilestonesState';
-import { useCreateProjectStudentSearchState } from './projectCreate/useCreateProjectStudentSearchState';
+import { useState } from "react";
+import type { FormEvent } from "react";
+import { isApiException } from "@/services/apiClient";
+import { supervisorApi } from "../api/supervisorApi";
+import { invalidateSupervisorProjectsCache } from "./useSupervisorProjects";
+import type {
+  CreateSupervisorProjectResponse,
+  SupervisorStudentSearchResult,
+} from "../types";
+import { INITIAL_DRAFT } from "../createProject.shared";
+import type {
+  CreateProjectStepId,
+  DraftState,
+  RequestModalState,
+} from "../createProject.shared";
+import { useCreateProjectMilestonesState } from "./projectCreate/useCreateProjectMilestonesState";
+import { useCreateProjectStudentSearchState } from "./projectCreate/useCreateProjectStudentSearchState";
 
 type UseCreateProjectPageStateParams = {
   onSuccessNavigate: () => void;
 };
 
-export function useCreateProjectPageState({ onSuccessNavigate }: UseCreateProjectPageStateParams) {
+export function useCreateProjectPageState({
+  onSuccessNavigate,
+}: UseCreateProjectPageStateParams) {
   const [currentStep, setCurrentStep] = useState<CreateProjectStepId>(1);
   const [draft, setDraft] = useState<DraftState>(INITIAL_DRAFT);
-  const [selectedStudents, setSelectedStudents] = useState<SupervisorStudentSearchResult[]>([]);
+  const [selectedStudents, setSelectedStudents] = useState<
+    SupervisorStudentSearchResult[]
+  >([]);
   const [selectedLeaderId, setSelectedLeaderId] = useState<string | null>(null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [showIncompleteHint, setShowIncompleteHint] = useState(false);
-  const [createdProject, setCreatedProject] = useState<CreateSupervisorProjectResponse | null>(
-    null,
-  );
+  const [createdProject, setCreatedProject] =
+    useState<CreateSupervisorProjectResponse | null>(null);
   const [requestModal, setRequestModal] = useState<RequestModalState>({
     isOpen: false,
-    status: 'loading',
-    title: '',
-    message: '',
+    status: "loading",
+    title: "",
+    message: "",
   });
 
-  const step1Valid = draft.title.trim().length > 0 && draft.summary.trim().length > 0;
+  const step1Valid =
+    draft.title.trim().length > 0 && draft.summary.trim().length > 0;
   const step2Valid = selectedStudents.length > 0;
   const milestonesState = useCreateProjectMilestonesState({ createdProject });
   const studentSearchState = useCreateProjectStudentSearchState({
@@ -45,9 +56,19 @@ export function useCreateProjectPageState({ onSuccessNavigate }: UseCreateProjec
   });
 
   const { milestones, milestoneRefs, expandedMilestoneIndex } = milestonesState;
-  const { studentQuery, setStudentQuery, searchResults, searchState, searchError } =
-    studentSearchState;
-  const { milestonePolicyError, step3Valid, incompleteMilestoneCount, shouldShowSearchPanel } = {
+  const {
+    studentQuery,
+    setStudentQuery,
+    searchResults,
+    searchState,
+    searchError,
+  } = studentSearchState;
+  const {
+    milestonePolicyError,
+    step3Valid,
+    incompleteMilestoneCount,
+    shouldShowSearchPanel,
+  } = {
     milestonePolicyError: milestonesState.milestonePolicyError,
     step3Valid: milestonesState.step3Valid,
     incompleteMilestoneCount: milestonesState.incompleteMilestoneCount,
@@ -55,7 +76,10 @@ export function useCreateProjectPageState({ onSuccessNavigate }: UseCreateProjec
   };
   const primaryCreatedMilestone = milestonesState.primaryCreatedMilestone;
 
-  function updateDraft<F extends keyof DraftState>(field: F, value: DraftState[F]) {
+  function updateDraft<F extends keyof DraftState>(
+    field: F,
+    value: DraftState[F],
+  ) {
     setDraft((prev) => ({ ...prev, [field]: value }));
   }
 
@@ -78,9 +102,10 @@ export function useCreateProjectPageState({ onSuccessNavigate }: UseCreateProjec
     setCreatedProject(null);
     setRequestModal({
       isOpen: true,
-      status: 'loading',
-      title: 'Creating project',
-      message: 'Saving the project, assigning students, and creating milestones.',
+      status: "loading",
+      title: "Creating project",
+      message:
+        "Saving the project, assigning students, and creating milestones.",
     });
 
     try {
@@ -105,19 +130,19 @@ export function useCreateProjectPageState({ onSuccessNavigate }: UseCreateProjec
       milestonesState.resetMilestones();
       setRequestModal({
         isOpen: true,
-        status: 'success',
-        title: 'Project created',
+        status: "success",
+        title: "Project created",
         message: `${response.title} was created successfully and is ready for the next workflow steps.`,
       });
     } catch (error) {
       const message = isApiException(error)
         ? error.apiError.message
-        : 'Unable to create the project right now. Please try again.';
+        : "Unable to create the project right now. Please try again.";
       setSubmitError(message);
       setRequestModal({
         isOpen: true,
-        status: 'error',
-        title: 'Project creation failed',
+        status: "error",
+        title: "Project creation failed",
         message,
       });
     } finally {
@@ -128,7 +153,7 @@ export function useCreateProjectPageState({ onSuccessNavigate }: UseCreateProjec
   function closeRequestModal() {
     const nextStatus = requestModal.status;
     setRequestModal((prev) => ({ ...prev, isOpen: false }));
-    if (nextStatus === 'success') onSuccessNavigate();
+    if (nextStatus === "success") onSuccessNavigate();
   }
 
   return {

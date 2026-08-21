@@ -1,18 +1,20 @@
-import { useState } from 'react';
-import { StudentMeetingChannelsSection } from '@/features/meetings/components/StudentMeetingChannelsSection';
-import { StudentMeetingRecordsSection } from '@/features/meetings/components/StudentMeetingRecordsSection';
+import { useState } from "react";
+import { StudentMeetingChannelsSection } from "@/features/meetings/components/StudentMeetingChannelsSection";
+import { StudentMeetingRecordsSection } from "@/features/meetings/components/StudentMeetingRecordsSection";
 
 type StudentMeetingsTabSectionProps = {
   projectId: string;
 };
 
-type MeetingsInnerTab = 'channels' | 'records';
+type MeetingsInnerTab = "channels" | "records";
 
-export function StudentMeetingsTabSection({ projectId }: StudentMeetingsTabSectionProps) {
-  const [activeTab, setActiveTab] = useState<MeetingsInnerTab>('channels');
+export function StudentMeetingsTabSection({
+  projectId,
+}: StudentMeetingsTabSectionProps) {
+  const [activeTab, setActiveTab] = useState<MeetingsInnerTab>("channels");
   const tabs: Array<{ value: MeetingsInnerTab; label: string }> = [
-    { value: 'channels', label: 'Channels' },
-    { value: 'records', label: 'Records' },
+    { value: "channels", label: "Channels" },
+    { value: "records", label: "Records" },
   ];
 
   return (
@@ -34,8 +36,8 @@ export function StudentMeetingsTabSection({ projectId }: StudentMeetingsTabSecti
                   onClick={() => setActiveTab(tab.value)}
                   className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[13px] font-medium transition-all ${
                     isActive
-                      ? 'border-indigo-200 bg-indigo-50 text-indigo-700 shadow-sm'
-                      : 'border-transparent bg-transparent text-slate-500 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-700'
+                      ? "border-indigo-200 bg-indigo-50 text-indigo-700 shadow-sm"
+                      : "border-transparent bg-transparent text-slate-500 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-700"
                   }`}
                 >
                   {tab.label}
@@ -46,12 +48,18 @@ export function StudentMeetingsTabSection({ projectId }: StudentMeetingsTabSecti
         </ul>
       </section>
 
-      <div hidden={activeTab !== 'channels'}>
-        <StudentMeetingChannelsSection projectId={projectId} enabled={activeTab === 'channels'} />
+      <div hidden={activeTab !== "channels"}>
+        <StudentMeetingChannelsSection
+          projectId={projectId}
+          enabled={activeTab === "channels"}
+        />
       </div>
 
-      <div hidden={activeTab !== 'records'}>
-        <StudentMeetingRecordsSection projectId={projectId} enabled={activeTab === 'records'} />
+      <div hidden={activeTab !== "records"}>
+        <StudentMeetingRecordsSection
+          projectId={projectId}
+          enabled={activeTab === "records"}
+        />
       </div>
     </section>
   );

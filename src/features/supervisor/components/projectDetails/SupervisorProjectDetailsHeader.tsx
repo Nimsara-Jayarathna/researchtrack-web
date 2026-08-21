@@ -1,9 +1,9 @@
-import { CalendarDays, Clock3, Users } from 'lucide-react';
-import { useRef } from 'react';
-import { Select } from '@/components/ui/Select';
-import { parseLocalDateOnly } from '@/lib/dateOnly';
-import { dateFormatter, LIFECYCLE_OPTIONS } from '../../projectDetails.shared';
-import type { SupervisorProjectLifecycle } from '../../types';
+import { CalendarDays, Clock3, Users } from "lucide-react";
+import { useRef } from "react";
+import { Select } from "@/components/ui/Select";
+import { parseLocalDateOnly } from "@/lib/dateOnly";
+import { dateFormatter, LIFECYCLE_OPTIONS } from "../../projectDetails.shared";
+import type { SupervisorProjectLifecycle } from "../../types";
 
 type SupervisorProjectDetailsHeaderProps = {
   title: string;
@@ -26,7 +26,9 @@ export function SupervisorProjectDetailsHeader({
   isUpdatingStatus,
   onQuickStatusChange,
 }: SupervisorProjectDetailsHeaderProps) {
-  const parsedMilestoneDate = milestoneDate ? parseLocalDateOnly(milestoneDate) : null;
+  const parsedMilestoneDate = milestoneDate
+    ? parseLocalDateOnly(milestoneDate)
+    : null;
   const lifecyclePillRef = useRef<HTMLDivElement>(null);
 
   return (
@@ -39,13 +41,13 @@ export function SupervisorProjectDetailsHeader({
           <p
             className="mt-1.5 text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7"
             style={{
-              display: '-webkit-box',
+              display: "-webkit-box",
               WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
             }}
           >
-            {summary ?? 'No summary has been recorded for this project yet.'}
+            {summary ?? "No summary has been recorded for this project yet."}
           </p>
         </div>
         <div
@@ -59,7 +61,11 @@ export function SupervisorProjectDetailsHeader({
             <div className="mt-0.5">
               <Select
                 value={quickLifecycleStatus}
-                onChange={(e) => onQuickStatusChange(e.target.value as SupervisorProjectLifecycle)}
+                onChange={(e) =>
+                  onQuickStatusChange(
+                    e.target.value as SupervisorProjectLifecycle,
+                  )
+                }
                 disabled={isUpdatingStatus}
                 menuAnchorRef={lifecyclePillRef}
                 menuAlign="auto"
@@ -68,7 +74,7 @@ export function SupervisorProjectDetailsHeader({
               >
                 {LIFECYCLE_OPTIONS.map((status) => (
                   <option key={status} value={status}>
-                    {status.replace('_', ' ')}
+                    {status.replace("_", " ")}
                   </option>
                 ))}
               </Select>
@@ -92,7 +98,7 @@ export function SupervisorProjectDetailsHeader({
                   ? parsedMilestoneDate
                     ? dateFormatter.format(parsedMilestoneDate)
                     : milestoneDate
-                  : 'Not set'}
+                  : "Not set"}
               </span>
             </div>
           </div>
@@ -106,7 +112,7 @@ export function SupervisorProjectDetailsHeader({
                 Team
               </span>
               <span className="font-semibold text-slate-700">
-                {membersCount} member{membersCount === 1 ? '' : 's'}
+                {membersCount} member{membersCount === 1 ? "" : "s"}
               </span>
             </div>
           </div>
@@ -119,7 +125,9 @@ export function SupervisorProjectDetailsHeader({
               <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
                 Progress
               </span>
-              <span className="font-semibold text-slate-700">{progressPercent ?? 0}%</span>
+              <span className="font-semibold text-slate-700">
+                {progressPercent ?? 0}%
+              </span>
             </div>
           </div>
         </div>

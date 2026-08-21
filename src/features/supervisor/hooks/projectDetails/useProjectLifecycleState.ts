@@ -1,6 +1,9 @@
-import { useEffect, useState } from 'react';
-import { toApiError } from '../../projectDetails.shared';
-import type { SupervisorProjectDetail, SupervisorProjectLifecycle } from '../../types';
+import { useEffect, useState } from "react";
+import { toApiError } from "../../projectDetails.shared";
+import type {
+  SupervisorProjectDetail,
+  SupervisorProjectLifecycle,
+} from "../../types";
 
 export type ProjectLifecycleState = {
   quickLifecycleStatus: SupervisorProjectLifecycle;
@@ -14,7 +17,11 @@ type UseProjectLifecycleStateParams = {
   setProject: (next: SupervisorProjectDetail) => void;
   showLoadingModal: (title: string, message: string) => void;
   showSuccessModal: (title: string, message: string) => void;
-  showErrorModal: (title: string, message: string, retryAction: () => Promise<void>) => void;
+  showErrorModal: (
+    title: string,
+    message: string,
+    retryAction: () => Promise<void>,
+  ) => void;
   api: {
     updateProjectStatus: (
       projectId: string,
@@ -33,11 +40,12 @@ export function useProjectLifecycleState({
   api,
 }: UseProjectLifecycleStateParams): ProjectLifecycleState {
   const [quickLifecycleStatus, setQuickLifecycleStatus] =
-    useState<SupervisorProjectLifecycle>('PLANNING');
+    useState<SupervisorProjectLifecycle>("PLANNING");
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   useEffect(() => {
-    if (project && !isUpdatingStatus) setQuickLifecycleStatus(project.lifecycleStatus);
+    if (project && !isUpdatingStatus)
+      setQuickLifecycleStatus(project.lifecycleStatus);
   }, [project, isUpdatingStatus]);
 
   async function submitQuickStatusChange(
@@ -47,18 +55,29 @@ export function useProjectLifecycleState({
     if (!projectId || !project) return;
     setQuickLifecycleStatus(nextStatus);
     setIsUpdatingStatus(true);
-    showLoadingModal('Updating project status', `Switching lifecycle status to ${nextStatus}.`);
+    showLoadingModal(
+      "Updating project status",
+      `Switching lifecycle status to ${nextStatus}.`,
+    );
     try {
       const updatedProject = await api.updateProjectStatus(projectId, {
         lifecycleStatus: nextStatus,
       });
       setProject(updatedProject);
-      showSuccessModal('Project status updated', `Lifecycle status is now ${nextStatus}.`);
+      showSuccessModal(
+        "Project status updated",
+        `Lifecycle status is now ${nextStatus}.`,
+      );
     } catch (statusException) {
       setQuickLifecycleStatus(previousStatus);
-      const apiError = toApiError(statusException, 'Unable to update project status right now.');
-      showErrorModal('Unable to update project status', apiError.message, async () =>
-        submitQuickStatusChange(nextStatus, previousStatus),
+      const apiError = toApiError(
+        statusException,
+        "Unable to update project status right now.",
+      );
+      showErrorModal(
+        "Unable to update project status",
+        apiError.message,
+        async () => submitQuickStatusChange(nextStatus, previousStatus),
       );
     } finally {
       setIsUpdatingStatus(false);

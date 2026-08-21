@@ -1,12 +1,15 @@
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { useEffect, useMemo, useState } from 'react';
-import type { useRegistrationFlow } from '../../hooks/useRegistrationFlow';
-import type { RegisterConfig } from '../../types';
-import { PasswordRequirementsPanel } from '../PasswordRequirementsPanel';
-import { PasswordField } from '../PasswordField';
-import { PASSWORD_MAX_LENGTH } from '../../utils/passwordRules';
-import { type ProfileFieldErrors, validateProfile } from '../../utils/registrationFlowValidation';
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { useEffect, useMemo, useState } from "react";
+import type { useRegistrationFlow } from "../../hooks/useRegistrationFlow";
+import type { RegisterConfig } from "../../types";
+import { PasswordRequirementsPanel } from "../PasswordRequirementsPanel";
+import { PasswordField } from "../PasswordField";
+import { PASSWORD_MAX_LENGTH } from "../../utils/passwordRules";
+import {
+  type ProfileFieldErrors,
+  validateProfile,
+} from "../../utils/registrationFlowValidation";
 
 type RegistrationFlow = ReturnType<typeof useRegistrationFlow>;
 
@@ -15,25 +18,28 @@ type Step4ProfileDetailsProps = {
   config: RegisterConfig;
 };
 
-export function Step4ProfileDetails({ flow, config }: Step4ProfileDetailsProps) {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+export function Step4ProfileDetails({
+  flow,
+  config,
+}: Step4ProfileDetailsProps) {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isNewPasswordFocused, setIsNewPasswordFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [registrationNumber, setRegistrationNumber] = useState('');
+  const [registrationNumber, setRegistrationNumber] = useState("");
   const [fieldErrors, setFieldErrors] = useState<ProfileFieldErrors>({});
 
-  const requireRegistrationNumber = flow.effectiveRole === 'STUDENT';
+  const requireRegistrationNumber = flow.effectiveRole === "STUDENT";
   const shouldLockRegistrationNumber =
     requireRegistrationNumber &&
     config.domainRestrictionEnabled &&
     config.studentEmailPrefixRestrictionEnabled;
   const autoFilledRegistrationNumber = useMemo(() => {
     if (!shouldLockRegistrationNumber) return null;
-    const atIndex = flow.email.indexOf('@');
+    const atIndex = flow.email.indexOf("@");
     if (atIndex <= 0) return null;
     return flow.email.slice(0, atIndex).trim().toUpperCase();
   }, [shouldLockRegistrationNumber, flow.email]);
@@ -45,7 +51,8 @@ export function Step4ProfileDetails({ flow, config }: Step4ProfileDetailsProps) 
   }, [autoFilledRegistrationNumber]);
 
   const isConfirmPasswordFilled = confirmPassword.trim().length > 0;
-  const isConfirmMatched = isConfirmPasswordFilled && password === confirmPassword;
+  const isConfirmMatched =
+    isConfirmPasswordFilled && password === confirmPassword;
   const isMismatch = isConfirmPasswordFilled && !isConfirmMatched;
   const liveErrors = useMemo(
     () =>
@@ -57,7 +64,14 @@ export function Step4ProfileDetails({ flow, config }: Step4ProfileDetailsProps) 
         registrationNumber,
         requireRegistrationNumber,
       }),
-    [firstName, lastName, password, confirmPassword, registrationNumber, requireRegistrationNumber],
+    [
+      firstName,
+      lastName,
+      password,
+      confirmPassword,
+      registrationNumber,
+      requireRegistrationNumber,
+    ],
   );
   const canSubmit = Object.keys(liveErrors).length === 0;
 
@@ -81,20 +95,28 @@ export function Step4ProfileDetails({ flow, config }: Step4ProfileDetailsProps) 
       firstName,
       lastName,
       password,
-      registrationNumber: requireRegistrationNumber ? registrationNumber : undefined,
+      registrationNumber: requireRegistrationNumber
+        ? registrationNumber
+        : undefined,
     });
   }
 
   function onRegistrationBlur() {
     const errors = runValidation();
-    setFieldErrors((prev) => ({ ...prev, registrationNumber: errors.registrationNumber }));
+    setFieldErrors((prev) => ({
+      ...prev,
+      registrationNumber: errors.registrationNumber,
+    }));
   }
 
   return (
     <form onSubmit={onSubmit} className="space-y-4" noValidate>
       <div className="flex gap-3">
         <div className="flex-1 space-y-1">
-          <label htmlFor="reg-first-name" className="text-sm font-medium text-foreground">
+          <label
+            htmlFor="reg-first-name"
+            className="text-sm font-medium text-foreground"
+          >
             First name
           </label>
           <Input
@@ -104,10 +126,15 @@ export function Step4ProfileDetails({ flow, config }: Step4ProfileDetailsProps) 
             autoComplete="given-name"
             className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
           />
-          {fieldErrors.firstName && <p className="text-xs text-red-600">{fieldErrors.firstName}</p>}
+          {fieldErrors.firstName && (
+            <p className="text-xs text-red-600">{fieldErrors.firstName}</p>
+          )}
         </div>
         <div className="flex-1 space-y-1">
-          <label htmlFor="reg-last-name" className="text-sm font-medium text-foreground">
+          <label
+            htmlFor="reg-last-name"
+            className="text-sm font-medium text-foreground"
+          >
             Last name
           </label>
           <Input
@@ -117,7 +144,9 @@ export function Step4ProfileDetails({ flow, config }: Step4ProfileDetailsProps) 
             autoComplete="family-name"
             className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
           />
-          {fieldErrors.lastName && <p className="text-xs text-red-600">{fieldErrors.lastName}</p>}
+          {fieldErrors.lastName && (
+            <p className="text-xs text-red-600">{fieldErrors.lastName}</p>
+          )}
         </div>
       </div>
 
@@ -138,7 +167,9 @@ export function Step4ProfileDetails({ flow, config }: Step4ProfileDetailsProps) 
         compact
         isNewPasswordFocused={isNewPasswordFocused}
       />
-      {fieldErrors.password && <p className="text-xs text-red-600">{fieldErrors.password}</p>}
+      {fieldErrors.password && (
+        <p className="text-xs text-red-600">{fieldErrors.password}</p>
+      )}
 
       <PasswordField
         id="reg-confirm-password"
@@ -158,7 +189,10 @@ export function Step4ProfileDetails({ flow, config }: Step4ProfileDetailsProps) 
 
       {requireRegistrationNumber && (
         <div className="space-y-1">
-          <label htmlFor="reg-number" className="text-sm font-medium text-foreground">
+          <label
+            htmlFor="reg-number"
+            className="text-sm font-medium text-foreground"
+          >
             Registration Number
           </label>
           <Input
@@ -182,7 +216,9 @@ export function Step4ProfileDetails({ flow, config }: Step4ProfileDetailsProps) 
             className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
           />
           {fieldErrors.registrationNumber && (
-            <p className="text-xs text-red-600">{fieldErrors.registrationNumber}</p>
+            <p className="text-xs text-red-600">
+              {fieldErrors.registrationNumber}
+            </p>
           )}
         </div>
       )}

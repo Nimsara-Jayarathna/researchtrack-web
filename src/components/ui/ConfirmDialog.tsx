@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react';
-import { createPortal } from 'react-dom';
-import { Button } from '@/components/ui/Button';
+import type { ReactNode } from "react";
+import { createPortal } from "react-dom";
+import { Button } from "@/components/ui/Button";
 
 type ConfirmDialogProps = {
   isOpen: boolean;
@@ -8,7 +8,7 @@ type ConfirmDialogProps = {
   description: ReactNode;
   confirmLabel?: string;
   cancelLabel?: string;
-  confirmVariant?: 'primary' | 'secondary' | 'danger';
+  confirmVariant?: "primary" | "secondary" | "danger";
   onCancel: () => void;
   onConfirm: () => void;
 };
@@ -17,9 +17,9 @@ export function ConfirmDialog({
   isOpen,
   title,
   description,
-  confirmLabel = 'Confirm',
-  cancelLabel = 'Cancel',
-  confirmVariant = 'danger',
+  confirmLabel = "Confirm",
+  cancelLabel = "Cancel",
+  confirmVariant = "danger",
   onCancel,
   onConfirm,
 }: ConfirmDialogProps) {
@@ -27,7 +27,7 @@ export function ConfirmDialog({
     return null;
   }
 
-  if (typeof document === 'undefined') {
+  if (typeof document === "undefined") {
     return null;
   }
 

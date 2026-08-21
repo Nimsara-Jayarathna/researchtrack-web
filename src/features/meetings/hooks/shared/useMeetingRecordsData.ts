@@ -1,11 +1,18 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { ApiError } from '@/types';
-import type { MeetingChannel, MeetingRecord, MeetingRecordUpsertPayload } from '../../types';
-import { sortMeetingRecords } from '../../lib/sortMeetingRecords';
-import { toApiError } from '../requestModal';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { ApiError } from "@/types";
+import type {
+  MeetingChannel,
+  MeetingRecord,
+  MeetingRecordUpsertPayload,
+} from "../../types";
+import { sortMeetingRecords } from "../../lib/sortMeetingRecords";
+import { toApiError } from "../requestModal";
 
 export type MeetingRecordsApiPort = {
-  getProjectMeetingRecords: (projectId: string, forceRefresh?: boolean) => Promise<MeetingRecord[]>;
+  getProjectMeetingRecords: (
+    projectId: string,
+    forceRefresh?: boolean,
+  ) => Promise<MeetingRecord[]>;
   getProjectMeetingChannels: (
     projectId: string,
     forceRefresh?: boolean,
@@ -19,8 +26,14 @@ export type MeetingRecordsApiPort = {
     recordId: string,
     payload: MeetingRecordUpsertPayload,
   ) => Promise<MeetingRecord>;
-  deleteProjectMeetingRecord: (projectId: string, recordId: string) => Promise<void>;
-  approveProjectMeetingRecord: (projectId: string, recordId: string) => Promise<MeetingRecord>;
+  deleteProjectMeetingRecord: (
+    projectId: string,
+    recordId: string,
+  ) => Promise<void>;
+  approveProjectMeetingRecord: (
+    projectId: string,
+    recordId: string,
+  ) => Promise<MeetingRecord>;
 };
 
 export type MeetingLoadResult = { ok: true } | { ok: false; error: ApiError };
@@ -39,7 +52,10 @@ type MeetingRecordsData = {
   hasLoaded: boolean;
   load: (options?: { forceRefresh?: boolean }) => Promise<MeetingLoadResult>;
   createRecord: (payload: MeetingRecordUpsertPayload) => Promise<MeetingRecord>;
-  updateRecord: (recordId: string, payload: MeetingRecordUpsertPayload) => Promise<MeetingRecord>;
+  updateRecord: (
+    recordId: string,
+    payload: MeetingRecordUpsertPayload,
+  ) => Promise<MeetingRecord>;
   deleteRecord: (recordId: string) => Promise<void>;
   approveRecord: (recordId: string) => Promise<MeetingRecord>;
 };
@@ -57,9 +73,14 @@ export function useMeetingRecordsData({
   const loadInFlightRef = useRef(false);
 
   const load = useCallback(
-    async (options?: { forceRefresh?: boolean }): Promise<MeetingLoadResult> => {
+    async (options?: {
+      forceRefresh?: boolean;
+    }): Promise<MeetingLoadResult> => {
       if (loadInFlightRef.current) {
-        return { ok: false, error: toApiError(null, 'Unable to load meeting records right now.') };
+        return {
+          ok: false,
+          error: toApiError(null, "Unable to load meeting records right now."),
+        };
       }
 
       loadInFlightRef.current = true;
@@ -68,15 +89,24 @@ export function useMeetingRecordsData({
 
       try {
         const [loadedRecords, loadedChannels] = await Promise.all([
-          api.getProjectMeetingRecords(projectId, options?.forceRefresh ?? false),
-          api.getProjectMeetingChannels(projectId, options?.forceRefresh ?? false),
+          api.getProjectMeetingRecords(
+            projectId,
+            options?.forceRefresh ?? false,
+          ),
+          api.getProjectMeetingChannels(
+            projectId,
+            options?.forceRefresh ?? false,
+          ),
         ]);
         setRecords(sortMeetingRecords(loadedRecords));
         setChannels(loadedChannels);
         setHasLoaded(true);
         return { ok: true };
       } catch (caught) {
-        const apiError = toApiError(caught, 'Unable to load meeting records right now.');
+        const apiError = toApiError(
+          caught,
+          "Unable to load meeting records right now.",
+        );
         setRecords([]);
         setChannels([]);
         setError(apiError);
@@ -93,7 +123,10 @@ export function useMeetingRecordsData({
     async (payload: MeetingRecordUpsertPayload): Promise<MeetingRecord> => {
       const created = await api.createProjectMeetingRecord(projectId, payload);
       setRecords((current) =>
-        sortMeetingRecords([created, ...current.filter((item) => item.id !== created.id)]),
+        sortMeetingRecords([
+          created,
+          ...current.filter((item) => item.id !== created.id),
+        ]),
       );
       return created;
     },
@@ -101,10 +134,19 @@ export function useMeetingRecordsData({
   );
 
   const updateRecord = useCallback(
-    async (recordId: string, payload: MeetingRecordUpsertPayload): Promise<MeetingRecord> => {
-      const updated = await api.updateProjectMeetingRecord(projectId, recordId, payload);
+    async (
+      recordId: string,
+      payload: MeetingRecordUpsertPayload,
+    ): Promise<MeetingRecord> => {
+      const updated = await api.updateProjectMeetingRecord(
+        projectId,
+        recordId,
+        payload,
+      );
       setRecords((current) =>
-        sortMeetingRecords(current.map((item) => (item.id === updated.id ? updated : item))),
+        sortMeetingRecords(
+          current.map((item) => (item.id === updated.id ? updated : item)),
+        ),
       );
       return updated;
     },
@@ -121,9 +163,14 @@ export function useMeetingRecordsData({
 
   const approveRecord = useCallback(
     async (recordId: string): Promise<MeetingRecord> => {
-      const approved = await api.approveProjectMeetingRecord(projectId, recordId);
+      const approved = await api.approveProjectMeetingRecord(
+        projectId,
+        recordId,
+      );
       setRecords((current) =>
-        sortMeetingRecords(current.map((item) => (item.id === approved.id ? approved : item))),
+        sortMeetingRecords(
+          current.map((item) => (item.id === approved.id ? approved : item)),
+        ),
       );
       return approved;
     },

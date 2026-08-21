@@ -1,4 +1,4 @@
-import { cn } from '@/lib/cn';
+import { cn } from "@/lib/cn";
 
 type LogoMarkProps = {
   /** Square size in px */
@@ -21,7 +21,7 @@ export function LogoMark({ size = 40, className }: LogoMarkProps) {
       alt="ResearchTrack"
       width={size}
       height={size}
-      className={cn('inline-block flex-shrink-0', className)}
+      className={cn("inline-block flex-shrink-0", className)}
       draggable={false}
     />
   );
@@ -30,9 +30,13 @@ export function LogoMark({ size = 40, className }: LogoMarkProps) {
 /**
  * Logo — renders the logo mark with an optional "ResearchTrack" wordmark.
  */
-export function Logo({ size = 40, showWordmark = false, className }: LogoProps) {
+export function Logo({
+  size = 40,
+  showWordmark = false,
+  className,
+}: LogoProps) {
   return (
-    <span className={cn('inline-flex items-center gap-2', className)}>
+    <span className={cn("inline-flex items-center gap-2", className)}>
       <LogoMark size={size} />
       {showWordmark && (
         <span

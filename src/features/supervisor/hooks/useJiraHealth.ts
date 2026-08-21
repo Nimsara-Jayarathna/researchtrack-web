@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
-import { isApiException } from '@/services/apiClient';
-import type { ApiError } from '@/types';
-import type { JiraHealth } from '../types';
+import { useCallback, useEffect, useState } from "react";
+import { isApiException } from "@/services/apiClient";
+import type { ApiError } from "@/types";
+import type { JiraHealth } from "../types";
 
 type JiraHealthState = {
   health: JiraHealth | null;
@@ -55,13 +55,13 @@ export function useJiraHealth(
         error: isApiException(error)
           ? error.apiError
           : {
-              code: 'INTERNAL_ERROR',
-              message: 'Unable to load Jira health data right now.',
+              code: "INTERNAL_ERROR",
+              message: "Unable to load Jira health data right now.",
               details: [],
               timestamp: new Date().toISOString(),
               status: 0,
-              error: 'Unexpected Error',
-              path: '',
+              error: "Unexpected Error",
+              path: "",
               traceId: null,
             },
       });

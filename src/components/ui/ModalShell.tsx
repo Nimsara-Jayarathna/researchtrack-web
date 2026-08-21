@@ -1,7 +1,7 @@
-import type { ReactNode, RefObject } from 'react';
-import { useEffect } from 'react';
-import { createPortal } from 'react-dom';
-import { cn } from '@/lib/cn';
+import type { ReactNode, RefObject } from "react";
+import { useEffect } from "react";
+import { createPortal } from "react-dom";
+import { cn } from "@/lib/cn";
 
 type ModalShellProps = {
   isOpen: boolean;
@@ -14,7 +14,7 @@ type ModalShellProps = {
   backdropClassName?: string;
   onBackdropClick?: () => void;
 
-  role?: 'dialog' | 'alertdialog';
+  role?: "dialog" | "alertdialog";
   ariaModal?: boolean;
   ariaLabel?: string;
   ariaLabelledBy?: string;
@@ -36,7 +36,7 @@ export function ModalShell({
   showBackdrop = true,
   backdropClassName,
   onBackdropClick,
-  role = 'dialog',
+  role = "dialog",
   ariaModal = true,
   ariaLabel,
   ariaLabelledBy,
@@ -49,24 +49,24 @@ export function ModalShell({
 }: ModalShellProps) {
   useEffect(() => {
     if (!isOpen || !closeOnEscape) return;
-    if (typeof document === 'undefined') return;
+    if (typeof document === "undefined") return;
 
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         onBackdropClick?.();
       }
     }
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, closeOnEscape, onBackdropClick]);
 
   useEffect(() => {
     if (!isOpen || !lockBodyScroll) return;
-    if (typeof document === 'undefined') return;
+    if (typeof document === "undefined") return;
 
     const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = previousOverflow;
     };
@@ -81,19 +81,23 @@ export function ModalShell({
     return null;
   }
 
-  if (portal && typeof document === 'undefined') {
+  if (portal && typeof document === "undefined") {
     return null;
   }
 
   const content = (
     <div className={containerClassName}>
       {showBackdrop ? (
-        <div className={backdropClassName} onClick={onBackdropClick} aria-hidden="true" />
+        <div
+          className={backdropClassName}
+          onClick={onBackdropClick}
+          aria-hidden="true"
+        />
       ) : null}
       <div
-        className={cn('flex w-full justify-center', dialogClassName)}
+        className={cn("flex w-full justify-center", dialogClassName)}
         role={role}
-        aria-modal={ariaModal ? 'true' : undefined}
+        aria-modal={ariaModal ? "true" : undefined}
         aria-label={ariaLabel}
         aria-labelledby={ariaLabelledBy}
         aria-describedby={ariaDescribedBy}

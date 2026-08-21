@@ -1,5 +1,5 @@
-import { useCallback, useState } from 'react';
-import type { MeetingRecord } from '../../types';
+import { useCallback, useState } from "react";
+import type { MeetingRecord } from "../../types";
 
 type MeetingRecordOverlayState = {
   viewingRecord: MeetingRecord | null;
@@ -11,8 +11,12 @@ type MeetingRecordOverlayState = {
 };
 
 export function useMeetingRecordOverlayState(): MeetingRecordOverlayState {
-  const [viewingRecord, setViewingRecord] = useState<MeetingRecord | null>(null);
-  const [pendingDelete, setPendingDelete] = useState<MeetingRecord | null>(null);
+  const [viewingRecord, setViewingRecord] = useState<MeetingRecord | null>(
+    null,
+  );
+  const [pendingDelete, setPendingDelete] = useState<MeetingRecord | null>(
+    null,
+  );
 
   const openView = useCallback((record: MeetingRecord) => {
     setViewingRecord(record);

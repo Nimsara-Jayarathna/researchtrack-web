@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState, useRef } from 'react';
-import { isApiException } from '@/services/apiClient';
-import type { ApiError } from '@/types';
-import type { ProjectFile, ProjectFileConfig } from '../types';
-import { studentFilesApi } from '../api/studentFilesApi';
+import { useCallback, useEffect, useState, useRef } from "react";
+import { isApiException } from "@/services/apiClient";
+import type { ApiError } from "@/types";
+import type { ProjectFile, ProjectFileConfig } from "../types";
+import { studentFilesApi } from "../api/studentFilesApi";
 
 type StudentProjectFilesState = {
   files: ProjectFile[];
@@ -12,17 +12,20 @@ type StudentProjectFilesState = {
 };
 
 const UNKNOWN_ERROR: ApiError = {
-  code: 'INTERNAL_ERROR',
-  message: 'Unable to load project files right now.',
+  code: "INTERNAL_ERROR",
+  message: "Unable to load project files right now.",
   details: [],
   timestamp: new Date().toISOString(),
   status: 0,
-  error: 'Unexpected Error',
-  path: '',
+  error: "Unexpected Error",
+  path: "",
   traceId: null,
 };
 
-export function useStudentProjectFiles(projectId: string | undefined, lazy = true) {
+export function useStudentProjectFiles(
+  projectId: string | undefined,
+  lazy = true,
+) {
   const [state, setState] = useState<StudentProjectFilesState>({
     files: [],
     config: null,
@@ -32,21 +35,27 @@ export function useStudentProjectFiles(projectId: string | undefined, lazy = tru
   const [hasLoaded, setHasLoaded] = useState(false);
   const isLoadingRef = useRef(false);
 
-  const seed = useCallback((files: ProjectFile[], config: ProjectFileConfig) => {
-    setState({
-      files,
-      config,
-      isLoading: false,
-      error: null,
-    });
-    isLoadingRef.current = false;
-    setHasLoaded(true);
-  }, []);
+  const seed = useCallback(
+    (files: ProjectFile[], config: ProjectFileConfig) => {
+      setState({
+        files,
+        config,
+        isLoading: false,
+        error: null,
+      });
+      isLoadingRef.current = false;
+      setHasLoaded(true);
+    },
+    [],
+  );
 
   const addUploadedFile = useCallback((uploadedFile: ProjectFile) => {
     setState((current) => ({
       ...current,
-      files: [uploadedFile, ...current.files.filter((file) => file.id !== uploadedFile.id)],
+      files: [
+        uploadedFile,
+        ...current.files.filter((file) => file.id !== uploadedFile.id),
+      ],
       error: null,
     }));
     setHasLoaded(true);
@@ -68,7 +77,12 @@ export function useStudentProjectFiles(projectId: string | undefined, lazy = tru
     setState((current) => ({ ...current, isLoading: true, error: null }));
     try {
       const response = await studentFilesApi.list(projectId);
-      setState({ files: response.files, config: response.config, isLoading: false, error: null });
+      setState({
+        files: response.files,
+        config: response.config,
+        isLoading: false,
+        error: null,
+      });
       isLoadingRef.current = false;
       setHasLoaded(true);
       return { ok: true as const };
@@ -90,7 +104,7 @@ export function useStudentProjectFiles(projectId: string | undefined, lazy = tru
       return;
     }
     const url = await studentFilesApi.getDownloadUrl(projectId, fileId);
-    window.open(url, '_blank', 'noopener,noreferrer');
+    window.open(url, "_blank", "noopener,noreferrer");
   }
 
   useEffect(() => {

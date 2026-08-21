@@ -36,4 +36,4 @@ export type {
   JiraVelocityWeek,
   JiraWorkload,
   JiraWorkloadMemberRow,
-} from '@/features/shared/types/jira.types';
+} from "@/features/shared/types/jira.types";

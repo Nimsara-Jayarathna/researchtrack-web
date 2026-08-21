@@ -1,9 +1,12 @@
-import { useRef, useState } from 'react';
-import { INITIAL_MILESTONE, isMilestoneComplete } from '../../createProject.shared';
-import type { MilestoneDraft } from '../../createProject.shared';
-import { earliestMilestone } from '../../createProject.shared';
-import { validateCreateMilestonesPolicy } from '../../milestonePolicy';
-import type { CreateSupervisorProjectResponse } from '../../types';
+import { useRef, useState } from "react";
+import {
+  INITIAL_MILESTONE,
+  isMilestoneComplete,
+} from "../../createProject.shared";
+import type { MilestoneDraft } from "../../createProject.shared";
+import { earliestMilestone } from "../../createProject.shared";
+import { validateCreateMilestonesPolicy } from "../../milestonePolicy";
+import type { CreateSupervisorProjectResponse } from "../../types";
 
 type UseCreateProjectMilestonesStateParams = {
   createdProject: CreateSupervisorProjectResponse | null;
@@ -12,14 +15,19 @@ type UseCreateProjectMilestonesStateParams = {
 export function useCreateProjectMilestonesState({
   createdProject,
 }: UseCreateProjectMilestonesStateParams) {
-  const [milestones, setMilestones] = useState<MilestoneDraft[]>([{ ...INITIAL_MILESTONE }]);
-  const [expandedMilestoneIndex, setExpandedMilestoneIndex] = useState<number | null>(0);
+  const [milestones, setMilestones] = useState<MilestoneDraft[]>([
+    { ...INITIAL_MILESTONE },
+  ]);
+  const [expandedMilestoneIndex, setExpandedMilestoneIndex] = useState<
+    number | null
+  >(0);
   const milestoneRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const milestonePolicyError = milestones.every(isMilestoneComplete)
     ? validateCreateMilestonesPolicy(milestones)
     : null;
-  const step3Valid = milestones.every(isMilestoneComplete) && !milestonePolicyError;
+  const step3Valid =
+    milestones.every(isMilestoneComplete) && !milestonePolicyError;
   const incompleteMilestoneCount = milestones.filter(
     (milestone) => !isMilestoneComplete(milestone),
   ).length;
@@ -45,7 +53,10 @@ export function useCreateProjectMilestonesState({
       const newIndex = prev.length;
       setExpandedMilestoneIndex(newIndex);
       setTimeout(() => {
-        milestoneRefs.current[newIndex]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        milestoneRefs.current[newIndex]?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
       }, 50);
       return [...prev, { ...INITIAL_MILESTONE }];
     });
@@ -53,7 +64,9 @@ export function useCreateProjectMilestonesState({
 
   function removeMilestone(index: number) {
     if (milestones.length === 1) return;
-    setMilestones((prev) => prev.filter((_, milestoneIndex) => milestoneIndex !== index));
+    setMilestones((prev) =>
+      prev.filter((_, milestoneIndex) => milestoneIndex !== index),
+    );
     setExpandedMilestoneIndex((current) => {
       if (current === null) return null;
       if (current === index) {

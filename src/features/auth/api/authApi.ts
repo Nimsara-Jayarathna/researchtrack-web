@@ -11,8 +11,8 @@ import type {
   RegisterResponse,
   SupervisorRegisterRequest,
   ValidateResetTokenResponse,
-} from '../types';
-import { apiClient } from '@/services/apiClient';
+} from "../types";
+import { apiClient } from "@/services/apiClient";
 
 // Switch to false once the backend /api/auth/* endpoints are live.
 // Mock credentials must never reach a production build.
@@ -26,11 +26,11 @@ let registerConfigCache: Promise<RegisterConfig> | null = null;
 // Dev-only fixture — ignored when USE_MOCK is false.
 const MOCK_RESPONSE: LoginResponse = {
   user: {
-    id: 'mock-user-id',
-    email: 'demo@researchtrack.com',
-    role: 'STUDENT',
-    firstName: 'Demo',
-    lastName: 'User',
+    id: "mock-user-id",
+    email: "demo@researchtrack.com",
+    role: "STUDENT",
+    firstName: "Demo",
+    lastName: "User",
   },
 };
 
@@ -38,47 +38,61 @@ export const authApi = {
   async login(body: LoginRequest): Promise<LoginResponse> {
     if (USE_MOCK) {
       await mockDelay();
-      return { ...MOCK_RESPONSE, user: { ...MOCK_RESPONSE.user, email: body.email } };
+      return {
+        ...MOCK_RESPONSE,
+        user: { ...MOCK_RESPONSE.user, email: body.email },
+      };
     }
-    return apiClient.post<LoginResponse>('/api/auth/login', body);
+    return apiClient.post<LoginResponse>("/api/auth/login", body);
   },
 
   async register(body: RegisterRequest): Promise<RegisterResponse> {
     if (USE_MOCK) {
       await mockDelay();
       return {
-        id: 'mock-user-id',
+        id: "mock-user-id",
         email: body.email,
         firstName: body.firstName,
         lastName: body.lastName,
         registrationNumber: body.registrationNumber,
-        role: 'STUDENT',
+        role: "STUDENT",
       };
     }
-    return apiClient.post<RegisterResponse>('/api/auth/register', body);
+    return apiClient.post<RegisterResponse>("/api/auth/register", body);
   },
 
-  async registerSupervisor(body: SupervisorRegisterRequest): Promise<RegisterResponse> {
+  async registerSupervisor(
+    body: SupervisorRegisterRequest,
+  ): Promise<RegisterResponse> {
     if (USE_MOCK) {
       await mockDelay();
       return {
-        id: 'mock-user-id',
+        id: "mock-user-id",
         email: body.email,
         firstName: body.firstName,
         lastName: body.lastName,
         registrationNumber: null,
-        role: 'SUPERVISOR',
+        role: "SUPERVISOR",
       };
     }
-    return apiClient.post<RegisterResponse>('/api/auth/register/supervisor', body);
+    return apiClient.post<RegisterResponse>(
+      "/api/auth/register/supervisor",
+      body,
+    );
   },
 
   async registerInit(body: { email: string }): Promise<{ message: string }> {
-    return apiClient.post<{ message: string }>('/api/auth/register/init', body);
+    return apiClient.post<{ message: string }>("/api/auth/register/init", body);
   },
 
-  async registerVerify(body: { email: string; otp: string }): Promise<RegisterVerifyResponse> {
-    return apiClient.post<RegisterVerifyResponse>('/api/auth/register/verify', body);
+  async registerVerify(body: {
+    email: string;
+    otp: string;
+  }): Promise<RegisterVerifyResponse> {
+    return apiClient.post<RegisterVerifyResponse>(
+      "/api/auth/register/verify",
+      body,
+    );
   },
 
   async registerComplete(body: {
@@ -89,13 +103,16 @@ export const authApi = {
     name?: string;
     role?: string;
   }): Promise<RegisterCompleteResponse> {
-    return apiClient.post<{ user: AuthUser }>('/api/auth/register/complete', body);
+    return apiClient.post<{ user: AuthUser }>(
+      "/api/auth/register/complete",
+      body,
+    );
   },
 
   getRegisterConfig(): Promise<RegisterConfig> {
     if (!registerConfigCache) {
       registerConfigCache = apiClient
-        .get<RegisterConfig>('/api/auth/register/config')
+        .get<RegisterConfig>("/api/auth/register/config")
         .catch((error) => {
           registerConfigCache = null;
           throw error;
@@ -110,7 +127,7 @@ export const authApi = {
    * needed here. Called by the {@code apiClient} 401 interceptor.
    */
   async refresh(): Promise<LoginResponse> {
-    return apiClient.post<LoginResponse>('/api/auth/refresh', {});
+    return apiClient.post<LoginResponse>("/api/auth/refresh", {});
   },
 
   /**
@@ -118,11 +135,11 @@ export const authApi = {
    * browser to delete both auth cookies via {@code Max-Age=0} Set-Cookie headers.
    */
   async logout(): Promise<void> {
-    return apiClient.post<void>('/api/auth/logout', {});
+    return apiClient.post<void>("/api/auth/logout", {});
   },
 
   async forgotPassword(body: ForgotPasswordRequest): Promise<void> {
-    return apiClient.post<void>('/api/auth/forgot-password', body);
+    return apiClient.post<void>("/api/auth/forgot-password", body);
   },
 
   async validateResetToken(token: string): Promise<ValidateResetTokenResponse> {
@@ -132,6 +149,6 @@ export const authApi = {
   },
 
   async resetPassword(body: ResetPasswordRequest): Promise<void> {
-    return apiClient.post<void>('/api/auth/reset-password', body);
+    return apiClient.post<void>("/api/auth/reset-password", body);
   },
 };

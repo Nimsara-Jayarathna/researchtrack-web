@@ -1,13 +1,23 @@
-import type { FormEvent } from 'react';
-import { useMemo, useState } from 'react';
-import { buildMilestoneForm, toApiError, toNullableTrimmed } from '../../projectDetails.shared';
-import type { MilestoneForm, MilestoneStatus } from '../../projectDetails.shared';
+import type { FormEvent } from "react";
+import { useMemo, useState } from "react";
+import {
+  buildMilestoneForm,
+  toApiError,
+  toNullableTrimmed,
+} from "../../projectDetails.shared";
+import type {
+  MilestoneForm,
+  MilestoneStatus,
+} from "../../projectDetails.shared";
 import {
   isTerminalMilestoneStatus,
   validateMilestoneAddPolicy,
   validateMilestoneUpdatePolicy,
-} from '../../milestonePolicy';
-import type { SupervisorProjectDetail, SupervisorProjectDetailMilestone } from '../../types';
+} from "../../milestonePolicy";
+import type {
+  SupervisorProjectDetail,
+  SupervisorProjectDetailMilestone,
+} from "../../types";
 
 export type MilestonesState = {
   isAddingMilestone: boolean;
@@ -37,7 +47,11 @@ type UseProjectMilestonesStateParams = {
   setProject: (next: SupervisorProjectDetail) => void;
   showLoadingModal: (title: string, message: string) => void;
   showSuccessModal: (title: string, message: string) => void;
-  showErrorModal: (title: string, message: string, retryAction: () => Promise<void>) => void;
+  showErrorModal: (
+    title: string,
+    message: string,
+    retryAction: () => Promise<void>,
+  ) => void;
   showValidationModal: (title: string, message: string) => void;
   api: {
     addProjectMilestone: (
@@ -69,18 +83,22 @@ export function useProjectMilestonesState({
 }: UseProjectMilestonesStateParams): MilestonesState {
   const [isAddingMilestone, setIsAddingMilestone] = useState(false);
   const [isSavingMilestone, setIsSavingMilestone] = useState(false);
-  const [editingMilestoneId, setEditingMilestoneId] = useState<string | null>(null);
-  const [quickStatusUpdatingId, setQuickStatusUpdatingId] = useState<string | null>(null);
-  const [newMilestoneForm, setNewMilestoneForm] = useState<MilestoneForm>({
-    title: '',
-    description: '',
-    dueDate: '',
-    status: 'PLANNED',
-  });
-  const [editMilestoneForm, setEditMilestoneForm] = useState<MilestoneForm | null>(null);
-  const [initialEditMilestoneForm, setInitialEditMilestoneForm] = useState<MilestoneForm | null>(
+  const [editingMilestoneId, setEditingMilestoneId] = useState<string | null>(
     null,
   );
+  const [quickStatusUpdatingId, setQuickStatusUpdatingId] = useState<
+    string | null
+  >(null);
+  const [newMilestoneForm, setNewMilestoneForm] = useState<MilestoneForm>({
+    title: "",
+    description: "",
+    dueDate: "",
+    status: "PLANNED",
+  });
+  const [editMilestoneForm, setEditMilestoneForm] =
+    useState<MilestoneForm | null>(null);
+  const [initialEditMilestoneForm, setInitialEditMilestoneForm] =
+    useState<MilestoneForm | null>(null);
 
   const isEditMilestoneDirty = useMemo(() => {
     if (!editMilestoneForm || !initialEditMilestoneForm) return false;
@@ -106,22 +124,29 @@ export function useProjectMilestonesState({
       nextDueDate: milestone.dueDate,
     });
     if (validationError) {
-      showValidationModal('Status update blocked', validationError);
+      showValidationModal("Status update blocked", validationError);
       return;
     }
 
     setQuickStatusUpdatingId(milestone.id);
     try {
-      const updatedProject = await api.updateProjectMilestone(projectId, milestone.id, {
-        title: milestone.title,
-        description: milestone.description,
-        dueDate: milestone.dueDate,
-        status: nextStatus,
-      });
+      const updatedProject = await api.updateProjectMilestone(
+        projectId,
+        milestone.id,
+        {
+          title: milestone.title,
+          description: milestone.description,
+          dueDate: milestone.dueDate,
+          status: nextStatus,
+        },
+      );
       setProject(updatedProject);
     } catch (statusException) {
-      const apiError = toApiError(statusException, 'Unable to update milestone status right now.');
-      showErrorModal('Status update failed', apiError.message, async () =>
+      const apiError = toApiError(
+        statusException,
+        "Unable to update milestone status right now.",
+      );
+      showErrorModal("Status update failed", apiError.message, async () =>
         submitQuickMilestoneStatus(milestone, nextStatus),
       );
     } finally {
@@ -137,7 +162,12 @@ export function useProjectMilestonesState({
 
   function cancelAddMilestone() {
     setIsAddingMilestone(false);
-    setNewMilestoneForm({ title: '', description: '', dueDate: '', status: 'PLANNED' });
+    setNewMilestoneForm({
+      title: "",
+      description: "",
+      dueDate: "",
+      status: "PLANNED",
+    });
   }
 
   function setNewMilestoneField(field: keyof MilestoneForm, value: string) {
@@ -151,12 +181,15 @@ export function useProjectMilestonesState({
       newMilestoneForm.dueDate,
     );
     if (validationError) {
-      showValidationModal('Unable to add milestone', validationError);
+      showValidationModal("Unable to add milestone", validationError);
       return;
     }
 
     setIsSavingMilestone(true);
-    showLoadingModal('Adding milestone', 'Creating a new milestone for this project.');
+    showLoadingModal(
+      "Adding milestone",
+      "Creating a new milestone for this project.",
+    );
     try {
       const updatedProject = await api.addProjectMilestone(projectId, {
         title: newMilestoneForm.title.trim(),
@@ -165,10 +198,20 @@ export function useProjectMilestonesState({
       });
       setProject(updatedProject);
       cancelAddMilestone();
-      showSuccessModal('Milestone added', 'The milestone was added successfully.');
+      showSuccessModal(
+        "Milestone added",
+        "The milestone was added successfully.",
+      );
     } catch (milestoneException) {
-      const apiError = toApiError(milestoneException, 'Unable to add milestone right now.');
-      showErrorModal('Unable to add milestone', apiError.message, submitMilestoneCreate);
+      const apiError = toApiError(
+        milestoneException,
+        "Unable to add milestone right now.",
+      );
+      showErrorModal(
+        "Unable to add milestone",
+        apiError.message,
+        submitMilestoneCreate,
+      );
     } finally {
       setIsSavingMilestone(false);
     }
@@ -197,7 +240,9 @@ export function useProjectMilestonesState({
   }
 
   function setEditMilestoneField(field: keyof MilestoneForm, value: string) {
-    setEditMilestoneForm((current) => (current ? { ...current, [field]: value } : current));
+    setEditMilestoneForm((current) =>
+      current ? { ...current, [field]: value } : current,
+    );
   }
 
   async function submitMilestoneUpdate() {
@@ -226,25 +271,42 @@ export function useProjectMilestonesState({
       nextDueDate: editMilestoneForm.dueDate,
     });
     if (validationError) {
-      showValidationModal('Unable to update milestone', validationError);
+      showValidationModal("Unable to update milestone", validationError);
       return;
     }
 
     setIsSavingMilestone(true);
-    showLoadingModal('Saving milestone', 'Updating milestone details and current status.');
+    showLoadingModal(
+      "Saving milestone",
+      "Updating milestone details and current status.",
+    );
     try {
-      const updatedProject = await api.updateProjectMilestone(projectId, editingMilestoneId, {
-        title: editMilestoneForm.title.trim(),
-        description: toNullableTrimmed(editMilestoneForm.description),
-        dueDate: editMilestoneForm.dueDate,
-        status: editMilestoneForm.status,
-      });
+      const updatedProject = await api.updateProjectMilestone(
+        projectId,
+        editingMilestoneId,
+        {
+          title: editMilestoneForm.title.trim(),
+          description: toNullableTrimmed(editMilestoneForm.description),
+          dueDate: editMilestoneForm.dueDate,
+          status: editMilestoneForm.status,
+        },
+      );
       setProject(updatedProject);
       cancelEditMilestone();
-      showSuccessModal('Milestone updated', 'Milestone changes were saved successfully.');
+      showSuccessModal(
+        "Milestone updated",
+        "Milestone changes were saved successfully.",
+      );
     } catch (milestoneException) {
-      const apiError = toApiError(milestoneException, 'Unable to update milestone right now.');
-      showErrorModal('Unable to update milestone', apiError.message, submitMilestoneUpdate);
+      const apiError = toApiError(
+        milestoneException,
+        "Unable to update milestone right now.",
+      );
+      showErrorModal(
+        "Unable to update milestone",
+        apiError.message,
+        submitMilestoneUpdate,
+      );
     } finally {
       setIsSavingMilestone(false);
     }

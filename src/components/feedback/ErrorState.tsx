@@ -1,17 +1,17 @@
-import { Button } from '@/components/ui/Button';
-import type { ApiError } from '@/types';
+import { Button } from "@/components/ui/Button";
+import type { ApiError } from "@/types";
 
 /** User-facing title for each error code. Full message comes from the server. */
-const ERROR_TITLES: Record<ApiError['code'], string> = {
-  VALIDATION_ERROR: 'Invalid Input',
-  BAD_REQUEST: 'Bad Request',
-  UNAUTHORIZED: 'Session Expired',
-  FORBIDDEN: 'Access Denied',
-  NOT_FOUND: 'Not Found',
-  CONFLICT: 'Conflict',
-  TOO_MANY_REQUESTS: 'Too Many Attempts',
-  SERVICE_UNAVAILABLE: 'Service Unavailable',
-  INTERNAL_ERROR: 'Something Went Wrong',
+const ERROR_TITLES: Record<ApiError["code"], string> = {
+  VALIDATION_ERROR: "Invalid Input",
+  BAD_REQUEST: "Bad Request",
+  UNAUTHORIZED: "Session Expired",
+  FORBIDDEN: "Access Denied",
+  NOT_FOUND: "Not Found",
+  CONFLICT: "Conflict",
+  TOO_MANY_REQUESTS: "Too Many Attempts",
+  SERVICE_UNAVAILABLE: "Service Unavailable",
+  INTERNAL_ERROR: "Something Went Wrong",
 };
 
 type ErrorStateProps = {
@@ -32,11 +32,12 @@ export function ErrorState({ error, onRetry }: ErrorStateProps) {
       <p className="font-semibold">{title}</p>
       <p className="mt-1">{error.message}</p>
 
-      {error.code === 'VALIDATION_ERROR' && error.details.length > 0 && (
+      {error.code === "VALIDATION_ERROR" && error.details.length > 0 && (
         <ul className="mt-2 list-inside list-disc space-y-0.5">
           {error.details.map((detail, index) => (
             <li key={`${detail.field}-${index}`}>
-              <span className="font-medium">{detail.field}:</span> {detail.issue}
+              <span className="font-medium">{detail.field}:</span>{" "}
+              {detail.issue}
             </li>
           ))}
         </ul>

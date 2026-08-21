@@ -33,13 +33,15 @@ export function createManagedAbortSignal(): {
   };
 }
 
-export function abortAllInFlightRequests(reason = 'session-transition'): number {
+export function abortAllInFlightRequests(
+  reason = "session-transition",
+): number {
   const entries = [...activeControllers.entries()];
   for (const [id, controller] of entries) {
     controller.abort(reason);
     activeControllers.delete(id);
   }
 
-  logDev('aborted in-flight requests', { reason, count: entries.length });
+  logDev("aborted in-flight requests", { reason, count: entries.length });
   return entries.length;
 }

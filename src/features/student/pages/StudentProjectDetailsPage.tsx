@@ -1,26 +1,26 @@
-import { useCallback, useMemo } from 'react';
-import { ProjectOverviewContent } from '@/features/projects/components/ProjectOverviewContent';
-import { useMeetingAnalytics } from '@/features/projects/hooks/useMeetingAnalytics';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { ErrorState } from '@/components/feedback/ErrorState';
-import { buttonStyles } from '@/components/ui/Button';
-import { PageTabs } from '@/components/ui/PageTabs';
-import { StudentProjectDetailsSkeleton } from '../components/StudentProjectDetailsSkeleton';
-import { StudentProjectDetailsKpis } from '../components/projectDetails/StudentProjectDetailsKpis';
-import { ProjectHeroCard } from '@/components/ui/ProjectHeroCard';
-import { LifecycleStatus } from '@/components/lifecycle';
-import { StudentProjectGitHubTab } from '../components/projectDetails/StudentProjectGitHubTab';
-import { StudentProjectJiraTab } from '../components/projectDetails/StudentProjectJiraTab';
-import { StudentProjectMilestonesTab } from '../components/projectDetails/StudentProjectMilestonesTab';
-import { StudentProjectTeamTab } from '../components/projectDetails/StudentProjectTeamTab';
-import { useStudentProject } from '../hooks/useStudentProject';
-import { useStudentProjectDetailsBlockingError } from '../hooks/projectDetails/useStudentProjectDetailsBlockingError';
-import { useStudentProjectDetailsTabs } from '../hooks/projectDetails/useStudentProjectDetailsTabs';
-import { studentApi } from '../api/studentApi';
-import { isBlockingError } from '@/utils/errorSeverity';
-import { StudentFilesTabSection } from '../components/StudentFilesTabSection';
-import { StudentMeetingsTabSection } from '../components/StudentMeetingsTabSection';
-import type { StudentProjectDetailTab } from '../types';
+import { useCallback, useMemo } from "react";
+import { ProjectOverviewContent } from "@/features/projects/components/ProjectOverviewContent";
+import { useMeetingAnalytics } from "@/features/projects/hooks/useMeetingAnalytics";
+import { Link, useParams, useSearchParams } from "react-router-dom";
+import { ErrorState } from "@/components/feedback/ErrorState";
+import { buttonStyles } from "@/components/ui/Button";
+import { PageTabs } from "@/components/ui/PageTabs";
+import { StudentProjectDetailsSkeleton } from "../components/StudentProjectDetailsSkeleton";
+import { StudentProjectDetailsKpis } from "../components/projectDetails/StudentProjectDetailsKpis";
+import { ProjectHeroCard } from "@/components/ui/ProjectHeroCard";
+import { LifecycleStatus } from "@/components/lifecycle";
+import { StudentProjectGitHubTab } from "../components/projectDetails/StudentProjectGitHubTab";
+import { StudentProjectJiraTab } from "../components/projectDetails/StudentProjectJiraTab";
+import { StudentProjectMilestonesTab } from "../components/projectDetails/StudentProjectMilestonesTab";
+import { StudentProjectTeamTab } from "../components/projectDetails/StudentProjectTeamTab";
+import { useStudentProject } from "../hooks/useStudentProject";
+import { useStudentProjectDetailsBlockingError } from "../hooks/projectDetails/useStudentProjectDetailsBlockingError";
+import { useStudentProjectDetailsTabs } from "../hooks/projectDetails/useStudentProjectDetailsTabs";
+import { studentApi } from "../api/studentApi";
+import { isBlockingError } from "@/utils/errorSeverity";
+import { StudentFilesTabSection } from "../components/StudentFilesTabSection";
+import { StudentMeetingsTabSection } from "../components/StudentMeetingsTabSection";
+import type { StudentProjectDetailTab } from "../types";
 
 function toTabLabel(tab: string) {
   return tab.charAt(0).toUpperCase() + tab.slice(1);
@@ -58,16 +58,23 @@ export function StudentProjectDetailsPage() {
       return null;
     }
 
-    if (error.code === 'NOT_FOUND') {
+    if (error.code === "NOT_FOUND") {
       return (
         <div className="rounded-3xl border border-dashed border-border bg-white p-10 text-center shadow-sm">
-          <h1 className="text-2xl font-semibold text-foreground">Project not found</h1>
+          <h1 className="text-2xl font-semibold text-foreground">
+            Project not found
+          </h1>
           <p className="mt-3 text-sm text-muted-foreground">
-            The requested student project could not be found or is not assigned to your account.
+            The requested student project could not be found or is not assigned
+            to your account.
           </p>
           <Link
             to="/student/projects"
-            className={buttonStyles({ variant: 'primary', size: 'md', className: 'mt-6' })}
+            className={buttonStyles({
+              variant: "primary",
+              size: "md",
+              className: "mt-6",
+            })}
           >
             Back to projects
           </Link>
@@ -86,7 +93,10 @@ export function StudentProjectDetailsPage() {
     <div className="space-y-6">
       <ProjectHeroCard
         title={project.title}
-        subtitle={project.summary ?? 'No summary has been recorded for this project yet.'}
+        subtitle={
+          project.summary ??
+          "No summary has been recorded for this project yet."
+        }
         rightSlot={<LifecycleStatus value={project.status} canEdit={false} />}
         kpiSlot={
           <StudentProjectDetailsKpis
@@ -108,7 +118,7 @@ export function StudentProjectDetailsPage() {
         tone="neutral"
       />
 
-      {activeTab === 'overview' ? (
+      {activeTab === "overview" ? (
         <ProjectOverviewContent
           project={project}
           role="student"
@@ -116,19 +126,25 @@ export function StudentProjectDetailsPage() {
         />
       ) : null}
 
-      {activeTab === 'team' ? (
-        <StudentProjectTeamTab members={project.members} leaderId={project.leader?.id ?? null} />
+      {activeTab === "team" ? (
+        <StudentProjectTeamTab
+          members={project.members}
+          leaderId={project.leader?.id ?? null}
+        />
       ) : null}
 
-      {activeTab === 'milestones' ? (
+      {activeTab === "milestones" ? (
         <StudentProjectMilestonesTab milestones={project.milestones} />
       ) : null}
 
-      {activeTab === 'files' ? (
-        <StudentFilesTabSection projectId={project.id} initialFiles={project.files} />
+      {activeTab === "files" ? (
+        <StudentFilesTabSection
+          projectId={project.id}
+          initialFiles={project.files}
+        />
       ) : null}
 
-      {activeTab === 'github' ? (
+      {activeTab === "github" ? (
         <StudentProjectGitHubTab
           projectId={projectId}
           projectGithubView={project.github ?? null}
@@ -138,9 +154,11 @@ export function StudentProjectDetailsPage() {
         />
       ) : null}
 
-      {activeTab === 'jira' ? <StudentProjectJiraTab projectId={projectId} jira={jira} /> : null}
+      {activeTab === "jira" ? (
+        <StudentProjectJiraTab projectId={projectId} jira={jira} />
+      ) : null}
 
-      {activeTab === 'meetings' && projectId ? (
+      {activeTab === "meetings" && projectId ? (
         <StudentMeetingsTabSection projectId={projectId} />
       ) : null}
     </div>

@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
-import { isApiException } from '@/services/apiClient';
-import type { ApiError } from '@/types';
-import type { JiraHierarchy } from '@/features/shared/types/jira.types';
-import { studentApi } from '../api/studentApi';
+import { useEffect, useState } from "react";
+import { isApiException } from "@/services/apiClient";
+import type { ApiError } from "@/types";
+import type { JiraHierarchy } from "@/features/shared/types/jira.types";
+import { studentApi } from "../api/studentApi";
 
 type HierarchyState = {
   data: JiraHierarchy | null;
@@ -43,13 +43,13 @@ export function useStudentJiraHierarchy(projectId: string | undefined) {
           error: isApiException(err)
             ? err.apiError
             : {
-                code: 'INTERNAL_ERROR',
-                message: 'Unable to load Jira hierarchy.',
+                code: "INTERNAL_ERROR",
+                message: "Unable to load Jira hierarchy.",
                 details: [],
                 timestamp: new Date().toISOString(),
                 status: 0,
-                error: 'Unexpected Error',
-                path: '',
+                error: "Unexpected Error",
+                path: "",
                 traceId: null,
               },
         });

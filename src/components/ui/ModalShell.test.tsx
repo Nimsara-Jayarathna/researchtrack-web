@@ -1,19 +1,23 @@
-import { render, screen } from '@testing-library/react';
-import { vi } from 'vitest';
-import { ModalShell } from './ModalShell';
+import { render, screen } from "@testing-library/react";
+import { vi } from "vitest";
+import { ModalShell } from "./ModalShell";
 
-describe('ModalShell', () => {
-  it('renders nothing when closed', () => {
+describe("ModalShell", () => {
+  it("renders nothing when closed", () => {
     render(
-      <ModalShell isOpen={false} containerClassName="fixed" onBackdropClick={() => {}}>
+      <ModalShell
+        isOpen={false}
+        containerClassName="fixed"
+        onBackdropClick={() => {}}
+      >
         <div>Content</div>
       </ModalShell>,
     );
 
-    expect(screen.queryByText('Content')).not.toBeInTheDocument();
+    expect(screen.queryByText("Content")).not.toBeInTheDocument();
   });
 
-  it('closes on Escape when enabled', () => {
+  it("closes on Escape when enabled", () => {
     const onClose = vi.fn();
 
     render(
@@ -22,34 +26,44 @@ describe('ModalShell', () => {
       </ModalShell>,
     );
 
-    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('does not close on Escape when disabled', () => {
+  it("does not close on Escape when disabled", () => {
     const onClose = vi.fn();
 
     render(
-      <ModalShell isOpen containerClassName="fixed" onBackdropClick={onClose} closeOnEscape={false}>
+      <ModalShell
+        isOpen
+        containerClassName="fixed"
+        onBackdropClick={onClose}
+        closeOnEscape={false}
+      >
         <div>Content</div>
       </ModalShell>,
     );
 
-    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
     expect(onClose).toHaveBeenCalledTimes(0);
   });
 
-  it('locks body scroll and restores it on close', () => {
-    document.body.style.overflow = 'scroll';
+  it("locks body scroll and restores it on close", () => {
+    document.body.style.overflow = "scroll";
 
     const { unmount } = render(
-      <ModalShell isOpen containerClassName="fixed" lockBodyScroll onBackdropClick={() => {}}>
+      <ModalShell
+        isOpen
+        containerClassName="fixed"
+        lockBodyScroll
+        onBackdropClick={() => {}}
+      >
         <div>Content</div>
       </ModalShell>,
     );
 
-    expect(document.body.style.overflow).toBe('hidden');
+    expect(document.body.style.overflow).toBe("hidden");
     unmount();
-    expect(document.body.style.overflow).toBe('scroll');
+    expect(document.body.style.overflow).toBe("scroll");
   });
 });

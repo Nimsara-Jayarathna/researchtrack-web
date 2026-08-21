@@ -1,6 +1,6 @@
-import { type ReactNode, useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { X } from 'lucide-react';
+import { type ReactNode, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import { X } from "lucide-react";
 
 type GithubDetailsModalProps = {
   isOpen: boolean;
@@ -9,7 +9,12 @@ type GithubDetailsModalProps = {
   children: ReactNode;
 };
 
-export function GithubDetailsModal({ isOpen, title, onClose, children }: GithubDetailsModalProps) {
+export function GithubDetailsModal({
+  isOpen,
+  title,
+  onClose,
+  children,
+}: GithubDetailsModalProps) {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -31,19 +36,19 @@ export function GithubDetailsModal({ isOpen, title, onClose, children }: GithubD
     }
 
     const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
 
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         onClose();
       }
     }
 
-    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener("keydown", onKeyDown);
 
     return () => {
       document.body.style.overflow = previousOverflow;
-      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener("keydown", onKeyDown);
     };
   }, [isOpen, onClose]);
 
@@ -53,14 +58,14 @@ export function GithubDetailsModal({ isOpen, title, onClose, children }: GithubD
 
   const modal = (
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4 backdrop-blur-sm transition-opacity duration-200 ${isMounted ? 'opacity-100' : 'opacity-0'}`}
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4 backdrop-blur-sm transition-opacity duration-200 ${isMounted ? "opacity-100" : "opacity-0"}`}
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-label={title}
     >
       <div
-        className={`w-full max-w-5xl rounded-3xl border border-border bg-white shadow-[0_24px_56px_rgba(15,23,42,0.24)] transition-all duration-200 ${isMounted ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-1 scale-[0.99] opacity-0'}`}
+        className={`w-full max-w-5xl rounded-3xl border border-border bg-white shadow-[0_24px_56px_rgba(15,23,42,0.24)] transition-all duration-200 ${isMounted ? "translate-y-0 scale-100 opacity-100" : "translate-y-1 scale-[0.99] opacity-0"}`}
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
@@ -79,7 +84,7 @@ export function GithubDetailsModal({ isOpen, title, onClose, children }: GithubD
     </div>
   );
 
-  if (typeof document === 'undefined') {
+  if (typeof document === "undefined") {
     return modal;
   }
 

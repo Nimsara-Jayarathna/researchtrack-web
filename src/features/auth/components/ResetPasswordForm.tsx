@@ -1,12 +1,12 @@
-import { Button } from '@/components/ui/Button';
-import { useMemo, useState } from 'react';
-import { PasswordRequirementsPanel } from './PasswordRequirementsPanel';
-import { PasswordField } from './PasswordField';
-import { PASSWORD_MAX_LENGTH } from '../utils/passwordRules';
+import { Button } from "@/components/ui/Button";
+import { useMemo, useState } from "react";
+import { PasswordRequirementsPanel } from "./PasswordRequirementsPanel";
+import { PasswordField } from "./PasswordField";
+import { PASSWORD_MAX_LENGTH } from "../utils/passwordRules";
 import {
   type ResetPasswordFieldErrors,
   validateResetPasswordForm,
-} from '../utils/resetPasswordValidation';
+} from "../utils/resetPasswordValidation";
 
 export type ResetPasswordFormProps = {
   onSubmit: (newPassword: string) => Promise<void>;
@@ -14,15 +14,20 @@ export type ResetPasswordFormProps = {
   onClearError: () => void;
 };
 
-export function ResetPasswordForm({ onSubmit, isLoading, onClearError }: ResetPasswordFormProps) {
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+export function ResetPasswordForm({
+  onSubmit,
+  isLoading,
+  onClearError,
+}: ResetPasswordFormProps) {
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [isNewPasswordFocused, setIsNewPasswordFocused] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<ResetPasswordFieldErrors>({});
   const isConfirmPasswordFilled = confirmNewPassword.trim().length > 0;
-  const isConfirmMatched = isConfirmPasswordFilled && newPassword === confirmNewPassword;
+  const isConfirmMatched =
+    isConfirmPasswordFilled && newPassword === confirmNewPassword;
   const isMismatch = isConfirmPasswordFilled && !isConfirmMatched;
 
   const isValid = useMemo(
@@ -40,7 +45,10 @@ export function ResetPasswordForm({ onSubmit, isLoading, onClearError }: ResetPa
     event.preventDefault();
     onClearError();
 
-    const errors = validateResetPasswordForm({ newPassword, confirmNewPassword });
+    const errors = validateResetPasswordForm({
+      newPassword,
+      confirmNewPassword,
+    });
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
       return;
@@ -87,10 +95,18 @@ export function ResetPasswordForm({ onSubmit, isLoading, onClearError }: ResetPa
         mismatch={isMismatch}
       />
       {fieldErrors.confirmNewPassword && (
-        <p className="text-xs text-rose-600">{fieldErrors.confirmNewPassword}</p>
+        <p className="text-xs text-rose-600">
+          {fieldErrors.confirmNewPassword}
+        </p>
       )}
 
-      <Button type="submit" variant="primary" size="lg" fullWidth disabled={isLoading || !isValid}>
+      <Button
+        type="submit"
+        variant="primary"
+        size="lg"
+        fullWidth
+        disabled={isLoading || !isValid}
+      >
         Update password
       </Button>
     </form>

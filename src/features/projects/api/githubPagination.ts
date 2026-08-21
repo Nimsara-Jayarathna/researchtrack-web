@@ -1,8 +1,8 @@
-import { isApiException } from '@/services/apiClient';
-import type { PaginatedListResult } from '../types';
+import { isApiException } from "@/services/apiClient";
+import type { PaginatedListResult } from "../types";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
+  return typeof value === "object" && value !== null;
 }
 
 function asArray<T>(value: unknown): T[] {
@@ -15,10 +15,10 @@ function asArray<T>(value: unknown): T[] {
 export function buildPagedUrl(path: string, page: number, size?: number) {
   const query = new URLSearchParams();
   if (page > 1) {
-    query.set('page', String(page));
+    query.set("page", String(page));
   }
-  if (typeof size === 'number' && Number.isFinite(size) && size > 0) {
-    query.set('size', String(size));
+  if (typeof size === "number" && Number.isFinite(size) && size > 0) {
+    query.set("size", String(size));
   }
   const queryString = query.toString();
   return queryString.length > 0 ? `${path}?${queryString}` : path;
@@ -32,7 +32,8 @@ export function normalizePaginatedPayload<T>(
   const requestedSize = Number.isFinite(size) && size && size > 0 ? size : null;
 
   if (Array.isArray(payload)) {
-    const effectiveSize = requestedSize ?? (payload.length > 0 ? payload.length : 10);
+    const effectiveSize =
+      requestedSize ?? (payload.length > 0 ? payload.length : 10);
     return {
       items: payload as T[],
       hasMore: payload.length >= effectiveSize,
@@ -49,25 +50,32 @@ export function normalizePaginatedPayload<T>(
 
     const normalizedItems = items.length > 0 ? items : [];
 
-    const hasMoreFromFlag = typeof payload.hasMore === 'boolean' ? payload.hasMore : null;
+    const hasMoreFromFlag =
+      typeof payload.hasMore === "boolean" ? payload.hasMore : null;
     const totalPages =
-      typeof payload.totalPages === 'number' && Number.isFinite(payload.totalPages)
+      typeof payload.totalPages === "number" &&
+      Number.isFinite(payload.totalPages)
         ? payload.totalPages
         : null;
     const hasNextPage =
-      typeof payload.hasNext === 'boolean'
+      typeof payload.hasNext === "boolean"
         ? payload.hasNext
-        : typeof payload.nextPage === 'number' && Number.isFinite(payload.nextPage);
+        : typeof payload.nextPage === "number" &&
+          Number.isFinite(payload.nextPage);
     const payloadSize =
-      typeof payload.size === 'number' && Number.isFinite(payload.size) && payload.size > 0
+      typeof payload.size === "number" &&
+      Number.isFinite(payload.size) &&
+      payload.size > 0
         ? payload.size
-        : typeof payload.pageSize === 'number' &&
+        : typeof payload.pageSize === "number" &&
             Number.isFinite(payload.pageSize) &&
             payload.pageSize > 0
           ? payload.pageSize
           : null;
     const effectiveSize =
-      payloadSize ?? requestedSize ?? (normalizedItems.length > 0 ? normalizedItems.length : 10);
+      payloadSize ??
+      requestedSize ??
+      (normalizedItems.length > 0 ? normalizedItems.length : 10);
 
     const hasMore =
       hasMoreFromFlag ??
@@ -110,6 +118,7 @@ export function fallbackSlicePage<T>(
 
 export function shouldFallbackToDashboard(error: unknown) {
   return (
-    isApiException(error) && (error.apiError.code === 'NOT_FOUND' || error.apiError.status === 404)
+    isApiException(error) &&
+    (error.apiError.code === "NOT_FOUND" || error.apiError.status === 404)
   );
 }

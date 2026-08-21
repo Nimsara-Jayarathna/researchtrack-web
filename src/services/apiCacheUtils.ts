@@ -9,7 +9,7 @@ export function appendQuery(url: string, params: URLSearchParams): string {
   if (!query) {
     return url;
   }
-  return `${url}${url.includes('?') ? '&' : '?'}${query}`;
+  return `${url}${url.includes("?") ? "&" : "?"}${query}`;
 }
 
 export function deleteKeysWithPrefix(

@@ -1,14 +1,17 @@
-import type { createRoleProjectApi } from '@/features/shared/api/createRoleProjectApi';
+import type { createRoleProjectApi } from "@/features/shared/api/createRoleProjectApi";
 import type {
   JiraAuthUrl,
   JiraHealth,
   JiraOAuthCompletePayload,
   JiraOAuthCompleteResult,
   SupervisorProjectDetail,
-} from '../types';
+} from "../types";
 
-type RoleProjectApi = Omit<ReturnType<typeof createRoleProjectApi>, 'clearCache'>;
-type ApiClient = typeof import('@/services/apiClient').apiClient;
+type RoleProjectApi = Omit<
+  ReturnType<typeof createRoleProjectApi>,
+  "clearCache"
+>;
+type ApiClient = typeof import("@/services/apiClient").apiClient;
 
 type CreateSupervisorJiraApiDeps = {
   apiClient: ApiClient;
@@ -21,12 +24,16 @@ export function createSupervisorJiraApi({
 }: CreateSupervisorJiraApiDeps) {
   return {
     getProjectJiraAuthUrl(projectId: string): Promise<JiraAuthUrl> {
-      return apiClient.get<JiraAuthUrl>(`/api/supervisor/projects/${projectId}/jira/auth-url`);
+      return apiClient.get<JiraAuthUrl>(
+        `/api/supervisor/projects/${projectId}/jira/auth-url`,
+      );
     },
 
-    completeJiraOAuth(payload: JiraOAuthCompletePayload): Promise<JiraOAuthCompleteResult> {
+    completeJiraOAuth(
+      payload: JiraOAuthCompletePayload,
+    ): Promise<JiraOAuthCompleteResult> {
       return apiClient.post<JiraOAuthCompleteResult>(
-        '/api/supervisor/jira/oauth/complete',
+        "/api/supervisor/jira/oauth/complete",
         payload,
       );
     },

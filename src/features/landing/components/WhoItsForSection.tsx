@@ -1,25 +1,25 @@
-import { Check, GraduationCap, UserCircle } from 'lucide-react';
-import type { LandingAudienceCard } from '../types';
+import { Check, GraduationCap, UserCircle } from "lucide-react";
+import type { LandingAudienceCard } from "../types";
 
 const AUDIENCES: LandingAudienceCard[] = [
   {
-    id: 'students',
+    id: "students",
     icon: UserCircle,
-    title: 'For Students',
+    title: "For Students",
     items: [
-      'Track project progress transparently',
-      'Share GitHub activity automatically',
-      'Document meeting outcomes',
+      "Track project progress transparently",
+      "Share GitHub activity automatically",
+      "Document meeting outcomes",
     ],
   },
   {
-    id: 'supervisors',
+    id: "supervisors",
     icon: GraduationCap,
-    title: 'For Supervisors',
+    title: "For Supervisors",
     items: [
-      'Monitor student commits in real-time',
-      'Review project milestones efficiently',
-      'Maintain organized meeting records',
+      "Monitor student commits in real-time",
+      "Review project milestones efficiently",
+      "Maintain organized meeting records",
     ],
   },
 ];
@@ -53,7 +53,9 @@ export function WhoItsForSection() {
               {items.map((item) => (
                 <li key={item} className="flex items-start gap-3">
                   <Check className="mt-0.5 h-5 w-5 shrink-0 text-sky-600" />
-                  <span className="text-sm leading-6 text-muted-foreground">{item}</span>
+                  <span className="text-sm leading-6 text-muted-foreground">
+                    {item}
+                  </span>
                 </li>
               ))}
             </ul>

@@ -1,7 +1,7 @@
-import { Download, Trash2 } from 'lucide-react';
-import { RoleBadge } from '@/components/ui/RoleBadge';
-import type { ProjectFile } from '../types';
-import { getFileTypeDisplay } from '../fileTypeDisplay';
+import { Download, Trash2 } from "lucide-react";
+import { RoleBadge } from "@/components/ui/RoleBadge";
+import type { ProjectFile } from "../types";
+import { getFileTypeDisplay } from "../fileTypeDisplay";
 
 type FileListItemProps = {
   file: ProjectFile;
@@ -10,19 +10,19 @@ type FileListItemProps = {
   onDelete: (file: ProjectFile) => void;
 };
 
-const dateTimeFormatter = new Intl.DateTimeFormat('en', {
-  month: 'short',
-  day: 'numeric',
-  year: 'numeric',
-  hour: 'numeric',
-  minute: '2-digit',
+const dateTimeFormatter = new Intl.DateTimeFormat("en", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
 });
 
 function formatFileSize(bytes: number) {
   if (bytes < 1024) {
     return `${bytes} B`;
   }
-  const units = ['KB', 'MB', 'GB', 'TB'];
+  const units = ["KB", "MB", "GB", "TB"];
   let size = bytes / 1024;
   let unitIndex = 0;
   while (size >= 1024 && unitIndex < units.length - 1) {
@@ -32,7 +32,12 @@ function formatFileSize(bytes: number) {
   return `${size.toFixed(size >= 10 ? 0 : 1)} ${units[unitIndex]}`;
 }
 
-export function FileListItem({ file, canDelete, onDownload, onDelete }: FileListItemProps) {
+export function FileListItem({
+  file,
+  canDelete,
+  onDownload,
+  onDelete,
+}: FileListItemProps) {
   const typeDisplay = getFileTypeDisplay(file.fileType, file.fileName);
 
   return (
@@ -60,7 +65,10 @@ export function FileListItem({ file, canDelete, onDownload, onDelete }: FileList
           >
             {file.uploadedByName}
           </span>
-          <RoleBadge role={file.uploadedByRole} className="shrink-0 px-2 py-0.5 text-[10px]" />
+          <RoleBadge
+            role={file.uploadedByRole}
+            className="shrink-0 px-2 py-0.5 text-[10px]"
+          />
         </div>
       </td>
       <td className="px-4 py-3 text-xs text-slate-500">

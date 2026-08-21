@@ -1,37 +1,37 @@
-import { RoleBadge } from '@/components/ui/RoleBadge';
-import { StatusBadge } from '@/components/ui/StatusBadge';
-import { useIsMobileLayout } from '@/components/ui/useIsMobileLayout';
-import { cn } from '@/lib/cn';
-import { CheckCircle2, Eye, Pencil, Trash2 } from 'lucide-react';
-import type { MeetingChannel, MeetingRecord } from '../types';
-import { getMeetingPlatformDisplay } from '../lib/platformDisplay';
-import { EmptyStateCard } from '@/components/ui/EmptyStateCard';
-import { DataTable } from '@/components/ui/DataTable';
+import { RoleBadge } from "@/components/ui/RoleBadge";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { useIsMobileLayout } from "@/components/ui/useIsMobileLayout";
+import { cn } from "@/lib/cn";
+import { CheckCircle2, Eye, Pencil, Trash2 } from "lucide-react";
+import type { MeetingChannel, MeetingRecord } from "../types";
+import { getMeetingPlatformDisplay } from "../lib/platformDisplay";
+import { EmptyStateCard } from "@/components/ui/EmptyStateCard";
+import { DataTable } from "@/components/ui/DataTable";
 
-const dateFormatter = new Intl.DateTimeFormat('en', {
-  month: 'short',
-  day: 'numeric',
-  year: 'numeric',
+const dateFormatter = new Intl.DateTimeFormat("en", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
 });
 
-const dateTimeFormatter = new Intl.DateTimeFormat('en', {
-  month: 'short',
-  day: 'numeric',
-  year: 'numeric',
-  hour: 'numeric',
-  minute: '2-digit',
+const dateTimeFormatter = new Intl.DateTimeFormat("en", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
 });
 
 const MAX_DISCUSSION_SUMMARY_CHARS = 25;
 const MAX_CHANNEL_NAME_CHARS = 26;
 
-function statusTone(status: MeetingRecord['status']) {
-  if (status === 'APPROVED') return 'success';
-  return 'warning';
+function statusTone(status: MeetingRecord["status"]) {
+  if (status === "APPROVED") return "success";
+  return "warning";
 }
 
 function parseIsoDate(value: string) {
-  const [year, month, day] = value.split('-').map((part) => Number(part));
+  const [year, month, day] = value.split("-").map((part) => Number(part));
   return new Date(year, month - 1, day);
 }
 
@@ -39,13 +39,15 @@ function buildStatusTitle(record: MeetingRecord) {
   return [
     `Added by ${record.addedByName} (${record.addedByRole})`,
     dateTimeFormatter.format(new Date(record.createdAt)),
-    ...(record.status === 'APPROVED' && record.approvedByName && record.approvedAt
+    ...(record.status === "APPROVED" &&
+    record.approvedByName &&
+    record.approvedAt
       ? [
           `Approved by ${record.approvedByName}`,
           dateTimeFormatter.format(new Date(record.approvedAt)),
         ]
       : []),
-  ].join(' • ');
+  ].join(" • ");
 }
 
 type MeetingRecordsTableProps = {
@@ -97,10 +99,14 @@ export function MeetingRecordsTable({
                   <p className="text-sm font-semibold text-slate-900">
                     {dateFormatter.format(parseIsoDate(record.meetingDate))}
                   </p>
-                  <p className="mt-0.5 text-xs text-slate-500">{record.durationMinutes} min</p>
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    {record.durationMinutes} min
+                  </p>
                 </div>
                 <div className="cursor-help" title={buildStatusTitle(record)}>
-                  <StatusBadge tone={statusTone(record.status)}>{record.status}</StatusBadge>
+                  <StatusBadge tone={statusTone(record.status)}>
+                    {record.status}
+                  </StatusBadge>
                 </div>
               </div>
 
@@ -114,7 +120,9 @@ export function MeetingRecordsTable({
 
               {linkedChannel ? (
                 (() => {
-                  const display = getMeetingPlatformDisplay(linkedChannel.platform);
+                  const display = getMeetingPlatformDisplay(
+                    linkedChannel.platform,
+                  );
                   const displayName =
                     linkedChannel.channelName.length > MAX_CHANNEL_NAME_CHARS
                       ? `${linkedChannel.channelName.slice(0, MAX_CHANNEL_NAME_CHARS - 3).trimEnd()}...`
@@ -130,7 +138,7 @@ export function MeetingRecordsTable({
                         title={display.label}
                         aria-label={display.label}
                       >
-                        {display.kind === 'simple-icon' ? (
+                        {display.kind === "simple-icon" ? (
                           <svg
                             aria-hidden
                             viewBox="0 0 24 24"
@@ -143,7 +151,11 @@ export function MeetingRecordsTable({
                           <display.Icon
                             aria-hidden
                             className="h-3.5 w-3.5 text-slate-700"
-                            style={display.hex ? { color: `#${display.hex}` } : undefined}
+                            style={
+                              display.hex
+                                ? { color: `#${display.hex}` }
+                                : undefined
+                            }
                             strokeWidth={2.25}
                           />
                         )}
@@ -153,7 +165,9 @@ export function MeetingRecordsTable({
                   );
                 })()
               ) : (
-                <span className="mt-3 inline-flex text-xs font-semibold text-slate-400">—</span>
+                <span className="mt-3 inline-flex text-xs font-semibold text-slate-400">
+                  —
+                </span>
               )}
 
               <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
@@ -168,15 +182,15 @@ export function MeetingRecordsTable({
                     title="View record"
                     aria-label="View record"
                     className={cn(
-                      'inline-flex h-8 w-8 items-center justify-center rounded-lg border transition-colors',
-                      'border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-800',
+                      "inline-flex h-8 w-8 items-center justify-center rounded-lg border transition-colors",
+                      "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-800",
                     )}
                   >
                     <Eye className="h-3.5 w-3.5" />
                   </button>
                   {canManage ? (
                     <>
-                      {record.status === 'PENDING' ? (
+                      {record.status === "PENDING" ? (
                         <button
                           type="button"
                           onClick={() => onApprove?.(record)}
@@ -228,17 +242,36 @@ export function MeetingRecordsTable({
           <col className="w-[220px]" />
           <col className="w-[220px]" />
           <col className="w-[140px]" />
-          {canManage ? <col className="w-[170px]" /> : <col className="w-[90px]" />}
+          {canManage ? (
+            <col className="w-[170px]" />
+          ) : (
+            <col className="w-[90px]" />
+          )}
         </colgroup>
       }
       columns={[
-        { key: 'date', header: 'Date', className: 'whitespace-nowrap' },
-        { key: 'duration', header: 'Duration', className: 'whitespace-nowrap' },
-        { key: 'summary', header: 'Discussion Summary' },
-        { key: 'channel', header: 'Channel' },
-        { key: 'addedBy', header: 'Added By', align: 'center', className: 'whitespace-nowrap' },
-        { key: 'status', header: 'Status', align: 'center', className: 'whitespace-nowrap' },
-        { key: 'actions', header: 'Actions', align: 'center', className: 'whitespace-nowrap' },
+        { key: "date", header: "Date", className: "whitespace-nowrap" },
+        { key: "duration", header: "Duration", className: "whitespace-nowrap" },
+        { key: "summary", header: "Discussion Summary" },
+        { key: "channel", header: "Channel" },
+        {
+          key: "addedBy",
+          header: "Added By",
+          align: "center",
+          className: "whitespace-nowrap",
+        },
+        {
+          key: "status",
+          header: "Status",
+          align: "center",
+          className: "whitespace-nowrap",
+        },
+        {
+          key: "actions",
+          header: "Actions",
+          align: "center",
+          className: "whitespace-nowrap",
+        },
       ]}
     >
       {records.map((record) => {
@@ -275,7 +308,9 @@ export function MeetingRecordsTable({
             <td className="px-4 py-3 align-middle">
               {linkedChannel ? (
                 (() => {
-                  const display = getMeetingPlatformDisplay(linkedChannel.platform);
+                  const display = getMeetingPlatformDisplay(
+                    linkedChannel.platform,
+                  );
                   const displayName =
                     linkedChannel.channelName.length > MAX_CHANNEL_NAME_CHARS
                       ? `${linkedChannel.channelName.slice(0, MAX_CHANNEL_NAME_CHARS - 3).trimEnd()}...`
@@ -291,7 +326,7 @@ export function MeetingRecordsTable({
                         title={display.label}
                         aria-label={display.label}
                       >
-                        {display.kind === 'simple-icon' ? (
+                        {display.kind === "simple-icon" ? (
                           <svg
                             aria-hidden
                             viewBox="0 0 24 24"
@@ -304,7 +339,11 @@ export function MeetingRecordsTable({
                           <display.Icon
                             aria-hidden
                             className="h-3.5 w-3.5 text-slate-700"
-                            style={display.hex ? { color: `#${display.hex}` } : undefined}
+                            style={
+                              display.hex
+                                ? { color: `#${display.hex}` }
+                                : undefined
+                            }
                             strokeWidth={2.25}
                           />
                         )}
@@ -318,7 +357,10 @@ export function MeetingRecordsTable({
               )}
             </td>
             <td className="max-w-0 px-4 py-3 w-[220px] whitespace-nowrap align-middle text-center text-xs text-slate-500">
-              <div className="flex justify-center cursor-help" title={record.addedByName}>
+              <div
+                className="flex justify-center cursor-help"
+                title={record.addedByName}
+              >
                 <RoleBadge
                   role={record.addedByRole}
                   className="min-w-[110px] justify-center px-2 py-0.5 text-[10px]"
@@ -326,8 +368,13 @@ export function MeetingRecordsTable({
               </div>
             </td>
             <td className="px-4 py-3 whitespace-nowrap align-middle text-center">
-              <div className="flex justify-center cursor-help" title={buildStatusTitle(record)}>
-                <StatusBadge tone={statusTone(record.status)}>{record.status}</StatusBadge>
+              <div
+                className="flex justify-center cursor-help"
+                title={buildStatusTitle(record)}
+              >
+                <StatusBadge tone={statusTone(record.status)}>
+                  {record.status}
+                </StatusBadge>
               </div>
             </td>
             <td className="px-4 py-3 whitespace-nowrap align-middle text-center">
@@ -338,8 +385,8 @@ export function MeetingRecordsTable({
                   title="View record"
                   aria-label="View record"
                   className={cn(
-                    'inline-flex h-8 w-8 items-center justify-center rounded-lg border transition-colors',
-                    'border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-800',
+                    "inline-flex h-8 w-8 items-center justify-center rounded-lg border transition-colors",
+                    "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-800",
                   )}
                 >
                   <Eye className="h-3.5 w-3.5" />
@@ -347,7 +394,7 @@ export function MeetingRecordsTable({
 
                 {canManage ? (
                   <>
-                    {record.status === 'PENDING' ? (
+                    {record.status === "PENDING" ? (
                       <button
                         type="button"
                         onClick={() => onApprove?.(record)}

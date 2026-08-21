@@ -2,7 +2,7 @@
 // invisible to JavaScript. This module only persists the user profile,
 // which is needed to rehydrate UI state (role-based routing, display name)
 // across page reloads without making an extra API call.
-const USER_KEY = 'ss_user';
+const USER_KEY = "ss_user";
 
 /**
  * Minimal user shape persisted to localStorage.
@@ -28,7 +28,8 @@ export const tokenStorage = {
       return null;
     }
   },
-  setUser: (user: StoredUser): void => localStorage.setItem(USER_KEY, JSON.stringify(user)),
+  setUser: (user: StoredUser): void =>
+    localStorage.setItem(USER_KEY, JSON.stringify(user)),
   clearUser: (): void => localStorage.removeItem(USER_KEY),
 
   /** Removes all auth data from localStorage — call on logout. */

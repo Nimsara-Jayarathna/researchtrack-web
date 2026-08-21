@@ -1,13 +1,15 @@
-const DEFAULT_ALLOWED_TYPES = ['pdf', 'docx', 'pptx', 'zip'];
+const DEFAULT_ALLOWED_TYPES = ["pdf", "docx", "pptx", "zip"];
 
 const EXTENSION_TO_MIME: Record<string, string> = {
-  pdf: 'application/pdf',
-  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-  zip: 'application/zip',
+  pdf: "application/pdf",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  zip: "application/zip",
 };
 
-const MIME_TO_EXTENSION: Record<string, string> = Object.entries(EXTENSION_TO_MIME).reduce(
+const MIME_TO_EXTENSION: Record<string, string> = Object.entries(
+  EXTENSION_TO_MIME,
+).reduce(
   (acc, [extension, mime]) => {
     acc[mime] = extension;
     return acc;
@@ -16,7 +18,7 @@ const MIME_TO_EXTENSION: Record<string, string> = Object.entries(EXTENSION_TO_MI
 );
 
 export function extensionFromFileName(fileName: string): string | null {
-  const dotIndex = fileName.lastIndexOf('.');
+  const dotIndex = fileName.lastIndexOf(".");
   if (dotIndex < 0 || dotIndex === fileName.length - 1) {
     return null;
   }
@@ -25,12 +27,12 @@ export function extensionFromFileName(fileName: string): string | null {
 
 function stripExtension(draft: string): string {
   const trimmed = draft.trim();
-  if (trimmed.length === 0) return '';
-  if (trimmed.endsWith('.')) return trimmed.slice(0, -1);
+  if (trimmed.length === 0) return "";
+  if (trimmed.endsWith(".")) return trimmed.slice(0, -1);
 
-  const dotIndex = trimmed.lastIndexOf('.');
+  const dotIndex = trimmed.lastIndexOf(".");
   if (dotIndex < 0) return trimmed;
-  if (dotIndex === 0) return '';
+  if (dotIndex === 0) return "";
 
   return trimmed.slice(0, dotIndex);
 }
@@ -39,14 +41,20 @@ export function baseNameFromFileName(fileName: string): string {
   return stripExtension(fileName);
 }
 
-export function resolveExpectedExtension(file: File, allowedTypes: Set<string>): string | null {
+export function resolveExpectedExtension(
+  file: File,
+  allowedTypes: Set<string>,
+): string | null {
   const byName = extensionFromFileName(file.name);
   if (byName && allowedTypes.has(byName)) {
     return byName;
   }
 
   const normalizedMimeType = file.type.trim().toLowerCase();
-  const byMime = normalizedMimeType.length > 0 ? MIME_TO_EXTENSION[normalizedMimeType] : undefined;
+  const byMime =
+    normalizedMimeType.length > 0
+      ? MIME_TO_EXTENSION[normalizedMimeType]
+      : undefined;
   if (byMime && allowedTypes.has(byMime)) {
     return byMime;
   }
@@ -71,7 +79,7 @@ export function enforceExpectedExtension(
 
 export function bytesToHumanSize(bytes: number): string {
   if (bytes <= 0) {
-    return '0 B';
+    return "0 B";
   }
   if (bytes < 1024) {
     return `${bytes} B`;
@@ -89,8 +97,13 @@ export function bytesToHumanSize(bytes: number): string {
 }
 
 export function normalizeAllowedTypes(allowedTypes?: string[]): string[] {
-  const source = allowedTypes && allowedTypes.length > 0 ? allowedTypes : DEFAULT_ALLOWED_TYPES;
-  return source.map((type) => type.trim().toLowerCase()).filter((type) => type.length > 0);
+  const source =
+    allowedTypes && allowedTypes.length > 0
+      ? allowedTypes
+      : DEFAULT_ALLOWED_TYPES;
+  return source
+    .map((type) => type.trim().toLowerCase())
+    .filter((type) => type.length > 0);
 }
 
 export function validateSelectedFile(
@@ -99,7 +112,7 @@ export function validateSelectedFile(
   allowedTypes: Set<string>,
 ): string | null {
   if (file.size <= 0) {
-    return 'Selected file is empty.';
+    return "Selected file is empty.";
   }
   if (file.size > maxFileSizeBytes) {
     return `File size must be ${bytesToHumanSize(maxFileSizeBytes)} or less.`;
@@ -108,14 +121,15 @@ export function validateSelectedFile(
   const extension = extensionFromFileName(file.name);
   const type = file.type.trim().toLowerCase();
   const mimeExtension =
-    Object.entries(EXTENSION_TO_MIME).find(([, mime]) => mime === type)?.[0] ?? null;
+    Object.entries(EXTENSION_TO_MIME).find(([, mime]) => mime === type)?.[0] ??
+    null;
   const mimeValid = mimeExtension !== null && allowedTypes.has(mimeExtension);
   const extensionValid = extension !== null && allowedTypes.has(extension);
 
   if (!mimeValid && !extensionValid) {
     return `Only ${Array.from(allowedTypes)
       .map((fileType) => fileType.toUpperCase())
-      .join(', ')} files are allowed.`;
+      .join(", ")} files are allowed.`;
   }
 
   return null;
@@ -132,7 +146,7 @@ export function resolveUploadContentType(file: File): string {
     return EXTENSION_TO_MIME[extension];
   }
 
-  return 'application/octet-stream';
+  return "application/octet-stream";
 }
 
 export async function uploadFileToPresignedUrl(
@@ -141,18 +155,21 @@ export async function uploadFileToPresignedUrl(
   contentType: string,
 ): Promise<void> {
   const response = await fetch(presignedUrl, {
-    method: 'PUT',
+    method: "PUT",
     headers: {
-      'Content-Type': contentType,
+      "Content-Type": contentType,
     },
     body: file,
   });
 
   if (!response.ok) {
-    throw new Error('Upload to storage failed.');
+    throw new Error("Upload to storage failed.");
   }
 }
 
-export function normalizeFileNameDraft(value: string, maxFileNameLength: number): string {
+export function normalizeFileNameDraft(
+  value: string,
+  maxFileNameLength: number,
+): string {
   return value.slice(0, maxFileNameLength);
 }

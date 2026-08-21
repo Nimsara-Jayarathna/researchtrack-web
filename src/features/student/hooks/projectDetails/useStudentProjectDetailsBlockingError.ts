@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
-import { useBlockingError } from '@/app/layout/BlockingErrorContext';
-import { isBlockingError } from '@/utils/errorSeverity';
-import type { ApiError } from '@/types';
+import { useEffect } from "react";
+import { useBlockingError } from "@/app/layout/BlockingErrorContext";
+import { isBlockingError } from "@/utils/errorSeverity";
+import type { ApiError } from "@/types";
 
 type UseStudentProjectDetailsBlockingErrorParams = {
   error: ApiError | null;

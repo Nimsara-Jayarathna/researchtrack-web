@@ -1,6 +1,6 @@
-import { supervisorApi } from '../../api/supervisorApi';
-import type { SupervisorProjectDetail } from '../../types';
-import { JiraHealthOverview } from './jira/JiraHealthOverview';
+import { supervisorApi } from "../../api/supervisorApi";
+import type { SupervisorProjectDetail } from "../../types";
+import { JiraHealthOverview } from "./jira/JiraHealthOverview";
 
 type JiraTabSectionProps = {
   project: SupervisorProjectDetail;
@@ -23,7 +23,8 @@ export function JiraTabSection({ project }: JiraTabSectionProps) {
         />
       ) : (
         <div className="rounded-3xl border border-dashed border-slate-200 bg-white p-10 text-center text-slate-500 shadow-sm">
-          Jira workspace is not connected for this project. Connect it from the Integrations tab.
+          Jira workspace is not connected for this project. Connect it from the
+          Integrations tab.
         </div>
       )}
     </section>

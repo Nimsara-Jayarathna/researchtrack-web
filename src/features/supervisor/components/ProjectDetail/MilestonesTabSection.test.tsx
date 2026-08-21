@@ -1,31 +1,36 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
-import type { MilestonesState } from '../../hooks/useProjectDetailsPageState';
-import type { MilestoneStatus } from '../../projectDetails.shared';
-import type { SupervisorProjectDetail, SupervisorProjectDetailMilestone } from '../../types';
-import { MilestonesTabSection } from './MilestonesTabSection';
+import { fireEvent, render, screen, within } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import type { MilestonesState } from "../../hooks/useProjectDetailsPageState";
+import type { MilestoneStatus } from "../../projectDetails.shared";
+import type {
+  SupervisorProjectDetail,
+  SupervisorProjectDetailMilestone,
+} from "../../types";
+import { MilestonesTabSection } from "./MilestonesTabSection";
 
 function buildMilestone(
   status: MilestoneStatus,
   overrides: Partial<SupervisorProjectDetailMilestone> = {},
 ): SupervisorProjectDetailMilestone {
   return {
-    id: 'milestone-1',
-    title: 'Milestone Alpha',
-    description: 'Test milestone',
-    dueDate: '2026-04-25',
+    id: "milestone-1",
+    title: "Milestone Alpha",
+    description: "Test milestone",
+    dueDate: "2026-04-25",
     status,
     sequenceNo: 1,
     ...overrides,
   };
 }
 
-function buildProject(milestones: SupervisorProjectDetailMilestone[]): SupervisorProjectDetail {
+function buildProject(
+  milestones: SupervisorProjectDetailMilestone[],
+): SupervisorProjectDetail {
   return {
-    id: 'project-1',
-    title: 'Project X',
+    id: "project-1",
+    title: "Project X",
     summary: null,
-    lifecycleStatus: 'ACTIVE',
+    lifecycleStatus: "ACTIVE",
     batch: null,
     semester: null,
     milestoneDate: null,
@@ -38,7 +43,7 @@ function buildProject(milestones: SupervisorProjectDetailMilestone[]): Superviso
       activitySummary: {
         totalCommits: 0,
         lastActivityAt: null,
-        status: 'idle',
+        status: "idle",
       },
       contributorsPreview: [],
       recentCommitsPreview: [],
@@ -52,17 +57,19 @@ function buildProject(milestones: SupervisorProjectDetailMilestone[]): Superviso
   };
 }
 
-function createMilestonesState(overrides: Partial<MilestonesState> = {}): MilestonesState {
+function createMilestonesState(
+  overrides: Partial<MilestonesState> = {},
+): MilestonesState {
   return {
     isAddingMilestone: false,
     isSavingMilestone: false,
     editingMilestoneId: null,
     quickStatusUpdatingId: null,
     newMilestoneForm: {
-      title: '',
-      description: '',
-      dueDate: '',
-      status: 'PLANNED',
+      title: "",
+      description: "",
+      dueDate: "",
+      status: "PLANNED",
     },
     editMilestoneForm: null,
     isEditMilestoneDirty: false,
@@ -79,78 +86,102 @@ function createMilestonesState(overrides: Partial<MilestonesState> = {}): Milest
   };
 }
 
-describe('MilestonesTabSection terminal lockdown', () => {
-  it('disables edit and quick-status interactions for completed milestone cards', () => {
-    const completed = buildMilestone('COMPLETED');
+describe("MilestonesTabSection terminal lockdown", () => {
+  it("disables edit and quick-status interactions for completed milestone cards", () => {
+    const completed = buildMilestone("COMPLETED");
     const startEditMilestone = vi.fn();
     const state = createMilestonesState({ startEditMilestone });
 
-    render(<MilestonesTabSection project={buildProject([completed])} milestones={state} />);
+    render(
+      <MilestonesTabSection
+        project={buildProject([completed])}
+        milestones={state}
+      />,
+    );
 
-    const editButton = screen.getByTitle('Terminal milestones cannot be edited.');
+    const editButton = screen.getByTitle(
+      "Terminal milestones cannot be edited.",
+    );
     expect(editButton).toBeDisabled();
     fireEvent.click(editButton);
     expect(startEditMilestone).not.toHaveBeenCalled();
 
-    const quickStatusButton = screen.getByRole('button', { name: 'Change milestone status' });
+    const quickStatusButton = screen.getByRole("button", {
+      name: "Change milestone status",
+    });
     expect(quickStatusButton).toBeDisabled();
     fireEvent.click(quickStatusButton);
-    expect(screen.queryByRole('listbox')).toBeNull();
+    expect(screen.queryByRole("listbox")).toBeNull();
   });
 
-  it('filters quick-status menu options for missed milestones', () => {
-    const missed = buildMilestone('MISSED');
+  it("filters quick-status menu options for missed milestones", () => {
+    const missed = buildMilestone("MISSED");
     const state = createMilestonesState();
 
-    render(<MilestonesTabSection project={buildProject([missed])} milestones={state} />);
+    render(
+      <MilestonesTabSection
+        project={buildProject([missed])}
+        milestones={state}
+      />,
+    );
 
-    const quickStatusButton = screen.getByRole('button', { name: 'Change milestone status' });
+    const quickStatusButton = screen.getByRole("button", {
+      name: "Change milestone status",
+    });
     expect(quickStatusButton).not.toBeDisabled();
 
     fireEvent.click(quickStatusButton);
-    const menu = screen.getByRole('listbox');
+    const menu = screen.getByRole("listbox");
 
-    expect(within(menu).queryByText('PLANNED')).toBeNull();
-    expect(within(menu).queryByText('IN PROGRESS')).toBeNull();
-    expect(within(menu).getByText('MISSED')).toBeInTheDocument();
-    expect(within(menu).getByText('COMPLETED')).toBeInTheDocument();
-    expect(within(menu).getByText('CANCELLED')).toBeInTheDocument();
+    expect(within(menu).queryByText("PLANNED")).toBeNull();
+    expect(within(menu).queryByText("IN PROGRESS")).toBeNull();
+    expect(within(menu).getByText("MISSED")).toBeInTheDocument();
+    expect(within(menu).getByText("COMPLETED")).toBeInTheDocument();
+    expect(within(menu).getByText("CANCELLED")).toBeInTheDocument();
   });
 
-  it('renders read-only completed status in edit form when editing a completed milestone row', () => {
-    const completed = buildMilestone('COMPLETED');
+  it("renders read-only completed status in edit form when editing a completed milestone row", () => {
+    const completed = buildMilestone("COMPLETED");
     const state = createMilestonesState({
       editingMilestoneId: completed.id,
       editMilestoneForm: {
         title: completed.title,
-        description: completed.description ?? '',
+        description: completed.description ?? "",
         dueDate: completed.dueDate,
         status: completed.status,
       },
     });
 
     const { container } = render(
-      <MilestonesTabSection project={buildProject([completed])} milestones={state} />,
+      <MilestonesTabSection
+        project={buildProject([completed])}
+        milestones={state}
+      />,
     );
 
-    const select = container.querySelector('select');
+    const select = container.querySelector("select");
     expect(select).not.toBeNull();
     expect(select).toBeDisabled();
 
-    const optionValues = Array.from(select?.querySelectorAll('option') ?? []).map(
-      (option) => option.value,
-    );
-    expect(optionValues).toEqual(['COMPLETED']);
+    const optionValues = Array.from(
+      select?.querySelectorAll("option") ?? [],
+    ).map((option) => option.value);
+    expect(optionValues).toEqual(["COMPLETED"]);
   });
 
-  it('keeps edit action enabled for non-terminal milestones', () => {
-    const planned = buildMilestone('PLANNED');
+  it("keeps edit action enabled for non-terminal milestones", () => {
+    const planned = buildMilestone("PLANNED");
     const startEditMilestone = vi.fn();
     const state = createMilestonesState({ startEditMilestone });
 
-    render(<MilestonesTabSection project={buildProject([planned])} milestones={state} />);
+    render(
+      <MilestonesTabSection
+        project={buildProject([planned])}
+        milestones={state}
+      />,
+    );
 
-    const editButton = screen.getByTitle('Edit milestone');
+    const editButton = screen.getByTitle("Edit milestone");
     expect(editButton).not.toBeDisabled();
 
     fireEvent.click(editButton);

@@ -1,4 +1,4 @@
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle } from "lucide-react";
 
 type JiraBugRatioBarProps = {
   bugRatio: number; // 0–100
@@ -8,47 +8,47 @@ type JiraBugRatioBarProps = {
 const WATCH_THRESHOLD = 20;
 const CRITICAL_THRESHOLD = 35;
 
-type RiskLevel = 'healthy' | 'watch' | 'critical';
+type RiskLevel = "healthy" | "watch" | "critical";
 
 function getRiskLevel(ratio: number): RiskLevel {
-  if (ratio > CRITICAL_THRESHOLD) return 'critical';
-  if (ratio >= WATCH_THRESHOLD) return 'watch';
-  return 'healthy';
+  if (ratio > CRITICAL_THRESHOLD) return "critical";
+  if (ratio >= WATCH_THRESHOLD) return "watch";
+  return "healthy";
 }
 
 const RISK_CONFIG = {
   healthy: {
-    label: 'Healthy',
-    zeroLabel: 'No open bugs',
-    barColor: '#10B981',
-    barGlow: '#10B98133',
-    textClass: 'text-emerald-600',
-    badgeBg: 'bg-emerald-50 border-emerald-200 text-emerald-700',
-    headerBg: 'from-emerald-50/70',
-    iconBg: 'bg-emerald-500',
-    needleColor: '#10B981',
+    label: "Healthy",
+    zeroLabel: "No open bugs",
+    barColor: "#10B981",
+    barGlow: "#10B98133",
+    textClass: "text-emerald-600",
+    badgeBg: "bg-emerald-50 border-emerald-200 text-emerald-700",
+    headerBg: "from-emerald-50/70",
+    iconBg: "bg-emerald-500",
+    needleColor: "#10B981",
   },
   watch: {
-    label: 'At Risk',
-    zeroLabel: 'No open bugs',
-    barColor: '#F59E0B',
-    barGlow: '#F59E0B33',
-    textClass: 'text-amber-600',
-    badgeBg: 'bg-amber-50 border-amber-200 text-amber-700',
-    headerBg: 'from-amber-50/70',
-    iconBg: 'bg-amber-500',
-    needleColor: '#F59E0B',
+    label: "At Risk",
+    zeroLabel: "No open bugs",
+    barColor: "#F59E0B",
+    barGlow: "#F59E0B33",
+    textClass: "text-amber-600",
+    badgeBg: "bg-amber-50 border-amber-200 text-amber-700",
+    headerBg: "from-amber-50/70",
+    iconBg: "bg-amber-500",
+    needleColor: "#F59E0B",
   },
   critical: {
-    label: 'Critical',
-    zeroLabel: 'No open bugs',
-    barColor: '#EF4444',
-    barGlow: '#EF444433',
-    textClass: 'text-red-600',
-    badgeBg: 'bg-red-50 border-red-200 text-red-700',
-    headerBg: 'from-red-50/60',
-    iconBg: 'bg-red-500',
-    needleColor: '#EF4444',
+    label: "Critical",
+    zeroLabel: "No open bugs",
+    barColor: "#EF4444",
+    barGlow: "#EF444433",
+    textClass: "text-red-600",
+    badgeBg: "bg-red-50 border-red-200 text-red-700",
+    headerBg: "from-red-50/60",
+    iconBg: "bg-red-500",
+    needleColor: "#EF4444",
   },
 };
 
@@ -70,19 +70,25 @@ export function JiraBugRatioBar({ bugRatio }: JiraBugRatioBarProps) {
           <AlertTriangle className="h-4 w-4" />
         </span>
         <div className="min-w-0">
-          <p className="text-sm font-bold tracking-wide text-slate-800">Bug Ratio</p>
-          <p className="text-[11px] text-slate-400">Open bugs as a share of open issues</p>
+          <p className="text-sm font-bold tracking-wide text-slate-800">
+            Bug Ratio
+          </p>
+          <p className="text-[11px] text-slate-400">
+            Open bugs as a share of open issues
+          </p>
         </div>
 
         {/* Hero metric */}
         <div className="ml-auto flex items-center gap-2.5">
-          <span className={`text-2xl font-extrabold tabular-nums leading-none ${cfg.textClass}`}>
+          <span
+            className={`text-2xl font-extrabold tabular-nums leading-none ${cfg.textClass}`}
+          >
             {clamped.toFixed(1)}%
           </span>
           <span
             className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${cfg.badgeBg}`}
           >
-            {isZero ? 'No open bugs' : cfg.label}
+            {isZero ? "No open bugs" : cfg.label}
           </span>
         </div>
       </div>
@@ -104,19 +110,19 @@ export function JiraBugRatioBar({ bugRatio }: JiraBugRatioBarProps) {
               className="h-full"
               style={{
                 width: `${WATCH_THRESHOLD}%`,
-                background: 'linear-gradient(90deg, #D1FAE5, #A7F3D0)',
+                background: "linear-gradient(90deg, #D1FAE5, #A7F3D0)",
               }}
             />
             <div
               className="h-full"
               style={{
                 width: `${CRITICAL_THRESHOLD - WATCH_THRESHOLD}%`,
-                background: 'linear-gradient(90deg, #FEF3C7, #FDE68A)',
+                background: "linear-gradient(90deg, #FEF3C7, #FDE68A)",
               }}
             />
             <div
               className="h-full flex-1"
-              style={{ background: 'linear-gradient(90deg, #FEE2E2, #FECACA)' }}
+              style={{ background: "linear-gradient(90deg, #FEE2E2, #FECACA)" }}
             />
           </div>
 
@@ -152,7 +158,7 @@ export function JiraBugRatioBar({ bugRatio }: JiraBugRatioBarProps) {
           >
             <div
               className="h-5 w-5 rounded-full border-2 border-white shadow-md"
-              style={{ backgroundColor: isZero ? '#94A3B8' : cfg.barColor }}
+              style={{ backgroundColor: isZero ? "#94A3B8" : cfg.barColor }}
             />
           </div>
         </div>

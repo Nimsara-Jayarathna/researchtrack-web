@@ -1,5 +1,5 @@
-import type { ProjectGitHubPreview } from '@/features/projects/types';
-import type { GitHubAvailableRepositories } from '@/features/shared/types/github.types';
+import type { ProjectGitHubPreview } from "@/features/projects/types";
+import type { GitHubAvailableRepositories } from "@/features/shared/types/github.types";
 
 export type {
   GitHubAccessSource,
@@ -11,7 +11,7 @@ export type {
   LinkGitHubRepositoriesPayload,
   ProjectGitHubRepositories,
   ProjectRepositoryLink,
-} from '@/features/shared/types/github.types';
+} from "@/features/shared/types/github.types";
 
 export type ProjectGitHubActivity = ProjectGitHubPreview;
 
@@ -76,7 +76,7 @@ export type GitHubAccessUpdatedSummary = {
   projectTitle: string;
   installationId: number;
   sourceId?: string | null;
-  flowType?: 'INSTALLATION_DIRECT' | 'INSTALLATION_REQUESTED' | null;
+  flowType?: "INSTALLATION_DIRECT" | "INSTALLATION_REQUESTED" | null;
   accessScope: string;
   accessibleRepositoryCount: number;
   repositories: GitHubInstallationRepository[];
@@ -89,7 +89,7 @@ export type GitHubAccessUpdatedAcknowledge = {
 export type GitHubInstallStart = {
   projectId: string;
   githubAuthorizeUrl: string;
-  flowType: 'INSTALLATION_DIRECT' | 'INSTALLATION_REQUESTED';
+  flowType: "INSTALLATION_DIRECT" | "INSTALLATION_REQUESTED";
   expiresAt: string;
 };
 

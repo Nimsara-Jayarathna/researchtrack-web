@@ -1,11 +1,11 @@
-import { ProjectStepper } from '../ProjectStepper';
-import { BasicsStepSection } from './BasicsStepSection';
-import { CreateProjectSuccessPanel } from './CreateProjectSuccessPanel';
-import { MilestonesStepSection } from './MilestonesStepSection';
-import { StudentsStepSection } from './StudentsStepSection';
-import { CREATE_PROJECT_STEPS } from '../../createProject.shared';
-import type { CreateProjectStepId } from '../../createProject.shared';
-import type { useCreateProjectPageState } from '../../hooks/useCreateProjectPageState';
+import { ProjectStepper } from "../ProjectStepper";
+import { BasicsStepSection } from "./BasicsStepSection";
+import { CreateProjectSuccessPanel } from "./CreateProjectSuccessPanel";
+import { MilestonesStepSection } from "./MilestonesStepSection";
+import { StudentsStepSection } from "./StudentsStepSection";
+import { CREATE_PROJECT_STEPS } from "../../createProject.shared";
+import type { CreateProjectStepId } from "../../createProject.shared";
+import type { useCreateProjectPageState } from "../../hooks/useCreateProjectPageState";
 
 type CreateProjectWizardProps = {
   state: ReturnType<typeof useCreateProjectPageState>;
@@ -18,7 +18,8 @@ export function CreateProjectWizard({ state }: CreateProjectWizardProps) {
         currentStep={state.currentStep}
         steps={CREATE_PROJECT_STEPS}
         onStepClick={(step) => {
-          if (step < state.currentStep) state.goStep(step as CreateProjectStepId);
+          if (step < state.currentStep)
+            state.goStep(step as CreateProjectStepId);
         }}
       />
 

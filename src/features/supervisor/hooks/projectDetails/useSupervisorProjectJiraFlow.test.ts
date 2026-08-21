@@ -1,5 +1,5 @@
-import { act, renderHook, waitFor } from '@testing-library/react';
-import { useSupervisorProjectJiraFlow } from './useSupervisorProjectJiraFlow';
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { useSupervisorProjectJiraFlow } from "./useSupervisorProjectJiraFlow";
 
 const supervisorApiMock = vi.hoisted(() => ({
   getProjectJiraAuthUrl: vi.fn(),
@@ -8,7 +8,7 @@ const supervisorApiMock = vi.hoisted(() => ({
   disconnectProjectJira: vi.fn(),
 }));
 
-vi.mock('../../api/supervisorApi', () => ({
+vi.mock("../../api/supervisorApi", () => ({
   supervisorApi: supervisorApiMock,
 }));
 
@@ -34,7 +34,7 @@ function renderJiraFlowHook(initialSearchParams = new URLSearchParams()) {
   const hook = renderHook(
     ({ searchParams }: HookProps) =>
       useSupervisorProjectJiraFlow({
-        projectId: 'project-1',
+        projectId: "project-1",
         searchParams,
         setSearchParams,
         reloadProject,
@@ -57,15 +57,15 @@ function renderJiraFlowHook(initialSearchParams = new URLSearchParams()) {
   };
 }
 
-describe('useSupervisorProjectJiraFlow', () => {
+describe("useSupervisorProjectJiraFlow", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     sessionStorage.clear();
   });
 
-  it('keeps the Jira connect button in redirecting state after starting a valid Atlassian redirect', async () => {
+  it("keeps the Jira connect button in redirecting state after starting a valid Atlassian redirect", async () => {
     supervisorApiMock.getProjectJiraAuthUrl.mockResolvedValue({
-      url: 'https://auth.atlassian.com/authorize?client_id=client-1',
+      url: "https://auth.atlassian.com/authorize?client_id=client-1",
     });
 
     const { navigateToUrl, result } = renderJiraFlowHook();
@@ -74,16 +74,18 @@ describe('useSupervisorProjectJiraFlow', () => {
       await result.current.handleConnectJira();
     });
 
-    expect(supervisorApiMock.getProjectJiraAuthUrl).toHaveBeenCalledWith('project-1');
+    expect(supervisorApiMock.getProjectJiraAuthUrl).toHaveBeenCalledWith(
+      "project-1",
+    );
     expect(navigateToUrl).toHaveBeenCalledWith(
-      'https://auth.atlassian.com/authorize?client_id=client-1',
+      "https://auth.atlassian.com/authorize?client_id=client-1",
     );
     expect(result.current.isConnectingJira).toBe(true);
   });
 
-  it('resets redirecting state when the project page is restored without Jira callback params', async () => {
+  it("resets redirecting state when the project page is restored without Jira callback params", async () => {
     supervisorApiMock.getProjectJiraAuthUrl.mockResolvedValue({
-      url: 'https://auth.atlassian.com/authorize?client_id=client-1',
+      url: "https://auth.atlassian.com/authorize?client_id=client-1",
     });
 
     const { result } = renderJiraFlowHook();
@@ -95,17 +97,19 @@ describe('useSupervisorProjectJiraFlow', () => {
     expect(result.current.isConnectingJira).toBe(true);
 
     act(() => {
-      window.dispatchEvent(new Event('pageshow'));
+      window.dispatchEvent(new Event("pageshow"));
     });
 
     expect(result.current.isConnectingJira).toBe(false);
   });
 
-  it('does not reset redirecting state on pageshow while Jira callback params are present', async () => {
+  it("does not reset redirecting state on pageshow while Jira callback params are present", async () => {
     supervisorApiMock.getProjectJiraAuthUrl.mockResolvedValue({
-      url: 'https://auth.atlassian.com/authorize?client_id=client-1',
+      url: "https://auth.atlassian.com/authorize?client_id=client-1",
     });
-    supervisorApiMock.completeJiraOAuth.mockReturnValue(new Promise(() => undefined));
+    supervisorApiMock.completeJiraOAuth.mockReturnValue(
+      new Promise(() => undefined),
+    );
 
     const { result, rerender } = renderJiraFlowHook();
 
@@ -116,20 +120,20 @@ describe('useSupervisorProjectJiraFlow', () => {
     expect(result.current.isConnectingJira).toBe(true);
 
     rerender({
-      searchParams: new URLSearchParams('jiraCode=code-1&jiraState=state-1'),
+      searchParams: new URLSearchParams("jiraCode=code-1&jiraState=state-1"),
     });
 
     await waitFor(() => {
       expect(supervisorApiMock.completeJiraOAuth).toHaveBeenCalledWith({
-        code: 'code-1',
-        state: 'state-1',
+        code: "code-1",
+        state: "state-1",
         error: null,
         errorDescription: null,
       });
     });
 
     act(() => {
-      window.dispatchEvent(new Event('pageshow'));
+      window.dispatchEvent(new Event("pageshow"));
     });
 
     expect(result.current.isConnectingJira).toBe(true);

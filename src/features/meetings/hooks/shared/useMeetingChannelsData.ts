@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { ApiError } from '@/types';
-import type { MeetingChannel, MeetingChannelUpsertPayload } from '../../types';
-import { sortMeetingChannels } from '../../lib/sortMeetingChannels';
-import { toApiError } from '../requestModal';
-import type { MeetingLoadResult } from './useMeetingRecordsData';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { ApiError } from "@/types";
+import type { MeetingChannel, MeetingChannelUpsertPayload } from "../../types";
+import { sortMeetingChannels } from "../../lib/sortMeetingChannels";
+import { toApiError } from "../requestModal";
+import type { MeetingLoadResult } from "./useMeetingRecordsData";
 
 export type MeetingChannelsApiPort = {
   getProjectMeetingChannels: (
@@ -19,8 +19,14 @@ export type MeetingChannelsApiPort = {
     channelId: string,
     payload: MeetingChannelUpsertPayload,
   ) => Promise<MeetingChannel>;
-  deleteProjectMeetingChannel: (projectId: string, channelId: string) => Promise<void>;
-  approveProjectMeetingChannel: (projectId: string, channelId: string) => Promise<MeetingChannel>;
+  deleteProjectMeetingChannel: (
+    projectId: string,
+    channelId: string,
+  ) => Promise<void>;
+  approveProjectMeetingChannel: (
+    projectId: string,
+    channelId: string,
+  ) => Promise<MeetingChannel>;
 };
 
 type UseMeetingChannelsDataOptions = {
@@ -35,7 +41,9 @@ type MeetingChannelsData = {
   error: ApiError | null;
   hasLoaded: boolean;
   load: (options?: { forceRefresh?: boolean }) => Promise<MeetingLoadResult>;
-  createChannel: (payload: MeetingChannelUpsertPayload) => Promise<MeetingChannel>;
+  createChannel: (
+    payload: MeetingChannelUpsertPayload,
+  ) => Promise<MeetingChannel>;
   updateChannel: (
     channelId: string,
     payload: MeetingChannelUpsertPayload,
@@ -56,9 +64,14 @@ export function useMeetingChannelsData({
   const loadInFlightRef = useRef(false);
 
   const load = useCallback(
-    async (options?: { forceRefresh?: boolean }): Promise<MeetingLoadResult> => {
+    async (options?: {
+      forceRefresh?: boolean;
+    }): Promise<MeetingLoadResult> => {
       if (loadInFlightRef.current) {
-        return { ok: false, error: toApiError(null, 'Unable to load meeting channels right now.') };
+        return {
+          ok: false,
+          error: toApiError(null, "Unable to load meeting channels right now."),
+        };
       }
 
       loadInFlightRef.current = true;
@@ -66,12 +79,18 @@ export function useMeetingChannelsData({
       setError(null);
 
       try {
-        const data = await api.getProjectMeetingChannels(projectId, options?.forceRefresh ?? false);
+        const data = await api.getProjectMeetingChannels(
+          projectId,
+          options?.forceRefresh ?? false,
+        );
         setChannels(sortMeetingChannels(data));
         setHasLoaded(true);
         return { ok: true };
       } catch (caught) {
-        const apiError = toApiError(caught, 'Unable to load meeting channels right now.');
+        const apiError = toApiError(
+          caught,
+          "Unable to load meeting channels right now.",
+        );
         setChannels([]);
         setError(apiError);
         return { ok: false, error: apiError };
@@ -87,7 +106,10 @@ export function useMeetingChannelsData({
     async (payload: MeetingChannelUpsertPayload): Promise<MeetingChannel> => {
       const created = await api.createProjectMeetingChannel(projectId, payload);
       setChannels((current) =>
-        sortMeetingChannels([created, ...current.filter((item) => item.id !== created.id)]),
+        sortMeetingChannels([
+          created,
+          ...current.filter((item) => item.id !== created.id),
+        ]),
       );
       return created;
     },
@@ -95,10 +117,19 @@ export function useMeetingChannelsData({
   );
 
   const updateChannel = useCallback(
-    async (channelId: string, payload: MeetingChannelUpsertPayload): Promise<MeetingChannel> => {
-      const updated = await api.updateProjectMeetingChannel(projectId, channelId, payload);
+    async (
+      channelId: string,
+      payload: MeetingChannelUpsertPayload,
+    ): Promise<MeetingChannel> => {
+      const updated = await api.updateProjectMeetingChannel(
+        projectId,
+        channelId,
+        payload,
+      );
       setChannels((current) =>
-        sortMeetingChannels(current.map((item) => (item.id === updated.id ? updated : item))),
+        sortMeetingChannels(
+          current.map((item) => (item.id === updated.id ? updated : item)),
+        ),
       );
       return updated;
     },
@@ -115,9 +146,14 @@ export function useMeetingChannelsData({
 
   const approveChannel = useCallback(
     async (channelId: string): Promise<MeetingChannel> => {
-      const approved = await api.approveProjectMeetingChannel(projectId, channelId);
+      const approved = await api.approveProjectMeetingChannel(
+        projectId,
+        channelId,
+      );
       setChannels((current) =>
-        sortMeetingChannels(current.map((item) => (item.id === approved.id ? approved : item))),
+        sortMeetingChannels(
+          current.map((item) => (item.id === approved.id ? approved : item)),
+        ),
       );
       return approved;
     },

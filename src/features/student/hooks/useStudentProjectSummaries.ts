@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
-import { isApiException } from '@/services/apiClient';
-import type { ApiError } from '@/types';
-import { studentApi } from '../api/studentApi';
-import type { StudentProjectSummary } from '../types';
+import { useEffect, useState } from "react";
+import { isApiException } from "@/services/apiClient";
+import type { ApiError } from "@/types";
+import { studentApi } from "../api/studentApi";
+import type { StudentProjectSummary } from "../types";
 
 type StudentProjectSummariesState = {
   projects: StudentProjectSummary[];
@@ -34,13 +34,13 @@ export function useStudentProjectSummaries() {
         error: isApiException(error)
           ? error.apiError
           : {
-              code: 'INTERNAL_ERROR',
-              message: 'Unable to load projects right now.',
+              code: "INTERNAL_ERROR",
+              message: "Unable to load projects right now.",
               details: [],
               timestamp: new Date().toISOString(),
               status: 0,
-              error: 'Unexpected Error',
-              path: '',
+              error: "Unexpected Error",
+              path: "",
               traceId: null,
             },
       });
@@ -73,13 +73,13 @@ export function useStudentProjectSummaries() {
           error: isApiException(error)
             ? error.apiError
             : {
-                code: 'INTERNAL_ERROR',
-                message: 'Unable to load projects right now.',
+                code: "INTERNAL_ERROR",
+                message: "Unable to load projects right now.",
                 details: [],
                 timestamp: new Date().toISOString(),
                 status: 0,
-                error: 'Unexpected Error',
-                path: '',
+                error: "Unexpected Error",
+                path: "",
                 traceId: null,
               },
         });

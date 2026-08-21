@@ -1,11 +1,11 @@
-import { useAuth } from '@/features/auth/hooks/useAuth';
-import { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { LoginForm } from './LoginForm';
-import { RequestStateModal } from '@/components/ui/RequestStateModal';
-import { getBlockingErrorTitle, isBlockingError } from '@/utils/errorSeverity';
-import { ModalShell } from '@/components/ui/ModalShell';
-import { AuthDialogCard } from './shell/AuthDialogCard';
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { LoginForm } from "./LoginForm";
+import { RequestStateModal } from "@/components/ui/RequestStateModal";
+import { getBlockingErrorTitle, isBlockingError } from "@/utils/errorSeverity";
+import { ModalShell } from "@/components/ui/ModalShell";
+import { AuthDialogCard } from "./shell/AuthDialogCard";
 
 type LoginPanelProps = {
   onClose: () => void;
@@ -13,7 +13,11 @@ type LoginPanelProps = {
   inModal?: boolean;
 };
 
-export function LoginPanel({ onClose, returnTo, inModal = false }: LoginPanelProps) {
+export function LoginPanel({
+  onClose,
+  returnTo,
+  inModal = false,
+}: LoginPanelProps) {
   const navigate = useNavigate();
   const dialogRef = useRef<HTMLElement>(null);
   const { login, isLoading, error, clearError } = useAuth();
@@ -55,7 +59,7 @@ export function LoginPanel({ onClose, returnTo, inModal = false }: LoginPanelPro
               feedbackMode="inline"
               onForgotPassword={() => {
                 onClose();
-                navigate('/forgot-password');
+                navigate("/forgot-password");
               }}
             />
           </AuthDialogCard>
@@ -78,19 +82,21 @@ export function LoginPanel({ onClose, returnTo, inModal = false }: LoginPanelPro
             feedbackMode="inline"
             onForgotPassword={() => {
               onClose();
-              navigate('/forgot-password');
+              navigate("/forgot-password");
             }}
           />
         </AuthDialogCard>
       )}
       <RequestStateModal
         isOpen={isLoading || !!blockingError}
-        status={isLoading ? 'loading' : 'error'}
-        title={isLoading ? 'Signing in...' : getBlockingErrorTitle(blockingError)}
+        status={isLoading ? "loading" : "error"}
+        title={
+          isLoading ? "Signing in..." : getBlockingErrorTitle(blockingError)
+        }
         message={
           isLoading
-            ? 'We are verifying your credentials.'
-            : blockingError?.message || 'Please try again later.'
+            ? "We are verifying your credentials."
+            : blockingError?.message || "Please try again later."
         }
         onClose={clearError}
       />

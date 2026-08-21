@@ -1,8 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
-import type { ApiError } from '@/types';
-import type { SupervisorProjectDetail, SupervisorStudentSearchResult } from '../../types';
-import type { SearchState } from '../../projectDetails.shared';
-import { toApiError } from '../../projectDetails.shared';
+import { useEffect, useMemo, useState } from "react";
+import type { ApiError } from "@/types";
+import type {
+  SupervisorProjectDetail,
+  SupervisorStudentSearchResult,
+} from "../../types";
+import type { SearchState } from "../../projectDetails.shared";
+import { toApiError } from "../../projectDetails.shared";
 
 export type TeamState = {
   isManagingStudents: boolean;
@@ -14,7 +17,7 @@ export type TeamState = {
   isAddingStudents: boolean;
   leaderDraftId: string;
   isUpdatingLeader: boolean;
-  studentMembers: SupervisorProjectDetail['members'];
+  studentMembers: SupervisorProjectDetail["members"];
   setStudentQuery: (query: string) => void;
   setLeaderDraftId: (id: string) => void;
   startManagement: () => void;
@@ -31,7 +34,11 @@ type UseProjectTeamStateDeps = {
   setProject: (project: SupervisorProjectDetail) => void;
   showLoadingModal: (title: string, message: string) => void;
   showSuccessModal: (title: string, message: string) => void;
-  showErrorModal: (title: string, message: string, retryAction: () => Promise<void>) => void;
+  showErrorModal: (
+    title: string,
+    message: string,
+    retryAction: () => Promise<void>,
+  ) => void;
   api: {
     searchStudents: (query: string) => Promise<SupervisorStudentSearchResult[]>;
     addProjectMembers: (
@@ -45,7 +52,7 @@ type UseProjectTeamStateDeps = {
         summary: string;
         batch: string;
         semester: string;
-        lifecycleStatus: SupervisorProjectDetail['lifecycleStatus'];
+        lifecycleStatus: SupervisorProjectDetail["lifecycleStatus"];
         leaderStudentId: string | null;
       },
     ) => Promise<SupervisorProjectDetail>;
@@ -63,39 +70,46 @@ export function useProjectTeamState({
 }: UseProjectTeamStateDeps): TeamState {
   const { searchStudents } = api;
   const [isManagingStudents, setIsManagingStudents] = useState(false);
-  const [studentQuery, setStudentQuery] = useState('');
-  const [studentSearchState, setStudentSearchState] = useState<SearchState>('idle');
-  const [studentSearchError, setStudentSearchError] = useState<ApiError | null>(null);
-  const [studentSearchResults, setStudentSearchResults] = useState<SupervisorStudentSearchResult[]>(
-    [],
+  const [studentQuery, setStudentQuery] = useState("");
+  const [studentSearchState, setStudentSearchState] =
+    useState<SearchState>("idle");
+  const [studentSearchError, setStudentSearchError] = useState<ApiError | null>(
+    null,
   );
+  const [studentSearchResults, setStudentSearchResults] = useState<
+    SupervisorStudentSearchResult[]
+  >([]);
   const [selectedStudentsToAdd, setSelectedStudentsToAdd] = useState<
     SupervisorStudentSearchResult[]
   >([]);
   const [isAddingStudents, setIsAddingStudents] = useState(false);
-  const [leaderDraftId, setLeaderDraftId] = useState<string>('');
+  const [leaderDraftId, setLeaderDraftId] = useState<string>("");
   const [isUpdatingLeader, setIsUpdatingLeader] = useState(false);
 
   const studentMembers = useMemo(
-    () => project?.members.filter((member) => member.memberRole === 'STUDENT') ?? [],
+    () =>
+      project?.members.filter((member) => member.memberRole === "STUDENT") ??
+      [],
     [project],
   );
 
   useEffect(() => {
-    setLeaderDraftId(project?.leader?.id ?? '');
+    setLeaderDraftId(project?.leader?.id ?? "");
   }, [project?.leader?.id]);
 
   useEffect(() => {
     const normalizedQuery = studentQuery.trim();
     if (!project || !isManagingStudents || normalizedQuery.length < 3) {
       setStudentSearchResults((current) => (current.length > 0 ? [] : current));
-      setStudentSearchState((current) => (current !== 'idle' ? 'idle' : current));
+      setStudentSearchState((current) =>
+        current !== "idle" ? "idle" : current,
+      );
       setStudentSearchError((current) => (current !== null ? null : current));
       return;
     }
 
     let isCancelled = false;
-    setStudentSearchState('loading');
+    setStudentSearchState("loading");
     setStudentSearchError((current) => (current !== null ? null : current));
 
     const timeoutId = window.setTimeout(async () => {
@@ -103,17 +117,23 @@ export function useProjectTeamState({
         const results = await searchStudents(normalizedQuery);
         if (isCancelled) return;
         const excludedIds = new Set([
-          ...project.members.filter((m) => m.memberRole === 'STUDENT').map((m) => m.id),
+          ...project.members
+            .filter((m) => m.memberRole === "STUDENT")
+            .map((m) => m.id),
           ...selectedStudentsToAdd.map((s) => s.id),
         ]);
         const visibleResults = results.filter((s) => !excludedIds.has(s.id));
         setStudentSearchResults(visibleResults);
-        setStudentSearchState(visibleResults.length > 0 ? 'results' : 'empty');
+        setStudentSearchState(visibleResults.length > 0 ? "results" : "empty");
       } catch (searchException) {
         if (isCancelled) return;
-        setStudentSearchResults((current) => (current.length > 0 ? [] : current));
-        setStudentSearchState('error');
-        setStudentSearchError(toApiError(searchException, 'Unable to search students right now.'));
+        setStudentSearchResults((current) =>
+          current.length > 0 ? [] : current,
+        );
+        setStudentSearchState("error");
+        setStudentSearchError(
+          toApiError(searchException, "Unable to search students right now."),
+        );
       }
     }, 300);
 
@@ -121,7 +141,13 @@ export function useProjectTeamState({
       isCancelled = true;
       window.clearTimeout(timeoutId);
     };
-  }, [isManagingStudents, project, searchStudents, selectedStudentsToAdd, studentQuery]);
+  }, [
+    isManagingStudents,
+    project,
+    searchStudents,
+    selectedStudentsToAdd,
+    studentQuery,
+  ]);
 
   function startManagement() {
     setIsManagingStudents(true);
@@ -129,40 +155,57 @@ export function useProjectTeamState({
 
   function cancelManagement() {
     setIsManagingStudents(false);
-    setStudentQuery('');
+    setStudentQuery("");
     setStudentSearchResults([]);
-    setStudentSearchState('idle');
+    setStudentSearchState("idle");
     setStudentSearchError(null);
     setSelectedStudentsToAdd([]);
   }
 
   function selectStudentToAdd(student: SupervisorStudentSearchResult) {
     setSelectedStudentsToAdd((current) =>
-      current.some((selected) => selected.id === student.id) ? current : [...current, student],
+      current.some((selected) => selected.id === student.id)
+        ? current
+        : [...current, student],
     );
-    setStudentQuery('');
+    setStudentQuery("");
     setStudentSearchResults([]);
-    setStudentSearchState('idle');
+    setStudentSearchState("idle");
   }
 
   function removeSelectedStudent(studentId: string) {
-    setSelectedStudentsToAdd((current) => current.filter((student) => student.id !== studentId));
+    setSelectedStudentsToAdd((current) =>
+      current.filter((student) => student.id !== studentId),
+    );
   }
 
   async function submitAddStudents() {
     if (!projectId || selectedStudentsToAdd.length === 0) return;
     setIsAddingStudents(true);
-    showLoadingModal('Adding team members', 'Assigning selected students to this project.');
+    showLoadingModal(
+      "Adding team members",
+      "Assigning selected students to this project.",
+    );
     try {
       const updatedProject = await api.addProjectMembers(projectId, {
         studentIds: selectedStudentsToAdd.map((student) => student.id),
       });
       setProject(updatedProject);
       cancelManagement();
-      showSuccessModal('Team updated', 'Selected students were added to the project.');
+      showSuccessModal(
+        "Team updated",
+        "Selected students were added to the project.",
+      );
     } catch (addException) {
-      const apiError = toApiError(addException, 'Unable to add students right now.');
-      showErrorModal('Unable to add students', apiError.message, submitAddStudents);
+      const apiError = toApiError(
+        addException,
+        "Unable to add students right now.",
+      );
+      showErrorModal(
+        "Unable to add students",
+        apiError.message,
+        submitAddStudents,
+      );
     } finally {
       setIsAddingStudents(false);
     }
@@ -173,26 +216,42 @@ export function useProjectTeamState({
   }
 
   async function submitLeaderUpdate() {
-    if (!projectId || !project || !leaderDraftId || leaderDraftId === project.leader?.id) return;
+    if (
+      !projectId ||
+      !project ||
+      !leaderDraftId ||
+      leaderDraftId === project.leader?.id
+    )
+      return;
     setIsUpdatingLeader(true);
     showLoadingModal(
-      'Updating project leader',
-      'Assigning the selected student as project leader.',
+      "Updating project leader",
+      "Assigning the selected student as project leader.",
     );
     try {
       const updatedProject = await api.updateProject(projectId, {
         title: project.title,
-        summary: project.summary ?? '',
-        batch: project.batch ?? '',
-        semester: project.semester ?? '',
+        summary: project.summary ?? "",
+        batch: project.batch ?? "",
+        semester: project.semester ?? "",
         lifecycleStatus: project.lifecycleStatus,
         leaderStudentId: leaderDraftId,
       });
       setProject(updatedProject);
-      showSuccessModal('Project leader updated', 'The project leader was updated successfully.');
+      showSuccessModal(
+        "Project leader updated",
+        "The project leader was updated successfully.",
+      );
     } catch (leaderException) {
-      const apiError = toApiError(leaderException, 'Unable to update project leader right now.');
-      showErrorModal('Unable to update leader', apiError.message, submitLeaderUpdate);
+      const apiError = toApiError(
+        leaderException,
+        "Unable to update project leader right now.",
+      );
+      showErrorModal(
+        "Unable to update leader",
+        apiError.message,
+        submitLeaderUpdate,
+      );
     } finally {
       setIsUpdatingLeader(false);
     }

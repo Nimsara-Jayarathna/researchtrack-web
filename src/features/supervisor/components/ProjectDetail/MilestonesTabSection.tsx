@@ -1,25 +1,28 @@
-import { CalendarDays, Plus, Edit2 } from 'lucide-react';
-import { useState } from 'react';
-import { buttonStyles } from '@/components/ui/Button';
-import { Select } from '@/components/ui/Select';
-import { parseLocalDateOnly } from '@/lib/dateOnly';
-import { FIELD_LIMITS, dateFormatter } from '../../projectDetails.shared';
+import { CalendarDays, Plus, Edit2 } from "lucide-react";
+import { useState } from "react";
+import { buttonStyles } from "@/components/ui/Button";
+import { Select } from "@/components/ui/Select";
+import { parseLocalDateOnly } from "@/lib/dateOnly";
+import { FIELD_LIMITS, dateFormatter } from "../../projectDetails.shared";
 import {
   getTodayLocalDateString,
   getVisibleMilestoneStatuses,
   isTerminalMilestoneStatus,
-} from '../../milestonePolicy';
-import { MilestoneStatusDropdown } from './MilestoneStatusDropdown';
-import type { MilestonesState } from '../../hooks/useProjectDetailsPageState';
-import type { MilestoneStatus } from '../../projectDetails.shared';
-import type { SupervisorProjectDetail } from '../../types';
+} from "../../milestonePolicy";
+import { MilestoneStatusDropdown } from "./MilestoneStatusDropdown";
+import type { MilestonesState } from "../../hooks/useProjectDetailsPageState";
+import type { MilestoneStatus } from "../../projectDetails.shared";
+import type { SupervisorProjectDetail } from "../../types";
 
 type MilestonesTabSectionProps = {
   project: SupervisorProjectDetail;
   milestones: MilestonesState;
 };
 
-export function MilestonesTabSection({ project, milestones }: MilestonesTabSectionProps) {
+export function MilestonesTabSection({
+  project,
+  milestones,
+}: MilestonesTabSectionProps) {
   const today = getTodayLocalDateString();
   const [openMilestoneId, setOpenMilestoneId] = useState<string | null>(null);
 
@@ -27,7 +30,9 @@ export function MilestonesTabSection({ project, milestones }: MilestonesTabSecti
     <section className="rounded-3xl border border-border bg-white p-6 shadow-sm transition-all hover:shadow-md">
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div className="flex flex-col">
-          <h2 className="text-lg font-bold tracking-tight text-slate-800">Project Milestones</h2>
+          <h2 className="text-lg font-bold tracking-tight text-slate-800">
+            Project Milestones
+          </h2>
           <p className="text-xs font-medium text-slate-400">
             Total {project.milestones.length} milestones defined
           </p>
@@ -49,9 +54,10 @@ export function MilestonesTabSection({ project, milestones }: MilestonesTabSecti
           <button
             type="button"
             className={buttonStyles({
-              variant: 'primary',
-              size: 'sm',
-              className: 'w-full rounded-xl shadow-lg shadow-indigo-100 sm:w-auto',
+              variant: "primary",
+              size: "sm",
+              className:
+                "w-full rounded-xl shadow-lg shadow-indigo-100 sm:w-auto",
             })}
             onClick={milestones.startAddMilestone}
           >
@@ -84,7 +90,9 @@ export function MilestonesTabSection({ project, milestones }: MilestonesTabSecti
                 placeholder="e.g. Design Sprint"
                 maxLength={FIELD_LIMITS.milestoneTitle}
                 value={milestones.newMilestoneForm.title}
-                onChange={(e) => milestones.setNewMilestoneField('title', e.target.value)}
+                onChange={(e) =>
+                  milestones.setNewMilestoneField("title", e.target.value)
+                }
                 className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium outline-none transition-all focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50"
               />
             </label>
@@ -98,7 +106,9 @@ export function MilestonesTabSection({ project, milestones }: MilestonesTabSecti
                   type="date"
                   min={today}
                   value={milestones.newMilestoneForm.dueDate}
-                  onChange={(e) => milestones.setNewMilestoneField('dueDate', e.target.value)}
+                  onChange={(e) =>
+                    milestones.setNewMilestoneField("dueDate", e.target.value)
+                  }
                   className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium outline-none transition-all focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50"
                 />
               </div>
@@ -112,7 +122,9 @@ export function MilestonesTabSection({ project, milestones }: MilestonesTabSecti
                 maxLength={FIELD_LIMITS.milestoneDescription}
                 rows={3}
                 value={milestones.newMilestoneForm.description}
-                onChange={(e) => milestones.setNewMilestoneField('description', e.target.value)}
+                onChange={(e) =>
+                  milestones.setNewMilestoneField("description", e.target.value)
+                }
                 className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium outline-none transition-all focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50"
               />
             </label>
@@ -121,9 +133,9 @@ export function MilestonesTabSection({ project, milestones }: MilestonesTabSecti
             <button
               type="button"
               className={buttonStyles({
-                variant: 'secondary',
-                size: 'md',
-                className: 'rounded-xl',
+                variant: "secondary",
+                size: "md",
+                className: "rounded-xl",
               })}
               onClick={milestones.cancelAddMilestone}
               disabled={milestones.isSavingMilestone}
@@ -133,13 +145,13 @@ export function MilestonesTabSection({ project, milestones }: MilestonesTabSecti
             <button
               type="submit"
               className={buttonStyles({
-                variant: 'primary',
-                size: 'md',
-                className: 'rounded-xl shadow-lg shadow-indigo-100',
+                variant: "primary",
+                size: "md",
+                className: "rounded-xl shadow-lg shadow-indigo-100",
               })}
               disabled={milestones.isSavingMilestone}
             >
-              {milestones.isSavingMilestone ? 'Saving...' : 'Create Milestone'}
+              {milestones.isSavingMilestone ? "Saving..." : "Create Milestone"}
             </button>
           </div>
         </form>
@@ -149,7 +161,9 @@ export function MilestonesTabSection({ project, milestones }: MilestonesTabSecti
         <div className="mt-6 space-y-4">
           {project.milestones.map((milestone, index) =>
             (() => {
-              const isTerminalMilestone = isTerminalMilestoneStatus(milestone.status);
+              const isTerminalMilestone = isTerminalMilestoneStatus(
+                milestone.status,
+              );
               const quickStatusOptions = getVisibleMilestoneStatuses({
                 currentStatus: milestone.status,
                 dueDate: milestone.dueDate,
@@ -159,7 +173,7 @@ export function MilestonesTabSection({ project, milestones }: MilestonesTabSecti
               return (
                 <div
                   key={milestone.id}
-                  className={`relative overflow-hidden rounded-3xl border border-slate-100 bg-white p-5 transition-all hover:shadow-lg group ${milestones.editingMilestoneId === milestone.id ? 'ring-2 ring-indigo-400' : ''}`}
+                  className={`relative overflow-hidden rounded-3xl border border-slate-100 bg-white p-5 transition-all hover:shadow-lg group ${milestones.editingMilestoneId === milestone.id ? "ring-2 ring-indigo-400" : ""}`}
                 >
                   {milestones.editingMilestoneId === milestone.id &&
                   milestones.editMilestoneForm ? (
@@ -185,7 +199,10 @@ export function MilestonesTabSection({ project, milestones }: MilestonesTabSecti
                             maxLength={FIELD_LIMITS.milestoneTitle}
                             value={milestones.editMilestoneForm.title}
                             onChange={(e) =>
-                              milestones.setEditMilestoneField('title', e.target.value)
+                              milestones.setEditMilestoneField(
+                                "title",
+                                e.target.value,
+                              )
                             }
                             className="h-10 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-medium outline-none transition-all focus:border-amber-400"
                           />
@@ -199,7 +216,10 @@ export function MilestonesTabSection({ project, milestones }: MilestonesTabSecti
                             type="date"
                             value={milestones.editMilestoneForm.dueDate}
                             onChange={(e) =>
-                              milestones.setEditMilestoneField('dueDate', e.target.value)
+                              milestones.setEditMilestoneField(
+                                "dueDate",
+                                e.target.value,
+                              )
                             }
                             className="h-10 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-medium outline-none transition-all focus:border-amber-400"
                           />
@@ -209,28 +229,32 @@ export function MilestonesTabSection({ project, milestones }: MilestonesTabSecti
                             Status
                           </span>
                           {(() => {
-                            const visibleStatusOptions = getVisibleMilestoneStatuses({
-                              currentStatus: milestone.status,
-                              dueDate: milestones.editMilestoneForm?.dueDate ?? milestone.dueDate,
-                              today,
-                            });
+                            const visibleStatusOptions =
+                              getVisibleMilestoneStatuses({
+                                currentStatus: milestone.status,
+                                dueDate:
+                                  milestones.editMilestoneForm?.dueDate ??
+                                  milestone.dueDate,
+                                today,
+                              });
                             const isStatusSelectDisabled =
-                              visibleStatusOptions.length <= 1 || isTerminalMilestone;
+                              visibleStatusOptions.length <= 1 ||
+                              isTerminalMilestone;
                             return (
                               <Select
                                 value={milestones.editMilestoneForm.status}
                                 onChange={(e) =>
                                   milestones.setEditMilestoneField(
-                                    'status',
+                                    "status",
                                     e.target.value as MilestoneStatus,
                                   )
                                 }
                                 disabled={isStatusSelectDisabled}
-                                className={`h-10 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold outline-none transition-all focus:border-amber-400 ${isStatusSelectDisabled ? 'cursor-not-allowed text-slate-400' : 'cursor-pointer'}`}
+                                className={`h-10 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold outline-none transition-all focus:border-amber-400 ${isStatusSelectDisabled ? "cursor-not-allowed text-slate-400" : "cursor-pointer"}`}
                               >
                                 {visibleStatusOptions.map((status) => (
                                   <option key={status} value={status}>
-                                    {status.replace('_', ' ')}
+                                    {status.replace("_", " ")}
                                   </option>
                                 ))}
                               </Select>
@@ -246,7 +270,10 @@ export function MilestonesTabSection({ project, milestones }: MilestonesTabSecti
                             rows={3}
                             value={milestones.editMilestoneForm.description}
                             onChange={(e) =>
-                              milestones.setEditMilestoneField('description', e.target.value)
+                              milestones.setEditMilestoneField(
+                                "description",
+                                e.target.value,
+                              )
                             }
                             className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium outline-none transition-all focus:border-amber-400"
                           />
@@ -256,9 +283,9 @@ export function MilestonesTabSection({ project, milestones }: MilestonesTabSecti
                         <button
                           type="button"
                           className={buttonStyles({
-                            variant: 'secondary',
-                            size: 'sm',
-                            className: 'rounded-xl',
+                            variant: "secondary",
+                            size: "sm",
+                            className: "rounded-xl",
                           })}
                           onClick={milestones.cancelEditMilestone}
                           disabled={milestones.isSavingMilestone}
@@ -268,15 +295,18 @@ export function MilestonesTabSection({ project, milestones }: MilestonesTabSecti
                         <button
                           type="submit"
                           className={buttonStyles({
-                            variant: 'primary',
-                            size: 'sm',
-                            className: 'rounded-xl',
+                            variant: "primary",
+                            size: "sm",
+                            className: "rounded-xl",
                           })}
                           disabled={
-                            milestones.isSavingMilestone || !milestones.isEditMilestoneDirty
+                            milestones.isSavingMilestone ||
+                            !milestones.isEditMilestoneDirty
                           }
                         >
-                          {milestones.isSavingMilestone ? 'Saving...' : 'Save Changes'}
+                          {milestones.isSavingMilestone
+                            ? "Saving..."
+                            : "Save Changes"}
                         </button>
                       </div>
                     </form>
@@ -285,7 +315,7 @@ export function MilestonesTabSection({ project, milestones }: MilestonesTabSecti
                       <div className="flex items-start gap-3 sm:gap-4">
                         <div className="flex shrink-0 items-start justify-center pt-0.5 sm:items-center">
                           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-base font-black text-slate-400 shadow-inner group-hover:bg-indigo-50 group-hover:text-indigo-500 transition-colors">
-                            {String(milestone.sequenceNo).padStart(2, '0')}
+                            {String(milestone.sequenceNo).padStart(2, "0")}
                           </div>
                         </div>
 
@@ -298,19 +328,24 @@ export function MilestonesTabSection({ project, milestones }: MilestonesTabSecti
                               <div className="mt-1 flex items-center gap-2 text-xs font-bold text-slate-400">
                                 <CalendarDays className="h-3.5 w-3.5" />
                                 {(() => {
-                                  const dueDate = parseLocalDateOnly(milestone.dueDate);
+                                  const dueDate = parseLocalDateOnly(
+                                    milestone.dueDate,
+                                  );
                                   return (
                                     <span>
-                                      Due{' '}
-                                      {dueDate ? dateFormatter.format(dueDate) : milestone.dueDate}
+                                      Due{" "}
+                                      {dueDate
+                                        ? dateFormatter.format(dueDate)
+                                        : milestone.dueDate}
                                     </span>
                                   );
                                 })()}
                                 {milestone.isOverdue ? (
                                   <span className="rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] uppercase tracking-wide text-rose-700">
-                                    {milestone.daysOverdue && milestone.daysOverdue > 0
+                                    {milestone.daysOverdue &&
+                                    milestone.daysOverdue > 0
                                       ? `${milestone.daysOverdue}d overdue`
-                                      : 'Overdue'}
+                                      : "Overdue"}
                                   </span>
                                 ) : null}
                                 {milestone.isChronologyViolation ? (
@@ -326,15 +361,20 @@ export function MilestonesTabSection({ project, milestones }: MilestonesTabSecti
                                 value={milestone.status}
                                 visibleOptions={quickStatusOptions}
                                 disabled={
-                                  milestones.quickStatusUpdatingId === milestone.id ||
-                                  !canOpenQuickStatus
+                                  milestones.quickStatusUpdatingId ===
+                                    milestone.id || !canOpenQuickStatus
                                 }
                                 isOpen={openMilestoneId === milestone.id}
                                 onOpenChange={(nextOpen) => {
-                                  setOpenMilestoneId(nextOpen ? milestone.id : null);
+                                  setOpenMilestoneId(
+                                    nextOpen ? milestone.id : null,
+                                  );
                                 }}
                                 onSelect={(nextStatus) => {
-                                  void milestones.submitQuickMilestoneStatus(milestone, nextStatus);
+                                  void milestones.submitQuickMilestoneStatus(
+                                    milestone,
+                                    nextStatus,
+                                  );
                                 }}
                               />
 
@@ -342,8 +382,8 @@ export function MilestonesTabSection({ project, milestones }: MilestonesTabSecti
                                 type="button"
                                 title={
                                   isTerminalMilestone
-                                    ? 'Terminal milestones cannot be edited.'
-                                    : 'Edit milestone'
+                                    ? "Terminal milestones cannot be edited."
+                                    : "Edit milestone"
                                 }
                                 onClick={() => {
                                   if (!isTerminalMilestone) {
@@ -351,7 +391,7 @@ export function MilestonesTabSection({ project, milestones }: MilestonesTabSecti
                                   }
                                 }}
                                 disabled={isTerminalMilestone}
-                                className={`flex h-9 w-9 items-center justify-center rounded-xl border bg-white shadow-sm transition-all ${isTerminalMilestone ? 'cursor-not-allowed border-slate-100 text-slate-300 opacity-60' : 'border-slate-100 text-slate-400 hover:border-amber-200 hover:text-amber-600 hover:shadow-md'}`}
+                                className={`flex h-9 w-9 items-center justify-center rounded-xl border bg-white shadow-sm transition-all ${isTerminalMilestone ? "cursor-not-allowed border-slate-100 text-slate-300 opacity-60" : "border-slate-100 text-slate-400 hover:border-amber-200 hover:text-amber-600 hover:shadow-md"}`}
                               >
                                 <Edit2 className="h-4 w-4" />
                               </button>
@@ -359,7 +399,8 @@ export function MilestonesTabSection({ project, milestones }: MilestonesTabSecti
                           </div>
 
                           <p className="mt-3 text-sm leading-relaxed text-slate-500 line-clamp-2">
-                            {milestone.description ?? 'No description provided for this milestone.'}
+                            {milestone.description ??
+                              "No description provided for this milestone."}
                           </p>
                         </div>
                       </div>

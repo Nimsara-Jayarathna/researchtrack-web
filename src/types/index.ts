@@ -1,14 +1,14 @@
 /** Stable error codes from the backend — use `code` to drive UI logic. */
 export type ApiErrorCode =
-  | 'VALIDATION_ERROR'
-  | 'BAD_REQUEST'
-  | 'UNAUTHORIZED'
-  | 'FORBIDDEN'
-  | 'NOT_FOUND'
-  | 'CONFLICT'
-  | 'TOO_MANY_REQUESTS'
-  | 'SERVICE_UNAVAILABLE'
-  | 'INTERNAL_ERROR';
+  | "VALIDATION_ERROR"
+  | "BAD_REQUEST"
+  | "UNAUTHORIZED"
+  | "FORBIDDEN"
+  | "NOT_FOUND"
+  | "CONFLICT"
+  | "TOO_MANY_REQUESTS"
+  | "SERVICE_UNAVAILABLE"
+  | "INTERNAL_ERROR";
 
 /** Shared meta block included in both success and error envelopes. */
 export type ApiMeta = {

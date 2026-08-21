@@ -11,7 +11,7 @@ export type ProjectGitHubRepositoryPreview = {
 export type ProjectGitHubActivitySummary = {
   totalCommits: number;
   lastActivityAt: string | null;
-  status: 'active' | 'idle';
+  status: "active" | "idle";
 };
 
 export type ProjectGitHubContributor = {
@@ -36,11 +36,11 @@ export type ProjectGitHubPreview = {
   authorizedInstallationId?: number | null;
   accessibleRepositoryCount?: number | null;
   accessScope?:
-    | 'NOT_AUTHORIZED'
-    | 'NO_REPOSITORIES'
-    | 'SINGLE_REPOSITORY'
-    | 'MULTIPLE_REPOSITORIES'
-    | 'ACCESS_UNAVAILABLE'
+    | "NOT_AUTHORIZED"
+    | "NO_REPOSITORIES"
+    | "SINGLE_REPOSITORY"
+    | "MULTIPLE_REPOSITORIES"
+    | "ACCESS_UNAVAILABLE"
     | string
     | null;
   repositories: ProjectGitHubRepositoryPreview[];

@@ -1,17 +1,20 @@
-import { useEffect, useState } from 'react';
-import { ErrorState } from '@/components/feedback/ErrorState';
-import { RequestStateModal } from '@/components/ui/RequestStateModal';
-import { RefreshCw, Upload } from 'lucide-react';
-import { supervisorFilesApi } from '@/features/projectfiles/api/supervisorFilesApi';
-import { FileList } from '@/features/projectfiles/components/FileList';
-import { UploadFileModal } from '@/features/projectfiles/components/UploadFileModal';
-import { DeleteConfirmModal } from '@/features/projectfiles/components/DeleteConfirmModal';
-import { useSupervisorProjectFiles } from '@/features/projectfiles/hooks/useSupervisorProjectFiles';
-import type { ApiError } from '@/types';
-import type { ProjectFile, ProjectFileConfig } from '@/features/projectfiles/types';
-import { Button } from '@/components/ui/Button';
-import { IconActionButton } from '@/components/ui/IconActionButton';
-import { SectionCard } from '@/components/ui/SectionCard';
+import { useEffect, useState } from "react";
+import { ErrorState } from "@/components/feedback/ErrorState";
+import { RequestStateModal } from "@/components/ui/RequestStateModal";
+import { RefreshCw, Upload } from "lucide-react";
+import { supervisorFilesApi } from "@/features/projectfiles/api/supervisorFilesApi";
+import { FileList } from "@/features/projectfiles/components/FileList";
+import { UploadFileModal } from "@/features/projectfiles/components/UploadFileModal";
+import { DeleteConfirmModal } from "@/features/projectfiles/components/DeleteConfirmModal";
+import { useSupervisorProjectFiles } from "@/features/projectfiles/hooks/useSupervisorProjectFiles";
+import type { ApiError } from "@/types";
+import type {
+  ProjectFile,
+  ProjectFileConfig,
+} from "@/features/projectfiles/types";
+import { Button } from "@/components/ui/Button";
+import { IconActionButton } from "@/components/ui/IconActionButton";
+import { SectionCard } from "@/components/ui/SectionCard";
 
 type FilesTabSectionProps = {
   projectId: string;
@@ -21,7 +24,10 @@ type FilesTabSectionProps = {
   } | null;
 };
 
-export function FilesTabSection({ projectId, initialFiles = null }: FilesTabSectionProps) {
+export function FilesTabSection({
+  projectId,
+  initialFiles = null,
+}: FilesTabSectionProps) {
   const {
     files,
     config,
@@ -36,18 +42,19 @@ export function FilesTabSection({ projectId, initialFiles = null }: FilesTabSect
     deleteFile,
   } = useSupervisorProjectFiles(projectId);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
-  const [filePendingDelete, setFilePendingDelete] = useState<ProjectFile | null>(null);
+  const [filePendingDelete, setFilePendingDelete] =
+    useState<ProjectFile | null>(null);
   const [requestModal, setRequestModal] = useState<{
     isOpen: boolean;
-    status: 'loading' | 'success' | 'error';
+    status: "loading" | "success" | "error";
     title: string;
     message: string;
     retryAction: (() => void) | null;
   }>({
     isOpen: false,
-    status: 'loading',
-    title: '',
-    message: '',
+    status: "loading",
+    title: "",
+    message: "",
     retryAction: null,
   });
 
@@ -67,9 +74,9 @@ export function FilesTabSection({ projectId, initialFiles = null }: FilesTabSect
     }
     setRequestModal({
       isOpen: true,
-      status: 'loading',
-      title: 'Refreshing project files',
-      message: 'Fetching the latest files for this project.',
+      status: "loading",
+      title: "Refreshing project files",
+      message: "Fetching the latest files for this project.",
       retryAction: null,
     });
 
@@ -77,9 +84,9 @@ export function FilesTabSection({ projectId, initialFiles = null }: FilesTabSect
     if (result.ok) {
       setRequestModal({
         isOpen: true,
-        status: 'success',
-        title: 'Project files refreshed',
-        message: 'You are viewing the latest files.',
+        status: "success",
+        title: "Project files refreshed",
+        message: "You are viewing the latest files.",
         retryAction: null,
       });
       return;
@@ -88,9 +95,9 @@ export function FilesTabSection({ projectId, initialFiles = null }: FilesTabSect
     const refreshError: ApiError | undefined = result.error;
     setRequestModal({
       isOpen: true,
-      status: 'error',
-      title: 'Unable to refresh files',
-      message: refreshError?.message ?? 'Unable to refresh files right now.',
+      status: "error",
+      title: "Unable to refresh files",
+      message: refreshError?.message ?? "Unable to refresh files right now.",
       retryAction: () => {
         void refreshFiles();
       },
@@ -105,9 +112,9 @@ export function FilesTabSection({ projectId, initialFiles = null }: FilesTabSect
     const targetFileId = filePendingDelete.id;
     setRequestModal({
       isOpen: true,
-      status: 'loading',
-      title: 'Deleting file',
-      message: 'Removing file from project storage.',
+      status: "loading",
+      title: "Deleting file",
+      message: "Removing file from project storage.",
       retryAction: null,
     });
 
@@ -117,9 +124,9 @@ export function FilesTabSection({ projectId, initialFiles = null }: FilesTabSect
       setFilePendingDelete(null);
       setRequestModal({
         isOpen: true,
-        status: 'success',
-        title: 'File deleted',
-        message: 'File was removed successfully.',
+        status: "success",
+        title: "File deleted",
+        message: "File was removed successfully.",
         retryAction: null,
       });
       return;
@@ -127,9 +134,9 @@ export function FilesTabSection({ projectId, initialFiles = null }: FilesTabSect
 
     setRequestModal({
       isOpen: true,
-      status: 'error',
-      title: 'Unable to delete file',
-      message: result.error?.message ?? 'Unable to delete file right now.',
+      status: "error",
+      title: "Unable to delete file",
+      message: result.error?.message ?? "Unable to delete file right now.",
       retryAction: () => {
         void confirmDeleteFile();
       },
@@ -148,7 +155,11 @@ export function FilesTabSection({ projectId, initialFiles = null }: FilesTabSect
               title="Refresh files"
               onClick={() => void refreshFiles()}
               disabled={isLoading}
-              icon={<RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />}
+              icon={
+                <RefreshCw
+                  className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+                />
+              }
             />
             <Button
               type="button"
@@ -168,7 +179,9 @@ export function FilesTabSection({ projectId, initialFiles = null }: FilesTabSect
           </div>
         ) : null}
 
-        {error ? <ErrorState error={error} onRetry={() => void load()} /> : null}
+        {error ? (
+          <ErrorState error={error} onRetry={() => void load()} />
+        ) : null}
 
         {!isLoading && !error ? (
           <FileList
@@ -184,8 +197,12 @@ export function FilesTabSection({ projectId, initialFiles = null }: FilesTabSect
         isOpen={isUploadOpen}
         onClose={() => setIsUploadOpen(false)}
         onUploaded={addUploadedFile}
-        getUploadUrl={(payload) => supervisorFilesApi.getUploadUrl(projectId, payload)}
-        confirmUpload={(payload) => supervisorFilesApi.confirmUpload(projectId, payload)}
+        getUploadUrl={(payload) =>
+          supervisorFilesApi.getUploadUrl(projectId, payload)
+        }
+        confirmUpload={(payload) =>
+          supervisorFilesApi.confirmUpload(projectId, payload)
+        }
         maxFileSizeBytes={config?.maxFileSizeBytes}
         maxFileNameLength={config?.maxFileNameLength}
         allowedTypes={config?.allowedTypes}
@@ -203,7 +220,9 @@ export function FilesTabSection({ projectId, initialFiles = null }: FilesTabSect
         status={requestModal.status}
         title={requestModal.title}
         message={requestModal.message}
-        onClose={() => setRequestModal((current) => ({ ...current, isOpen: false }))}
+        onClose={() =>
+          setRequestModal((current) => ({ ...current, isOpen: false }))
+        }
         onRetry={requestModal.retryAction ?? undefined}
       />
     </>

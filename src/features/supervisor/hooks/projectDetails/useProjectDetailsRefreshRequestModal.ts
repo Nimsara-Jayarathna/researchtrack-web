@@ -1,9 +1,9 @@
-import { useCallback, useState } from 'react';
-import type { SetURLSearchParams } from 'react-router-dom';
+import { useCallback, useState } from "react";
+import type { SetURLSearchParams } from "react-router-dom";
 
 export type ProjectDetailsRefreshRequestModalState = {
   isOpen: boolean;
-  status: 'loading' | 'success' | 'error';
+  status: "loading" | "success" | "error";
   title: string;
   message: string;
   retryAction?: () => void;
@@ -21,16 +21,16 @@ export function useProjectDetailsRefreshRequestModal({
 }: UseProjectDetailsRefreshRequestModalParams) {
   const [state, setState] = useState<ProjectDetailsRefreshRequestModalState>({
     isOpen: false,
-    status: 'loading',
-    title: '',
-    message: '',
+    status: "loading",
+    title: "",
+    message: "",
   });
 
   const showLoading = useCallback(
     (payload: { title: string; message: string; retryAction?: () => void }) => {
       setState({
         isOpen: true,
-        status: 'loading',
+        status: "loading",
         title: payload.title,
         message: payload.message,
         retryAction: payload.retryAction,
@@ -44,7 +44,7 @@ export function useProjectDetailsRefreshRequestModal({
     (payload: { title: string; message: string; retryAction?: () => void }) => {
       setState({
         isOpen: true,
-        status: 'error',
+        status: "error",
         title: payload.title,
         message: payload.message,
         retryAction: payload.retryAction,
@@ -55,10 +55,14 @@ export function useProjectDetailsRefreshRequestModal({
   );
 
   const showSuccess = useCallback(
-    (payload: { title: string; message: string; redirectToJiraOnClose?: boolean }) => {
+    (payload: {
+      title: string;
+      message: string;
+      redirectToJiraOnClose?: boolean;
+    }) => {
       setState({
         isOpen: true,
-        status: 'success',
+        status: "success",
         title: payload.title,
         message: payload.message,
         redirectToJiraOnClose: payload.redirectToJiraOnClose,
@@ -68,14 +72,18 @@ export function useProjectDetailsRefreshRequestModal({
   );
 
   const hide = useCallback(() => {
-    setState((current) => ({ ...current, isOpen: false, redirectToJiraOnClose: false }));
+    setState((current) => ({
+      ...current,
+      isOpen: false,
+      redirectToJiraOnClose: false,
+    }));
   }, []);
 
   const close = useCallback(() => {
     setState((current) => {
       if (current.redirectToJiraOnClose) {
         const nextParams = new URLSearchParams(searchParams);
-        nextParams.set('tab', 'jira');
+        nextParams.set("tab", "jira");
         setSearchParams(nextParams, { replace: true });
       }
 

@@ -1,10 +1,10 @@
-import type { ReactNode } from 'react';
+import type { ReactNode } from "react";
 
-export type AsyncRequestKind = 'idle' | 'loading' | 'success' | 'error';
+export type AsyncRequestKind = "idle" | "loading" | "success" | "error";
 
 export type RequestStateModalView = {
   isOpen: boolean;
-  status: 'loading' | 'success' | 'error' | 'warning';
+  status: "loading" | "success" | "error" | "warning";
   title: string;
   message: string;
   onClose?: () => void;
@@ -13,7 +13,7 @@ export type RequestStateModalView = {
   autoCloseOnSuccess?: boolean;
 };
 
-type CopyValue = string | ((kind: Exclude<AsyncRequestKind, 'idle'>) => string);
+type CopyValue = string | ((kind: Exclude<AsyncRequestKind, "idle">) => string);
 
 type Copy = {
   loading: { title: string; message: CopyValue };
@@ -26,7 +26,7 @@ export function toRequestStateModalView(args: {
   copy: Copy;
   onClose?: () => void;
   onRetry?: () => void;
-  footer?: Partial<Record<'success' | 'error', ReactNode>>;
+  footer?: Partial<Record<"success" | "error", ReactNode>>;
   autoCloseOnSuccess?: boolean;
   disableCloseWhileLoading?: boolean;
 }): RequestStateModalView {
@@ -40,32 +40,43 @@ export function toRequestStateModalView(args: {
     disableCloseWhileLoading = true,
   } = args;
 
-  if (kind === 'idle') {
+  if (kind === "idle") {
     return {
       isOpen: false,
-      status: 'loading',
-      title: '',
-      message: '',
+      status: "loading",
+      title: "",
+      message: "",
     };
   }
 
   const resolved =
-    kind === 'loading' ? copy.loading : kind === 'success' ? copy.success : copy.error;
+    kind === "loading"
+      ? copy.loading
+      : kind === "success"
+        ? copy.success
+        : copy.error;
 
   const resolveCopyValue = (value: CopyValue) =>
-    typeof value === 'function' ? value(kind) : value;
+    typeof value === "function" ? value(kind) : value;
 
-  const isLoading = kind === 'loading';
-  const effectiveOnClose = isLoading && disableCloseWhileLoading ? undefined : onClose;
+  const isLoading = kind === "loading";
+  const effectiveOnClose =
+    isLoading && disableCloseWhileLoading ? undefined : onClose;
 
   return {
     isOpen: true,
-    status: kind === 'loading' ? 'loading' : kind === 'success' ? 'success' : 'error',
+    status:
+      kind === "loading" ? "loading" : kind === "success" ? "success" : "error",
     title: resolved.title,
     message: resolveCopyValue(resolved.message),
     onClose: effectiveOnClose,
-    onRetry: kind === 'error' ? onRetry : undefined,
-    footer: kind === 'success' ? footer?.success : kind === 'error' ? footer?.error : undefined,
+    onRetry: kind === "error" ? onRetry : undefined,
+    footer:
+      kind === "success"
+        ? footer?.success
+        : kind === "error"
+          ? footer?.error
+          : undefined,
     autoCloseOnSuccess,
   };
 }

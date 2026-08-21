@@ -12,7 +12,11 @@ function parseDateOnlyParts(value: string): DateOnlyParts | null {
   const month = Number(value.slice(5, 7));
   const day = Number(value.slice(8, 10));
 
-  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+  if (
+    !Number.isFinite(year) ||
+    !Number.isFinite(month) ||
+    !Number.isFinite(day)
+  ) {
     return null;
   }
 
@@ -33,7 +37,9 @@ function parseDateOnlyParts(value: string): DateOnlyParts | null {
   return { year, monthIndex, day };
 }
 
-export function parseLocalDateOnly(value: string | null | undefined): Date | null {
+export function parseLocalDateOnly(
+  value: string | null | undefined,
+): Date | null {
   if (value === null || value === undefined) {
     return null;
   }
@@ -50,7 +56,10 @@ export function parseLocalDateOnly(value: string | null | undefined): Date | nul
  * Returns the calendar day difference (date-only) between a YYYY-MM-DD value and a reference date.
  * Uses UTC midnights to avoid DST 23/25-hour day drift.
  */
-export function diffDaysDateOnly(value: string | null | undefined, reference: Date): number | null {
+export function diffDaysDateOnly(
+  value: string | null | undefined,
+  reference: Date,
+): number | null {
   if (value === null || value === undefined) {
     return null;
   }
@@ -61,6 +70,10 @@ export function diffDaysDateOnly(value: string | null | undefined, reference: Da
   }
 
   const targetUtc = Date.UTC(parts.year, parts.monthIndex, parts.day);
-  const referenceUtc = Date.UTC(reference.getFullYear(), reference.getMonth(), reference.getDate());
+  const referenceUtc = Date.UTC(
+    reference.getFullYear(),
+    reference.getMonth(),
+    reference.getDate(),
+  );
   return (targetUtc - referenceUtc) / DAY_IN_MS;
 }

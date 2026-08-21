@@ -1,5 +1,5 @@
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import type { MeetingChannel } from '../types';
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import type { MeetingChannel } from "../types";
 
 type MeetingChannelDeleteConfirmModalProps = {
   isOpen: boolean;
@@ -20,9 +20,11 @@ export function MeetingChannelDeleteConfirmModal({
       title="Delete channel?"
       description={
         <p>
-          This will permanently remove{' '}
-          <span className="font-semibold">{channel?.channelName ?? 'this channel'}</span> from the
-          project.
+          This will permanently remove{" "}
+          <span className="font-semibold">
+            {channel?.channelName ?? "this channel"}
+          </span>{" "}
+          from the project.
         </p>
       }
       confirmLabel="Delete"

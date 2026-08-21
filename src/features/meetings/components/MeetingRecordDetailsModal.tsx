@@ -1,33 +1,33 @@
-import { createPortal } from 'react-dom';
-import { cn } from '@/lib/cn';
-import { X } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-import type { MeetingChannel, MeetingRecord } from '../types';
-import { StatusBadge } from '@/components/ui/StatusBadge';
-import { getMeetingPlatformDisplay } from '../lib/platformDisplay';
+import { createPortal } from "react-dom";
+import { cn } from "@/lib/cn";
+import { X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import type { MeetingChannel, MeetingRecord } from "../types";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { getMeetingPlatformDisplay } from "../lib/platformDisplay";
 
-const dateFormatter = new Intl.DateTimeFormat('en', {
-  month: 'long',
-  day: 'numeric',
-  year: 'numeric',
+const dateFormatter = new Intl.DateTimeFormat("en", {
+  month: "long",
+  day: "numeric",
+  year: "numeric",
 });
 
-const dateTimeFormatter = new Intl.DateTimeFormat('en', {
-  month: 'short',
-  day: 'numeric',
-  year: 'numeric',
-  hour: 'numeric',
-  minute: '2-digit',
+const dateTimeFormatter = new Intl.DateTimeFormat("en", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
 });
 
 function parseIsoDate(value: string) {
-  const [year, month, day] = value.split('-').map((part) => Number(part));
+  const [year, month, day] = value.split("-").map((part) => Number(part));
   return new Date(year, month - 1, day);
 }
 
-function statusTone(status: MeetingRecord['status']) {
-  if (status === 'APPROVED') return 'success';
-  return 'warning';
+function statusTone(status: MeetingRecord["status"]) {
+  if (status === "APPROVED") return "success";
+  return "warning";
 }
 
 type MetadataItem = {
@@ -72,8 +72,8 @@ export function MeetingRecordDetailsModal({
   const modal = (
     <div
       className={cn(
-        'fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/60 px-4 backdrop-blur-sm transition-opacity duration-200',
-        isMounted ? 'opacity-100' : 'opacity-0',
+        "fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/60 px-4 backdrop-blur-sm transition-opacity duration-200",
+        isMounted ? "opacity-100" : "opacity-0",
       )}
       onClick={onClose}
       role="dialog"
@@ -82,22 +82,26 @@ export function MeetingRecordDetailsModal({
     >
       <div
         className={cn(
-          'w-full max-w-2xl overflow-hidden rounded-3xl border border-border bg-white shadow-[0_24px_56px_rgba(15,23,42,0.24)] transition-all duration-200',
+          "w-full max-w-2xl overflow-hidden rounded-3xl border border-border bg-white shadow-[0_24px_56px_rgba(15,23,42,0.24)] transition-all duration-200",
           isMounted
-            ? 'translate-y-0 scale-100 opacity-100'
-            : 'translate-y-1 scale-[0.99] opacity-0',
+            ? "translate-y-0 scale-100 opacity-100"
+            : "translate-y-1 scale-[0.99] opacity-0",
         )}
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
           <div>
-            <h3 className="text-lg font-semibold text-foreground">Meeting record</h3>
+            <h3 className="text-lg font-semibold text-foreground">
+              Meeting record
+            </h3>
             <p className="mt-0.5 text-xs font-medium text-slate-400">
               {dateFormatter.format(parseIsoDate(record.meetingDate))}
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <StatusBadge tone={statusTone(record.status)}>{record.status}</StatusBadge>
+            <StatusBadge tone={statusTone(record.status)}>
+              {record.status}
+            </StatusBadge>
             <button
               type="button"
               onClick={onClose}
@@ -138,13 +142,15 @@ export function MeetingRecordDetailsModal({
 
           {(() => {
             const metadata: MetadataItem[] = [
-              { label: 'Duration', value: `${record.durationMinutes} minutes` },
+              { label: "Duration", value: `${record.durationMinutes} minutes` },
               ...(linkedChannel
                 ? [
                     {
-                      label: 'Linked channel',
+                      label: "Linked channel",
                       value: (() => {
-                        const display = getMeetingPlatformDisplay(linkedChannel.platform);
+                        const display = getMeetingPlatformDisplay(
+                          linkedChannel.platform,
+                        );
                         return (
                           <span
                             className="inline-flex max-w-full items-center gap-2"
@@ -155,7 +161,7 @@ export function MeetingRecordDetailsModal({
                               title={display.label}
                               aria-label={display.label}
                             >
-                              {display.kind === 'simple-icon' ? (
+                              {display.kind === "simple-icon" ? (
                                 <svg
                                   aria-hidden
                                   viewBox="0 0 24 24"
@@ -168,7 +174,11 @@ export function MeetingRecordDetailsModal({
                                 <display.Icon
                                   aria-hidden
                                   className="h-4 w-4 text-slate-700"
-                                  style={display.hex ? { color: `#${display.hex}` } : undefined}
+                                  style={
+                                    display.hex
+                                      ? { color: `#${display.hex}` }
+                                      : undefined
+                                  }
                                   strokeWidth={2.25}
                                 />
                               )}
@@ -182,14 +192,24 @@ export function MeetingRecordDetailsModal({
                     },
                   ]
                 : []),
-              { label: 'Added by', value: `${record.addedByName} (${record.addedByRole})` },
-              { label: 'Created at', value: dateTimeFormatter.format(new Date(record.createdAt)) },
-              ...(record.status === 'APPROVED' && record.approvedByName && record.approvedAt
+              {
+                label: "Added by",
+                value: `${record.addedByName} (${record.addedByRole})`,
+              },
+              {
+                label: "Created at",
+                value: dateTimeFormatter.format(new Date(record.createdAt)),
+              },
+              ...(record.status === "APPROVED" &&
+              record.approvedByName &&
+              record.approvedAt
                 ? [
-                    { label: 'Approved by', value: record.approvedByName },
+                    { label: "Approved by", value: record.approvedByName },
                     {
-                      label: 'Approved at',
-                      value: dateTimeFormatter.format(new Date(record.approvedAt)),
+                      label: "Approved at",
+                      value: dateTimeFormatter.format(
+                        new Date(record.approvedAt),
+                      ),
                     },
                   ]
                 : []),
@@ -206,7 +226,9 @@ export function MeetingRecordDetailsModal({
                       <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">
                         {item.label}
                       </p>
-                      <div className="text-sm font-semibold text-slate-800">{item.value}</div>
+                      <div className="text-sm font-semibold text-slate-800">
+                        {item.value}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -218,7 +240,7 @@ export function MeetingRecordDetailsModal({
     </div>
   );
 
-  if (typeof document === 'undefined') {
+  if (typeof document === "undefined") {
     return modal;
   }
 

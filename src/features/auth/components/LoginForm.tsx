@@ -1,15 +1,15 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import type { ApiError } from '@/types';
-import type { LoginRequest } from '../types';
-import { Link } from 'react-router-dom';
+import { useState } from "react";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import type { ApiError } from "@/types";
+import type { LoginRequest } from "../types";
+import { Link } from "react-router-dom";
 import {
   getLoginGeneralError,
   mapBackendLoginFieldErrors,
   type LoginFieldErrors,
   validateLoginForm,
-} from '../utils/loginValidation';
+} from "../utils/loginValidation";
 
 /**
  * Props follow the Dependency Inversion Principle:
@@ -24,7 +24,7 @@ export type LoginFormProps = {
   error: ApiError | null;
   onClearError: () => void;
   onSuccess?: () => void;
-  feedbackMode?: 'inline' | 'modal';
+  feedbackMode?: "inline" | "modal";
   onForgotPassword?: () => void;
 };
 
@@ -34,17 +34,21 @@ export function LoginForm({
   error,
   onClearError,
   onSuccess,
-  feedbackMode = 'inline',
+  feedbackMode = "inline",
   onForgotPassword,
 }: LoginFormProps) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [fieldErrors, setFieldErrors] = useState<LoginFieldErrors>({});
 
-  const showInlineBackendFeedback = feedbackMode === 'inline';
+  const showInlineBackendFeedback = feedbackMode === "inline";
   // Derived from the ApiError using pure utility functions (Single Responsibility).
-  const backendFieldErrors = showInlineBackendFeedback ? mapBackendLoginFieldErrors(error) : {};
-  const generalError = showInlineBackendFeedback ? getLoginGeneralError(error) : null;
+  const backendFieldErrors = showInlineBackendFeedback
+    ? mapBackendLoginFieldErrors(error)
+    : {};
+  const generalError = showInlineBackendFeedback
+    ? getLoginGeneralError(error)
+    : null;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -73,12 +77,17 @@ export function LoginForm({
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
       {/* General error banner */}
       {generalError && (
-        <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">{generalError}</p>
+        <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">
+          {generalError}
+        </p>
       )}
 
       {/* Email */}
       <div className="flex flex-col gap-1">
-        <label htmlFor="login-email" className="text-sm font-medium text-foreground">
+        <label
+          htmlFor="login-email"
+          className="text-sm font-medium text-foreground"
+        >
           Email
         </label>
         <Input
@@ -95,7 +104,10 @@ export function LoginForm({
 
       {/* Password */}
       <div className="flex flex-col gap-1">
-        <label htmlFor="login-password" className="text-sm font-medium text-foreground">
+        <label
+          htmlFor="login-password"
+          className="text-sm font-medium text-foreground"
+        >
           Password
         </label>
         <Input
@@ -107,7 +119,9 @@ export function LoginForm({
           onChange={(e) => setPassword(e.target.value)}
           className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
         />
-        {passwordError && <p className="text-xs text-red-500">{passwordError}</p>}
+        {passwordError && (
+          <p className="text-xs text-red-500">{passwordError}</p>
+        )}
       </div>
 
       <Button
@@ -130,7 +144,10 @@ export function LoginForm({
           Forgot your password?
         </button>
       ) : (
-        <Link to="/forgot-password" className="mx-auto text-sm text-primary hover:underline">
+        <Link
+          to="/forgot-password"
+          className="mx-auto text-sm text-primary hover:underline"
+        >
           Forgot your password?
         </Link>
       )}

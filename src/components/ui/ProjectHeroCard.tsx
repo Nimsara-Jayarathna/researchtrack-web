@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactNode } from "react";
 
 type ProjectHeroCardProps = {
   title: string;
@@ -19,7 +19,7 @@ export function ProjectHeroCard({
     <section
       className={
         rootClassName ??
-        'rounded-3xl border border-border bg-white p-6 shadow-sm transition-all hover:shadow-md'
+        "rounded-3xl border border-border bg-white p-6 shadow-sm transition-all hover:shadow-md"
       }
     >
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
@@ -30,10 +30,10 @@ export function ProjectHeroCard({
           <p
             className="mt-1.5 text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7"
             style={{
-              display: '-webkit-box',
+              display: "-webkit-box",
               WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
             }}
           >
             {subtitle}

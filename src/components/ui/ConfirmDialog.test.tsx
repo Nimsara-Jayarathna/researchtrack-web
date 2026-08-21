@@ -1,10 +1,10 @@
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { vi } from 'vitest';
-import { ConfirmDialog } from './ConfirmDialog';
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { vi } from "vitest";
+import { ConfirmDialog } from "./ConfirmDialog";
 
-describe('ConfirmDialog', () => {
-  it('does not render when closed', () => {
+describe("ConfirmDialog", () => {
+  it("does not render when closed", () => {
     render(
       <ConfirmDialog
         isOpen={false}
@@ -15,10 +15,10 @@ describe('ConfirmDialog', () => {
       />,
     );
 
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
-  it('invokes cancel and confirm callbacks', async () => {
+  it("invokes cancel and confirm callbacks", async () => {
     const user = userEvent.setup();
     const onCancel = vi.fn();
     const onConfirm = vi.fn();
@@ -34,14 +34,14 @@ describe('ConfirmDialog', () => {
       />,
     );
 
-    await user.click(screen.getByRole('button', { name: 'Cancel' }));
-    await user.click(screen.getByRole('button', { name: 'Delete' }));
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    await user.click(screen.getByRole("button", { name: "Delete" }));
 
     expect(onCancel).toHaveBeenCalledTimes(1);
     expect(onConfirm).toHaveBeenCalledTimes(1);
   });
 
-  it('cancels when clicking the backdrop', async () => {
+  it("cancels when clicking the backdrop", async () => {
     const user = userEvent.setup();
     const onCancel = vi.fn();
 
@@ -55,10 +55,10 @@ describe('ConfirmDialog', () => {
       />,
     );
 
-    const dialog = screen.getByRole('dialog');
-    const backdrop = dialog.parentElement?.querySelector('.absolute.inset-0');
+    const dialog = screen.getByRole("dialog");
+    const backdrop = dialog.parentElement?.querySelector(".absolute.inset-0");
     if (!backdrop) {
-      throw new Error('Expected ConfirmDialog backdrop to exist.');
+      throw new Error("Expected ConfirmDialog backdrop to exist.");
     }
     await user.click(backdrop);
 

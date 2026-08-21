@@ -1,9 +1,17 @@
-import type { ProjectGitHubPreview } from '@/features/projects/types';
-import type { ProjectFile, ProjectFileConfig } from '@/features/projectfiles/types';
-import type { UserRole } from '@/types/roles';
-import type { ProjectGitHubRepositories } from './github.types';
+import type { ProjectGitHubPreview } from "@/features/projects/types";
+import type {
+  ProjectFile,
+  ProjectFileConfig,
+} from "@/features/projectfiles/types";
+import type { UserRole } from "@/types/roles";
+import type { ProjectGitHubRepositories } from "./github.types";
 
-export type SupervisorProjectLifecycle = 'PLANNING' | 'ACTIVE' | 'AT_RISK' | 'BEHIND' | 'COMPLETED';
+export type SupervisorProjectLifecycle =
+  | "PLANNING"
+  | "ACTIVE"
+  | "AT_RISK"
+  | "BEHIND"
+  | "COMPLETED";
 
 export type SupervisorProjectSummary = {
   id: string;
@@ -39,7 +47,7 @@ export type SupervisorProjectDetailMilestone = {
   title: string;
   description: string | null;
   dueDate: string;
-  status: 'PLANNED' | 'IN_PROGRESS' | 'COMPLETED' | 'MISSED' | 'CANCELLED';
+  status: "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "MISSED" | "CANCELLED";
   sequenceNo: number;
   isOverdue?: boolean;
   daysOverdue?: number;
@@ -49,7 +57,7 @@ export type SupervisorProjectDetailMilestone = {
 export type SupervisorProjectMilestoneInsights = {
   overdueOpenMilestones: number;
   dueSoonCount: number;
-  timelineRiskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | string;
+  timelineRiskLevel: "LOW" | "MEDIUM" | "HIGH" | string;
 };
 
 export type SupervisorProjectDetail = {
@@ -83,28 +91,28 @@ export type SupervisorProjectDetail = {
 };
 
 export type SupervisorProjectTab =
-  | 'overview'
-  | 'team'
-  | 'activity'
-  | 'meetings'
-  | 'action-items'
-  | 'files';
+  | "overview"
+  | "team"
+  | "activity"
+  | "meetings"
+  | "action-items"
+  | "files";
 
 export type SupervisorProjectDetailTab =
-  | 'overview'
-  | 'team'
-  | 'milestones'
-  | 'files'
-  | 'github'
-  | 'integrations'
-  | 'jira'
-  | 'meetings';
+  | "overview"
+  | "team"
+  | "milestones"
+  | "files"
+  | "github"
+  | "integrations"
+  | "jira"
+  | "meetings";
 
 // Legacy / UI-only aggregate types (used by older components or mock views).
 export type SupervisorProjectMember = {
   id: string;
   name: string;
-  role: 'Student' | 'Supervisor';
+  role: "Student" | "Supervisor";
 };
 
 export type SupervisorProjectMetric = {
@@ -114,7 +122,7 @@ export type SupervisorProjectMetric = {
 
 export type SupervisorProjectIntegration = {
   label: string;
-  status: 'Connected' | 'Needs setup' | 'Issue';
+  status: "Connected" | "Needs setup" | "Issue";
   href?: string;
 };
 
@@ -135,7 +143,7 @@ export type SupervisorProjectMeeting = {
   id: string;
   title: string;
   scheduledFor: string;
-  status: 'Approved' | 'Submitted' | 'Draft';
+  status: "Approved" | "Submitted" | "Draft";
   summary: string;
 };
 
@@ -144,8 +152,8 @@ export type SupervisorProjectActionItem = {
   title: string;
   assignee: string;
   dueDate: string;
-  priority: 'Low' | 'Medium' | 'High';
-  status: 'Todo' | 'In Progress' | 'Done';
+  priority: "Low" | "Medium" | "High";
+  status: "Todo" | "In Progress" | "Done";
   jiraKey?: string;
 };
 

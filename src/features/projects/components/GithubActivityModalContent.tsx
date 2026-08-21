@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from "react";
 import {
   ChevronDown,
   GitCommit,
@@ -8,63 +8,67 @@ import {
   Settings,
   ShieldCheck,
   Zap,
-} from 'lucide-react';
-import { buttonStyles } from '@/components/ui/Button';
-import { TimeAgo } from '@/components/ui/TimeAgo';
-import { isApiException } from '@/services/apiClient';
-import type { ProjectGitHubRecentCommit } from '../types';
-import type { PaginatedListResult } from '../types';
-import { getGeneratedAvatarUrl, getGitHubAvatarUrl } from '../utils/githubIdentity';
+} from "lucide-react";
+import { buttonStyles } from "@/components/ui/Button";
+import { TimeAgo } from "@/components/ui/TimeAgo";
+import { isApiException } from "@/services/apiClient";
+import type { ProjectGitHubRecentCommit } from "../types";
+import type { PaginatedListResult } from "../types";
+import {
+  getGeneratedAvatarUrl,
+  getGitHubAvatarUrl,
+} from "../utils/githubIdentity";
 
 type CommitType =
-  | 'merge'
-  | 'feat'
-  | 'fix'
-  | 'refactor'
-  | 'chore'
-  | 'docs'
-  | 'ci'
-  | 'test'
-  | 'perf'
-  | 'build'
-  | 'revert'
-  | 'style';
+  | "merge"
+  | "feat"
+  | "fix"
+  | "refactor"
+  | "chore"
+  | "docs"
+  | "ci"
+  | "test"
+  | "perf"
+  | "build"
+  | "revert"
+  | "style";
 
 function getCommitType(message: string): CommitType | null {
   const subject =
     message
-      .split('\n')
+      .split("\n")
       .map((line) => line.trim())
       .find((line) => line.length > 0)
-      ?.toLowerCase() ?? '';
+      ?.toLowerCase() ?? "";
 
   if (
     /^merge(\s|$)/.test(subject) ||
-    subject.includes('merge pull request') ||
-    subject.includes('merge branch')
+    subject.includes("merge pull request") ||
+    subject.includes("merge branch")
   ) {
-    return 'merge';
+    return "merge";
   }
 
-  const conventionalType = subject.match(/^([a-z]+)(?:\([^)]+\))?!?:\s*/)?.[1] ?? null;
+  const conventionalType =
+    subject.match(/^([a-z]+)(?:\([^)]+\))?!?:\s*/)?.[1] ?? null;
   if (conventionalType) {
     const normalizedType = conventionalType.toLowerCase();
     const typeAliasMap: Record<string, CommitType> = {
-      feat: 'feat',
-      feature: 'feat',
-      fix: 'fix',
-      bugfix: 'fix',
-      hotfix: 'fix',
-      refactor: 'refactor',
-      chore: 'chore',
-      docs: 'docs',
-      doc: 'docs',
-      ci: 'ci',
-      test: 'test',
-      perf: 'perf',
-      build: 'build',
-      revert: 'revert',
-      style: 'style',
+      feat: "feat",
+      feature: "feat",
+      fix: "fix",
+      bugfix: "fix",
+      hotfix: "fix",
+      refactor: "refactor",
+      chore: "chore",
+      docs: "docs",
+      doc: "docs",
+      ci: "ci",
+      test: "test",
+      perf: "perf",
+      build: "build",
+      revert: "revert",
+      style: "style",
     };
     if (typeAliasMap[normalizedType]) {
       return typeAliasMap[normalizedType];
@@ -72,17 +76,17 @@ function getCommitType(message: string): CommitType | null {
   }
 
   const fallbackPatterns: Array<[CommitType, RegExp]> = [
-    ['feat', /^(feat|feature)\b/],
-    ['fix', /^(fix|bugfix|hotfix)\b/],
-    ['refactor', /^refactor\b/],
-    ['docs', /^(docs|doc)\b/],
-    ['chore', /^chore\b/],
-    ['ci', /^(ci|pipeline|workflow)\b/],
-    ['test', /^test\b/],
-    ['perf', /^perf\b/],
-    ['build', /^build\b/],
-    ['revert', /^revert\b/],
-    ['style', /^style\b/],
+    ["feat", /^(feat|feature)\b/],
+    ["fix", /^(fix|bugfix|hotfix)\b/],
+    ["refactor", /^refactor\b/],
+    ["docs", /^(docs|doc)\b/],
+    ["chore", /^chore\b/],
+    ["ci", /^(ci|pipeline|workflow)\b/],
+    ["test", /^test\b/],
+    ["perf", /^perf\b/],
+    ["build", /^build\b/],
+    ["revert", /^revert\b/],
+    ["style", /^style\b/],
   ];
   for (const [type, pattern] of fallbackPatterns) {
     if (pattern.test(subject)) {
@@ -93,32 +97,45 @@ function getCommitType(message: string): CommitType | null {
 }
 
 function commitTypeBadgeClass(type: CommitType) {
-  if (type === 'merge') return 'bg-slate-50 text-slate-600 border-slate-100';
-  if (type === 'feat') return 'bg-emerald-50 text-emerald-700 border-emerald-100';
-  if (type === 'fix') return 'bg-rose-50 text-rose-700 border-rose-100';
-  if (type === 'refactor') return 'bg-indigo-50 text-indigo-700 border-indigo-100';
-  if (type === 'ci' || type === 'build') return 'bg-cyan-50 text-cyan-700 border-cyan-100';
-  if (type === 'docs') return 'bg-amber-50 text-amber-700 border-amber-100';
-  if (type === 'test') return 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-100';
-  if (type === 'perf') return 'bg-teal-50 text-teal-700 border-teal-100';
-  if (type === 'revert') return 'bg-rose-50 text-rose-700 border-rose-100';
-  if (type === 'style') return 'bg-lime-50 text-lime-700 border-lime-100';
-  return 'bg-zinc-50 text-zinc-600 border-zinc-100';
+  if (type === "merge") return "bg-slate-50 text-slate-600 border-slate-100";
+  if (type === "feat")
+    return "bg-emerald-50 text-emerald-700 border-emerald-100";
+  if (type === "fix") return "bg-rose-50 text-rose-700 border-rose-100";
+  if (type === "refactor")
+    return "bg-indigo-50 text-indigo-700 border-indigo-100";
+  if (type === "ci" || type === "build")
+    return "bg-cyan-50 text-cyan-700 border-cyan-100";
+  if (type === "docs") return "bg-amber-50 text-amber-700 border-amber-100";
+  if (type === "test")
+    return "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-100";
+  if (type === "perf") return "bg-teal-50 text-teal-700 border-teal-100";
+  if (type === "revert") return "bg-rose-50 text-rose-700 border-rose-100";
+  if (type === "style") return "bg-lime-50 text-lime-700 border-lime-100";
+  return "bg-zinc-50 text-zinc-600 border-zinc-100";
 }
 
-function CommitTypeIcon({ type, className }: { type: CommitType | null; className?: string }) {
-  if (type === 'merge') return <GitMerge className={className} />;
-  if (type === 'feat') return <Zap className={className} />;
-  if (type === 'fix') return <ShieldCheck className={className} />;
-  if (type === 'refactor') return <Settings className={className} />;
-  if (type === 'ci' || type === 'build') return <Terminal className={className} />;
-  if (type === 'docs') return <FileText className={className} />;
+function CommitTypeIcon({
+  type,
+  className,
+}: {
+  type: CommitType | null;
+  className?: string;
+}) {
+  if (type === "merge") return <GitMerge className={className} />;
+  if (type === "feat") return <Zap className={className} />;
+  if (type === "fix") return <ShieldCheck className={className} />;
+  if (type === "refactor") return <Settings className={className} />;
+  if (type === "ci" || type === "build")
+    return <Terminal className={className} />;
+  if (type === "docs") return <FileText className={className} />;
   return <GitCommit className={className} />;
 }
 
 type GithubActivityModalContentProps = {
   isOpen: boolean;
-  fetchPage: (page: number) => Promise<PaginatedListResult<ProjectGitHubRecentCommit>>;
+  fetchPage: (
+    page: number,
+  ) => Promise<PaginatedListResult<ProjectGitHubRecentCommit>>;
 };
 
 function ActivityItemSkeleton() {
@@ -131,7 +148,10 @@ function ActivityItemSkeleton() {
   );
 }
 
-export function GithubActivityModalContent({ isOpen, fetchPage }: GithubActivityModalContentProps) {
+export function GithubActivityModalContent({
+  isOpen,
+  fetchPage,
+}: GithubActivityModalContentProps) {
   const [items, setItems] = useState<ProjectGitHubRecentCommit[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
@@ -159,7 +179,7 @@ export function GithubActivityModalContent({ isOpen, fetchPage }: GithubActivity
         setErrorMessage(
           isApiException(error)
             ? error.apiError.message
-            : 'Unable to load GitHub activity right now.',
+            : "Unable to load GitHub activity right now.",
         );
       } finally {
         if (append) {
@@ -206,7 +226,7 @@ export function GithubActivityModalContent({ isOpen, fetchPage }: GithubActivity
         <button
           type="button"
           onClick={() => void loadPage(1, false)}
-          className={buttonStyles({ variant: 'secondary', size: 'sm' })}
+          className={buttonStyles({ variant: "secondary", size: "sm" })}
         >
           Retry
         </button>
@@ -215,7 +235,9 @@ export function GithubActivityModalContent({ isOpen, fetchPage }: GithubActivity
   }
 
   if (items.length === 0) {
-    return <p className="text-sm text-muted-foreground">No GitHub activity found.</p>;
+    return (
+      <p className="text-sm text-muted-foreground">No GitHub activity found.</p>
+    );
   }
 
   return (
@@ -231,7 +253,7 @@ export function GithubActivityModalContent({ isOpen, fetchPage }: GithubActivity
 
         return (
           <article
-            key={`${commit.sha ?? 'commit'}-${index}`}
+            key={`${commit.sha ?? "commit"}-${index}`}
             className="group relative flex gap-4 rounded-2xl border border-slate-100 bg-white p-4 transition-all hover:border-amber-200 hover:shadow-md"
           >
             <div className="flex shrink-0 flex-col items-center gap-2 pt-1">
@@ -239,15 +261,16 @@ export function GithubActivityModalContent({ isOpen, fetchPage }: GithubActivity
                 {authorAvatarUrl ? (
                   <img
                     src={authorAvatarUrl}
-                    alt={commit.author || 'Author'}
+                    alt={commit.author || "Author"}
                     className="h-full w-full object-cover"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = getGeneratedAvatarUrl(commit.author);
+                      (e.target as HTMLImageElement).src =
+                        getGeneratedAvatarUrl(commit.author);
                     }}
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center text-xs font-bold text-slate-400">
-                    {commit.author?.slice(0, 2).toUpperCase() || '??'}
+                    {commit.author?.slice(0, 2).toUpperCase() || "??"}
                   </div>
                 )}
               </div>
@@ -258,7 +281,7 @@ export function GithubActivityModalContent({ isOpen, fetchPage }: GithubActivity
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-slate-800">
-                    {commit.author || 'Unknown Author'}
+                    {commit.author || "Unknown Author"}
                   </span>
                   <span className="text-slate-300">•</span>
                   {commit.committedAt && (
@@ -278,13 +301,13 @@ export function GithubActivityModalContent({ isOpen, fetchPage }: GithubActivity
                     </span>
                   )}
                   <code className="rounded bg-slate-50 px-1.5 py-0.5 font-mono text-[10px] font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-700">
-                    {shortSha ?? 'N/A'}
+                    {shortSha ?? "N/A"}
                   </code>
                 </div>
               </div>
 
               <p className="mt-1.5 text-sm leading-6 text-slate-600 transition-colors group-hover:text-slate-900">
-                {commit.message || 'No commit message provided.'}
+                {commit.message || "No commit message provided."}
               </p>
             </div>
           </article>
@@ -305,9 +328,9 @@ export function GithubActivityModalContent({ isOpen, fetchPage }: GithubActivity
             type="button"
             onClick={() => void handleLoadMore()}
             className={buttonStyles({
-              variant: 'secondary',
-              size: 'sm',
-              className: 'rounded-full px-4 font-medium',
+              variant: "secondary",
+              size: "sm",
+              className: "rounded-full px-4 font-medium",
             })}
             disabled={isInitialLoading || isLoadingMore}
           >

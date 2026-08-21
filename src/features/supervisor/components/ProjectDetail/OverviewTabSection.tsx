@@ -1,17 +1,23 @@
-import { useMemo } from 'react';
-import { ProjectOverviewContent } from '@/features/projects/components/ProjectOverviewContent';
-import { useMeetingAnalytics } from '@/features/projects/hooks/useMeetingAnalytics';
-import { supervisorApi } from '../../api/supervisorApi';
-import type { OverviewState } from '../../hooks/useProjectDetailsPageState';
-import { FIELD_LIMITS, LIFECYCLE_OPTIONS } from '../../projectDetails.shared';
-import type { SupervisorProjectLifecycle, SupervisorProjectDetail } from '../../types';
+import { useMemo } from "react";
+import { ProjectOverviewContent } from "@/features/projects/components/ProjectOverviewContent";
+import { useMeetingAnalytics } from "@/features/projects/hooks/useMeetingAnalytics";
+import { supervisorApi } from "../../api/supervisorApi";
+import type { OverviewState } from "../../hooks/useProjectDetailsPageState";
+import { FIELD_LIMITS, LIFECYCLE_OPTIONS } from "../../projectDetails.shared";
+import type {
+  SupervisorProjectLifecycle,
+  SupervisorProjectDetail,
+} from "../../types";
 
 type OverviewTabSectionProps = {
   project: SupervisorProjectDetail;
   overview: OverviewState;
 };
 
-export function OverviewTabSection({ project, overview }: OverviewTabSectionProps) {
+export function OverviewTabSection({
+  project,
+  overview,
+}: OverviewTabSectionProps) {
   const meetingFetchers = useMemo(
     () => ({
       getMeetingChannels: supervisorApi.getProjectMeetingChannels,
@@ -38,7 +44,10 @@ export function OverviewTabSection({ project, overview }: OverviewTabSectionProp
         onSubmit: overview.submit,
         onChangeField: overview.setField,
         onLifecycleChange: (value) =>
-          overview.setField('lifecycleStatus', value as SupervisorProjectLifecycle),
+          overview.setField(
+            "lifecycleStatus",
+            value as SupervisorProjectLifecycle,
+          ),
       }}
     />
   );

@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
-import { Button } from '@/components/ui/Button';
+import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
+import { Button } from "@/components/ui/Button";
 
 type RepositoryRenameModalProps = {
   isOpen: boolean;
@@ -27,10 +27,10 @@ export function RepositoryRenameModal({
   useEffect(() => {
     if (!isOpen) return;
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose();
+      if (e.key === "Escape") onClose();
     }
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
   // Trap focus inside the modal
@@ -76,7 +76,9 @@ export function RepositoryRenameModal({
           ✕
         </Button>
 
-        <h3 className="mb-5 text-lg font-semibold text-foreground">Edit display name</h3>
+        <h3 className="mb-5 text-lg font-semibold text-foreground">
+          Edit display name
+        </h3>
 
         <div className="space-y-4">
           <div>
@@ -91,7 +93,7 @@ export function RepositoryRenameModal({
                 value={draftName}
                 onChange={(e) => onChange(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !isSaving) {
+                  if (e.key === "Enter" && !isSaving) {
                     e.preventDefault();
                     onSave();
                   }
@@ -107,10 +109,12 @@ export function RepositoryRenameModal({
                 onClick={onSave}
                 disabled={isSaving}
               >
-                {isSaving ? 'Saving...' : 'Save'}
+                {isSaving ? "Saving..." : "Save"}
               </Button>
             </div>
-            {error ? <p className="mt-1.5 text-xs text-rose-700">{error}</p> : null}
+            {error ? (
+              <p className="mt-1.5 text-xs text-rose-700">{error}</p>
+            ) : null}
           </div>
         </div>
       </div>

@@ -4,6 +4,6 @@
  * Adding a new role means editing this file only (OCP).
  */
 export const ROLE_HOME: Record<string, string> = {
-  SUPERVISOR: '/supervisor',
-  STUDENT: '/student/projects',
+  SUPERVISOR: "/supervisor",
+  STUDENT: "/student/projects",
 };

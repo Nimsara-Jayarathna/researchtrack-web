@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
-import { isApiException } from '@/services/apiClient';
-import type { ApiError } from '@/types';
-import type { JiraWorkload } from '../types';
+import { useCallback, useEffect, useState } from "react";
+import { isApiException } from "@/services/apiClient";
+import type { ApiError } from "@/types";
+import type { JiraWorkload } from "../types";
 
 type JiraWorkloadState = {
   workload: JiraWorkload | null;
@@ -59,13 +59,13 @@ export function useJiraWorkload(
         error: isApiException(error)
           ? error.apiError
           : {
-              code: 'INTERNAL_ERROR',
-              message: 'Unable to load Jira team workload data right now.',
+              code: "INTERNAL_ERROR",
+              message: "Unable to load Jira team workload data right now.",
               details: [],
               timestamp: new Date().toISOString(),
               status: 0,
-              error: 'Unexpected Error',
-              path: '',
+              error: "Unexpected Error",
+              path: "",
               traceId: null,
             },
       });

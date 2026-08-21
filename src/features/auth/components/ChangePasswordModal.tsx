@@ -1,46 +1,60 @@
-import { Button } from '@/components/ui/Button';
-import { RequestStateModal } from '@/components/ui/RequestStateModal';
-import { ModalShell } from '@/components/ui/ModalShell';
-import { isApiException } from '@/services/apiClient';
-import { X } from 'lucide-react';
-import { useState, type FormEvent } from 'react';
-import { PasswordRequirementsPanel } from './PasswordRequirementsPanel';
-import { getPasswordChecks, isPasswordPolicyPassed } from '../utils/passwordRules';
-import { PasswordField } from './PasswordField';
-import { PASSWORD_MAX_LENGTH } from '../utils/passwordRules';
-import { toRequestStateModalView } from '../utils/requestStateModalView';
+import { Button } from "@/components/ui/Button";
+import { RequestStateModal } from "@/components/ui/RequestStateModal";
+import { ModalShell } from "@/components/ui/ModalShell";
+import { isApiException } from "@/services/apiClient";
+import { X } from "lucide-react";
+import { useState, type FormEvent } from "react";
+import { PasswordRequirementsPanel } from "./PasswordRequirementsPanel";
+import {
+  getPasswordChecks,
+  isPasswordPolicyPassed,
+} from "../utils/passwordRules";
+import { PasswordField } from "./PasswordField";
+import { PASSWORD_MAX_LENGTH } from "../utils/passwordRules";
+import { toRequestStateModalView } from "../utils/requestStateModalView";
 
 type RequestStatus =
-  | { kind: 'idle' }
-  | { kind: 'loading' }
-  | { kind: 'success'; message: string }
-  | { kind: 'error'; message: string };
+  | { kind: "idle" }
+  | { kind: "loading" }
+  | { kind: "success"; message: string }
+  | { kind: "error"; message: string };
 
 type ChangePasswordModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (payload: { currentPassword: string; newPassword: string }) => Promise<void>;
+  onSubmit: (payload: {
+    currentPassword: string;
+    newPassword: string;
+  }) => Promise<void>;
 };
 
-export function ChangePasswordModal({ isOpen, onClose, onSubmit }: ChangePasswordModalProps) {
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+export function ChangePasswordModal({
+  isOpen,
+  onClose,
+  onSubmit,
+}: ChangePasswordModalProps) {
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isNewPasswordFocused, setIsNewPasswordFocused] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
-  const [requestStatus, setRequestStatus] = useState<RequestStatus>({ kind: 'idle' });
+  const [requestStatus, setRequestStatus] = useState<RequestStatus>({
+    kind: "idle",
+  });
   const passwordChecks = getPasswordChecks(newPassword);
   const isCurrentPasswordFilled = currentPassword.trim().length > 0;
   const isConfirmPasswordFilled = confirmPassword.trim().length > 0;
-  const isConfirmMatched = isConfirmPasswordFilled && newPassword === confirmPassword;
+  const isConfirmMatched =
+    isConfirmPasswordFilled && newPassword === confirmPassword;
   const isMismatch = isConfirmPasswordFilled && !isConfirmMatched;
   const passwordPolicyPassed = isPasswordPolicyPassed(passwordChecks);
-  const canSubmit = isCurrentPasswordFilled && passwordPolicyPassed && isConfirmMatched;
+  const canSubmit =
+    isCurrentPasswordFilled && passwordPolicyPassed && isConfirmMatched;
 
-  if (!isOpen || typeof document === 'undefined') {
+  if (!isOpen || typeof document === "undefined") {
     return null;
   }
 
@@ -48,53 +62,62 @@ export function ChangePasswordModal({ isOpen, onClose, onSubmit }: ChangePasswor
     event.preventDefault();
     setValidationError(null);
 
-    if (!currentPassword.trim() || !newPassword.trim() || !confirmPassword.trim()) {
-      setValidationError('All password fields are required.');
+    if (
+      !currentPassword.trim() ||
+      !newPassword.trim() ||
+      !confirmPassword.trim()
+    ) {
+      setValidationError("All password fields are required.");
       return;
     }
 
     if (!passwordPolicyPassed) {
-      setValidationError('New password does not satisfy password requirements.');
+      setValidationError(
+        "New password does not satisfy password requirements.",
+      );
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setValidationError('Confirm password must match new password.');
+      setValidationError("Confirm password must match new password.");
       return;
     }
 
-    setRequestStatus({ kind: 'loading' });
+    setRequestStatus({ kind: "loading" });
 
     try {
       await onSubmit({ currentPassword, newPassword });
-      setRequestStatus({ kind: 'success', message: 'Your password has been updated.' });
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
+      setRequestStatus({
+        kind: "success",
+        message: "Your password has been updated.",
+      });
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
     } catch (error) {
-      let message = 'Unable to update password right now. Please try again.';
+      let message = "Unable to update password right now. Please try again.";
       if (isApiException(error)) {
         const newPasswordDetail = error.apiError.details.find(
-          (detail) => detail.field === 'newPassword',
+          (detail) => detail.field === "newPassword",
         );
         const currentPasswordDetail = error.apiError.details.find(
-          (detail) => detail.field === 'currentPassword',
+          (detail) => detail.field === "currentPassword",
         );
         message =
           (newPasswordDetail?.message ?? newPasswordDetail?.issue) ||
           (currentPasswordDetail?.message ?? currentPasswordDetail?.issue) ||
           error.apiError.message;
       }
-      setRequestStatus({ kind: 'error', message });
+      setRequestStatus({ kind: "error", message });
     }
   }
 
   function handleClose() {
     setValidationError(null);
-    setRequestStatus({ kind: 'idle' });
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmPassword('');
+    setRequestStatus({ kind: "idle" });
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
     setShowCurrentPassword(false);
     setShowNewPassword(false);
     setShowConfirmPassword(false);
@@ -103,31 +126,31 @@ export function ChangePasswordModal({ isOpen, onClose, onSubmit }: ChangePasswor
   }
 
   function closeRequestState() {
-    if (requestStatus.kind === 'success') {
+    if (requestStatus.kind === "success") {
       handleClose();
       return;
     }
-    setRequestStatus({ kind: 'idle' });
+    setRequestStatus({ kind: "idle" });
   }
 
   function retrySubmit() {
-    setRequestStatus({ kind: 'idle' });
+    setRequestStatus({ kind: "idle" });
   }
 
   const requestStateModal = toRequestStateModalView({
     kind: requestStatus.kind,
     copy: {
       loading: {
-        title: 'Updating password',
-        message: 'Please wait while we secure your account.',
+        title: "Updating password",
+        message: "Please wait while we secure your account.",
       },
       success: {
-        title: 'Password updated',
-        message: requestStatus.kind === 'success' ? requestStatus.message : '',
+        title: "Password updated",
+        message: requestStatus.kind === "success" ? requestStatus.message : "",
       },
       error: {
-        title: 'Unable to update password',
-        message: requestStatus.kind === 'error' ? requestStatus.message : '',
+        title: "Unable to update password",
+        message: requestStatus.kind === "error" ? requestStatus.message : "",
       },
     },
     onClose: closeRequestState,
@@ -159,8 +182,12 @@ export function ChangePasswordModal({ isOpen, onClose, onSubmit }: ChangePasswor
             <X className="h-5 w-5" />
           </button>
 
-          <h2 className="pr-8 text-xl font-bold text-slate-900">Change Password</h2>
-          <p className="mt-1 text-sm text-slate-500">Update your account password securely.</p>
+          <h2 className="pr-8 text-xl font-bold text-slate-900">
+            Change Password
+          </h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Update your account password securely.
+          </p>
 
           <div className="mt-5 space-y-3">
             <PasswordField
@@ -170,7 +197,9 @@ export function ChangePasswordModal({ isOpen, onClose, onSubmit }: ChangePasswor
               onChange={setCurrentPassword}
               maxLength={PASSWORD_MAX_LENGTH}
               isVisible={showCurrentPassword}
-              onToggleVisibility={() => setShowCurrentPassword((value) => !value)}
+              onToggleVisibility={() =>
+                setShowCurrentPassword((value) => !value)
+              }
             />
             <PasswordField
               id="new-password"
@@ -194,7 +223,9 @@ export function ChangePasswordModal({ isOpen, onClose, onSubmit }: ChangePasswor
               onChange={setConfirmPassword}
               maxLength={PASSWORD_MAX_LENGTH}
               isVisible={showConfirmPassword}
-              onToggleVisibility={() => setShowConfirmPassword((value) => !value)}
+              onToggleVisibility={() =>
+                setShowConfirmPassword((value) => !value)
+              }
               showMismatch={isConfirmPasswordFilled}
               mismatch={isMismatch}
             />
@@ -207,14 +238,19 @@ export function ChangePasswordModal({ isOpen, onClose, onSubmit }: ChangePasswor
           ) : null}
 
           <div className="mt-5 flex items-center justify-end gap-2">
-            <Button type="button" variant="secondary" size="md" onClick={handleClose}>
+            <Button
+              type="button"
+              variant="secondary"
+              size="md"
+              onClick={handleClose}
+            >
               Cancel
             </Button>
             <Button
               type="submit"
               variant="primary"
               size="md"
-              disabled={!canSubmit || requestStatus.kind === 'loading'}
+              disabled={!canSubmit || requestStatus.kind === "loading"}
             >
               Save password
             </Button>

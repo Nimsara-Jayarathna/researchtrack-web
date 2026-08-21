@@ -1,9 +1,11 @@
-import type { StudentProjectDetail, StudentProjectSummary } from '../types';
+import type { StudentProjectDetail, StudentProjectSummary } from "../types";
 
-type ApiClient = typeof import('@/services/apiClient').apiClient;
+type ApiClient = typeof import("@/services/apiClient").apiClient;
 
 type StudentProjectCache = Partial<Record<string, StudentProjectDetail>>;
-type StudentProjectInFlight = Partial<Record<string, Promise<StudentProjectDetail>>>;
+type StudentProjectInFlight = Partial<
+  Record<string, Promise<StudentProjectDetail>>
+>;
 
 type CreateStudentProjectsApiDeps = {
   apiClient: ApiClient;
@@ -18,19 +20,26 @@ export function createStudentProjectsApi({
 }: CreateStudentProjectsApiDeps) {
   return {
     getProjects(): Promise<StudentProjectSummary[]> {
-      return apiClient.get<StudentProjectSummary[]>('/api/student/projects');
+      return apiClient.get<StudentProjectSummary[]>("/api/student/projects");
     },
 
-    async getProjectById(projectId: string, forceRefresh = false): Promise<StudentProjectDetail> {
+    async getProjectById(
+      projectId: string,
+      forceRefresh = false,
+    ): Promise<StudentProjectDetail> {
       if (!forceRefresh && cachedProjectsById[projectId]) {
         return cachedProjectsById[projectId] as StudentProjectDetail;
       }
 
       if (!forceRefresh && inFlightProjectRequests[projectId]) {
-        return inFlightProjectRequests[projectId] as Promise<StudentProjectDetail>;
+        return inFlightProjectRequests[
+          projectId
+        ] as Promise<StudentProjectDetail>;
       }
 
-      const request = apiClient.get<StudentProjectDetail>(`/api/student/projects/${projectId}`);
+      const request = apiClient.get<StudentProjectDetail>(
+        `/api/student/projects/${projectId}`,
+      );
       inFlightProjectRequests[projectId] = request;
 
       try {

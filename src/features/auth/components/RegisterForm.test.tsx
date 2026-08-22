@@ -15,7 +15,7 @@ function makeApiError(overrides: Partial<ApiError> = {}): ApiError {
     error: "Bad Request",
     code: "VALIDATION_ERROR",
     message: "Validation failed.",
-    path: "/api/auth/register",
+    path: "/api/v1/auth/register",
     traceId: null,
     details: [],
     ...overrides,

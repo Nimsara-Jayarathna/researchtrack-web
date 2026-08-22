@@ -9,11 +9,7 @@ export const LIFECYCLE_VALUES = [
 export type LifecycleValue = (typeof LIFECYCLE_VALUES)[number];
 
 export type LifecycleTone =
-  | "student"
-  | "success"
-  | "warning"
-  | "danger"
-  | "neutral";
+  "student" | "success" | "warning" | "danger" | "neutral";
 
 export function formatLifecycleLabel(value: string) {
   return value.replace(/_/g, " ");

@@ -19,19 +19,10 @@ import { parseLocalDateOnly } from "@/lib/dateOnly";
 import type { MeetingAnalyticsState } from "@/features/projects/hooks/useMeetingAnalytics";
 
 type StatusBadgeTone =
-  | "student"
-  | "supervisor"
-  | "success"
-  | "warning"
-  | "danger"
-  | "neutral";
+  "student" | "supervisor" | "success" | "warning" | "danger" | "neutral";
 
 type MilestoneStatus =
-  | "PLANNED"
-  | "IN_PROGRESS"
-  | "COMPLETED"
-  | "MISSED"
-  | "CANCELLED";
+  "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "MISSED" | "CANCELLED";
 
 type OverviewMilestone = {
   id: string;
@@ -90,10 +81,7 @@ type ProjectOverviewEditForm = {
 };
 
 export type ProjectOverviewTextField =
-  | "title"
-  | "summary"
-  | "batch"
-  | "semester";
+  "title" | "summary" | "batch" | "semester";
 
 type ProjectOverviewFieldLimits = {
   title: number;

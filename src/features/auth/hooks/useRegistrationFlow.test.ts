@@ -113,6 +113,14 @@ describe("useRegistrationFlow", () => {
       });
     });
 
+    expect(authApi.registerComplete).toHaveBeenCalledWith({
+      registrationToken: "token_abc",
+      fname: "Nimal",
+      lname: "Perera",
+      password: "Secure@123",
+      name: "IT24103464",
+      role: undefined,
+    });
     expect(result.current.isSuccess).toBe(true);
     expect(removeSpy.mock.calls.some((call) => call[0] === "reg_email")).toBe(
       false,
@@ -150,7 +158,7 @@ describe("useRegistrationFlow", () => {
         timestamp: "2026-04-12T00:00:00Z",
         status: 400,
         error: "Bad Request",
-        path: "/api/auth/register/verify",
+        path: "/api/v1/auth/register/verify",
         traceId: null,
       },
       name: "ApiException",

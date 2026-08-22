@@ -37,7 +37,7 @@ function makeValidationError(message: string): ApiError {
     timestamp: new Date().toISOString(),
     status: 400,
     error: "Bad Request",
-    path: "/api/auth/register/init",
+    path: "/api/v1/auth/register/init",
     traceId: null,
   };
 }

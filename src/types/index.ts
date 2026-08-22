@@ -1,4 +1,4 @@
-/** Stable error codes from the backend — use `code` to drive UI logic. */
+/** Stable error codes consumed by existing frontend UI. */
 export type ApiErrorCode =
   | "VALIDATION_ERROR"
   | "BAD_REQUEST"
@@ -10,49 +10,62 @@ export type ApiErrorCode =
   | "SERVICE_UNAVAILABLE"
   | "INTERNAL_ERROR";
 
-/** Shared meta block included in both success and error envelopes. */
+/** Canonical error codes emitted by ResearchTrack.BuildingBlocks.Api. */
+export type BackendApiErrorCode =
+  | "VALIDATION_ERROR"
+  | "BAD_REQUEST"
+  | "UNAUTHORIZED"
+  | "FORBIDDEN"
+  | "NOT_FOUND"
+  | "CONFLICT"
+  | "RATE_LIMITED"
+  | "DEPENDENCY_UNAVAILABLE"
+  | "SERVICE_UNAVAILABLE"
+  | "INTERNAL_ERROR";
+
+/** Metadata emitted by ResearchTrack.BuildingBlocks.Api. */
 export type ApiMeta = {
   timestamp: string;
-  path: string;
   traceId: string | null;
 };
 
-/** A single field-level validation error, present in `ApiError.details`. */
+/** Field-level validation error returned by the .NET API. */
+export type ApiFieldError = {
+  field: string;
+  errors: string[];
+};
+
+/** Error payload inside the canonical ResearchTrack API envelope. */
+export type ApiErrorBody = {
+  code: BackendApiErrorCode;
+  message: string;
+  fieldErrors?: ApiFieldError[];
+  details?: unknown;
+};
+
+/** Existing frontend field-error shape consumed by forms/components. */
 export type ApiErrorDetail = {
   field: string;
-  /** Backend serialises this as `issue` (from `ApiErrorDetail#getIssue()`). */
   issue?: string;
-  /** Kept for forward-compatibility if the backend field is ever renamed to `message`. */
   message?: string;
 };
 
-/** Nested backend error object inside the standard response envelope. */
-export type ApiErrorBody = {
-  code: ApiErrorCode;
-  status: number;
-  details: ApiErrorDetail[];
-};
-
-/**
- * Normalized frontend error consumed by hooks/components.
- *
- * This is derived from the backend response envelope and preserves a flat shape
- * for existing UI code.
- */
+/** Normalized frontend error consumed by hooks/components. */
 export type ApiError = {
   code: ApiErrorCode;
   status: number;
   message: string;
   details: ApiErrorDetail[];
-  /** Optional human-readable HTTP reason phrase inferred on the client side. */
   error?: string;
-} & ApiMeta;
+  timestamp: string;
+  path: string;
+  traceId: string | null;
+};
 
-/** Standard response envelope for all backend endpoints. */
+/** Canonical response envelope returned by ResearchTrack.BuildingBlocks.Api. */
 export type ApiResponse<T> = {
   success: boolean;
-  message: string;
-  data: T;
-  error: ApiErrorBody | null;
+  data?: T;
+  error?: ApiErrorBody;
   meta: ApiMeta;
 };

@@ -61,8 +61,7 @@ export function Select(props: SelectProps) {
   const selectRef = useRef<HTMLSelectElement>(null);
   const anchorRef = (menuAnchorRef ??
     (selectRef as unknown as RefObject<HTMLElement | null>)) as
-    | RefObject<HTMLElement | null>
-    | undefined;
+    RefObject<HTMLElement | null> | undefined;
 
   const options = useMemo<OptionItem[]>(() => {
     return Children.toArray(children)

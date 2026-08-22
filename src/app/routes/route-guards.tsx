@@ -1,12 +1,6 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { tokenStorage } from "@/services/tokenStorage";
 import { ROLE_HOME } from "./roleHome";
 import { useAuthStateValue } from "@/features/auth/state/authState";
-
-// UI-only preview mode: allow authenticated users to inspect either role's shell locally.
-// Enabled only in dev builds (import.meta.env.DEV = true during `vite dev`, false after `vite build`).
-// Backend authorization must still enforce the real role restrictions.
-const ALLOW_CROSS_ROLE_PREVIEW = import.meta.env.DEV;
 
 function buildLoginRedirectPath(
   pathname: string,
@@ -23,22 +17,13 @@ function buildLoginRedirectPath(
   }
 }
 
-function useResolvedGuardUser() {
-  const authState = useAuthStateValue();
-  if (authState.status === "bootstrapping") {
-    return tokenStorage.getUser();
-  }
-  return authState.user;
-}
-
-/**
- * Blocks unauthenticated users — redirects to /login.
- * Use for any route that requires a valid session.
- */
+/** Blocks unauthenticated users while the server remains the session authority. */
 export function RequireAuth() {
   const location = useLocation();
-  const user = useResolvedGuardUser();
-  if (!user) {
+  const authState = useAuthStateValue();
+
+  if (authState.status === "bootstrapping") return null;
+  if (!authState.user) {
     return (
       <Navigate
         to={buildLoginRedirectPath(
@@ -50,17 +35,20 @@ export function RequireAuth() {
       />
     );
   }
+
   return <Outlet />;
 }
 
 /**
- * Blocks users without the required role.
- * Security note: this is a UI-only guard — the backend must also enforce
- * role-based access on every protected API endpoint.
+ * UI role guard. Backend authorization remains authoritative for every
+ * protected operation; there is intentionally no development bypass.
  */
 export function RequireRole({ role }: { role: string }) {
   const location = useLocation();
-  const user = useResolvedGuardUser();
+  const authState = useAuthStateValue();
+
+  if (authState.status === "bootstrapping") return null;
+  const user = authState.user;
   if (!user) {
     return (
       <Navigate
@@ -73,18 +61,18 @@ export function RequireRole({ role }: { role: string }) {
       />
     );
   }
-  if (ALLOW_CROSS_ROLE_PREVIEW) return <Outlet />;
-  if (user.role !== role)
+
+  if (user.role !== role) {
     return <Navigate to={ROLE_HOME[user.role] ?? "/"} replace />;
+  }
+
   return <Outlet />;
 }
 
-/**
- * Blocks authenticated users from guest-only pages (/login, /register).
- * Redirects them to their role home instead.
- */
+/** Blocks authenticated users from guest-only pages. */
 export function RequireGuest() {
-  const user = useResolvedGuardUser();
-  if (!user) return <Outlet />;
-  return <Navigate to={ROLE_HOME[user.role] ?? "/"} replace />;
+  const authState = useAuthStateValue();
+  if (authState.status === "bootstrapping") return null;
+  if (!authState.user) return <Outlet />;
+  return <Navigate to={ROLE_HOME[authState.user.role] ?? "/"} replace />;
 }

@@ -22,6 +22,44 @@ describe("authApi registration endpoints", () => {
     vi.clearAllMocks();
   });
 
+  it("uses canonical Story 2 login, refresh, logout, and me endpoints", async () => {
+    const authApi = await loadAuthApi();
+    vi.mocked(apiClientMock.post).mockResolvedValue({
+      user: {
+        id: "user-id",
+        email: "student@my.sliit.lk",
+        firstName: "Student",
+        lastName: "User",
+        role: "STUDENT",
+      },
+    });
+    vi.mocked(apiClientMock.get).mockResolvedValue({
+      user: {
+        id: "user-id",
+        email: "student@my.sliit.lk",
+        firstName: "Student",
+        lastName: "User",
+        role: "STUDENT",
+      },
+    });
+
+    await authApi.login({
+      email: "student@my.sliit.lk",
+      password: "password",
+    });
+    await authApi.refresh();
+    await authApi.logout();
+    await authApi.me();
+
+    expect(apiClientMock.post).toHaveBeenCalledWith("/api/v1/auth/login", {
+      email: "student@my.sliit.lk",
+      password: "password",
+    });
+    expect(apiClientMock.post).toHaveBeenCalledWith("/api/v1/auth/refresh", {});
+    expect(apiClientMock.post).toHaveBeenCalledWith("/api/v1/auth/logout", {});
+    expect(apiClientMock.get).toHaveBeenCalledWith("/api/v1/auth/me");
+  });
+
   it("uses /api/v1/auth/register for direct student registration", async () => {
     const authApi = await loadAuthApi();
     const payload = {

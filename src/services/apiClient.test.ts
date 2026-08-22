@@ -6,7 +6,7 @@ const beginSessionTransition = vi.hoisted(() => vi.fn());
 const resetSessionState = vi.hoisted(() => vi.fn());
 
 vi.mock("@/app/config/env", () => ({
-  env: { apiBaseUrl: "http://localhost:8081" },
+  env: { apiBaseUrl: "http://localhost:8081", apiVersion: "v1" },
 }));
 
 vi.mock("@/services/tokenStorage", () => ({
@@ -122,7 +122,7 @@ describe("apiClient response normalization", () => {
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch).toHaveBeenNthCalledWith(
       1,
-      "http://localhost:8081/api/auth/login",
+      "http://localhost:8081/api/v1/auth/login",
       expect.any(Object),
     );
   });
@@ -201,7 +201,7 @@ describe("apiClient response normalization", () => {
     expect(fetch).toHaveBeenCalledTimes(3);
     expect(fetch).toHaveBeenNthCalledWith(
       2,
-      "http://localhost:8081/api/auth/refresh",
+      "http://localhost:8081/api/v1/auth/refresh",
       expect.objectContaining({ method: "POST" }),
     );
     expect(setUser).toHaveBeenCalledOnce();

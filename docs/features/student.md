@@ -1,5 +1,8 @@
 # Student Feature
 
+
+> **API version note:** Examples in this document use `v1`. At runtime the frontend version prefix comes from `VITE_API_VERSION`; feature code remains version-agnostic.
+
 Student workspace for browsing assigned projects and reading project detail.
 
 ## Routes
@@ -22,23 +25,23 @@ Student workspace for browsing assigned projects and reading project detail.
 
 Student pages currently use:
 
-- `GET /api/student/projects`
-- `GET /api/student/projects/{projectId}`
-- `GET /api/student/projects/{projectId}/github`
-- `GET /api/student/projects/{projectId}/github/activity?page=...&size=...`
-- `GET /api/student/projects/{projectId}/github/contributors?page=...&size=...`
-- `GET /api/student/projects/{projectId}/jira/health`
-- `GET /api/student/projects/{projectId}/jira/sprint-progress`
-- `GET /api/student/projects/{projectId}/jira/workload`
-- `GET /api/student/projects/{projectId}/jira/hierarchy`
-- `GET /api/student/projects/{projectId}/meeting-channels`
-- `POST /api/student/projects/{projectId}/meeting-channels`
-- `GET /api/student/projects/{projectId}/meeting-records`
-- `POST /api/student/projects/{projectId}/meeting-records`
-- `GET /api/student/projects/{projectId}/files`
-- `POST /api/student/projects/{projectId}/files/upload-url`
-- `POST /api/student/projects/{projectId}/files/confirm`
-- `GET /api/student/projects/{projectId}/files/{fileId}/download-url`
+- `GET /api/v1/student/projects`
+- `GET /api/v1/student/projects/{projectId}`
+- `GET /api/v1/student/projects/{projectId}/github`
+- `GET /api/v1/student/projects/{projectId}/github/activity?page=...&size=...`
+- `GET /api/v1/student/projects/{projectId}/github/contributors?page=...&size=...`
+- `GET /api/v1/student/projects/{projectId}/jira/health`
+- `GET /api/v1/student/projects/{projectId}/jira/sprint-progress`
+- `GET /api/v1/student/projects/{projectId}/jira/workload`
+- `GET /api/v1/student/projects/{projectId}/jira/hierarchy`
+- `GET /api/v1/student/projects/{projectId}/meeting-channels`
+- `POST /api/v1/student/projects/{projectId}/meeting-channels`
+- `GET /api/v1/student/projects/{projectId}/meeting-records`
+- `POST /api/v1/student/projects/{projectId}/meeting-records`
+- `GET /api/v1/student/projects/{projectId}/files`
+- `POST /api/v1/student/projects/{projectId}/files/upload-url`
+- `POST /api/v1/student/projects/{projectId}/files/confirm`
+- `GET /api/v1/student/projects/{projectId}/files/{fileId}/download-url`
 
 ---
 
@@ -66,7 +69,7 @@ Student pages currently use:
 | `src/features/student/components/StudentFilesTabSection.tsx` | Student files tab for upload/list/download (no delete) |
 | `src/features/projectfiles/hooks/useStudentProjectFiles.ts` | Files tab state: lazy load, seed from project detail, upload/download actions |
 | `src/features/projectfiles/components/UploadFileModal.tsx` | Shared upload modal with FE validation + request-state lifecycle |
-| `src/features/student/api/studentApi.ts` | Student API client |
+| `src/features/student/api/v1/studentApi.ts` | Student API client |
 | `src/features/student/types.ts` | Student list/detail API models |
 
 ---
@@ -76,7 +79,7 @@ Student pages currently use:
 ### Data source
 
 - Uses `useStudentProjects`
-- Calls `GET /api/student/projects`
+- Calls `GET /api/v1/student/projects`
 
 ### Current card behavior
 
@@ -103,7 +106,7 @@ Student pages currently use:
 ### Data source
 
 - Uses `useStudentProject`
-- Calls `GET /api/student/projects/{projectId}`
+- Calls `GET /api/v1/student/projects/{projectId}`
 
 ### Tabs
 
@@ -137,27 +140,27 @@ Student pages currently use:
 - Jira (read-only shared analytics view):
   - Renders the same `JiraHealthOverview` orchestrator used by supervisors.
   - Sub-tabs: Health, Sprint Progress (4 most recent), Team Workload, and Hierarchy.
-  - Fetches data via `GET /api/student/projects/{projectId}/jira/*` endpoints.
+  - Fetches data via `GET /api/v1/student/projects/{projectId}/jira/*` endpoints.
   - No manual refresh or connect/disconnect actions are exposed for students.
   - When Jira is not connected, displays a read-only empty state.
 - Meetings:
   - Inner sub-tabs use Jira-style pill navigation with `role="tablist"`:
     - `Channels`
     - `Records`
-  - `Channels` fetches and renders `GET /api/student/projects/{projectId}/meeting-channels`.
-  - Students can submit channels via `POST /api/student/projects/{projectId}/meeting-channels`.
+  - `Channels` fetches and renders `GET /api/v1/student/projects/{projectId}/meeting-channels`.
+  - Students can submit channels via `POST /api/v1/student/projects/{projectId}/meeting-channels`.
   - Student-submitted channels are shown as pending until supervisor approval.
   - No student edit/delete/approve actions are exposed.
-  - `Records` fetches and renders `GET /api/student/projects/{projectId}/meeting-records`.
-  - Students can submit records via `POST /api/student/projects/{projectId}/meeting-records`.
+  - `Records` fetches and renders `GET /api/v1/student/projects/{projectId}/meeting-records`.
+  - Students can submit records via `POST /api/v1/student/projects/{projectId}/meeting-records`.
   - Student-submitted records are shown as pending until supervisor approval.
   - Student records are view-only after submission (no edit/delete/approve actions are exposed).
 
 ### Files (student scope)
 
 - Data source:
-  - Primary seed from `GET /api/student/projects/{projectId}` via embedded `data.files`.
-  - Refresh/list endpoint: `GET /api/student/projects/{projectId}/files`.
+  - Primary seed from `GET /api/v1/student/projects/{projectId}` via embedded `data.files`.
+  - Refresh/list endpoint: `GET /api/v1/student/projects/{projectId}/files`.
 - Upload flow:
   - `POST /files/upload-url` -> direct S3 PUT -> `POST /files/confirm`.
   - On success, UI inserts returned file row without immediate list re-fetch.
@@ -175,7 +178,7 @@ Displays all cached Jira issues in an expandable tree grouped by Epic -> Story/T
 - Collapsed by default beyond depth 2.
 - Each node shows: issue type badge, issue key, summary, status pill, assignee, and story points.
 - "Unlinked Issues" section shows issues whose parent is outside the project's cache.
-- Source: `GET /api/student/projects/{projectId}/jira/hierarchy`
+- Source: `GET /api/v1/student/projects/{projectId}/jira/hierarchy`
 - Hook: `useStudentJiraHierarchy`
 - Components: `JiraHierarchyView`, `JiraHierarchyNode`, `JiraHierarchySkeleton`
 

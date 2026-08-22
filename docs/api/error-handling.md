@@ -1,5 +1,8 @@
 # Frontend API Response + Error Handling
 
+
+> **API version note:** Examples in this document use `v1`. At runtime the frontend version prefix comes from `VITE_API_VERSION`; feature code remains version-agnostic.
+
 This document describes how the frontend consumes the backend's standardized response envelope.
 
 Related:
@@ -18,7 +21,7 @@ Related:
   "error": null,
   "meta": {
     "timestamp": "...",
-    "path": "/api/...",
+    "path": "/api/v1/...",
     "traceId": null
   }
 }
@@ -38,7 +41,7 @@ Related:
   },
   "meta": {
     "timestamp": "...",
-    "path": "/api/...",
+    "path": "/api/v1/...",
     "traceId": null
   }
 }
@@ -71,12 +74,12 @@ Defined in `src/types/index.ts`:
 
 Implemented in `src/services/apiClient.ts`:
 
-- For **protected endpoints** (`/api/...` excluding `/api/auth/*`):
-  - first `401` -> attempt `POST /api/auth/refresh`
+- For **protected endpoints** (`/api/v1/...` excluding `/api/v1/auth/*`):
+  - first `401` -> attempt `POST /api/v1/auth/refresh`
   - if refresh succeeds -> retry original request once
   - if refresh fails -> clear auth state and redirect to `/login`
 
-- For **auth endpoints** (`/api/auth/*`):
+- For **auth endpoints** (`/api/v1/auth/*`):
   - `401` does **not** trigger refresh retry
   - examples: invalid login credentials, refresh endpoint failures
 
@@ -110,11 +113,11 @@ Updated tests in:
 Covered scenarios:
 - wrapped success parsing
 - wrapped error parsing
-- login failure (`/api/auth/login`) does not refresh
+- login failure (`/api/v1/auth/login`) does not refresh
 - validation error details mapping preservation
 - protected endpoint 401 refresh + retry
 - refresh failure path (clear auth + redirect flow)
-- no recursive refresh for `/api/auth/refresh`
+- no recursive refresh for `/api/v1/auth/refresh`
 
 ## 8) Blocking Error UX Contract
 
@@ -140,7 +143,7 @@ Shell-level behavior:
 
 ## 9) Registration Config Precondition
 
-Registration no longer opens with fallback defaults if `/api/auth/register/config` fails.
+Registration no longer opens with fallback defaults if `/api/v1/auth/register/config` fails.
 
 - Success: open registration panel with fetched config.
 - Failure: keep registration panel closed and show blocking modal.
@@ -148,6 +151,6 @@ Registration no longer opens with fallback defaults if `/api/auth/register/confi
 
 This behavior is implemented via:
 
-- `src/features/auth/api/authApi.ts`
+- `src/features/auth/api/v1/authApi.ts`
 - `src/features/landing/pages/LandingPage.tsx`
 - `src/features/auth/components/AuthModal.tsx`

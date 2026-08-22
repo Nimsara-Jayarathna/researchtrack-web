@@ -1,4 +1,5 @@
 import { env } from "@/app/config/env";
+import { toVersionedApiPath } from "@/app/config/apiVersion";
 import type { ApiError, ApiErrorBody, ApiMeta, ApiResponse } from "@/types";
 import { tokenStorage } from "./tokenStorage";
 import type { StoredUser } from "./tokenStorage";
@@ -43,12 +44,15 @@ type WrappedApiErrorResponse = {
  */
 async function tryRefresh(): Promise<boolean> {
   try {
-    const response = await fetch(`${env.apiBaseUrl}${REFRESH_PATH}`, {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({}),
-    });
+    const response = await fetch(
+      `${env.apiBaseUrl}${toVersionedApiPath(REFRESH_PATH)}`,
+      {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      },
+    );
     if (!response.ok) return false;
     const body = (await response.json()) as ApiResponse<{ user: StoredUser }>;
     if (body?.success && body?.data?.user) {
@@ -255,7 +259,8 @@ async function request<T>(
   let response: Response;
 
   try {
-    response = await fetch(`${env.apiBaseUrl}${path}`, {
+    const requestPath = toVersionedApiPath(path);
+    response = await fetch(`${env.apiBaseUrl}${requestPath}`, {
       ...init,
       signal: managed.signal,
       headers,
@@ -269,7 +274,7 @@ async function request<T>(
         error: "Client Closed Request",
         code: "INTERNAL_ERROR",
         message: "Request was cancelled.",
-        path,
+        path: toVersionedApiPath(path),
         traceId: null,
         details: [],
       });
@@ -283,7 +288,7 @@ async function request<T>(
       code: "SERVICE_UNAVAILABLE",
       message:
         "Unable to reach the server. Please check your connection and try again.",
-      path,
+      path: toVersionedApiPath(path),
       traceId: null,
       details: [],
     });
@@ -309,7 +314,7 @@ async function request<T>(
       error: "Unauthorized",
       code: "UNAUTHORIZED",
       message: "Your session has expired. Please log in again.",
-      path,
+      path: toVersionedApiPath(path),
       traceId: null,
       details: [],
     });
@@ -325,12 +330,16 @@ async function request<T>(
   if (!response.ok) {
     // Backend errors are wrapped in the standard response envelope.
     // Fall back safely for empty/non-JSON/proxy responses.
-    throw new ApiException(normalizeError(path, response, body));
+    throw new ApiException(
+      normalizeError(toVersionedApiPath(path), response, body),
+    );
   }
 
   if (hasApiEnvelopeShape(body)) {
     if (body.success === false) {
-      throw new ApiException(normalizeError(path, response, body));
+      throw new ApiException(
+        normalizeError(toVersionedApiPath(path), response, body),
+      );
     }
     return body.data as T;
   }

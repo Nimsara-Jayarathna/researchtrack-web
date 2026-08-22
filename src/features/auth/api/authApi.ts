@@ -78,14 +78,14 @@ export const authApi = {
         role: "SUPERVISOR",
       };
     }
-    return apiClient.post<RegisterResponse>(
-      REGISTRATION_BASE,
-      body,
-    );
+    return apiClient.post<RegisterResponse>(REGISTRATION_BASE, body);
   },
 
   async registerInit(body: { email: string }): Promise<{ message: string }> {
-    return apiClient.post<{ message: string }>(`${REGISTRATION_BASE}/init`, body);
+    return apiClient.post<{ message: string }>(
+      `${REGISTRATION_BASE}/init`,
+      body,
+    );
   },
 
   async registerVerify(body: {

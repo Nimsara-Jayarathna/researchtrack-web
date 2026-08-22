@@ -7,11 +7,7 @@ import type { UserRole } from "@/types/roles";
 import type { ProjectGitHubRepositories } from "./github.types";
 
 export type SupervisorProjectLifecycle =
-  | "PLANNING"
-  | "ACTIVE"
-  | "AT_RISK"
-  | "BEHIND"
-  | "COMPLETED";
+  "PLANNING" | "ACTIVE" | "AT_RISK" | "BEHIND" | "COMPLETED";
 
 export type SupervisorProjectSummary = {
   id: string;
@@ -91,12 +87,7 @@ export type SupervisorProjectDetail = {
 };
 
 export type SupervisorProjectTab =
-  | "overview"
-  | "team"
-  | "activity"
-  | "meetings"
-  | "action-items"
-  | "files";
+  "overview" | "team" | "activity" | "meetings" | "action-items" | "files";
 
 export type SupervisorProjectDetailTab =
   | "overview"

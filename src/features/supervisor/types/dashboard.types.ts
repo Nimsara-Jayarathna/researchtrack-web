@@ -17,11 +17,7 @@ export type SupervisorDashboardProjectItem = {
   lastActivityAt: string | null;
   progressPercent: number | null;
   jiraHealthIndicator:
-    | "AT_RISK"
-    | "BEHIND"
-    | "HEALTHY"
-    | "NOT_CONNECTED"
-    | null;
+    "AT_RISK" | "BEHIND" | "HEALTHY" | "NOT_CONNECTED" | null;
 };
 
 export type SupervisorDashboard = {

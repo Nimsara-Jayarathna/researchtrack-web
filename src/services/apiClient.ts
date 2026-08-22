@@ -147,10 +147,7 @@ function fallbackCode(status: number): ApiErrorCode {
   }
 }
 
-
-function normalizeBackendErrorCode(
-  code: BackendApiErrorCode,
-): ApiErrorCode {
+function normalizeBackendErrorCode(code: BackendApiErrorCode): ApiErrorCode {
   if (code === "RATE_LIMITED") return "TOO_MANY_REQUESTS";
   if (code === "DEPENDENCY_UNAVAILABLE") return "SERVICE_UNAVAILABLE";
   return code;

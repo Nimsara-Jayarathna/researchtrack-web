@@ -35,8 +35,7 @@ type SupervisorRegisterFormProps = RegisterFormCommonProps & {
 };
 
 export type RegisterFormProps =
-  | StudentRegisterFormProps
-  | SupervisorRegisterFormProps;
+  StudentRegisterFormProps | SupervisorRegisterFormProps;
 
 export function RegisterForm(props: RegisterFormProps) {
   const {

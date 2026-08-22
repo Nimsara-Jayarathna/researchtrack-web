@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import { clearInMemoryAuthState, setAuthenticatedUser } from "@/features/auth/state/authState";
+import {
+  clearInMemoryAuthState,
+  setAuthenticatedUser,
+} from "@/features/auth/state/authState";
 import { RequireRole } from "./route-guards";
 
 function renderSupervisorRoute() {

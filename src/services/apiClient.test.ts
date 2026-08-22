@@ -187,7 +187,6 @@ describe("apiClient ResearchTrack .NET contract", () => {
     expect(fetch).toHaveBeenCalledTimes(1);
   });
 
-
   it("refreshes once and retries a protected request after access-token expiry", async () => {
     vi.mocked(fetch)
       .mockResolvedValueOnce(
@@ -217,7 +216,9 @@ describe("apiClient ResearchTrack .NET contract", () => {
         jsonResponse(200, successEnvelope({ id: "project-1" })),
       );
 
-    const result = await apiClient.get<{ id: string }>("/api/v1/projects/project-1");
+    const result = await apiClient.get<{ id: string }>(
+      "/api/v1/projects/project-1",
+    );
 
     expect(result).toEqual({ id: "project-1" });
     expect(fetch).toHaveBeenCalledTimes(3);
@@ -252,9 +253,9 @@ describe("apiClient ResearchTrack .NET contract", () => {
         ),
       );
 
-    await expect(apiClient.get("/api/v1/projects/project-1")).rejects.toMatchObject<
-      ApiException
-    >({
+    await expect(
+      apiClient.get("/api/v1/projects/project-1"),
+    ).rejects.toMatchObject<ApiException>({
       apiError: expect.objectContaining({
         status: 401,
         code: "UNAUTHORIZED",

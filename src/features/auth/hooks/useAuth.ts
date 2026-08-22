@@ -78,10 +78,15 @@ export function useAuth() {
       // Revoke the refresh token and clear both httpOnly cookies on the server first.
       await authApi.logout();
     } finally {
-      if (!isCurrentSession(sessionAtStart)) return;
-      resetSessionState();
-      navigate("/", { replace: true });
+      setAuthLoading(false);
     }
+
+    if (!isCurrentSession(sessionAtStart)) {
+      return;
+    }
+
+    resetSessionState();
+    navigate("/", { replace: true });
   }
 
   function clearError(): void {

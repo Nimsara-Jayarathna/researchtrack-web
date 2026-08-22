@@ -72,7 +72,7 @@ Defined in `src/types/index.ts`:
 Implemented in `src/services/apiClient.ts`:
 
 - For **protected endpoints** (`/api/...` excluding `/api/auth/*`):
-  - first `401` -> attempt `POST /api/auth/refresh`
+  - first `401` -> attempt `POST /api/v1/auth/refresh`
   - if refresh succeeds -> retry original request once
   - if refresh fails -> clear auth state and redirect to `/login`
 
@@ -110,11 +110,11 @@ Updated tests in:
 Covered scenarios:
 - wrapped success parsing
 - wrapped error parsing
-- login failure (`/api/auth/login`) does not refresh
+- login failure (`/api/v1/auth/login`) does not refresh
 - validation error details mapping preservation
 - protected endpoint 401 refresh + retry
 - refresh failure path (clear auth + redirect flow)
-- no recursive refresh for `/api/auth/refresh`
+- no recursive refresh for `/api/v1/auth/refresh`
 
 ## 8) Blocking Error UX Contract
 

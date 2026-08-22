@@ -1,4 +1,5 @@
 import { env } from "@/app/config/env";
+import { toVersionedApiPath } from "@/app/config/apiVersion";
 import type {
   ApiError,
   ApiErrorBody,
@@ -26,11 +27,21 @@ export function isApiException(error: unknown): error is ApiException {
   return error instanceof ApiException;
 }
 
-// Story 2 will migrate these authentication endpoints to /api/v1/auth/*.
-// Registration is already canonical, so both prefixes are treated as public
-// auth endpoints to avoid an incorrect refresh attempt on registration 401s.
-const REFRESH_PATH = "/api/auth/refresh";
-const AUTH_PATH_PREFIXES = ["/api/auth/", "/api/v1/auth/"] as const;
+const AUTH_BASE = toVersionedApiPath("/api/auth");
+const REFRESH_PATH = `${AUTH_BASE}/refresh`;
+
+// These endpoints must never trigger a refresh loop. /me is intentionally not
+// included: a 401 from /me should attempt refresh once, then retry /me.
+function isRefreshExcludedPath(path: string): boolean {
+  return (
+    path === `${AUTH_BASE}/login` ||
+    path === REFRESH_PATH ||
+    path === `${AUTH_BASE}/logout` ||
+    path.startsWith(`${AUTH_BASE}/register`) ||
+    path.startsWith("/api/auth/forgot-password") ||
+    path.startsWith("/api/auth/reset-password")
+  );
+}
 let inFlightRefresh: Promise<boolean> | null = null;
 
 async function tryRefresh(): Promise<boolean> {
@@ -60,10 +71,6 @@ async function tryRefreshSingleFlight(): Promise<boolean> {
     inFlightRefresh = null;
   });
   return inFlightRefresh;
-}
-
-function isAuthEndpoint(path: string): boolean {
-  return AUTH_PATH_PREFIXES.some((prefix) => path.startsWith(prefix));
 }
 
 async function parseJsonSafely(response: Response): Promise<unknown | null> {
@@ -248,13 +255,12 @@ async function request<T>(
     managed.release();
   }
 
-  if (response.status === 401 && !isAuthEndpoint(path) && !isRetry) {
+  if (response.status === 401 && !isRefreshExcludedPath(path) && !isRetry) {
     const refreshed = await tryRefreshSingleFlight();
     if (refreshed) return request<T>(path, init, true);
 
     beginSessionTransition("session-expired");
     resetSessionState();
-    window.location.href = "/login";
     throw new ApiException({
       timestamp: new Date().toISOString(),
       status: 401,

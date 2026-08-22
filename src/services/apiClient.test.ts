@@ -6,7 +6,7 @@ const beginSessionTransition = vi.hoisted(() => vi.fn());
 const resetSessionState = vi.hoisted(() => vi.fn());
 
 vi.mock("@/app/config/env", () => ({
-  env: { apiBaseUrl: "http://localhost:8081" },
+  env: { apiBaseUrl: "http://localhost:8081", apiVersion: "v1" },
 }));
 
 vi.mock("@/services/tokenStorage", () => ({
@@ -160,7 +160,7 @@ describe("apiClient ResearchTrack .NET contract", () => {
     expect(fetch).toHaveBeenCalledTimes(1);
   });
 
-  it("still treats not-yet-migrated auth endpoints as public until Story 2", async () => {
+  it("does not attempt refresh when canonical login itself returns 401", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
       jsonResponse(
         401,
@@ -172,7 +172,7 @@ describe("apiClient ResearchTrack .NET contract", () => {
     );
 
     await expect(
-      apiClient.post("/api/auth/login", {
+      apiClient.post("/api/v1/auth/login", {
         email: "wrong@example.com",
         password: "wrong",
       }),
@@ -185,6 +185,86 @@ describe("apiClient ResearchTrack .NET contract", () => {
     } as ApiException);
 
     expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("refreshes once and retries a protected request after access-token expiry", async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(
+        jsonResponse(
+          401,
+          errorEnvelope({
+            code: "UNAUTHORIZED",
+            message: "Authentication is required.",
+          }),
+        ),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse(
+          200,
+          successEnvelope({
+            user: {
+              id: "user-id",
+              email: "student@my.sliit.lk",
+              firstName: "Student",
+              lastName: "User",
+              role: "STUDENT",
+            },
+          }),
+        ),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse(200, successEnvelope({ id: "project-1" })),
+      );
+
+    const result = await apiClient.get<{ id: string }>(
+      "/api/v1/projects/project-1",
+    );
+
+    expect(result).toEqual({ id: "project-1" });
+    expect(fetch).toHaveBeenCalledTimes(3);
+    expect(fetch).toHaveBeenNthCalledWith(
+      2,
+      "http://localhost:8081/api/v1/auth/refresh",
+      expect.objectContaining({ method: "POST", credentials: "include" }),
+    );
+    expect(setUser).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "user-id", role: "STUDENT" }),
+    );
+  });
+
+  it("clears the local session when refresh fails for a protected request", async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(
+        jsonResponse(
+          401,
+          errorEnvelope({
+            code: "UNAUTHORIZED",
+            message: "Authentication is required.",
+          }),
+        ),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse(
+          401,
+          errorEnvelope({
+            code: "UNAUTHORIZED",
+            message: "Authentication session is invalid or has expired.",
+          }),
+        ),
+      );
+
+    await expect(
+      apiClient.get("/api/v1/projects/project-1"),
+    ).rejects.toMatchObject<ApiException>({
+      apiError: expect.objectContaining({
+        status: 401,
+        code: "UNAUTHORIZED",
+        message: "Your session has expired. Please log in again.",
+      }),
+    } as ApiException);
+
+    expect(beginSessionTransition).toHaveBeenCalledWith("session-expired");
+    expect(resetSessionState).toHaveBeenCalledTimes(1);
   });
 
   it("rejects 2xx responses that do not use the .NET envelope", async () => {

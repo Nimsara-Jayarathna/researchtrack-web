@@ -1,7 +1,7 @@
 // Tokens are now delivered as httpOnly cookies by the backend and are
 // invisible to JavaScript. This module only persists the user profile,
-// which is needed to rehydrate UI state (role-based routing, display name)
-// across page reloads without making an extra API call.
+// which is a non-sensitive UI cache only. The server-side /me endpoint remains
+// the source of truth for authentication after every page bootstrap.
 const USER_KEY = "ss_user";
 
 /**
@@ -17,7 +17,7 @@ export type StoredUser = {
 };
 
 export const tokenStorage = {
-  // User profile — cached to rehydrate auth state on page reload.
+  // User profile — non-sensitive UI cache only; never treated as proof of auth.
   // This is the only piece of auth data the frontend stores; tokens live
   // exclusively in httpOnly cookies managed by the browser.
   getUser: (): StoredUser | null => {

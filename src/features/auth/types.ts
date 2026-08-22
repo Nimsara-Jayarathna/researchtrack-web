@@ -9,7 +9,7 @@ export type AuthUser = {
   lastName: string;
 };
 
-/** POST /api/auth/login request body */
+/** POST /api/v1/auth/login request body */
 export type LoginRequest = {
   email: string;
   password: string;

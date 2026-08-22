@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 import type { ApiError } from "@/types";
-import { tokenStorage, type StoredUser } from "@/services/tokenStorage";
+import type { StoredUser } from "@/services/tokenStorage";
 
 export type AuthStatus = "bootstrapping" | "authenticated" | "unauthenticated";
 
@@ -21,9 +21,7 @@ let state: AuthState = {
 const listeners = new Set<() => void>();
 
 function emit(): void {
-  for (const listener of listeners) {
-    listener();
-  }
+  for (const listener of listeners) listener();
 }
 
 function update(next: AuthState): void {
@@ -31,30 +29,13 @@ function update(next: AuthState): void {
   emit();
 }
 
-function bootstrapIfNeeded(): void {
-  if (state.status !== "bootstrapping") {
-    return;
-  }
-
-  const user = tokenStorage.getUser();
-  state = {
-    status: user ? "authenticated" : "unauthenticated",
-    user,
-    isLoading: false,
-    error: null,
-  };
-}
-
 export function getAuthState(): AuthState {
-  bootstrapIfNeeded();
   return state;
 }
 
 export function subscribeAuthState(listener: () => void): () => void {
   listeners.add(listener);
-  return () => {
-    listeners.delete(listener);
-  };
+  return () => listeners.delete(listener);
 }
 
 export function useAuthStateValue(): AuthState {
@@ -62,18 +43,16 @@ export function useAuthStateValue(): AuthState {
 }
 
 export function setAuthLoading(isLoading: boolean): void {
-  const current = getAuthState();
   update({
-    ...current,
+    ...state,
     isLoading,
-    error: isLoading ? null : current.error,
+    error: isLoading ? null : state.error,
   });
 }
 
 export function setAuthError(error: ApiError | null): void {
-  const current = getAuthState();
   update({
-    ...current,
+    ...state,
     isLoading: false,
     error,
   });

@@ -1,8 +1,5 @@
 # Auth Feature
 
-
-> **API version note:** Examples in this document use `v1`. At runtime the frontend version prefix comes from `VITE_API_VERSION`; feature code remains version-agnostic.
-
 Handles login, email-verified registration, session persistence, and route protection.
 
 ## Current Architecture Note
@@ -22,10 +19,10 @@ Current registration orchestration centers around:
 
 Current backend contract used by frontend:
 
-- `GET /api/v1/auth/register/config`
-- `POST /api/v1/auth/register/init`
-- `POST /api/v1/auth/register/verify`
-- `POST /api/v1/auth/register/complete`
+- `GET /api/auth/register/config`
+- `POST /api/auth/register/init`
+- `POST /api/auth/register/verify`
+- `POST /api/auth/register/complete`
 
 Registration only opens after config is fetched successfully; config failure uses blocking modal UX.
 
@@ -204,7 +201,7 @@ const { user, isLoading, error, login, register, logout, clearError } = useAuth(
 | `error` | `ApiError \| null` | Last error from login/register; cleared by `clearError()` or a new submission |
 | `login(body)` | `Promise<void>` | Submits credentials; stores user profile in `localStorage`; navigates to role home on success. Tokens are set as httpOnly cookies by the backend — never touched by JS. |
 | `register(body)` | `Promise<void>` | Submits registration; navigates to `/login` on success — no session created on registration |
-| `logout()` | `Promise<void>` | Calls `POST /api/v1/auth/logout` to revoke the refresh token server-side; clears `localStorage`; navigates to `/` |
+| `logout()` | `Promise<void>` | Calls `POST /api/auth/logout` to revoke the refresh token server-side; clears `localStorage`; navigates to `/` |
 | `clearError()` | `void` | Resets `error` to `null` |
 
 ### Post-auth navigation
@@ -254,7 +251,7 @@ const { register, isLoading, isSuccess, error, clearError } = useSupervisorRegis
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `register(body)` | `Promise<void>` | Posts `SupervisorRegisterRequest` to `/api/v1/auth/register/supervisor` |
+| `register(body)` | `Promise<void>` | Posts `SupervisorRegisterRequest` to `/api/auth/register/supervisor` |
 | `isLoading` | `boolean` | True while the request is in flight |
 | `isSuccess` | `boolean` | True after successful registration until redirect |
 | `error` | `ApiError \| null` | Last error from the registration request |
@@ -285,7 +282,7 @@ Pure, stateless validation utilities extracted from `RegisterForm` (Single Respo
 
 ---
 
-## API — `authApi` (`src/features/auth/api/v1/authApi.ts`)
+## API — `authApi` (`src/features/auth/api/authApi.ts`)
 
 Thin wrapper around `apiClient`. Toggle `USE_MOCK` to switch between mock and real backend.
 
@@ -310,11 +307,11 @@ await authApi.logout();
 
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | `/api/v1/auth/login` | Authenticate; returns user profile; sets `ss_access_token` + `ss_refresh_token` httpOnly cookies |
-| POST | `/api/v1/auth/register` | Create student account; returns user profile; no session created |
-| POST | `/api/v1/auth/register/supervisor` | Create supervisor account; returns user profile with `role=SUPERVISOR`; no session created |
-| POST | `/api/v1/auth/refresh` | Exchange refresh cookie for new token pair; returns updated user profile |
-| POST | `/api/v1/auth/logout` | Revoke refresh token; clear both cookies (`Max-Age=0`) |
+| POST | `/api/auth/login` | Authenticate; returns user profile; sets `ss_access_token` + `ss_refresh_token` httpOnly cookies |
+| POST | `/api/auth/register` | Create student account; returns user profile; no session created |
+| POST | `/api/auth/register/supervisor` | Create supervisor account; returns user profile with `role=SUPERVISOR`; no session created |
+| POST | `/api/auth/refresh` | Exchange refresh cookie for new token pair; returns updated user profile |
+| POST | `/api/auth/logout` | Revoke refresh token; clear both cookies (`Max-Age=0`) |
 
 ### Mock mode
 
@@ -354,7 +351,7 @@ type StoredUser = {
 | Data | Storage | Readable by JS? |
 |------|---------|----------------|
 | `ss_access_token` JWT | `HttpOnly` cookie (`Path=/api`) | No |
-| `ss_refresh_token` | `HttpOnly` cookie (`Path=/api/v1/auth`) | No |
+| `ss_refresh_token` | `HttpOnly` cookie (`Path=/api/auth`) | No |
 | User profile (`ss_user`) | `localStorage` | Yes |
 
 The user profile in `localStorage` contains only non-sensitive display data (name, email, role). It is used solely to rehydrate UI state on page reload — never for authorization decisions. All real authorization is enforced by the backend.
@@ -397,11 +394,11 @@ This is a **UI-only** boundary. The backend enforces role-based access on every 
 |------|-------------|
 | `UserRole` | `'SUPERVISOR' \| 'STUDENT'` |
 | `AuthUser` | Authenticated user profile — `id`, `email`, `role`, `firstName`, `lastName` |
-| `LoginRequest` | POST `/api/v1/auth/login` body |
-| `RegisterRequest` | POST `/api/v1/auth/register` body — `role` intentionally excluded (server always assigns `STUDENT`) |
-| `SupervisorRegisterRequest` | POST `/api/v1/auth/register/supervisor` body — no `registrationNumber` |
+| `LoginRequest` | POST `/api/auth/login` body |
+| `RegisterRequest` | POST `/api/auth/register` body — `role` intentionally excluded (server always assigns `STUDENT`) |
+| `SupervisorRegisterRequest` | POST `/api/auth/register/supervisor` body — no `registrationNumber` |
 | `RegisterResponse` | POST register success for student/supervisor — public profile; `registrationNumber` may be `null` for supervisor |
-| `LoginResponse` | POST `/api/v1/auth/login` and POST `/api/v1/auth/refresh` success — `{ user: AuthUser }`. Tokens are not included; they are delivered as `HttpOnly` cookies. |
+| `LoginResponse` | POST `/api/auth/login` and POST `/api/auth/refresh` success — `{ user: AuthUser }`. Tokens are not included; they are delivered as `HttpOnly` cookies. |
 
 ---
 
@@ -410,11 +407,11 @@ This is a **UI-only** boundary. The backend enforces role-based access on every 
 All auth endpoints are live (`USE_MOCK = false`).
 
 - `VITE_API_BASE_URL` in `.env` must point to the running backend (default: `http://localhost:8081`)
-- `POST /api/v1/auth/register` → creates student account, returns user profile; no session created
-- `POST /api/v1/auth/register/supervisor` → creates supervisor account, returns user profile; no session created
-- `POST /api/v1/auth/login` → authenticates user, returns user profile; sets `ss_access_token` and `ss_refresh_token` as `HttpOnly; Secure; SameSite=Strict` cookies
-- `POST /api/v1/auth/refresh` → silently rotates token pair; called automatically by the `apiClient` 401 interceptor
-- `POST /api/v1/auth/logout` → revokes refresh token in the database; clears both cookies via `Max-Age=0`
+- `POST /api/auth/register` → creates student account, returns user profile; no session created
+- `POST /api/auth/register/supervisor` → creates supervisor account, returns user profile; no session created
+- `POST /api/auth/login` → authenticates user, returns user profile; sets `ss_access_token` and `ss_refresh_token` as `HttpOnly; Secure; SameSite=Strict` cookies
+- `POST /api/auth/refresh` → silently rotates token pair; called automatically by the `apiClient` 401 interceptor
+- `POST /api/auth/logout` → revokes refresh token in the database; clears both cookies via `Max-Age=0`
 
 ### Session flow
 
@@ -423,15 +420,15 @@ login         → backend sets ss_access_token (15 min) + ss_refresh_token (7 da
                 frontend stores user profile in localStorage only
 
 API request   → browser automatically sends ss_access_token cookie (Path=/api)
-401 received  → apiClient calls POST /api/v1/auth/refresh automatically (once)
+401 received  → apiClient calls POST /api/auth/refresh automatically (once)
                 on success: retries original request transparently
                 on failure: clears localStorage, redirects to /login
 
-auth endpoint 401 (e.g. /api/v1/auth/login, /api/v1/auth/refresh)
+auth endpoint 401 (e.g. /api/auth/login, /api/auth/refresh)
               → apiClient does NOT attempt refresh retry
                 login failures surface backend message directly (e.g. "Invalid email or password.")
 
-logout        → POST /api/v1/auth/logout revokes refresh token + sets Max-Age=0 on both cookies
+logout        → POST /api/auth/logout revokes refresh token + sets Max-Age=0 on both cookies
                 frontend clears localStorage, navigates to /
 ```
 
@@ -442,6 +439,6 @@ To restore mock mode for offline development, set `USE_MOCK = true` in `authApi.
 | Cookie | Path | Max-Age | HttpOnly | Secure | SameSite |
 |--------|------|---------|----------|--------|----------|
 | `ss_access_token` | `/api` | 900 s (15 min) | Yes | Yes\* | Strict |
-| `ss_refresh_token` | `/api/v1/auth` | 604800 s (7 days) | Yes | Yes\* | Strict |
+| `ss_refresh_token` | `/api/auth` | 604800 s (7 days) | Yes | Yes\* | Strict |
 
 \* `Secure` is `false` in the dev Spring profile so cookies work over plain HTTP locally (see `application-dev.yaml`). Must be `true` in production.

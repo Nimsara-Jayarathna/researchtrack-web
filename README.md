@@ -18,10 +18,7 @@ Current scope covers the public landing flow, auth screens, student workspace, a
 
 Default example:
 
-```env
-VITE_API_BASE_URL=http://localhost:5000
-VITE_API_VERSION=v1
-```
+`VITE_API_BASE_URL=http://localhost:5000`
 
 GitHub App setup/install links are now backend-managed via `GITHUB_APP_INSTALL_URL`
 in the backend environment.
@@ -29,15 +26,14 @@ in the backend environment.
 Local auth/refresh reliability notes:
 
 - Ensure the backend gateway runs on `http://localhost:5000` and frontend `VITE_API_BASE_URL` points to that gateway origin.
-- Set `VITE_API_VERSION` to the API contract exposed by the gateway/backend, for example `v1`.
 - Ensure backend `CORS_ALLOWED_ORIGINS=http://localhost:5173`.
 - Use `localhost` consistently in FE and BE (do not mix with `127.0.0.1`).
 
 Docker/CI note:
 
-- Pass both `VITE_API_BASE_URL` and `VITE_API_VERSION` as build arguments.
+- Pass `VITE_API_BASE_URL` as a single build argument.
 - Example:
-  `docker build --build-arg VITE_API_BASE_URL=https://stg.researchtrack.blipzo.xyz --build-arg VITE_API_VERSION=v1 .`
+  `docker build --build-arg VITE_API_BASE_URL=https://stg.researchtrack.blipzo.xyz .`
 - FE container-level gzip compression is configured in `nginx.conf` for text assets (`gzip_min_length 1024`).
 - If Nginx Proxy Manager also applies compression, keep only one compression layer active to avoid redundant work.
 
@@ -45,26 +41,6 @@ Docker/CI note:
 
 1. `npm ci`
 2. `npm run dev`
-
-## API versioning
-
-Both the gateway origin and API contract version are environment-controlled:
-
-```env
-VITE_API_BASE_URL=http://localhost:5000
-VITE_API_VERSION=v1
-```
-
-Feature modules remain version-agnostic and use logical paths such as `/api/auth/register`. The shared API client inserts `VITE_API_VERSION` at the network boundary, so the actual request becomes:
-
-```text
-http://localhost:5000/api/v1/auth/register
-```
-
-`VITE_API_VERSION` must use the form `v<number>` (for example `v1` or `v2`). The application validates it during Vite startup/build and again in runtime configuration. Feature code must not hard-code `/api/v1/...` or any other versioned path.
-
-Changing API version therefore requires only environment/deployment configuration, while the React feature code remains unchanged. The configured version must still match a version actually exposed by the gateway/backend.
-
 
 ## Scripts
 

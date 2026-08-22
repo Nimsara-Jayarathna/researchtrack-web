@@ -1,8 +1,5 @@
 # Supervisor Feature
 
-
-> **API version note:** Examples in this document use `v1`. At runtime the frontend version prefix comes from `VITE_API_VERSION`; feature code remains version-agnostic.
-
 Supervisor workspace for dashboard monitoring, project listing, project creation, and project detail management.
 
 Related major-fixes doc: `docs/branches/major-fixes-scrum-97-supervisor-ui-workflow.md`
@@ -37,53 +34,53 @@ Global legacy aliases (`/dashboard`, `/project`, `/project/new`, `/projects/:pro
 
 Supervisor feature currently uses these APIs:
 
-- `GET /api/v1/supervisor/dashboard`
-- `GET /api/v1/supervisor/projects`
-- `GET /api/v1/supervisor/projects/{projectId}`
-- `GET /api/v1/supervisor/projects/{projectId}/github`
-- `GET /api/v1/supervisor/projects/{projectId}/github/activity?page=...&size=...`
-- `GET /api/v1/supervisor/projects/{projectId}/github/contributors?page=...&size=...`
-- `GET /api/v1/supervisor/projects/{projectId}/github/installations/{installationId}/repositories?page=...&size=...`
-- `POST /api/v1/supervisor/projects/{projectId}/github/link`
-- `POST /api/v1/supervisor/projects/{projectId}/github/access/remove`
-- `POST /api/v1/supervisor/projects/{projectId}/github/access-requests`
-- `GET /api/v1/supervisor/projects/{projectId}/github/access-requests/validate?token=...`
-- `POST /api/v1/supervisor/projects/{projectId}/github/access-requests/continue?token=...`
-- `POST /api/v1/supervisor/projects/{projectId}/github/refresh`
-- `GET /api/v1/supervisor/projects/{projectId}/jira/auth-url`
-- `POST /api/v1/supervisor/jira/oauth/complete`
-- `POST /api/v1/supervisor/projects/{projectId}/jira/disconnect`
-- `GET /api/v1/supervisor/projects/{projectId}/jira/health`
-- `GET /api/v1/supervisor/projects/{projectId}/jira/workload`
-- `GET /api/v1/supervisor/projects/{projectId}/jira/hierarchy`
-- `POST /api/v1/supervisor/projects/{projectId}/jira/refresh`
-- `GET /api/v1/supervisor/projects/{projectId}/meeting-channels`
-- `POST /api/v1/supervisor/projects/{projectId}/meeting-channels`
-- `PATCH /api/v1/supervisor/projects/{projectId}/meeting-channels/{channelId}`
-- `DELETE /api/v1/supervisor/projects/{projectId}/meeting-channels/{channelId}`
-- `POST /api/v1/supervisor/projects/{projectId}/meeting-channels/{channelId}/approve`
-- `GET /api/v1/supervisor/projects/{projectId}/meeting-records`
-- `POST /api/v1/supervisor/projects/{projectId}/meeting-records`
-- `PATCH /api/v1/supervisor/projects/{projectId}/meeting-records/{recordId}`
-- `DELETE /api/v1/supervisor/projects/{projectId}/meeting-records/{recordId}`
-- `POST /api/v1/supervisor/projects/{projectId}/meeting-records/{recordId}/approve`
-- `GET /api/v1/supervisor/projects/{projectId}/files`
-- `POST /api/v1/supervisor/projects/{projectId}/files/upload-url`
-- `POST /api/v1/supervisor/projects/{projectId}/files/confirm`
-- `GET /api/v1/supervisor/projects/{projectId}/files/{fileId}/download-url`
-- `DELETE /api/v1/supervisor/projects/{projectId}/files/{fileId}`
-- `GET /api/v1/github/access-requests/validate?token=...`
-- `POST /api/v1/github/access-requests/continue?token=...`
-- `GET /api/v1/github/access-updated/summary?token=...`
-- `POST /api/v1/github/access-updated/acknowledge?token=...`
-- `GET /api/v1/supervisor/students/search?q=...`
-- `POST /api/v1/supervisor/projects`
-- `PATCH /api/v1/supervisor/projects/{projectId}`
-- `PATCH /api/v1/supervisor/projects/{projectId}/status`
-- `PATCH /api/v1/supervisor/projects/{projectId}/repository`
-- `POST /api/v1/supervisor/projects/{projectId}/members`
-- `POST /api/v1/supervisor/projects/{projectId}/milestones`
-- `PATCH /api/v1/supervisor/projects/{projectId}/milestones/{milestoneId}`
+- `GET /api/supervisor/dashboard`
+- `GET /api/supervisor/projects`
+- `GET /api/supervisor/projects/{projectId}`
+- `GET /api/supervisor/projects/{projectId}/github`
+- `GET /api/supervisor/projects/{projectId}/github/activity?page=...&size=...`
+- `GET /api/supervisor/projects/{projectId}/github/contributors?page=...&size=...`
+- `GET /api/supervisor/projects/{projectId}/github/installations/{installationId}/repositories?page=...&size=...`
+- `POST /api/supervisor/projects/{projectId}/github/link`
+- `POST /api/supervisor/projects/{projectId}/github/access/remove`
+- `POST /api/supervisor/projects/{projectId}/github/access-requests`
+- `GET /api/supervisor/projects/{projectId}/github/access-requests/validate?token=...`
+- `POST /api/supervisor/projects/{projectId}/github/access-requests/continue?token=...`
+- `POST /api/supervisor/projects/{projectId}/github/refresh`
+- `GET /api/supervisor/projects/{projectId}/jira/auth-url`
+- `POST /api/supervisor/jira/oauth/complete`
+- `POST /api/supervisor/projects/{projectId}/jira/disconnect`
+- `GET /api/supervisor/projects/{projectId}/jira/health`
+- `GET /api/supervisor/projects/{projectId}/jira/workload`
+- `GET /api/supervisor/projects/{projectId}/jira/hierarchy`
+- `POST /api/supervisor/projects/{projectId}/jira/refresh`
+- `GET /api/supervisor/projects/{projectId}/meeting-channels`
+- `POST /api/supervisor/projects/{projectId}/meeting-channels`
+- `PATCH /api/supervisor/projects/{projectId}/meeting-channels/{channelId}`
+- `DELETE /api/supervisor/projects/{projectId}/meeting-channels/{channelId}`
+- `POST /api/supervisor/projects/{projectId}/meeting-channels/{channelId}/approve`
+- `GET /api/supervisor/projects/{projectId}/meeting-records`
+- `POST /api/supervisor/projects/{projectId}/meeting-records`
+- `PATCH /api/supervisor/projects/{projectId}/meeting-records/{recordId}`
+- `DELETE /api/supervisor/projects/{projectId}/meeting-records/{recordId}`
+- `POST /api/supervisor/projects/{projectId}/meeting-records/{recordId}/approve`
+- `GET /api/supervisor/projects/{projectId}/files`
+- `POST /api/supervisor/projects/{projectId}/files/upload-url`
+- `POST /api/supervisor/projects/{projectId}/files/confirm`
+- `GET /api/supervisor/projects/{projectId}/files/{fileId}/download-url`
+- `DELETE /api/supervisor/projects/{projectId}/files/{fileId}`
+- `GET /api/github/access-requests/validate?token=...`
+- `POST /api/github/access-requests/continue?token=...`
+- `GET /api/github/access-updated/summary?token=...`
+- `POST /api/github/access-updated/acknowledge?token=...`
+- `GET /api/supervisor/students/search?q=...`
+- `POST /api/supervisor/projects`
+- `PATCH /api/supervisor/projects/{projectId}`
+- `PATCH /api/supervisor/projects/{projectId}/status`
+- `PATCH /api/supervisor/projects/{projectId}/repository`
+- `POST /api/supervisor/projects/{projectId}/members`
+- `POST /api/supervisor/projects/{projectId}/milestones`
+- `PATCH /api/supervisor/projects/{projectId}/milestones/{milestoneId}`
 
 ---
 
@@ -121,7 +118,7 @@ Supervisor feature currently uses these APIs:
 | `src/features/supervisor/components/SupervisorProjectCard.tsx` | Clickable summary card (full-card navigation) with compact status/progress layout |
 | `src/features/supervisor/components/SupervisorProjectCardSkeleton.tsx` | List loading placeholder |
 | `src/features/supervisor/components/ProjectDetailsSkeleton.tsx` | Detail loading placeholder |
-| `src/features/supervisor/api/v1/supervisorApi.ts` | Supervisor API client for read + mutation endpoints |
+| `src/features/supervisor/api/supervisorApi.ts` | Supervisor API client for read + mutation endpoints |
 | `src/features/supervisor/hooks/useJiraHealth.ts` | Shared Jira health hook used by supervisor/student Jira views |
 | `src/features/supervisor/hooks/useJiraWorkload.ts` | Scalable workload analytics hook with support for imbalances and estimates |
 | `src/features/supervisor/hooks/useSupervisorDashboard.ts` | Dashboard hook with loading/error/retry |
@@ -138,7 +135,7 @@ Supervisor feature currently uses these APIs:
 ### Data source
 
 - Uses `useSupervisorDashboard`
-- Calls `GET /api/v1/supervisor/dashboard`
+- Calls `GET /api/supervisor/dashboard`
 
 ### Current behavior
 
@@ -168,7 +165,7 @@ Supervisor feature currently uses these APIs:
 ### Data source
 
 - Uses `useSupervisorProjects`
-- Calls `GET /api/v1/supervisor/projects`
+- Calls `GET /api/supervisor/projects`
 
 ### Card behavior
 
@@ -200,13 +197,13 @@ Supervisor feature currently uses these APIs:
 ### Student lookup flow
 
 - Search after 3+ characters
-- Calls `GET /api/v1/supervisor/students/search?q=...`
+- Calls `GET /api/supervisor/students/search?q=...`
 - Shows full name, email, registration number
 - Prevents duplicate selection
 
 ### Submit flow
 
-- Calls `POST /api/v1/supervisor/projects`
+- Calls `POST /api/supervisor/projects`
 - On success:
   - shows success modal
   - invalidates project list cache
@@ -224,7 +221,7 @@ Supervisor feature currently uses these APIs:
 ### Data source
 
 - Uses `useSupervisorProject`
-- Calls `GET /api/v1/supervisor/projects/{projectId}`
+- Calls `GET /api/supervisor/projects/{projectId}`
 
 ### Tabs
 
@@ -240,8 +237,8 @@ Supervisor feature currently uses these APIs:
 ### Files tab: attachment management
 
 - Data source:
-  - Primary seed from `GET /api/v1/supervisor/projects/{projectId}` via embedded `data.files`.
-  - Refresh/list endpoint: `GET /api/v1/supervisor/projects/{projectId}/files`.
+  - Primary seed from `GET /api/supervisor/projects/{projectId}` via embedded `data.files`.
+  - Refresh/list endpoint: `GET /api/supervisor/projects/{projectId}/files`.
 - Upload flow:
   - `POST /files/upload-url` -> direct S3 PUT -> `POST /files/confirm`.
   - On success, UI inserts returned file row without forcing an immediate list re-fetch.
@@ -257,7 +254,7 @@ Supervisor feature currently uses these APIs:
 ### Header status control
 
 - Lifecycle status is editable from the top chip row dropdown.
-- Calls `PATCH /api/v1/supervisor/projects/{projectId}/status`.
+- Calls `PATCH /api/supervisor/projects/{projectId}/status`.
 - On failure, UI reverts to previous status and shows inline error.
 
 ### Overview tab: core edit mode
@@ -270,7 +267,7 @@ Supervisor feature currently uses these APIs:
   - semester
   - lifecycle status
   - health note
-- Save calls `PATCH /api/v1/supervisor/projects/{projectId}`.
+- Save calls `PATCH /api/supervisor/projects/{projectId}`.
 - Cancel resets form to latest loaded data.
 
 ### Overview tab: GitHub repository link management
@@ -281,10 +278,10 @@ Supervisor feature currently uses these APIs:
   - Step 2: show only relevant content for selected method
 - Repository URL method:
   - validates `https://github.com/{owner}/{repo}`
-  - saves via `PATCH /api/v1/supervisor/projects/{projectId}/repository`
+  - saves via `PATCH /api/supervisor/projects/{projectId}/repository`
 - GitHub App method:
   - `Connect GitHub App` redirects to backend start endpoint:
-    - `GET /api/v1/supervisor/projects/{projectId}/github/setup/start`
+    - `GET /api/supervisor/projects/{projectId}/github/setup/start`
     - backend generates project-aware `state` and redirects to GitHub install URL
   - `Request More Repository Access` creates short-lived project-scoped request link
   - modal success shows copyable access-request link (no direct auto-open)
@@ -293,12 +290,12 @@ Supervisor feature currently uses these APIs:
   - `Configure repository` opens explicit repository selection
   - `Remove access linkage` clears project-level authorization + cached linkage
 - Repository selection step:
-  - loads via `GET /api/v1/supervisor/projects/{projectId}/github/installations/{installationId}/repositories`
+  - loads via `GET /api/supervisor/projects/{projectId}/github/installations/{installationId}/repositories`
   - supports backend pagination (`Load more`)
   - includes animated blocking skeleton while loading
   - list is single-select and always selectable
-  - confirm links selected repo via `POST /api/v1/supervisor/projects/{projectId}/github/link`
-- Save calls `PATCH /api/v1/supervisor/projects/{projectId}/repository`.
+  - confirm links selected repo via `POST /api/supervisor/projects/{projectId}/github/link`
+- Save calls `PATCH /api/supervisor/projects/{projectId}/repository`.
 - When one repository is linked, `Link repository` is disabled (current one-repo scope).
 - `Remove` action clears repository/app linkage from the project.
 
@@ -327,7 +324,7 @@ Supervisor feature currently uses these APIs:
   - full contributors
 - Refresh action:
   - supervisor-only
-  - calls `POST /api/v1/supervisor/projects/{projectId}/github/refresh`
+  - calls `POST /api/supervisor/projects/{projectId}/github/refresh`
   - then re-fetches project detail payload
 
 ### Integrations tab: GitHub + Jira connection controls
@@ -381,21 +378,21 @@ Scope note:
   - `Channels`
   - `Records` (placeholder state)
 - `Channels` data/actions:
-  - list channels: `GET /api/v1/supervisor/projects/{projectId}/meeting-channels`
-  - add channel: `POST /api/v1/supervisor/projects/{projectId}/meeting-channels`
-  - update channel: `PATCH /api/v1/supervisor/projects/{projectId}/meeting-channels/{channelId}`
-  - delete channel: `DELETE /api/v1/supervisor/projects/{projectId}/meeting-channels/{channelId}`
-  - approve pending channel: `POST /api/v1/supervisor/projects/{projectId}/meeting-channels/{channelId}/approve`
+  - list channels: `GET /api/supervisor/projects/{projectId}/meeting-channels`
+  - add channel: `POST /api/supervisor/projects/{projectId}/meeting-channels`
+  - update channel: `PATCH /api/supervisor/projects/{projectId}/meeting-channels/{channelId}`
+  - delete channel: `DELETE /api/supervisor/projects/{projectId}/meeting-channels/{channelId}`
+  - approve pending channel: `POST /api/supervisor/projects/{projectId}/meeting-channels/{channelId}/approve`
 - Status behavior:
   - supervisor-created channels are approved immediately
   - student-created channels appear as pending until approved
 
 - `Records` data/actions:
-  - list records: `GET /api/v1/supervisor/projects/{projectId}/meeting-records`
-  - add record: `POST /api/v1/supervisor/projects/{projectId}/meeting-records`
-  - update record: `PATCH /api/v1/supervisor/projects/{projectId}/meeting-records/{recordId}`
-  - delete record: `DELETE /api/v1/supervisor/projects/{projectId}/meeting-records/{recordId}`
-  - approve pending record: `POST /api/v1/supervisor/projects/{projectId}/meeting-records/{recordId}/approve`
+  - list records: `GET /api/supervisor/projects/{projectId}/meeting-records`
+  - add record: `POST /api/supervisor/projects/{projectId}/meeting-records`
+  - update record: `PATCH /api/supervisor/projects/{projectId}/meeting-records/{recordId}`
+  - delete record: `DELETE /api/supervisor/projects/{projectId}/meeting-records/{recordId}`
+  - approve pending record: `POST /api/supervisor/projects/{projectId}/meeting-records/{recordId}/approve`
   - supervisor-created records are approved immediately
   - student-created records appear as pending until approved
 
@@ -406,7 +403,7 @@ Displays all cached Jira issues in an expandable tree grouped by Epic -> Story/T
 - Collapsed by default beyond depth 2.
 - Each node shows: issue type badge, issue key, summary, status pill, assignee, and story points.
 - "Unlinked Issues" section shows issues whose parent is outside the project's cache.
-- Source: `GET /api/v1/supervisor/projects/{projectId}/jira/hierarchy`
+- Source: `GET /api/supervisor/projects/{projectId}/jira/hierarchy`
 - Hook: `useJiraHierarchy`
 - Components: `JiraHierarchyView`, `JiraHierarchyNode`, `JiraHierarchySkeleton`
 
@@ -416,12 +413,12 @@ Displays all cached Jira issues in an expandable tree grouped by Epic -> Story/T
   - email search
   - select/remove pending additions locally
   - submit selected additions
-- Submit calls `POST /api/v1/supervisor/projects/{projectId}/members`.
+- Submit calls `POST /api/supervisor/projects/{projectId}/members`.
 - Existing member deletion is intentionally not in scope.
 - Project leader assignment:
   - shows current leader (if available)
   - supports assigning/changing leader from currently assigned student members
-  - persists leader change via `PATCH /api/v1/supervisor/projects/{projectId}` using `leaderStudentId`
+  - persists leader change via `PATCH /api/supervisor/projects/{projectId}` using `leaderStudentId`
 
 ### Milestones tab: add + edit
 
@@ -429,16 +426,16 @@ Displays all cached Jira issues in an expandable tree grouped by Epic -> Story/T
   - title
   - description
   - due date
-  - calls `POST /api/v1/supervisor/projects/{projectId}/milestones`
+  - calls `POST /api/supervisor/projects/{projectId}/milestones`
 - Milestone inline edit form:
   - title
   - description
   - due date
   - status
-  - calls `PATCH /api/v1/supervisor/projects/{projectId}/milestones/{milestoneId}`
+  - calls `PATCH /api/supervisor/projects/{projectId}/milestones/{milestoneId}`
 - Quick status update:
   - milestone rows include direct status dropdown for one-click status changes
-  - updates are persisted through `PATCH /api/v1/supervisor/projects/{projectId}/milestones/{milestoneId}`
+  - updates are persisted through `PATCH /api/supervisor/projects/{projectId}/milestones/{milestoneId}`
   - UI applies status-based color coding for readability
 
 ### Error/empty handling

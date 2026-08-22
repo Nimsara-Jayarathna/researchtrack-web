@@ -28,7 +28,7 @@ describe("useRegisterConfig", () => {
     timestamp: "2023-01-01T00:00:00Z",
     status: 400,
     error: "Bad Request",
-    path: "/api/auth/register/config",
+    path: "/api/v1/auth/register/config",
     traceId: null,
   };
 
@@ -90,6 +90,6 @@ describe("useRegisterConfig", () => {
     expect(result.current.config).toBeNull();
     expect(result.current.error?.status).toBe(503);
     expect(result.current.error?.message).toBe("fallback message");
-    expect(result.current.error?.path).toBe("/api/auth/register/config");
+    expect(result.current.error?.path).toBe("/api/v1/auth/register/config");
   });
 });

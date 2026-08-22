@@ -14,7 +14,10 @@ import type {
 } from "../types";
 import { apiClient } from "@/services/apiClient";
 
-// Switch to false once the backend /api/auth/* endpoints are live.
+const REGISTRATION_BASE = "/api/v1/auth/register";
+
+// Registration endpoints are canonical /api/v1 routes in Story 1.
+// Login/refresh/logout/password-reset routes migrate with Story 2.
 // Mock credentials must never reach a production build.
 const USE_MOCK = false;
 
@@ -58,7 +61,7 @@ export const authApi = {
         role: "STUDENT",
       };
     }
-    return apiClient.post<RegisterResponse>("/api/auth/register", body);
+    return apiClient.post<RegisterResponse>(REGISTRATION_BASE, body);
   },
 
   async registerSupervisor(
@@ -76,13 +79,13 @@ export const authApi = {
       };
     }
     return apiClient.post<RegisterResponse>(
-      "/api/auth/register/supervisor",
+      REGISTRATION_BASE,
       body,
     );
   },
 
   async registerInit(body: { email: string }): Promise<{ message: string }> {
-    return apiClient.post<{ message: string }>("/api/auth/register/init", body);
+    return apiClient.post<{ message: string }>(`${REGISTRATION_BASE}/init`, body);
   },
 
   async registerVerify(body: {
@@ -90,7 +93,7 @@ export const authApi = {
     otp: string;
   }): Promise<RegisterVerifyResponse> {
     return apiClient.post<RegisterVerifyResponse>(
-      "/api/auth/register/verify",
+      `${REGISTRATION_BASE}/verify`,
       body,
     );
   },
@@ -103,8 +106,8 @@ export const authApi = {
     name?: string;
     role?: string;
   }): Promise<RegisterCompleteResponse> {
-    return apiClient.post<{ user: AuthUser }>(
-      "/api/auth/register/complete",
+    return apiClient.post<RegisterCompleteResponse>(
+      `${REGISTRATION_BASE}/complete`,
       body,
     );
   },
@@ -112,7 +115,7 @@ export const authApi = {
   getRegisterConfig(): Promise<RegisterConfig> {
     if (!registerConfigCache) {
       registerConfigCache = apiClient
-        .get<RegisterConfig>("/api/auth/register/config")
+        .get<RegisterConfig>(`${REGISTRATION_BASE}/config`)
         .catch((error) => {
           registerConfigCache = null;
           throw error;

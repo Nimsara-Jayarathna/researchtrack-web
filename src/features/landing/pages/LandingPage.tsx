@@ -53,7 +53,7 @@ export function LandingPage({
       timestamp: new Date().toISOString(),
       status: 503,
       error: "Service Unavailable",
-      path: "/api/auth/register/config",
+      path: "/api/v1/auth/register/config",
       traceId: null,
     };
   }

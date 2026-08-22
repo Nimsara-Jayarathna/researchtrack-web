@@ -1,12 +1,17 @@
 import { env } from "@/app/config/env";
-import { toVersionedApiPath } from "@/app/config/apiVersion";
-import type { ApiError, ApiErrorBody, ApiMeta, ApiResponse } from "@/types";
+import type {
+  ApiError,
+  ApiErrorBody,
+  ApiErrorCode,
+  BackendApiErrorCode,
+  ApiMeta,
+  ApiResponse,
+} from "@/types";
 import { tokenStorage } from "./tokenStorage";
 import type { StoredUser } from "./tokenStorage";
 import { beginSessionTransition, resetSessionState } from "./sessionState";
 import { createManagedAbortSignal } from "./requestRegistry";
 
-/** Thrown by `apiClient` on non-2xx responses and network failures. Carries the typed `ApiError`. */
 export class ApiException extends Error {
   readonly apiError: ApiError;
 
@@ -17,67 +22,48 @@ export class ApiException extends Error {
   }
 }
 
-/** Type guard — narrows an unknown caught error to `ApiException`. */
 export function isApiException(error: unknown): error is ApiException {
   return error instanceof ApiException;
 }
 
+// Story 2 will migrate these authentication endpoints to /api/v1/auth/*.
+// Registration is already canonical, so both prefixes are treated as public
+// auth endpoints to avoid an incorrect refresh attempt on registration 401s.
 const REFRESH_PATH = "/api/auth/refresh";
-const AUTH_PATH_PREFIX = "/api/auth/";
+const AUTH_PATH_PREFIXES = ["/api/auth/", "/api/v1/auth/"] as const;
 let inFlightRefresh: Promise<boolean> | null = null;
-type WrappedApiErrorResponse = {
-  success: false;
-  message: string;
-  data: null;
-  error: ApiErrorBody;
-  meta: ApiMeta;
-};
 
-/**
- * Attempts a silent token refresh using the {@code ss_refresh_token} httpOnly cookie.
- *
- * This is a raw {@code fetch} call intentionally — importing {@code authApi} here would
- * create a circular dependency because {@code authApi} itself imports {@code apiClient}.
- *
- * Returns {@code true} if the refresh succeeded and the user profile has been
- * updated in storage; {@code false} if the session is fully expired.
- */
 async function tryRefresh(): Promise<boolean> {
   try {
-    const response = await fetch(
-      `${env.apiBaseUrl}${toVersionedApiPath(REFRESH_PATH)}`,
-      {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
-      },
-    );
+    const response = await fetch(`${env.apiBaseUrl}${REFRESH_PATH}`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
     if (!response.ok) return false;
-    const body = (await response.json()) as ApiResponse<{ user: StoredUser }>;
-    if (body?.success && body?.data?.user) {
-      tokenStorage.setUser(body.data.user);
-    }
-    return body?.success === true;
+
+    const body = (await response.json()) as unknown;
+    if (!hasApiEnvelopeShape(body) || body.success !== true) return false;
+
+    const data = body.data as { user?: StoredUser } | undefined;
+    if (data?.user) tokenStorage.setUser(data.user);
+    return true;
   } catch {
     return false;
   }
 }
 
 async function tryRefreshSingleFlight(): Promise<boolean> {
-  if (inFlightRefresh) {
-    return inFlightRefresh;
-  }
-
+  if (inFlightRefresh) return inFlightRefresh;
   inFlightRefresh = tryRefresh().finally(() => {
     inFlightRefresh = null;
   });
-
   return inFlightRefresh;
 }
 
 function isAuthEndpoint(path: string): boolean {
-  return path.startsWith(AUTH_PATH_PREFIX);
+  return AUTH_PATH_PREFIXES.some((prefix) => path.startsWith(prefix));
 }
 
 async function parseJsonSafely(response: Response): Promise<unknown | null> {
@@ -96,62 +82,78 @@ function hasApiMetaShape(value: unknown): value is ApiMeta {
   return (
     isRecord(value) &&
     typeof value.timestamp === "string" &&
-    typeof value.path === "string" &&
     (typeof value.traceId === "string" || value.traceId === null)
   );
 }
 
 function hasApiErrorBodyShape(value: unknown): value is ApiErrorBody {
-  return (
-    isRecord(value) &&
-    typeof value.code === "string" &&
-    typeof value.status === "number" &&
-    Array.isArray(value.details)
-  );
+  if (!isRecord(value)) return false;
+  if (typeof value.code !== "string" || typeof value.message !== "string") {
+    return false;
+  }
+
+  if ("fieldErrors" in value && value.fieldErrors !== undefined) {
+    if (!Array.isArray(value.fieldErrors)) return false;
+    for (const fieldError of value.fieldErrors) {
+      if (
+        !isRecord(fieldError) ||
+        typeof fieldError.field !== "string" ||
+        !Array.isArray(fieldError.errors) ||
+        !fieldError.errors.every((error) => typeof error === "string")
+      ) {
+        return false;
+      }
+    }
+  }
+
+  return true;
 }
 
 function hasApiEnvelopeShape(value: unknown): value is ApiResponse<unknown> {
-  return (
-    isRecord(value) &&
-    typeof value.success === "boolean" &&
-    typeof value.message === "string" &&
-    "data" in value &&
-    "error" in value &&
-    hasApiMetaShape(value.meta)
+  if (!isRecord(value) || typeof value.success !== "boolean") return false;
+  if (!hasApiMetaShape(value.meta)) return false;
+  return value.success ? "data" in value : hasApiErrorBodyShape(value.error);
+}
+
+function normalizeFieldErrors(body: ApiErrorBody): ApiError["details"] {
+  return (body.fieldErrors ?? []).flatMap((fieldError) =>
+    fieldError.errors.map((message) => ({
+      field: fieldError.field,
+      message,
+      issue: message,
+    })),
   );
 }
 
-function hasWrappedApiErrorShape(
-  value: unknown,
-): value is WrappedApiErrorResponse {
-  return (
-    hasApiEnvelopeShape(value) &&
-    value.success === false &&
-    hasApiErrorBodyShape(value.error)
-  );
-}
-
-function hasLegacyApiErrorShape(value: unknown): value is ApiError {
-  return (
-    isRecord(value) &&
-    typeof value.status === "number" &&
-    typeof value.code === "string" &&
-    typeof value.message === "string"
-  );
-}
-
-function normalizeDetails(value: unknown): ApiError["details"] {
-  if (!Array.isArray(value)) {
-    return [];
+function fallbackCode(status: number): ApiErrorCode {
+  switch (status) {
+    case 400:
+      return "BAD_REQUEST";
+    case 401:
+      return "UNAUTHORIZED";
+    case 403:
+      return "FORBIDDEN";
+    case 404:
+      return "NOT_FOUND";
+    case 409:
+      return "CONFLICT";
+    case 429:
+      return "TOO_MANY_REQUESTS";
+    case 502:
+    case 503:
+      return "SERVICE_UNAVAILABLE";
+    default:
+      return "INTERNAL_ERROR";
   }
+}
 
-  return value
-    .filter((detail) => isRecord(detail) && typeof detail.field === "string")
-    .map((detail) => ({
-      field: detail.field as string,
-      issue: typeof detail.issue === "string" ? detail.issue : undefined,
-      message: typeof detail.message === "string" ? detail.message : undefined,
-    }));
+
+function normalizeBackendErrorCode(
+  code: BackendApiErrorCode,
+): ApiErrorCode {
+  if (code === "RATE_LIMITED") return "TOO_MANY_REQUESTS";
+  if (code === "DEPENDENCY_UNAVAILABLE") return "SERVICE_UNAVAILABLE";
+  return code;
 }
 
 function createFallbackError(
@@ -164,7 +166,7 @@ function createFallbackError(
     status,
     error:
       statusText || (status === 401 ? "Unauthorized" : "Internal Server Error"),
-    code: status === 401 ? "UNAUTHORIZED" : "INTERNAL_ERROR",
+    code: fallbackCode(status),
     message:
       status === 401
         ? "Authentication failed."
@@ -180,78 +182,33 @@ function normalizeError(
   response: Response,
   body: unknown,
 ): ApiError {
-  if (hasWrappedApiErrorShape(body)) {
+  if (
+    hasApiEnvelopeShape(body) &&
+    body.success === false &&
+    hasApiErrorBodyShape(body.error)
+  ) {
     return {
       timestamp: body.meta.timestamp,
-      status: body.error.status,
+      status: response.status,
       error:
         response.statusText ||
-        (body.error.status === 401 ? "Unauthorized" : "Request Failed"),
-      code: body.error.code,
-      message: body.message,
-      path: body.meta.path || path,
+        (response.status === 401 ? "Unauthorized" : "Request Failed"),
+      code: normalizeBackendErrorCode(body.error.code),
+      message: body.error.message,
+      path,
       traceId: body.meta.traceId,
-      details: normalizeDetails(body.error.details),
-    };
-  }
-
-  if (hasLegacyApiErrorShape(body)) {
-    return {
-      timestamp: body.timestamp ?? new Date().toISOString(),
-      status: body.status,
-      error: body.error,
-      code: body.code,
-      message: body.message,
-      path: body.path ?? path,
-      traceId: body.traceId ?? null,
-      details: normalizeDetails(body.details),
-    };
-  }
-
-  if (hasApiEnvelopeShape(body) && body.success === false) {
-    const fallbackStatus = hasApiErrorBodyShape(body.error)
-      ? body.error.status
-      : response.status;
-    const fallbackCode = hasApiErrorBodyShape(body.error)
-      ? body.error.code
-      : "INTERNAL_ERROR";
-    const fallbackDetails = hasApiErrorBodyShape(body.error)
-      ? body.error.details
-      : [];
-    return {
-      timestamp: body.meta.timestamp,
-      status: fallbackStatus,
-      error:
-        response.statusText ||
-        (fallbackStatus === 401 ? "Unauthorized" : "Request Failed"),
-      code: fallbackCode,
-      message: body.message,
-      path: body.meta.path || path,
-      traceId: body.meta.traceId,
-      details: normalizeDetails(fallbackDetails),
+      details: normalizeFieldErrors(body.error),
     };
   }
 
   return createFallbackError(path, response.status, response.statusText);
 }
 
-/**
- * Core request function. Sends cookies automatically via {@code credentials: 'include'}.
- * No Authorization header — the access token lives in an httpOnly cookie.
- *
- * 401 interceptor: on a first 401, silently calls {@code POST /api/auth/refresh}.
- * If the refresh succeeds, the original request is retried once.
- * If the refresh also fails (expired session), local state is cleared and the
- * browser is redirected to {@code /login}.
- *
- * @param isRetry - true when this call is the post-refresh retry; prevents infinite loops.
- */
 async function request<T>(
   path: string,
   init: RequestInit = {},
   isRetry = false,
 ): Promise<T> {
-  // Use Headers to safely normalise any init.headers format (object, Headers instance, or tuples).
   const headers = new Headers(init.headers);
   headers.set("Content-Type", "application/json");
 
@@ -259,12 +216,11 @@ async function request<T>(
   let response: Response;
 
   try {
-    const requestPath = toVersionedApiPath(path);
-    response = await fetch(`${env.apiBaseUrl}${requestPath}`, {
+    response = await fetch(`${env.apiBaseUrl}${path}`, {
       ...init,
       signal: managed.signal,
       headers,
-      credentials: "include", // send httpOnly cookies on every request
+      credentials: "include",
     });
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") {
@@ -274,13 +230,12 @@ async function request<T>(
         error: "Client Closed Request",
         code: "INTERNAL_ERROR",
         message: "Request was cancelled.",
-        path: toVersionedApiPath(path),
+        path,
         traceId: null,
         details: [],
       });
     }
 
-    // Network failure (offline, DNS error, timeout, etc.)
     throw new ApiException({
       timestamp: new Date().toISOString(),
       status: 503,
@@ -288,7 +243,7 @@ async function request<T>(
       code: "SERVICE_UNAVAILABLE",
       message:
         "Unable to reach the server. Please check your connection and try again.",
-      path: toVersionedApiPath(path),
+      path,
       traceId: null,
       details: [],
     });
@@ -296,15 +251,10 @@ async function request<T>(
     managed.release();
   }
 
-  // 401 interceptor: attempt one silent refresh only for protected endpoints.
-  // Never refresh on public auth endpoints (e.g. /api/auth/login), because a 401
-  // there means invalid credentials, not an expired authenticated session.
   if (response.status === 401 && !isAuthEndpoint(path) && !isRetry) {
     const refreshed = await tryRefreshSingleFlight();
-    if (refreshed) {
-      return request<T>(path, init, true);
-    }
-    // Refresh also failed — session is fully expired.
+    if (refreshed) return request<T>(path, init, true);
+
     beginSessionTransition("session-expired");
     resetSessionState();
     window.location.href = "/login";
@@ -314,57 +264,53 @@ async function request<T>(
       error: "Unauthorized",
       code: "UNAUTHORIZED",
       message: "Your session has expired. Please log in again.",
-      path: toVersionedApiPath(path),
+      path,
       traceId: null,
       details: [],
     });
   }
 
-  // 204 No Content — no body to parse, return undefined as the empty payload.
-  if (response.status === 204) {
-    return undefined as unknown as T;
-  }
+  if (response.status === 204) return undefined as unknown as T;
 
   const body = await parseJsonSafely(response);
 
   if (!response.ok) {
-    // Backend errors are wrapped in the standard response envelope.
-    // Fall back safely for empty/non-JSON/proxy responses.
-    throw new ApiException(
-      normalizeError(toVersionedApiPath(path), response, body),
-    );
+    throw new ApiException(normalizeError(path, response, body));
   }
 
-  if (hasApiEnvelopeShape(body)) {
-    if (body.success === false) {
-      throw new ApiException(
-        normalizeError(toVersionedApiPath(path), response, body),
-      );
-    }
-    return body.data as T;
+  if (!hasApiEnvelopeShape(body)) {
+    throw new ApiException({
+      timestamp: new Date().toISOString(),
+      status: response.status,
+      error: "Invalid API Response",
+      code: "INTERNAL_ERROR",
+      message: "The server returned an invalid response.",
+      path,
+      traceId: null,
+      details: [],
+    });
   }
 
-  return body as T;
+  if (body.success === false) {
+    throw new ApiException(normalizeError(path, response, body));
+  }
+
+  return body.data as T;
 }
 
-/** HTTP client for all backend API calls. Throws `ApiException` on failure. */
 export const apiClient = {
   get<T>(path: string): Promise<T> {
     return request<T>(path, { method: "GET" });
   },
-
   post<T>(path: string, body: unknown): Promise<T> {
     return request<T>(path, { method: "POST", body: JSON.stringify(body) });
   },
-
   put<T>(path: string, body: unknown): Promise<T> {
     return request<T>(path, { method: "PUT", body: JSON.stringify(body) });
   },
-
   patch<T>(path: string, body: unknown): Promise<T> {
     return request<T>(path, { method: "PATCH", body: JSON.stringify(body) });
   },
-
   del<T>(path: string): Promise<T> {
     return request<T>(path, { method: "DELETE" });
   },

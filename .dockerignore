@@ -19,3 +19,12 @@ pnpm-debug.log*
 .github
 .DS_Store
 Thumbs.db
+
+.vscode
+.idea
+*.log
+.env
+.env.*
+!.env.example
+coverage
+README.md

@@ -85,12 +85,12 @@ export function useProjectTeamState({
   const [isAddingStudents, setIsAddingStudents] = useState(false);
   const [leaderDraftId, setLeaderDraftId] = useState<string>("");
   const [isUpdatingLeader, setIsUpdatingLeader] = useState(false);
+  const projectMembers = project?.members ?? [];
 
   const studentMembers = useMemo(
     () =>
-      project?.members.filter((member) => member.memberRole === "STUDENT") ??
-      [],
-    [project],
+      projectMembers.filter((member) => member.memberRole === "STUDENT"),
+    [projectMembers],
   );
 
   useEffect(() => {
@@ -117,7 +117,7 @@ export function useProjectTeamState({
         const results = await searchStudents(normalizedQuery);
         if (isCancelled) return;
         const excludedIds = new Set([
-          ...project.members
+          ...projectMembers
             .filter((m) => m.memberRole === "STUDENT")
             .map((m) => m.id),
           ...selectedStudentsToAdd.map((s) => s.id),
@@ -144,6 +144,7 @@ export function useProjectTeamState({
   }, [
     isManagingStudents,
     project,
+    projectMembers,
     searchStudents,
     selectedStudentsToAdd,
     studentQuery,

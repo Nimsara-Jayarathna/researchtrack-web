@@ -1,3 +1,9 @@
+import {
+  PROJECTS_RESOURCE_PATH,
+  createEmptyProjectGitHubPreview,
+  type ProjectResourceDetail,
+  type ProjectResourceSummary,
+} from "@/features/projects/api/projectResource";
 import type { StudentProjectDetail, StudentProjectSummary } from "../types";
 
 type ApiClient = typeof import("@/services/apiClient").apiClient;
@@ -13,14 +19,54 @@ type CreateStudentProjectsApiDeps = {
   inFlightProjectRequests: StudentProjectInFlight;
 };
 
+function toStudentSummary(project: ProjectResourceSummary): StudentProjectSummary {
+  return {
+    id: project.id,
+    title: project.title,
+    summary: project.summary,
+    status: project.lifecycleStatus,
+    batch: project.batch,
+    semester: project.semester,
+    milestoneDate: project.milestoneDate,
+    lastActivityAt: project.lastActivityAt,
+    progressPercent: project.progressPercent,
+    supervisorName: project.supervisorName,
+  };
+}
+
+function toStudentDetail(project: ProjectResourceDetail): StudentProjectDetail {
+  return {
+    id: project.id,
+    title: project.title,
+    summary: project.summary,
+    status: project.lifecycleStatus,
+    batch: project.batch,
+    semester: project.semester,
+    milestoneDate: project.milestoneDate,
+    lastActivityAt: project.lastActivityAt,
+    progressPercent: project.progressPercent,
+    repositoryUrl: null,
+    github: createEmptyProjectGitHubPreview(),
+    githubRepositories: null,
+    jira: null,
+    leader: project.leader,
+    members: project.members ?? [],
+    milestones: project.milestones ?? [],
+    files: null,
+  };
+}
+
 export function createStudentProjectsApi({
   apiClient,
   cachedProjectsById,
   inFlightProjectRequests,
 }: CreateStudentProjectsApiDeps) {
   return {
-    getProjects(): Promise<StudentProjectSummary[]> {
-      return apiClient.get<StudentProjectSummary[]>("/api/student/projects");
+    async getProjects(): Promise<StudentProjectSummary[]> {
+      const projects = await apiClient.get<ProjectResourceSummary[]>(
+        PROJECTS_RESOURCE_PATH,
+      );
+      return projects.map(toStudentSummary);
     },
 
     async getProjectById(
@@ -37,9 +83,9 @@ export function createStudentProjectsApi({
         ] as Promise<StudentProjectDetail>;
       }
 
-      const request = apiClient.get<StudentProjectDetail>(
-        `/api/student/projects/${projectId}`,
-      );
+      const request = apiClient
+        .get<ProjectResourceDetail>(`${PROJECTS_RESOURCE_PATH}/${projectId}`)
+        .then(toStudentDetail);
       inFlightProjectRequests[projectId] = request;
 
       try {

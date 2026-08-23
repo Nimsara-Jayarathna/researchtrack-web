@@ -34,16 +34,19 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     environment: test
+
     permissions:
       contents: read
+      packages: read
+
     env:
       SSH_HOST: ${{ secrets.SSH_HOST }}
       SSH_PORT: ${{ secrets.SSH_PORT }}
       SSH_USER: ${{ secrets.SSH_USER }}
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-      GHCR_USERNAME: ${{ vars.GHCR_USERNAME }}
-      GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
+
       NPM_NET_NAME: ${{ vars.NPM_NET_NAME }}
+
       IMAGE: ${{ needs.build.outputs.image_ref }}
       CONTAINER_NAME: researchtrack-frontend-test
       NETWORK_ALIAS: researchtrack-frontend-test
@@ -54,7 +57,14 @@ jobs:
         run: |
           set -euo pipefail
 
-          required=(SSH_HOST SSH_PORT SSH_USER SSH_PRIVATE_KEY IMAGE)
+          required=(
+            SSH_HOST
+            SSH_PORT
+            SSH_USER
+            SSH_PRIVATE_KEY
+            IMAGE
+          )
+
           for name in "${required[@]}"; do
             if [ -z "${!name:-}" ]; then
               echo "$name is not configured for the test environment." >&2
@@ -71,11 +81,6 @@ jobs:
             echo "NPM_NET_NAME is not set; npm_default will be used."
           fi
 
-          if [ -n "${GHCR_READ_TOKEN:-}" ] && [ -z "${GHCR_USERNAME:-}" ]; then
-            echo "GHCR_USERNAME must be configured when GHCR_READ_TOKEN is provided." >&2
-            exit 1
-          fi
-
           echo "Deployment configuration validated."
 
       - name: Configure SSH
@@ -84,27 +89,62 @@ jobs:
           set -euo pipefail
 
           mkdir -p ~/.ssh
-          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_ed25519
+
+          printf '%s\n' "$SSH_PRIVATE_KEY" \
+            | tr -d '\r' \
+            > ~/.ssh/id_ed25519
+
           chmod 600 ~/.ssh/id_ed25519
 
           touch ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
-          ssh-keyscan -H -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
 
-      - name: Authenticate deployment host to GHCR
-        if: ${{ env.GHCR_READ_TOKEN != '' }}
+          ssh-keyscan \
+            -H \
+            -p "$SSH_PORT" \
+            "$SSH_HOST" \
+            >> ~/.ssh/known_hosts
+
+      - name: Authenticate to GHCR and pull image
         shell: bash
+        env:
+          GHCR_USERNAME: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
 
-          printf '%s' "$GHCR_READ_TOKEN" | \
+          echo "Authenticating deployment host to GHCR..."
+
+          printf '%s' "$GHCR_TOKEN" | \
             ssh \
               -i ~/.ssh/id_ed25519 \
               -o IdentitiesOnly=yes \
               -o StrictHostKeyChecking=yes \
               -p "$SSH_PORT" \
               "$SSH_USER@$SSH_HOST" \
-              "docker login ghcr.io -u '$GHCR_USERNAME' --password-stdin"
+              "GHCR_USERNAME='$GHCR_USERNAME' IMAGE='$IMAGE' bash -s" <<'REMOTE'
+          set -euo pipefail
+
+          DOCKER_CONFIG="$(mktemp -d)"
+          export DOCKER_CONFIG
+
+          cleanup() {
+            rm -rf "$DOCKER_CONFIG"
+          }
+
+          trap cleanup EXIT
+
+          docker login ghcr.io \
+            -u "$GHCR_USERNAME" \
+            --password-stdin \
+            >/dev/null
+
+          echo "Authenticated to GHCR."
+          echo "Pulling image: $IMAGE"
+
+          docker pull "$IMAGE"
+
+          REMOTE
 
       - name: Deploy container
         shell: bash
@@ -119,47 +159,84 @@ jobs:
             -o StrictHostKeyChecking=yes \
             -p "$SSH_PORT" \
             "$SSH_USER@$SSH_HOST" \
-            "IMAGE='$IMAGE' CONTAINER_NAME='$CONTAINER_NAME' NETWORK_ALIAS='$NETWORK_ALIAS' NPM_NET_NAME='$NETWORK_NAME' bash -s" <<'REMOTE'
+            "IMAGE='$IMAGE' \
+             CONTAINER_NAME='$CONTAINER_NAME' \
+             NETWORK_ALIAS='$NETWORK_ALIAS' \
+             NPM_NET_NAME='$NETWORK_NAME' \
+             bash -s" <<'REMOTE'
+
           set -euo pipefail
 
           if ! docker network inspect "$NPM_NET_NAME" >/dev/null 2>&1; then
             echo "Creating Docker network: $NPM_NET_NAME"
-            docker network create --driver bridge "$NPM_NET_NAME" >/dev/null
+
+            docker network create \
+              --driver bridge \
+              "$NPM_NET_NAME" \
+              >/dev/null
           fi
 
-          echo "Pulling image: $IMAGE"
-          docker pull "$IMAGE"
-
           echo "Replacing container: $CONTAINER_NAME"
-          docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1 || true
 
-          docker run -d \
+          docker rm \
+            -f \
+            "$CONTAINER_NAME" \
+            >/dev/null 2>&1 || true
+
+          docker run \
+            -d \
             --name "$CONTAINER_NAME" \
             --network "$NPM_NET_NAME" \
             --network-alias "$NETWORK_ALIAS" \
             --restart unless-stopped \
-            "$IMAGE" >/dev/null
+            "$IMAGE" \
+            >/dev/null
 
           echo "Waiting for container health check..."
+
           for attempt in $(seq 1 30); do
-            RUNNING="$(docker inspect --format='{{.State.Running}}' "$CONTAINER_NAME" 2>/dev/null || true)"
-            HEALTH="$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$CONTAINER_NAME" 2>/dev/null || true)"
+
+            RUNNING="$(
+              docker inspect \
+                --format='{{.State.Running}}' \
+                "$CONTAINER_NAME" \
+                2>/dev/null || true
+            )"
+
+            HEALTH="$(
+              docker inspect \
+                --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' \
+                "$CONTAINER_NAME" \
+                2>/dev/null || true
+            )"
 
             if [ "$RUNNING" != "true" ]; then
               echo "Container stopped before becoming healthy." >&2
-              docker logs --tail 100 "$CONTAINER_NAME" || true
+
+              docker logs \
+                --tail 100 \
+                "$CONTAINER_NAME" || true
+
               exit 1
             fi
 
             if [ "$HEALTH" = "healthy" ]; then
               echo "Test deployment is healthy."
-              docker ps --filter "name=^/${CONTAINER_NAME}$" --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}'
+
+              docker ps \
+                --filter "name=^/${CONTAINER_NAME}$" \
+                --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}'
+
               exit 0
             fi
 
             if [ "$HEALTH" = "unhealthy" ]; then
               echo "Container reported unhealthy." >&2
-              docker logs --tail 100 "$CONTAINER_NAME" || true
+
+              docker logs \
+                --tail 100 \
+                "$CONTAINER_NAME" || true
+
               exit 1
             fi
 
@@ -167,6 +244,11 @@ jobs:
           done
 
           echo "Timed out waiting for a healthy container." >&2
-          docker logs --tail 100 "$CONTAINER_NAME" || true
+
+          docker logs \
+            --tail 100 \
+            "$CONTAINER_NAME" || true
+
           exit 1
+
           REMOTE

@@ -117,34 +117,26 @@ jobs:
 
           printf '%s' "$GHCR_TOKEN" | \
             ssh \
+              -T \
               -i ~/.ssh/id_ed25519 \
               -o IdentitiesOnly=yes \
               -o StrictHostKeyChecking=yes \
               -p "$SSH_PORT" \
               "$SSH_USER@$SSH_HOST" \
-              "GHCR_USERNAME='$GHCR_USERNAME' IMAGE='$IMAGE' bash -s" <<'REMOTE'
-          set -euo pipefail
+              "set -euo pipefail;
+               DOCKER_CONFIG=\$(mktemp -d);
+               export DOCKER_CONFIG;
+               trap 'rm -rf \"\$DOCKER_CONFIG\"' EXIT;
 
-          DOCKER_CONFIG="$(mktemp -d)"
-          export DOCKER_CONFIG
+               docker login ghcr.io \
+                 -u '$GHCR_USERNAME' \
+                 --password-stdin \
+                 >/dev/null;
 
-          cleanup() {
-            rm -rf "$DOCKER_CONFIG"
-          }
+               echo 'Authenticated to GHCR.';
+               echo 'Pulling image: $IMAGE';
 
-          trap cleanup EXIT
-
-          docker login ghcr.io \
-            -u "$GHCR_USERNAME" \
-            --password-stdin \
-            >/dev/null
-
-          echo "Authenticated to GHCR."
-          echo "Pulling image: $IMAGE"
-
-          docker pull "$IMAGE"
-
-          REMOTE
+               docker pull '$IMAGE';"
 
       - name: Deploy container
         shell: bash
@@ -154,6 +146,7 @@ jobs:
           NETWORK_NAME="${NPM_NET_NAME:-npm_default}"
 
           ssh \
+            -T \
             -i ~/.ssh/id_ed25519 \
             -o IdentitiesOnly=yes \
             -o StrictHostKeyChecking=yes \
@@ -183,6 +176,8 @@ jobs:
             "$CONTAINER_NAME" \
             >/dev/null 2>&1 || true
 
+          echo "Starting container: $CONTAINER_NAME"
+
           docker run \
             -d \
             --name "$CONTAINER_NAME" \
@@ -209,6 +204,8 @@ jobs:
                 "$CONTAINER_NAME" \
                 2>/dev/null || true
             )"
+
+            echo "Health check $attempt/30: $HEALTH"
 
             if [ "$RUNNING" != "true" ]; then
               echo "Container stopped before becoming healthy." >&2

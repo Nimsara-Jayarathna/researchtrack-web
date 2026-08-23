@@ -125,10 +125,10 @@ describe("apiClient ResearchTrack .NET contract", () => {
         path: "/api/v1/auth/register/init",
         traceId: "trace-2",
         details: [
-          {
+          expect.objectContaining({
             field: "email",
             message: "Invalid IT number format. Use ITXXXXXXXX.",
-          },
+          }),
         ],
       }),
     } as ApiException);

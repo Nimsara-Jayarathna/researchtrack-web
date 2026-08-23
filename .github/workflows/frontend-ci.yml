@@ -1,0 +1,42 @@
+name: Frontend CI
+
+on:
+  pull_request:
+    branches: ["main", "develop"]
+  workflow_call:
+
+concurrency:
+  group: frontend-ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Verify, Test and Build
+    runs-on: ubuntu-latest
+    env:
+      CI: "true"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify
+        run: npm run verify
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build
+        run: npm run build

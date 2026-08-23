@@ -19,7 +19,9 @@ type CreateStudentProjectsApiDeps = {
   inFlightProjectRequests: StudentProjectInFlight;
 };
 
-function toStudentSummary(project: ProjectResourceSummary): StudentProjectSummary {
+function toStudentSummary(
+  project: ProjectResourceSummary,
+): StudentProjectSummary {
   return {
     id: project.id,
     title: project.title,

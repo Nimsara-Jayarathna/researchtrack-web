@@ -85,11 +85,13 @@ export function useProjectTeamState({
   const [isAddingStudents, setIsAddingStudents] = useState(false);
   const [leaderDraftId, setLeaderDraftId] = useState<string>("");
   const [isUpdatingLeader, setIsUpdatingLeader] = useState(false);
-  const projectMembers = project?.members ?? [];
+  const projectMembers = useMemo(
+    () => project?.members ?? [],
+    [project?.members],
+  );
 
   const studentMembers = useMemo(
-    () =>
-      projectMembers.filter((member) => member.memberRole === "STUDENT"),
+    () => projectMembers.filter((member) => member.memberRole === "STUDENT"),
     [projectMembers],
   );
 

@@ -9,13 +9,13 @@ export type AuthUser = {
   lastName: string;
 };
 
-/** POST /api/auth/login request body */
+/** POST /api/v1/auth/login request body */
 export type LoginRequest = {
   email: string;
   password: string;
 };
 
-/** POST /api/auth/register request body */
+/** POST /api/v1/auth/register request body */
 export type RegisterRequest = {
   firstName: string;
   lastName: string;
@@ -24,7 +24,7 @@ export type RegisterRequest = {
   registrationNumber: string;
 };
 
-/** POST /api/auth/register/supervisor request body */
+/** POST /api/v1/auth/register/supervisor request body */
 export type SupervisorRegisterRequest = {
   firstName: string;
   lastName: string;
@@ -32,7 +32,7 @@ export type SupervisorRegisterRequest = {
   password: string;
 };
 
-/** POST /api/auth/register — newly created student's public profile (no tokens issued) */
+/** POST /api/v1/auth/register — newly created student's public profile (no tokens issued) */
 export type RegisterResponse = {
   id: string;
   email: string;
@@ -78,6 +78,16 @@ export type RegisterConfig = {
   supervisorDomain: string | null;
   studentEmailPrefixRestrictionEnabled: boolean;
   studentEmailPrefixRegex: string | null;
+  requireStudentRegistrationNumber?: boolean;
+  requireStudentRegistrationNumberToMatchEmail?: boolean;
+  passwordPolicy?: {
+    minimumLength: number;
+    maximumLength: number;
+    requireUppercase: boolean;
+    requireLowercase: boolean;
+    requireDigit: boolean;
+    requireSpecialCharacter: boolean;
+  };
 };
 
 export type ForgotPasswordRequest = { email: string };

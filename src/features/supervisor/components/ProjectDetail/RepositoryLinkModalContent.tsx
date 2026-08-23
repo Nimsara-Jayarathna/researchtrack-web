@@ -15,16 +15,12 @@ import {
 import type { GitHubRepositoryOption } from "../../types";
 
 export type RepositoryLinkMethod =
-  | "PUBLIC_URL"
-  | "INSTALLATION_DIRECT"
-  | "INSTALLATION_REQUESTED";
+  "PUBLIC_URL" | "INSTALLATION_DIRECT" | "INSTALLATION_REQUESTED";
 
 type RepositoryLinkModalContentProps = {
   step: "method" | "repository-selection";
   repositorySelectionEntryMode:
-    | "manual"
-    | "callback-direct"
-    | "callback-requested";
+    "manual" | "callback-direct" | "callback-requested";
   canReturnToMethods: boolean;
   selectedMethod: RepositoryLinkMethod | null;
   onSelectMethod: (method: RepositoryLinkMethod) => void;

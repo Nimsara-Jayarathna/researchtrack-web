@@ -21,7 +21,6 @@ import {
   SupervisorDashboardPage,
   SupervisorProjectsPage,
 } from "@/features/supervisor";
-import { tokenStorage } from "@/services/tokenStorage";
 import {
   Navigate,
   Route,
@@ -36,10 +35,7 @@ import { useAuthStateValue } from "@/features/auth/state/authState";
 
 function useResolvedUser() {
   const authState = useAuthStateValue();
-  if (authState.status === "bootstrapping") {
-    return tokenStorage.getUser();
-  }
-  return authState.user;
+  return authState.status === "bootstrapping" ? null : authState.user;
 }
 
 function RootRoute() {

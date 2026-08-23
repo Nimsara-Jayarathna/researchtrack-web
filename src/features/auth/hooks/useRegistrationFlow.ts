@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toVersionedApiPath } from "@/app/config/apiVersion";
 import { isApiException } from "@/services/apiClient";
 import type { ApiError } from "@/types";
 import { authApi } from "../api/authApi";
@@ -37,7 +38,7 @@ function makeValidationError(message: string): ApiError {
     timestamp: new Date().toISOString(),
     status: 400,
     error: "Bad Request",
-    path: "/api/auth/register/init",
+    path: toVersionedApiPath("/api/auth/register/init"),
     traceId: null,
   };
 }

@@ -1,3 +1,9 @@
+import {
+  PROJECTS_RESOURCE_PATH,
+  createEmptyProjectGitHubPreview,
+  type ProjectResourceDetail,
+  type ProjectResourceSummary,
+} from "@/features/projects/api/projectResource";
 import type {
   AddSupervisorProjectMembersRequest,
   AddSupervisorProjectMilestoneRequest,
@@ -25,16 +31,58 @@ type CreateSupervisorProjectsApiDeps = {
   inFlightProjectRequests: SupervisorProjectInFlight;
 };
 
+function toSupervisorSummary(
+  project: ProjectResourceSummary,
+): SupervisorProjectSummary {
+  return {
+    id: project.id,
+    title: project.title,
+    summary: project.summary,
+    lifecycleStatus: project.lifecycleStatus,
+    batch: project.batch,
+    semester: project.semester,
+    milestoneDate: project.milestoneDate,
+    progressPercent: project.progressPercent,
+    memberCount: project.memberCount,
+  };
+}
+
+function toSupervisorDetail(
+  project: ProjectResourceDetail,
+): SupervisorProjectDetail {
+  return {
+    id: project.id,
+    title: project.title,
+    summary: project.summary,
+    lifecycleStatus: project.lifecycleStatus,
+    batch: project.batch,
+    semester: project.semester,
+    milestoneDate: project.milestoneDate,
+    progressPercent: project.progressPercent,
+    lastActivityAt: project.lastActivityAt,
+    repositoryUrl: null,
+    github: createEmptyProjectGitHubPreview(),
+    githubRepositories: null,
+    jira: null,
+    leader: project.leader,
+    members: project.members ?? [],
+    milestones: project.milestones ?? [],
+    milestoneInsights: null,
+    files: null,
+  };
+}
+
 export function createSupervisorProjectsApi({
   apiClient,
   cachedProjectsById,
   inFlightProjectRequests,
 }: CreateSupervisorProjectsApiDeps) {
   return {
-    getProjects(): Promise<SupervisorProjectSummary[]> {
-      return apiClient.get<SupervisorProjectSummary[]>(
-        "/api/supervisor/projects",
+    async getProjects(): Promise<SupervisorProjectSummary[]> {
+      const projects = await apiClient.get<ProjectResourceSummary[]>(
+        PROJECTS_RESOURCE_PATH,
       );
+      return projects.map(toSupervisorSummary);
     },
 
     async getProjectById(
@@ -51,9 +99,9 @@ export function createSupervisorProjectsApi({
         ] as Promise<SupervisorProjectDetail>;
       }
 
-      const request = apiClient.get<SupervisorProjectDetail>(
-        `/api/supervisor/projects/${projectId}`,
-      );
+      const request = apiClient
+        .get<ProjectResourceDetail>(`${PROJECTS_RESOURCE_PATH}/${projectId}`)
+        .then(toSupervisorDetail);
       inFlightProjectRequests[projectId] = request;
 
       try {
@@ -69,11 +117,13 @@ export function createSupervisorProjectsApi({
       body: CreateSupervisorProjectRequest,
     ): Promise<CreateSupervisorProjectResponse> {
       return apiClient.post<CreateSupervisorProjectResponse>(
-        "/api/supervisor/projects",
+        PROJECTS_RESOURCE_PATH,
         body,
       );
     },
 
+    // The operations below belong to later stories and intentionally keep their
+    // existing contracts until those .NET backend slices are implemented.
     async updateProject(
       projectId: string,
       body: UpdateSupervisorProjectRequest,

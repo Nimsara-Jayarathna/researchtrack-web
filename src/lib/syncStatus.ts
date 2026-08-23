@@ -1,10 +1,5 @@
 export type CanonicalSyncStatus =
-  | "IN_PROGRESS"
-  | "SUCCESS"
-  | "PENDING"
-  | "FAILED"
-  | "DISABLED"
-  | "UNKNOWN";
+  "IN_PROGRESS" | "SUCCESS" | "PENDING" | "FAILED" | "DISABLED" | "UNKNOWN";
 
 export function normalizeSyncStatus(
   raw: string | null | undefined,

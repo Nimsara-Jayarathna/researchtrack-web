@@ -7,11 +7,7 @@ import type {
 } from "@/features/projectfiles/types";
 
 export type StudentProjectLifecycle =
-  | "PLANNING"
-  | "ACTIVE"
-  | "AT_RISK"
-  | "BEHIND"
-  | "COMPLETED";
+  "PLANNING" | "ACTIVE" | "AT_RISK" | "BEHIND" | "COMPLETED";
 
 export type StudentProjectSummary = {
   id: string;
@@ -84,10 +80,4 @@ export type StudentProjectDetail = {
 };
 
 export type StudentProjectDetailTab =
-  | "overview"
-  | "team"
-  | "milestones"
-  | "files"
-  | "github"
-  | "jira"
-  | "meetings";
+  "overview" | "team" | "milestones" | "files" | "github" | "jira" | "meetings";

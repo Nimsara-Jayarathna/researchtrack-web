@@ -4,8 +4,7 @@ import type { CreateSupervisorProjectResponse } from "../../types";
 type CreateProjectSuccessPanelProps = {
   createdProject: CreateSupervisorProjectResponse;
   primaryMilestone:
-    | CreateSupervisorProjectResponse["milestones"][number]
-    | null;
+    CreateSupervisorProjectResponse["milestones"][number] | null;
 };
 
 export function CreateProjectSuccessPanel({

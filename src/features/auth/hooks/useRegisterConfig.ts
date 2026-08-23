@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { authApi } from "../api/authApi";
+import { toVersionedApiPath } from "@/app/config/apiVersion";
 import { isApiException } from "@/services/apiClient";
 import type { ApiError } from "@/types";
 import type { RegisterConfig } from "../types";
@@ -32,7 +33,7 @@ function toRegisterConfigError(
     timestamp: new Date().toISOString(),
     status: 503,
     error: "Service Unavailable",
-    path: "/api/auth/register/config",
+    path: toVersionedApiPath("/api/auth/register/config"),
     traceId: null,
   };
 }

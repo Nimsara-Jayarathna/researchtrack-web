@@ -1,5 +1,4 @@
 import type {
-  AuthUser,
   ForgotPasswordRequest,
   RegisterConfig,
   RegisterCompleteResponse,
@@ -13,8 +12,13 @@ import type {
   ValidateResetTokenResponse,
 } from "../types";
 import { apiClient } from "@/services/apiClient";
+import { toVersionedApiPath } from "@/app/config/apiVersion";
 
-// Switch to false once the backend /api/auth/* endpoints are live.
+const AUTH_BASE = toVersionedApiPath("/api/auth");
+const REGISTRATION_BASE = `${AUTH_BASE}/register`;
+
+// Story 2 migrates login/session endpoints to the canonical ResearchTrack API.
+// Password-reset endpoints remain on their existing contract until that story is migrated.
 // Mock credentials must never reach a production build.
 const USE_MOCK = false;
 
@@ -43,7 +47,7 @@ export const authApi = {
         user: { ...MOCK_RESPONSE.user, email: body.email },
       };
     }
-    return apiClient.post<LoginResponse>("/api/auth/login", body);
+    return apiClient.post<LoginResponse>(`${AUTH_BASE}/login`, body);
   },
 
   async register(body: RegisterRequest): Promise<RegisterResponse> {
@@ -58,7 +62,7 @@ export const authApi = {
         role: "STUDENT",
       };
     }
-    return apiClient.post<RegisterResponse>("/api/auth/register", body);
+    return apiClient.post<RegisterResponse>(REGISTRATION_BASE, body);
   },
 
   async registerSupervisor(
@@ -75,14 +79,14 @@ export const authApi = {
         role: "SUPERVISOR",
       };
     }
-    return apiClient.post<RegisterResponse>(
-      "/api/auth/register/supervisor",
-      body,
-    );
+    return apiClient.post<RegisterResponse>(REGISTRATION_BASE, body);
   },
 
   async registerInit(body: { email: string }): Promise<{ message: string }> {
-    return apiClient.post<{ message: string }>("/api/auth/register/init", body);
+    return apiClient.post<{ message: string }>(
+      `${REGISTRATION_BASE}/init`,
+      body,
+    );
   },
 
   async registerVerify(body: {
@@ -90,7 +94,7 @@ export const authApi = {
     otp: string;
   }): Promise<RegisterVerifyResponse> {
     return apiClient.post<RegisterVerifyResponse>(
-      "/api/auth/register/verify",
+      `${REGISTRATION_BASE}/verify`,
       body,
     );
   },
@@ -103,8 +107,8 @@ export const authApi = {
     name?: string;
     role?: string;
   }): Promise<RegisterCompleteResponse> {
-    return apiClient.post<{ user: AuthUser }>(
-      "/api/auth/register/complete",
+    return apiClient.post<RegisterCompleteResponse>(
+      `${REGISTRATION_BASE}/complete`,
       body,
     );
   },
@@ -112,7 +116,7 @@ export const authApi = {
   getRegisterConfig(): Promise<RegisterConfig> {
     if (!registerConfigCache) {
       registerConfigCache = apiClient
-        .get<RegisterConfig>("/api/auth/register/config")
+        .get<RegisterConfig>(`${REGISTRATION_BASE}/config`)
         .catch((error) => {
           registerConfigCache = null;
           throw error;
@@ -121,13 +125,17 @@ export const authApi = {
     return registerConfigCache;
   },
 
+  async me(): Promise<LoginResponse> {
+    return apiClient.get<LoginResponse>(`${AUTH_BASE}/me`);
+  },
+
   /**
    * Exchanges the {@code ss_refresh_token} httpOnly cookie for a fresh pair of
    * cookies. The browser sends the cookie automatically; no token handling is
    * needed here. Called by the {@code apiClient} 401 interceptor.
    */
   async refresh(): Promise<LoginResponse> {
-    return apiClient.post<LoginResponse>("/api/auth/refresh", {});
+    return apiClient.post<LoginResponse>(`${AUTH_BASE}/refresh`, {});
   },
 
   /**
@@ -135,7 +143,7 @@ export const authApi = {
    * browser to delete both auth cookies via {@code Max-Age=0} Set-Cookie headers.
    */
   async logout(): Promise<void> {
-    return apiClient.post<void>("/api/auth/logout", {});
+    return apiClient.post<void>(`${AUTH_BASE}/logout`, {});
   },
 
   async forgotPassword(body: ForgotPasswordRequest): Promise<void> {

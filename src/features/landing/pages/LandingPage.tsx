@@ -1,3 +1,4 @@
+import { toVersionedApiPath } from "@/app/config/apiVersion";
 import { useEffect, useState } from "react";
 import { PublicLayout } from "@/app/layout/PublicLayout";
 import { RequestStateModal } from "@/components/ui/RequestStateModal";
@@ -53,7 +54,7 @@ export function LandingPage({
       timestamp: new Date().toISOString(),
       status: 503,
       error: "Service Unavailable",
-      path: "/api/auth/register/config",
+      path: toVersionedApiPath("/api/auth/register/config"),
       traceId: null,
     };
   }

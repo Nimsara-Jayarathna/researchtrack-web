@@ -14,9 +14,7 @@ type IntegrationsTabSectionProps = {
   isDisconnectingJira: boolean;
   pendingGitHubSourceId?: string | null;
   pendingGitHubFlowType?:
-    | "INSTALLATION_DIRECT"
-    | "INSTALLATION_REQUESTED"
-    | null;
+    "INSTALLATION_DIRECT" | "INSTALLATION_REQUESTED" | null;
   onPendingGitHubSourceHandled?: () => void;
 };
 

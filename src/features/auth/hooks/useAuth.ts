@@ -72,20 +72,21 @@ export function useAuth() {
 
   async function logout(): Promise<void> {
     const sessionAtStart = beginSessionTransition("logout");
+    setAuthLoading(true);
 
-    // Local-first logout: always clear local auth/caches immediately so UI and guards
-    // cannot remain authenticated or stuck loading if the server call fails.
-    resetSessionState();
-    navigate("/");
-
-    // Best-effort server logout. Fire-and-forget so local logout is never blocked.
-    void authApi.logout().catch(() => {
-      // Swallow errors — local logout is authoritative.
-    });
+    try {
+      // Revoke the refresh token and clear both httpOnly cookies on the server first.
+      await authApi.logout();
+    } finally {
+      setAuthLoading(false);
+    }
 
     if (!isCurrentSession(sessionAtStart)) {
       return;
     }
+
+    resetSessionState();
+    navigate("/", { replace: true });
   }
 
   function clearError(): void {

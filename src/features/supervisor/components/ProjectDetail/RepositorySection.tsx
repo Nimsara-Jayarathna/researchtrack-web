@@ -37,9 +37,7 @@ type RepositorySectionProps = {
 
 type ModalStep = "method" | "repository-selection";
 type RepositorySelectionEntryMode =
-  | "manual"
-  | "callback-direct"
-  | "callback-requested";
+  "manual" | "callback-direct" | "callback-requested";
 
 type RequestModalState = {
   isOpen: boolean;

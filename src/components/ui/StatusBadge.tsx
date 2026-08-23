@@ -1,12 +1,7 @@
 import { cn } from "@/lib/cn";
 
 type StatusBadgeTone =
-  | "student"
-  | "supervisor"
-  | "success"
-  | "warning"
-  | "danger"
-  | "neutral";
+  "student" | "supervisor" | "success" | "warning" | "danger" | "neutral";
 
 type StatusBadgeProps = {
   children: string;

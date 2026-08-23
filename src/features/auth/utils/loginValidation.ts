@@ -11,7 +11,7 @@ export type LoginFieldErrors = {
 /**
  * Pure client-side validation for the login form.
  *
- * Rules mirror the backend {@code @NotBlank} and {@code @Email} constraints
+ * Rules mirror the backend required/email constraints
  * so the user gets immediate feedback before the request is sent.
  *
  * @returns An error map — empty object means all fields are valid.
@@ -27,8 +27,6 @@ export function validateLoginForm(
     errors.email = "Enter a valid email.";
 
   if (!password) errors.password = "Password is required.";
-  else if (password.length < 8)
-    errors.password = "Password must be at least 8 characters.";
 
   return errors;
 }
@@ -36,8 +34,7 @@ export function validateLoginForm(
 /**
  * Maps a backend {@link ApiError} details array onto {@link LoginFieldErrors}.
  *
- * The backend serialises the field as {@code issue}.
- * {@code message} is checked first as a forward-compatibility fallback.
+ * The shared API client normalizes .NET field errors into the existing UI detail shape.
  *
  * @returns A field-keyed error map, or an empty object when there are no details.
  */

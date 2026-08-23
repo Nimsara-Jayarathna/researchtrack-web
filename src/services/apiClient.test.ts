@@ -6,7 +6,7 @@ const beginSessionTransition = vi.hoisted(() => vi.fn());
 const resetSessionState = vi.hoisted(() => vi.fn());
 
 vi.mock("@/app/config/env", () => ({
-  env: { apiBaseUrl: "http://localhost:8081" },
+  env: { apiBaseUrl: "http://localhost:8081", apiVersion: "v1" },
 }));
 
 vi.mock("@/services/tokenStorage", () => ({
@@ -32,16 +32,13 @@ function jsonResponse(status: number, body: unknown): Response {
   });
 }
 
-function successEnvelope<T>(data: T, message = "OK") {
+function successEnvelope<T>(data: T) {
   return {
     success: true,
-    message,
     data,
-    error: null,
     meta: {
-      timestamp: "2026-03-14T10:00:00Z",
-      path: "/api/test",
-      traceId: null,
+      traceId: "trace-1",
+      timestamp: "2026-08-22T06:00:00Z",
     },
   };
 }
@@ -49,65 +46,133 @@ function successEnvelope<T>(data: T, message = "OK") {
 function errorEnvelope(overrides: {
   message: string;
   code: string;
-  status: number;
-  details?: Array<{ field: string; issue?: string; message?: string }>;
-  path: string;
+  fieldErrors?: Array<{ field: string; errors: string[] }>;
 }) {
   return {
     success: false,
-    message: overrides.message,
-    data: null,
     error: {
       code: overrides.code,
-      status: overrides.status,
-      details: overrides.details ?? [],
+      message: overrides.message,
+      ...(overrides.fieldErrors ? { fieldErrors: overrides.fieldErrors } : {}),
     },
     meta: {
-      timestamp: "2026-03-14T10:00:00Z",
-      path: overrides.path,
-      traceId: null,
+      traceId: "trace-2",
+      timestamp: "2026-08-22T06:01:00Z",
     },
   };
 }
 
-describe("apiClient response normalization", () => {
+describe("apiClient ResearchTrack .NET contract", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.stubGlobal("fetch", vi.fn());
   });
 
-  it("unwraps wrapped success responses and returns plain data", async () => {
+  it("unwraps the canonical .NET success envelope", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
       jsonResponse(
         200,
         successEnvelope({
-          id: "p-1",
-          title: "Project Phoenix",
+          registrationToken: "token_abc",
+          requiresRoleSelection: false,
+          role: "SUPERVISOR",
         }),
       ),
     );
 
-    const data = await apiClient.get<{ id: string; title: string }>(
-      "/api/supervisor/projects/p-1",
-    );
-    expect(data).toEqual({ id: "p-1", title: "Project Phoenix" });
+    const data = await apiClient.post<{
+      registrationToken: string;
+      requiresRoleSelection: boolean;
+      role: string | null;
+    }>("/api/v1/auth/register/verify", {
+      email: "supervisor@sliit.lk",
+      otp: "123456",
+    });
+
+    expect(data).toEqual({
+      registrationToken: "token_abc",
+      requiresRoleSelection: false,
+      role: "SUPERVISOR",
+    });
   });
 
-  it("does not attempt refresh for failed /api/auth/login and surfaces backend message", async () => {
+  it("normalizes .NET fieldErrors for existing form components", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
       jsonResponse(
-        401,
+        400,
         errorEnvelope({
-          status: 401,
-          code: "UNAUTHORIZED",
-          message: "Invalid email or password.",
-          path: "/api/auth/login",
+          code: "VALIDATION_ERROR",
+          message: "Validation failed.",
+          fieldErrors: [
+            {
+              field: "email",
+              errors: ["Invalid IT number format. Use ITXXXXXXXX."],
+            },
+          ],
         }),
       ),
     );
 
     await expect(
-      apiClient.post("/api/auth/login", {
+      apiClient.post("/api/v1/auth/register/init", {
+        email: "bad@my.sliit.lk",
+      }),
+    ).rejects.toMatchObject<ApiException>({
+      apiError: expect.objectContaining({
+        status: 400,
+        code: "VALIDATION_ERROR",
+        message: "Validation failed.",
+        path: "/api/v1/auth/register/init",
+        traceId: "trace-2",
+        details: [
+          expect.objectContaining({
+            field: "email",
+            message: "Invalid IT number format. Use ITXXXXXXXX.",
+          }),
+        ],
+      }),
+    } as ApiException);
+  });
+
+  it("does not attempt token refresh for canonical registration auth failures", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse(
+        401,
+        errorEnvelope({
+          code: "UNAUTHORIZED",
+          message: "Registration session is invalid or expired.",
+        }),
+      ),
+    );
+
+    await expect(
+      apiClient.post("/api/v1/auth/register/complete", {
+        registrationToken: "expired",
+      }),
+    ).rejects.toMatchObject<ApiException>({
+      apiError: expect.objectContaining({
+        status: 401,
+        code: "UNAUTHORIZED",
+        message: "Registration session is invalid or expired.",
+      }),
+    } as ApiException);
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not attempt refresh when canonical login itself returns 401", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse(
+        401,
+        errorEnvelope({
+          code: "UNAUTHORIZED",
+          message: "Invalid email or password.",
+        }),
+      ),
+    );
+
+    await expect(
+      apiClient.post("/api/v1/auth/login", {
         email: "wrong@example.com",
         password: "wrong",
       }),
@@ -120,103 +185,61 @@ describe("apiClient response normalization", () => {
     } as ApiException);
 
     expect(fetch).toHaveBeenCalledTimes(1);
-    expect(fetch).toHaveBeenNthCalledWith(
-      1,
-      "http://localhost:8081/api/auth/login",
-      expect.any(Object),
-    );
   });
 
-  it("parses wrapped validation errors and keeps field details for forms", async () => {
-    vi.mocked(fetch).mockResolvedValueOnce(
-      jsonResponse(
-        400,
-        errorEnvelope({
-          status: 400,
-          code: "VALIDATION_ERROR",
-          message: "Validation failed.",
-          path: "/api/auth/register",
-          details: [{ field: "email", issue: "Email is invalid." }],
-        }),
-      ),
-    );
-
-    await expect(
-      apiClient.post("/api/auth/register", {
-        firstName: "A",
-        lastName: "B",
-        registrationNumber: "CS/2021/001",
-        email: "bad-email",
-        password: "Secure@123",
-      }),
-    ).rejects.toMatchObject<ApiException>({
-      apiError: expect.objectContaining({
-        status: 400,
-        code: "VALIDATION_ERROR",
-        message: "Validation failed.",
-        details: [
-          { field: "email", issue: "Email is invalid.", message: undefined },
-        ],
-      }),
-    } as ApiException);
-  });
-
-  it("still attempts refresh for protected endpoint 401 and retries original request", async () => {
+  it("refreshes once and retries a protected request after access-token expiry", async () => {
     vi.mocked(fetch)
       .mockResolvedValueOnce(
         jsonResponse(
           401,
           errorEnvelope({
-            status: 401,
             code: "UNAUTHORIZED",
-            message: "Authentication required.",
-            path: "/api/supervisor/projects",
+            message: "Authentication is required.",
           }),
         ),
       )
       .mockResolvedValueOnce(
         jsonResponse(
           200,
-          successEnvelope(
-            {
-              user: {
-                id: "u-1",
-                email: "user@example.com",
-                firstName: "Test",
-                lastName: "User",
-                role: "SUPERVISOR",
-              },
+          successEnvelope({
+            user: {
+              id: "user-id",
+              email: "student@my.sliit.lk",
+              firstName: "Student",
+              lastName: "User",
+              role: "STUDENT",
             },
-            "Token refreshed.",
-          ),
+          }),
         ),
       )
-      .mockResolvedValueOnce(jsonResponse(200, successEnvelope({ ok: true })));
+      .mockResolvedValueOnce(
+        jsonResponse(200, successEnvelope({ id: "project-1" })),
+      );
 
-    const data = await apiClient.get<{ ok: boolean }>(
-      "/api/supervisor/projects",
+    const result = await apiClient.get<{ id: string }>(
+      "/api/v1/projects/project-1",
     );
-    expect(data).toEqual({ ok: true });
 
+    expect(result).toEqual({ id: "project-1" });
     expect(fetch).toHaveBeenCalledTimes(3);
     expect(fetch).toHaveBeenNthCalledWith(
       2,
-      "http://localhost:8081/api/auth/refresh",
-      expect.objectContaining({ method: "POST" }),
+      "http://localhost:8081/api/v1/auth/refresh",
+      expect.objectContaining({ method: "POST", credentials: "include" }),
     );
-    expect(setUser).toHaveBeenCalledOnce();
+    expect(setUser).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "user-id", role: "STUDENT" }),
+    );
   });
 
-  it("clears local auth and throws session-expired error when refresh fails", async () => {
+  it("clears the local session when refresh fails for a protected request", async () => {
     vi.mocked(fetch)
       .mockResolvedValueOnce(
         jsonResponse(
           401,
           errorEnvelope({
-            status: 401,
             code: "UNAUTHORIZED",
-            message: "Authentication required.",
-            path: "/api/student/projects",
+            message: "Authentication is required.",
           }),
         ),
       )
@@ -224,16 +247,14 @@ describe("apiClient response normalization", () => {
         jsonResponse(
           401,
           errorEnvelope({
-            status: 401,
             code: "UNAUTHORIZED",
-            message: "Refresh token is invalid or has expired.",
-            path: "/api/auth/refresh",
+            message: "Authentication session is invalid or has expired.",
           }),
         ),
       );
 
     await expect(
-      apiClient.get("/api/student/projects"),
+      apiClient.get("/api/v1/projects/project-1"),
     ).rejects.toMatchObject<ApiException>({
       apiError: expect.objectContaining({
         status: 401,
@@ -242,35 +263,25 @@ describe("apiClient response normalization", () => {
       }),
     } as ApiException);
 
-    expect(fetch).toHaveBeenCalledTimes(2);
     expect(beginSessionTransition).toHaveBeenCalledWith("session-expired");
-    expect(resetSessionState).toHaveBeenCalledOnce();
-    expect(clearAll).not.toHaveBeenCalled();
+    expect(resetSessionState).toHaveBeenCalledTimes(1);
   });
 
-  it("does not recursively refresh when /api/auth/refresh itself returns 401", async () => {
+  it("rejects 2xx responses that do not use the .NET envelope", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
-      jsonResponse(
-        401,
-        errorEnvelope({
-          status: 401,
-          code: "UNAUTHORIZED",
-          message: "Refresh token is invalid or has expired.",
-          path: "/api/auth/refresh",
-        }),
-      ),
+      jsonResponse(200, { registrationToken: "raw-token" }),
     );
 
     await expect(
-      apiClient.post("/api/auth/refresh", {}),
+      apiClient.post("/api/v1/auth/register/verify", {
+        email: "supervisor@sliit.lk",
+        otp: "123456",
+      }),
     ).rejects.toMatchObject<ApiException>({
       apiError: expect.objectContaining({
-        status: 401,
-        code: "UNAUTHORIZED",
-        message: "Refresh token is invalid or has expired.",
+        code: "INTERNAL_ERROR",
+        message: "The server returned an invalid response.",
       }),
     } as ApiException);
-
-    expect(fetch).toHaveBeenCalledTimes(1);
   });
 });

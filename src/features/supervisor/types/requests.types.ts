@@ -59,6 +59,10 @@ export type AddSupervisorProjectMembersRequest = {
   studentIds: string[];
 };
 
+export type RemoveProjectMemberRequest = {
+  studentId: string;
+};
+
 export type AddSupervisorProjectMilestoneRequest = {
   title: string;
   description: string | null;

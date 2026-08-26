@@ -21,7 +21,7 @@ import { normalizeGitHubRepositoryUrl } from "../utils/githubRepositoryUrl";
 type ApiClient = typeof import("@/services/apiClient").apiClient;
 
 type SupervisorProjectCache = Partial<Record<string, SupervisorProjectDetail>>;
-type SupervisorProjectInFlight = Partial<
+type SupervisorProjectInFlight = Partial
   Record<string, Promise<SupervisorProjectDetail>>
 >;
 
@@ -174,6 +174,17 @@ export function createSupervisorProjectsApi({
       const updated = await apiClient.post<SupervisorProjectDetail>(
         `/api/supervisor/projects/${projectId}/members`,
         body,
+      );
+      cachedProjectsById[projectId] = updated;
+      return updated;
+    },
+
+    async removeProjectMember(
+      projectId: string,
+      studentId: string,
+    ): Promise<SupervisorProjectDetail> {
+      const updated = await apiClient.delete<SupervisorProjectDetail>(
+        `/api/supervisor/projects/${projectId}/members/${studentId}`,
       );
       cachedProjectsById[projectId] = updated;
       return updated;

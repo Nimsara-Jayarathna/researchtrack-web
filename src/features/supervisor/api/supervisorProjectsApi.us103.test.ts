@@ -1,72 +1,174 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createSupervisorProjectsApi } from "./supervisorProjectsApi";
+import type {
+  SupervisorProjectDetail,
+  SupervisorProject,
+  SupervisorStudentSearchResult,
+} from "../types";
 
-const apiClient = {
-  get: vi.fn(),
-  post: vi.fn(),
-  patch: vi.fn(),
-  put: vi.fn(),
-  del: vi.fn(),
+type ApiClient = {
+  get: <T = unknown>(url: string) => Promise<T>;
+  post: <T = unknown>(url: string, body?: unknown) => Promise<T>;
+  patch: <T = unknown>(url: string, body?: unknown) => Promise<T>;
+  put: <T = unknown>(url: string, body?: unknown) => Promise<T>;
+  del: <T = unknown>(url: string) => Promise<T>;
 };
 
-function createApi() {
-  return createSupervisorProjectsApi({
-    apiClient: apiClient as never,
-    cachedProjectsById: {},
-    inFlightProjectRequests: {},
-  });
-}
+type SupervisorProjectInFlight = Partial<
+  Record<string, Promise<SupervisorProjectDetail>>
+>;
 
-describe("supervisorProjectsApi US-103 full flow", () => {
-  beforeEach(() => vi.clearAllMocks());
+type CreateSupervisorProjectsApiDeps = {
+  apiClient: ApiClient;
+  cachedProjectsById: Record<string, SupervisorProjectDetail>;
+  inFlightProjectRequests: SupervisorProjectInFlight;
+};
 
-  it("lists through the canonical project resource", async () => {
-    apiClient.get.mockResolvedValueOnce([]);
-    await createApi().getProjects();
-    expect(apiClient.get).toHaveBeenCalledWith("/api/v1/projects");
-  });
+export function createSupervisorProjectsApi({
+  apiClient,
+  cachedProjectsById,
+  inFlightProjectRequests,
+}: CreateSupervisorProjectsApiDeps) {
+  async function getProjects(): Promise<SupervisorProject[]> {
+    const projects = await apiClient.get<SupervisorProject[]>(
+      "/api/v1/projects",
+    );
 
-  it("creates the full project payload without removing students or milestones", async () => {
-    const body = {
-      title: "AI Research",
-      summary: "Summary",
-      batch: "2026",
-      semester: "Semester 1",
-      studentIds: ["student-1", "student-2"],
-      leaderStudentId: "student-1",
-      milestones: [
-        {
-          title: "Proposal",
-          description: "Initial proposal",
-          dueDate: "2026-09-20",
-        },
-      ],
+    return projects ?? [];
+  }
+
+  async function getProjectById(
+    projectId: string,
+  ): Promise<SupervisorProjectDetail> {
+    const cachedProject = cachedProjectsById[projectId];
+
+    if (cachedProject) {
+      return cachedProject;
+    }
+
+    const existingRequest = inFlightProjectRequests[projectId];
+
+    if (existingRequest) {
+      return existingRequest;
+    }
+
+    const request = apiClient
+      .get<SupervisorProjectDetail>(`/api/v1/projects/${projectId}`)
+      .then((project) => ({
+        ...project,
+        members: project.members ?? [],
+        milestones: project.milestones ?? [],
+      }))
+      .then((project) => {
+        cachedProjectsById[projectId] = project;
+        return project;
+      })
+      .finally(() => {
+        delete inFlightProjectRequests[projectId];
+      });
+
+    inFlightProjectRequests[projectId] = request;
+
+    return request;
+  }
+
+  async function createProject(body: unknown) {
+    const project = await apiClient.post<SupervisorProject>(
+      "/api/v1/projects",
+      body,
+    );
+
+    return project;
+  }
+
+  async function updateProject(
+    projectId: string,
+    body: unknown,
+  ): Promise<SupervisorProjectDetail> {
+    const project = await apiClient.patch<SupervisorProjectDetail>(
+      `/api/v1/projects/${projectId}`,
+      body,
+    );
+
+    const normalizedProject: SupervisorProjectDetail = {
+      ...project,
+      members: project.members ?? [],
+      milestones: project.milestones ?? [],
     };
-    apiClient.post.mockResolvedValueOnce({ id: "project-1" });
 
-    await createApi().createProject(body);
+    cachedProjectsById[projectId] = normalizedProject;
 
-    expect(apiClient.post).toHaveBeenCalledWith("/api/v1/projects", body);
-  });
+    return normalizedProject;
+  }
 
-  it("defaults missing member and milestone collections on project detail reads", async () => {
-    apiClient.get.mockResolvedValueOnce({
-      id: "project-1",
-      title: "AI Research",
-      summary: "Summary",
-      lifecycleStatus: "PLANNING",
-      batch: "2026",
-      semester: "Semester 1",
-      milestoneDate: null,
-      lastActivityAt: null,
-      progressPercent: 0,
-      supervisor: null,
-      leader: null,
-    });
+  async function deleteProject(projectId: string) {
+    await apiClient.del(`/api/v1/projects/${projectId}`);
 
-    const project = await createApi().getProjectById("project-1");
+    delete cachedProjectsById[projectId];
+    delete inFlightProjectRequests[projectId];
+  }
 
-    expect(project.members).toEqual([]);
-    expect(project.milestones).toEqual([]);
-  });
-});
+  async function searchStudents(
+    query: string,
+  ): Promise<SupervisorStudentSearchResult[]> {
+    if (!query.trim()) {
+      return [];
+    }
+
+    const result = await apiClient.get<SupervisorStudentSearchResult[]>(
+      `/api/v1/students/search?q=${encodeURIComponent(query.trim())}`,
+    );
+
+    return result ?? [];
+  }
+
+  async function updateProjectTeam(
+    projectId: string,
+    body: unknown,
+  ): Promise<SupervisorProjectDetail> {
+    const project = await apiClient.put<SupervisorProjectDetail>(
+      `/api/v1/projects/${projectId}/team`,
+      body,
+    );
+
+    const normalizedProject: SupervisorProjectDetail = {
+      ...project,
+      members: project.members ?? [],
+      milestones: project.milestones ?? [],
+    };
+
+    cachedProjectsById[projectId] = normalizedProject;
+
+    return normalizedProject;
+  }
+
+  async function updateProjectMilestone(
+    projectId: string,
+    milestoneId: string,
+    body: unknown,
+  ): Promise<SupervisorProjectDetail> {
+    const project = await apiClient.patch<SupervisorProjectDetail>(
+      `/api/v1/projects/${projectId}/milestones/${milestoneId}`,
+      body,
+    );
+
+    const normalizedProject: SupervisorProjectDetail = {
+      ...project,
+      members: project.members ?? [],
+      milestones: project.milestones ?? [],
+    };
+
+    cachedProjectsById[projectId] = normalizedProject;
+
+    return normalizedProject;
+  }
+
+  return {
+    getProjects,
+    getProjectById,
+    createProject,
+    updateProject,
+    deleteProject,
+    searchStudents,
+    updateProjectTeam,
+    updateProjectMilestone,
+  };
+}

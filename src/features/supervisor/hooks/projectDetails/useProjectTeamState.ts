@@ -9,47 +9,82 @@ import { toApiError } from "../../projectDetails.shared";
 
 export type TeamState = {
   isManagingStudents: boolean;
+
   studentQuery: string;
   studentSearchState: SearchState;
   studentSearchError: ApiError | null;
   studentSearchResults: SupervisorStudentSearchResult[];
+
   selectedStudentsToAdd: SupervisorStudentSearchResult[];
+
   isAddingStudents: boolean;
+
   leaderDraftId: string;
   isUpdatingLeader: boolean;
+
   studentMembers: SupervisorProjectDetail["members"];
+
   setStudentQuery: (query: string) => void;
   setLeaderDraftId: (id: string) => void;
+
   startManagement: () => void;
   cancelManagement: () => void;
-  selectStudentToAdd: (student: SupervisorStudentSearchResult) => void;
+
+  selectStudentToAdd: (
+    student: SupervisorStudentSearchResult,
+  ) => void;
+
   removeSelectedStudent: (studentId: string) => void;
+
   addStudents: () => void;
+
   removeStudent: (studentId: string) => Promise<void>;
+
   submitLeaderUpdate: () => Promise<void>;
 };
 
 type UseProjectTeamStateDeps = {
   projectId: string | undefined;
+
   project: SupervisorProjectDetail | null;
-  setProject: (project: SupervisorProjectDetail) => void;
-  showLoadingModal: (title: string, message: string) => void;
-  showSuccessModal: (title: string, message: string) => void;
+
+  setProject: (
+    project: SupervisorProjectDetail,
+  ) => void;
+
+  showLoadingModal: (
+    title: string,
+    message: string,
+  ) => void;
+
+  showSuccessModal: (
+    title: string,
+    message: string,
+  ) => void;
+
   showErrorModal: (
     title: string,
     message: string,
     retryAction: () => Promise<void>,
   ) => void;
+
   api: {
-    searchStudents: (query: string) => Promise<SupervisorStudentSearchResult[]>;
+    searchStudents: (
+      query: string,
+    ) => Promise<SupervisorStudentSearchResult[]>;
+
     addProjectMembers: (
       projectId: string,
-      payload: { studentIds: string[] },
+      payload: {
+        studentIds: string[];
+      },
     ) => Promise<SupervisorProjectDetail>;
+
     removeProjectMember: (
       projectId: string,
       studentId: string,
     ) => Promise<SupervisorProjectDetail>;
+
     updateProject: (
       projectId: string,
       payload: {
@@ -73,95 +108,155 @@ export function useProjectTeamState({
   showErrorModal,
   api,
 }: UseProjectTeamStateDeps): TeamState {
-  const { searchStudents } = api;
-  const [isManagingStudents, setIsManagingStudents] = useState(false);
-  const [studentQuery, setStudentQuery] = useState("");
+  const [isManagingStudents, setIsManagingStudents] =
+    useState(false);
+
+  const [studentQuery, setStudentQuery] =
+    useState("");
+
   const [studentSearchState, setStudentSearchState] =
     useState<SearchState>("idle");
-  const [studentSearchError, setStudentSearchError] = useState<ApiError | null>(
-    null,
-  );
-  const [studentSearchResults, setStudentSearchResults] = useState
-    SupervisorStudentSearchResult[]
-  >([]);
-  const [selectedStudentsToAdd, setSelectedStudentsToAdd] = useState
-    SupervisorStudentSearchResult[]
-  >([]);
-  const [isAddingStudents, setIsAddingStudents] = useState(false);
-  const [leaderDraftId, setLeaderDraftId] = useState<string>("");
-  const [isUpdatingLeader, setIsUpdatingLeader] = useState(false);
+
+  const [studentSearchError, setStudentSearchError] =
+    useState<ApiError | null>(null);
+
+  const [studentSearchResults, setStudentSearchResults] =
+    useState<SupervisorStudentSearchResult[]>([]);
+
+  const [selectedStudentsToAdd, setSelectedStudentsToAdd] =
+    useState<SupervisorStudentSearchResult[]>([]);
+
+  const [isAddingStudents, setIsAddingStudents] =
+    useState(false);
+
+  const [leaderDraftId, setLeaderDraftId] =
+    useState("");
+
+  const [isUpdatingLeader, setIsUpdatingLeader] =
+    useState(false);
+
   const projectMembers = useMemo(
     () => project?.members ?? [],
     [project?.members],
   );
 
   const studentMembers = useMemo(
-    () => projectMembers.filter((member) => member.memberRole === "STUDENT"),
+    () =>
+      projectMembers.filter(
+        (member) => member.memberRole === "STUDENT",
+      ),
     [projectMembers],
   );
 
+  /*
+   * Keep the leader dropdown synchronized
+   * with the currently loaded project.
+   */
   useEffect(() => {
     setLeaderDraftId(project?.leader?.id ?? "");
   }, [project?.leader?.id]);
 
+  /*
+   * Search students with debounce.
+   */
   useEffect(() => {
     const normalizedQuery = studentQuery.trim();
-    if (!project || !isManagingStudents || normalizedQuery.length < 3) {
-      setStudentSearchResults((current) => (current.length > 0 ? [] : current));
-      setStudentSearchState((current) =>
-        current !== "idle" ? "idle" : current,
-      );
-      setStudentSearchError((current) => (current !== null ? null : current));
+
+    if (
+      !project ||
+      !isManagingStudents ||
+      normalizedQuery.length < 3
+    ) {
+      setStudentSearchResults([]);
+      setStudentSearchState("idle");
+      setStudentSearchError(null);
+
       return;
     }
 
-    let isCancelled = false;
-    setStudentSearchState("loading");
-    setStudentSearchError((current) => (current !== null ? null : current));
+    let cancelled = false;
 
-    const timeoutId = window.setTimeout(async () => {
-      try {
-        const results = await searchStudents(normalizedQuery);
-        if (isCancelled) return;
-        const excludedIds = new Set([
-          ...projectMembers
-            .filter((m) => m.memberRole === "STUDENT")
-            .map((m) => m.id),
-          ...selectedStudentsToAdd.map((s) => s.id),
-        ]);
-        const visibleResults = results.filter((s) => !excludedIds.has(s.id));
-        setStudentSearchResults(visibleResults);
-        setStudentSearchState(visibleResults.length > 0 ? "results" : "empty");
-      } catch (searchException) {
-        if (isCancelled) return;
-        setStudentSearchResults((current) =>
-          current.length > 0 ? [] : current,
-        );
-        setStudentSearchState("error");
-        setStudentSearchError(
-          toApiError(searchException, "Unable to search students right now."),
-        );
-      }
+    setStudentSearchState("loading");
+    setStudentSearchError(null);
+
+    const timeoutId = window.setTimeout(() => {
+      void (async () => {
+        try {
+          const results =
+            await api.searchStudents(normalizedQuery);
+
+          if (cancelled) {
+            return;
+          }
+
+          /*
+           * Exclude:
+           * 1. Students already in the project
+           * 2. Students already selected for adding
+           */
+          const excludedIds = new Set([
+            ...studentMembers.map(
+              (member) => member.id,
+            ),
+            ...selectedStudentsToAdd.map(
+              (student) => student.id,
+            ),
+          ]);
+
+          const visibleResults = results.filter(
+            (student) =>
+              !excludedIds.has(student.id),
+          );
+
+          setStudentSearchResults(visibleResults);
+
+          setStudentSearchState(
+            visibleResults.length > 0
+              ? "results"
+              : "empty",
+          );
+        } catch (searchException) {
+          if (cancelled) {
+            return;
+          }
+
+          setStudentSearchResults([]);
+          setStudentSearchState("error");
+
+          setStudentSearchError(
+            toApiError(
+              searchException,
+              "Unable to search students right now.",
+            ),
+          );
+        }
+      })();
     }, 300);
 
     return () => {
-      isCancelled = true;
+      cancelled = true;
       window.clearTimeout(timeoutId);
     };
   }, [
+    api,
     isManagingStudents,
     project,
-    projectMembers,
-    searchStudents,
     selectedStudentsToAdd,
+    studentMembers,
     studentQuery,
   ]);
 
-  function startManagement() {
+  /*
+   * Start student management.
+   */
+  function startManagement(): void {
     setIsManagingStudents(true);
   }
 
-  function cancelManagement() {
+  /*
+   * Cancel student management.
+   */
+  function cancelManagement(): void {
     setIsManagingStudents(false);
     setStudentQuery("");
     setStudentSearchResults([]);
@@ -170,36 +265,81 @@ export function useProjectTeamState({
     setSelectedStudentsToAdd([]);
   }
 
-  function selectStudentToAdd(student: SupervisorStudentSearchResult) {
-    setSelectedStudentsToAdd((current) =>
-      current.some((selected) => selected.id === student.id)
-        ? current
-        : [...current, student],
-    );
+  /*
+   * Select a student from search results.
+   */
+  function selectStudentToAdd(
+    student: SupervisorStudentSearchResult,
+  ): void {
+    setSelectedStudentsToAdd((current) => {
+      if (
+        current.some(
+          (selected) => selected.id === student.id,
+        )
+      ) {
+        return current;
+      }
+
+      return [...current, student];
+    });
+
     setStudentQuery("");
     setStudentSearchResults([]);
     setStudentSearchState("idle");
+    setStudentSearchError(null);
   }
 
-  function removeSelectedStudent(studentId: string) {
+  /*
+   * Remove a student from temporary selection.
+   */
+  function removeSelectedStudent(
+    studentId: string,
+  ): void {
     setSelectedStudentsToAdd((current) =>
-      current.filter((student) => student.id !== studentId),
+      current.filter(
+        (student) => student.id !== studentId,
+      ),
     );
   }
 
-  async function submitAddStudents() {
-    if (!projectId || selectedStudentsToAdd.length === 0) return;
+  /*
+   * Add selected students to the project.
+   */
+  async function submitAddStudents(): Promise<void> {
+    if (
+      !projectId ||
+      selectedStudentsToAdd.length === 0
+    ) {
+      return;
+    }
+
     setIsAddingStudents(true);
+
     showLoadingModal(
       "Adding team members",
       "Assigning selected students to this project.",
     );
+
     try {
-      const updatedProject = await api.addProjectMembers(projectId, {
-        studentIds: selectedStudentsToAdd.map((student) => student.id),
-      });
+      const updatedProject =
+        await api.addProjectMembers(projectId, {
+          studentIds: selectedStudentsToAdd.map(
+            (student) => student.id,
+          ),
+        });
+
       setProject(updatedProject);
-      cancelManagement();
+
+      /*
+       * Clear temporary selection.
+       */
+      setIsManagingStudents(false);
+      setStudentQuery("");
+      setStudentSearchResults([]);
+      setStudentSearchState("idle");
+      setStudentSearchError(null);
+      setSelectedStudentsToAdd([]);
+
       showSuccessModal(
         "Team updated",
         "Selected students were added to the project.",
@@ -209,6 +349,7 @@ export function useProjectTeamState({
         addException,
         "Unable to add students right now.",
       );
+
       showErrorModal(
         "Unable to add students",
         apiError.message,
@@ -219,23 +360,47 @@ export function useProjectTeamState({
     }
   }
 
-  function addStudents() {
+  /*
+   * Public function used by TeamTabSection.
+   */
+  function addStudents(): void {
     void submitAddStudents();
   }
 
-  async function submitRemoveStudent(studentId: string) {
-    if (!projectId || !project) return;
+  /*
+   * Remove a student from the project.
+   */
+  async function submitRemoveStudent(
+    studentId: string,
+  ): Promise<void> {
+    if (!projectId || !project) {
+      return;
+    }
+
     setIsAddingStudents(true);
+
     showLoadingModal(
       "Removing team member",
       "Removing the student from this project.",
     );
+
     try {
-      const updatedProject = await api.removeProjectMember(
-        projectId,
-        studentId,
-      );
+      const updatedProject =
+        await api.removeProjectMember(
+          projectId,
+          studentId,
+        );
+
       setProject(updatedProject);
+
+      /*
+       * If the removed student was the leader,
+       * clear the draft leader.
+       */
+      if (leaderDraftId === studentId) {
+        setLeaderDraftId("");
+      }
+
       showSuccessModal(
         "Team member removed",
         "The student was removed from the project.",
@@ -245,43 +410,81 @@ export function useProjectTeamState({
         removeException,
         "Unable to remove student right now.",
       );
+
       showErrorModal(
         "Unable to remove student",
         apiError.message,
-        () => submitRemoveStudent(studentId),
+        () =>
+          submitRemoveStudent(studentId),
       );
     } finally {
       setIsAddingStudents(false);
     }
   }
 
-  async function removeStudentWrapper(studentId: string) {
+  /*
+   * Public remove function.
+   */
+  async function removeStudent(
+    studentId: string,
+  ): Promise<void> {
     await submitRemoveStudent(studentId);
   }
 
-  async function submitLeaderUpdate() {
+  /*
+   * Update project leader.
+   */
+  async function submitLeaderUpdate(): Promise<void> {
     if (
       !projectId ||
       !project ||
       !leaderDraftId ||
       leaderDraftId === project.leader?.id
-    )
+    ) {
       return;
+    }
+
+    /*
+     * Only an existing student member
+     * can become project leader.
+     */
+    const selectedLeaderExists =
+      studentMembers.some(
+        (member) =>
+          member.id === leaderDraftId,
+      );
+
+    if (!selectedLeaderExists) {
+      showErrorModal(
+        "Invalid project leader",
+        "Please select a student who is already a member of this project.",
+        submitLeaderUpdate,
+      );
+
+      return;
+    }
+
     setIsUpdatingLeader(true);
+
     showLoadingModal(
       "Updating project leader",
       "Assigning the selected student as project leader.",
     );
+
     try {
-      const updatedProject = await api.updateProject(projectId, {
-        title: project.title,
-        summary: project.summary ?? "",
-        batch: project.batch ?? "",
-        semester: project.semester ?? "",
-        lifecycleStatus: project.lifecycleStatus,
-        leaderStudentId: leaderDraftId,
-      });
+      const updatedProject =
+        await api.updateProject(projectId, {
+          title: project.title,
+          summary: project.summary ?? "",
+          batch: project.batch ?? "",
+          semester: project.semester ?? "",
+          lifecycleStatus:
+            project.lifecycleStatus,
+          leaderStudentId: leaderDraftId,
+        });
+
       setProject(updatedProject);
+
       showSuccessModal(
         "Project leader updated",
         "The project leader was updated successfully.",
@@ -291,6 +494,7 @@ export function useProjectTeamState({
         leaderException,
         "Unable to update project leader right now.",
       );
+
       showErrorModal(
         "Unable to update leader",
         apiError.message,
@@ -303,23 +507,33 @@ export function useProjectTeamState({
 
   return {
     isManagingStudents,
+
     studentQuery,
     studentSearchState,
     studentSearchError,
     studentSearchResults,
+
     selectedStudentsToAdd,
+
     isAddingStudents,
+
     leaderDraftId,
     isUpdatingLeader,
+
     studentMembers,
+
     setStudentQuery,
     setLeaderDraftId,
+
     startManagement,
     cancelManagement,
+
     selectStudentToAdd,
     removeSelectedStudent,
+
     addStudents,
-    removeStudent: removeStudentWrapper,
+    removeStudent,
+
     submitLeaderUpdate,
   };
 }

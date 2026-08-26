@@ -4,6 +4,7 @@ import {
   type ProjectResourceDetail,
   type ProjectResourceSummary,
 } from "@/features/projects/api/projectResource";
+
 import type {
   AddSupervisorProjectMembersRequest,
   AddSupervisorProjectMilestoneRequest,
@@ -16,12 +17,16 @@ import type {
   UpdateSupervisorProjectRequest,
   UpdateSupervisorProjectStatusRequest,
 } from "../types";
+
 import { normalizeGitHubRepositoryUrl } from "../utils/githubRepositoryUrl";
 
 type ApiClient = typeof import("@/services/apiClient").apiClient;
 
-type SupervisorProjectCache = Partial<Record<string, SupervisorProjectDetail>>;
-type SupervisorProjectInFlight = Partial
+type SupervisorProjectCache = Partial<
+  Record<string, SupervisorProjectDetail>
+>;
+
+type SupervisorProjectInFlight = Partial<
   Record<string, Promise<SupervisorProjectDetail>>
 >;
 
@@ -79,9 +84,11 @@ export function createSupervisorProjectsApi({
 }: CreateSupervisorProjectsApiDeps) {
   return {
     async getProjects(): Promise<SupervisorProjectSummary[]> {
-      const projects = await apiClient.get<ProjectResourceSummary[]>(
-        PROJECTS_RESOURCE_PATH,
-      );
+      const projects =
+        await apiClient.get<ProjectResourceSummary[]>(
+          PROJECTS_RESOURCE_PATH,
+        );
+
       return projects.map(toSupervisorSummary);
     },
 
@@ -89,24 +96,37 @@ export function createSupervisorProjectsApi({
       projectId: string,
       forceRefresh = false,
     ): Promise<SupervisorProjectDetail> {
-      if (!forceRefresh && cachedProjectsById[projectId]) {
-        return cachedProjectsById[projectId] as SupervisorProjectDetail;
+      if (
+        !forceRefresh &&
+        cachedProjectsById[projectId]
+      ) {
+        return cachedProjectsById[
+          projectId
+        ] as SupervisorProjectDetail;
       }
 
-      if (!forceRefresh && inFlightProjectRequests[projectId]) {
+      if (
+        !forceRefresh &&
+        inFlightProjectRequests[projectId]
+      ) {
         return inFlightProjectRequests[
           projectId
         ] as Promise<SupervisorProjectDetail>;
       }
 
       const request = apiClient
-        .get<ProjectResourceDetail>(`${PROJECTS_RESOURCE_PATH}/${projectId}`)
+        .get<ProjectResourceDetail>(
+          `${PROJECTS_RESOURCE_PATH}/${projectId}`,
+        )
         .then(toSupervisorDetail);
+
       inFlightProjectRequests[projectId] = request;
 
       try {
         const project = await request;
+
         cachedProjectsById[projectId] = project;
+
         return project;
       } finally {
         delete inFlightProjectRequests[projectId];
@@ -122,17 +142,18 @@ export function createSupervisorProjectsApi({
       );
     },
 
-    // The operations below belong to later stories and intentionally keep their
-    // existing contracts until those .NET backend slices are implemented.
     async updateProject(
       projectId: string,
       body: UpdateSupervisorProjectRequest,
     ): Promise<SupervisorProjectDetail> {
-      const updated = await apiClient.patch<SupervisorProjectDetail>(
-        `/api/supervisor/projects/${projectId}`,
-        body,
-      );
+      const updated =
+        await apiClient.patch<SupervisorProjectDetail>(
+          `/api/supervisor/projects/${projectId}`,
+          body,
+        );
+
       cachedProjectsById[projectId] = updated;
+
       return updated;
     },
 
@@ -140,11 +161,14 @@ export function createSupervisorProjectsApi({
       projectId: string,
       body: UpdateSupervisorProjectStatusRequest,
     ): Promise<SupervisorProjectDetail> {
-      const updated = await apiClient.patch<SupervisorProjectDetail>(
-        `/api/supervisor/projects/${projectId}/status`,
-        body,
-      );
+      const updated =
+        await apiClient.patch<SupervisorProjectDetail>(
+          `/api/supervisor/projects/${projectId}/status`,
+          body,
+        );
+
       cachedProjectsById[projectId] = updated;
+
       return updated;
     },
 
@@ -156,14 +180,19 @@ export function createSupervisorProjectsApi({
         typeof repositoryUrl === "string"
           ? normalizeGitHubRepositoryUrl(repositoryUrl)
           : null;
+
       const body: UpdateRepositoryRequest = {
         repositoryUrl: normalizedRepositoryUrl,
       };
-      const updated = await apiClient.patch<SupervisorProjectDetail>(
-        `/api/supervisor/projects/${projectId}/repository`,
-        body,
-      );
+
+      const updated =
+        await apiClient.patch<SupervisorProjectDetail>(
+          `/api/supervisor/projects/${projectId}/repository`,
+          body,
+        );
+
       cachedProjectsById[projectId] = updated;
+
       return updated;
     },
 
@@ -171,11 +200,14 @@ export function createSupervisorProjectsApi({
       projectId: string,
       body: AddSupervisorProjectMembersRequest,
     ): Promise<SupervisorProjectDetail> {
-      const updated = await apiClient.post<SupervisorProjectDetail>(
-        `/api/supervisor/projects/${projectId}/members`,
-        body,
-      );
+      const updated =
+        await apiClient.post<SupervisorProjectDetail>(
+          `/api/supervisor/projects/${projectId}/members`,
+          body,
+        );
+
       cachedProjectsById[projectId] = updated;
+
       return updated;
     },
 
@@ -183,10 +215,13 @@ export function createSupervisorProjectsApi({
       projectId: string,
       studentId: string,
     ): Promise<SupervisorProjectDetail> {
-      const updated = await apiClient.delete<SupervisorProjectDetail>(
-        `/api/supervisor/projects/${projectId}/members/${studentId}`,
-      );
+      const updated =
+        await apiClient.del<SupervisorProjectDetail>(
+          `/api/supervisor/projects/${projectId}/members/${studentId}`,
+        );
+
       cachedProjectsById[projectId] = updated;
+
       return updated;
     },
 
@@ -194,11 +229,14 @@ export function createSupervisorProjectsApi({
       projectId: string,
       body: AddSupervisorProjectMilestoneRequest,
     ): Promise<SupervisorProjectDetail> {
-      const updated = await apiClient.post<SupervisorProjectDetail>(
-        `/api/supervisor/projects/${projectId}/milestones`,
-        body,
-      );
+      const updated =
+        await apiClient.post<SupervisorProjectDetail>(
+          `/api/supervisor/projects/${projectId}/milestones`,
+          body,
+        );
+
       cachedProjectsById[projectId] = updated;
+
       return updated;
     },
 
@@ -207,11 +245,14 @@ export function createSupervisorProjectsApi({
       milestoneId: string,
       body: UpdateSupervisorProjectMilestoneRequest,
     ): Promise<SupervisorProjectDetail> {
-      const updated = await apiClient.patch<SupervisorProjectDetail>(
-        `/api/supervisor/projects/${projectId}/milestones/${milestoneId}`,
-        body,
-      );
+      const updated =
+        await apiClient.patch<SupervisorProjectDetail>(
+          `/api/supervisor/projects/${projectId}/milestones/${milestoneId}`,
+          body,
+        );
+
       cachedProjectsById[projectId] = updated;
+
       return updated;
     },
   };

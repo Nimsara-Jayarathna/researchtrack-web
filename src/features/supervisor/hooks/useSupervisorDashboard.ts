@@ -82,8 +82,7 @@ export function useSupervisorDashboard() {
       return;
     }
 
-    const inFlightDashboardRequest =
-      getInFlightSupervisorDashboardRequest();
+    const inFlightDashboardRequest = getInFlightSupervisorDashboardRequest();
     const startsNewRequest = forceRefresh || !inFlightDashboardRequest;
     const request = startsNewRequest
       ? supervisorApi.getDashboard()

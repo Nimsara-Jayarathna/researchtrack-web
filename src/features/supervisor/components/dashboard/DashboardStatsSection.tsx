@@ -72,17 +72,16 @@ export function DashboardStatsSection({
           label={stat.label}
           tone={stat.tone}
           value={
-            showSkeleton || !dashboard
-              ? undefined
-              : (stat.key === "jiraAtRiskCount" ||
-                    stat.key === "jiraBehindCount") &&
-                  !hasConnectedJiraProject
-                ? (
-                    <span className="text-sm font-semibold normal-case tracking-normal text-slate-500">
-                      Not linked
-                    </span>
-                  )
-                : stat.getValue(dashboard)
+            showSkeleton || !dashboard ? undefined : (stat.key ===
+                "jiraAtRiskCount" ||
+                stat.key === "jiraBehindCount") &&
+              !hasConnectedJiraProject ? (
+              <span className="text-sm font-semibold normal-case tracking-normal text-slate-500">
+                Not linked
+              </span>
+            ) : (
+              stat.getValue(dashboard)
+            )
           }
           loading={showSkeleton}
         />

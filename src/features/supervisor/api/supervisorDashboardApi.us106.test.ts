@@ -29,8 +29,6 @@ describe("supervisorDashboardApi US-106", () => {
 
     await expect(api.getDashboard()).resolves.toEqual(dashboard);
 
-    expect(apiClient.get).toHaveBeenCalledWith(
-      "/api/v1/supervisor/dashboard",
-    );
+    expect(apiClient.get).toHaveBeenCalledWith("/api/v1/supervisor/dashboard");
   });
 });

@@ -48,11 +48,10 @@ export type CreateSupervisorProjectResponse = {
 
 export type UpdateSupervisorProjectRequest = {
   title: string;
-  summary: string;
+  summary: string | null;
   batch: string;
   semester: string;
   lifecycleStatus: SupervisorProjectLifecycle;
-  leaderStudentId?: string | null;
 };
 
 export type AddSupervisorProjectMembersRequest = {

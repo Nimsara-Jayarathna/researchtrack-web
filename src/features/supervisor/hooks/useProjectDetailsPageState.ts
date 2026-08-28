@@ -67,7 +67,7 @@ export function useProjectDetailsPageState({
       searchStudents: supervisorApi.searchStudents,
       addProjectMembers: supervisorApi.addProjectMembers,
       removeProjectMember: supervisorApi.removeProjectMember,
-      updateProject: supervisorApi.updateProject,
+      updateProjectLeader: supervisorApi.updateProjectLeader,
     },
   });
   const overview: OverviewState = useProjectOverviewState({

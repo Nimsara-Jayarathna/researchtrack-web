@@ -56,16 +56,9 @@ type UseProjectTeamStateDeps = {
       projectId: string,
       studentId: string,
     ) => Promise<SupervisorProjectDetail>;
-    updateProject: (
+    updateProjectLeader: (
       projectId: string,
-      payload: {
-        title: string;
-        summary: string;
-        batch: string;
-        semester: string;
-        lifecycleStatus: SupervisorProjectDetail["lifecycleStatus"];
-        leaderStudentId: string | null;
-      },
+      payload: { leaderStudentId: string | null },
     ) => Promise<SupervisorProjectDetail>;
   };
 };
@@ -303,12 +296,7 @@ export function useProjectTeamState({
       "Assigning the selected student as project leader.",
     );
     try {
-      const updatedProject = await api.updateProject(projectId, {
-        title: project.title,
-        summary: project.summary ?? "",
-        batch: project.batch ?? "",
-        semester: project.semester ?? "",
-        lifecycleStatus: project.lifecycleStatus,
+      const updatedProject = await api.updateProjectLeader(projectId, {
         leaderStudentId: leaderDraftId,
       });
       setProject(updatedProject);

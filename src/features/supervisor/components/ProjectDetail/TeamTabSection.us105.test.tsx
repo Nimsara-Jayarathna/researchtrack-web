@@ -15,6 +15,15 @@ const student = {
   memberRole: "STUDENT" as const,
 };
 
+const studentA = {
+  id: "student-1",
+  firstName: "Alice",
+  lastName: "Student",
+  email: "alice@students.example.edu",
+  registrationNumber: "ST00000001",
+  memberRole: "STUDENT" as const,
+};
+
 const supervisor = {
   id: "supervisor-1",
   firstName: "Dr",
@@ -105,5 +114,36 @@ describe("TeamTabSection US-105 membership UI", () => {
 
     await user.click(screen.getByRole("button", { name: "Remove" }));
     expect(confirmStudentRemoval).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the existing leader UI wired to the leader submit action", async () => {
+    const submitLeaderUpdate = vi.fn().mockResolvedValue(undefined);
+    const user = userEvent.setup();
+    const leaderProject: SupervisorProjectDetail = {
+      ...project,
+      leader: {
+        id: studentA.id,
+        firstName: studentA.firstName,
+        lastName: studentA.lastName,
+        email: studentA.email,
+        registrationNumber: studentA.registrationNumber,
+      },
+      members: [supervisor, studentA, student],
+    };
+
+    render(
+      <TeamTabSection
+        project={leaderProject}
+        team={teamState({
+          isManagingStudents: false,
+          studentMembers: [studentA, student],
+          leaderDraftId: student.id,
+          submitLeaderUpdate,
+        })}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Change" }));
+    expect(submitLeaderUpdate).toHaveBeenCalledTimes(1);
   });
 });

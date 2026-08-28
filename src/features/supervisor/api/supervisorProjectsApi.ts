@@ -13,6 +13,7 @@ import type {
   SupervisorProjectDetail,
   SupervisorProjectSummary,
   UpdateRepositoryRequest,
+  UpdateSupervisorProjectLeaderRequest,
   UpdateSupervisorProjectMilestoneRequest,
   UpdateSupervisorProjectRequest,
   UpdateSupervisorProjectStatusRequest,
@@ -294,6 +295,27 @@ export function createSupervisorProjectsApi({
         "updateRepository is not implemented by the current " +
           "ProjectService backend.",
       );
+    },
+
+    // ============================================================
+    // UPDATE PROJECT LEADER
+    // PUT /api/v1/projects/{projectId}/leader
+    // ============================================================
+
+    async updateProjectLeader(
+      projectId: string,
+      body: UpdateSupervisorProjectLeaderRequest,
+    ): Promise<SupervisorProjectDetail> {
+      const updated = await apiClient.put<ProjectResourceDetail>(
+        `${PROJECTS_RESOURCE_PATH}/${projectId}/leader`,
+        body,
+      );
+
+      const project = toSupervisorDetail(updated);
+
+      cachedProjectsById[projectId] = project;
+
+      return project;
     },
 
     // ============================================================

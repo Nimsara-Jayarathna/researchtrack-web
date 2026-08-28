@@ -54,6 +54,10 @@ export type UpdateSupervisorProjectRequest = {
   lifecycleStatus: SupervisorProjectLifecycle;
 };
 
+export type UpdateSupervisorProjectLeaderRequest = {
+  leaderStudentId: string | null;
+};
+
 export type AddSupervisorProjectMembersRequest = {
   studentIds: string[];
 };

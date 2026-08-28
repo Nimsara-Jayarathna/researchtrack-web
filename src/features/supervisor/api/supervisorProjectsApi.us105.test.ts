@@ -63,6 +63,28 @@ describe("supervisorProjectsApi US-105 membership flow", () => {
     expect(project.members[0]?.id).toBe("student-3");
   });
 
+  it("updates the leader through the dedicated project leader endpoint", async () => {
+    const body = { leaderStudentId: "student-2" };
+    apiClient.put.mockResolvedValueOnce({
+      ...projectResource([]),
+      leader: {
+        id: "student-2",
+        firstName: "Bob",
+        lastName: "Student",
+        email: "bob@students.example.edu",
+        registrationNumber: "ST00000002",
+      },
+    });
+
+    const project = await createApi().updateProjectLeader("project-1", body);
+
+    expect(apiClient.put).toHaveBeenCalledWith(
+      "/api/v1/projects/project-1/leader",
+      body,
+    );
+    expect(project.leader?.id).toBe("student-2");
+  });
+
   it("removes a student and returns the authoritative updated project", async () => {
     apiClient.del.mockResolvedValueOnce(projectResource([]));
 

@@ -57,7 +57,7 @@ describe("useProjectTeamState US-105", () => {
           searchStudents: vi.fn().mockResolvedValue([]),
           addProjectMembers: vi.fn(),
           removeProjectMember,
-          updateProject: vi.fn(),
+          updateProjectLeader: vi.fn(),
         },
       }),
     );
@@ -72,5 +72,65 @@ describe("useProjectTeamState US-105", () => {
     expect(removeProjectMember).toHaveBeenCalledWith("project-1", "student-2");
     expect(setProject).toHaveBeenCalledWith(updatedProject);
     expect(result.current.studentPendingRemoval).toBeNull();
+  });
+
+  it("updates the leader through the dedicated leader API without resending project metadata", async () => {
+    const studentA = {
+      ...student,
+      id: "student-1",
+      firstName: "Alice",
+      email: "alice@students.example.edu",
+      registrationNumber: "ST00000001",
+    };
+    const currentProject = {
+      ...projectWithMembers([studentA, student]),
+      leader: {
+        id: "student-1",
+        firstName: "Alice",
+        lastName: "Student",
+        email: "alice@students.example.edu",
+        registrationNumber: "ST00000001",
+      },
+    };
+    const updatedProject = {
+      ...currentProject,
+      leader: {
+        id: "student-2",
+        firstName: "Bob",
+        lastName: "Student",
+        email: "bob@students.example.edu",
+        registrationNumber: "ST00000002",
+      },
+    };
+    const setProject = vi.fn();
+    const updateProjectLeader = vi.fn().mockResolvedValue(updatedProject);
+
+    const { result } = renderHook(() =>
+      useProjectTeamState({
+        projectId: "project-1",
+        project: currentProject,
+        setProject,
+        showLoadingModal: vi.fn(),
+        showSuccessModal: vi.fn(),
+        showErrorModal: vi.fn(),
+        api: {
+          searchStudents: vi.fn().mockResolvedValue([]),
+          addProjectMembers: vi.fn(),
+          removeProjectMember: vi.fn(),
+          updateProjectLeader,
+        },
+      }),
+    );
+
+    act(() => result.current.setLeaderDraftId("student-2"));
+
+    await act(async () => {
+      await result.current.submitLeaderUpdate();
+    });
+
+    expect(updateProjectLeader).toHaveBeenCalledWith("project-1", {
+      leaderStudentId: "student-2",
+    });
+    expect(setProject).toHaveBeenCalledWith(updatedProject);
   });
 });

@@ -3,6 +3,7 @@ import { registerSessionCacheClearer } from "@/services/sessionCache";
 import { createRoleProjectApi } from "@/features/shared/api/createRoleProjectApi";
 import { clearRecord } from "@/services/apiCacheUtils";
 import type { SupervisorProjectDetail } from "../types";
+import { invalidateSupervisorDashboardCache } from "../cache/supervisorDashboardCache";
 import { createSupervisorDashboardApi } from "./supervisorDashboardApi";
 import { createSupervisorGitHubApi } from "./supervisorGitHubApi";
 import { createSupervisorJiraApi } from "./supervisorJiraApi";
@@ -36,6 +37,7 @@ function clearSupervisorApiCache() {
   clearRecord(cachedProjectsById);
   clearRecord(inFlightProjectRequests);
   clearRoleProjectCache();
+  invalidateSupervisorDashboardCache();
 }
 
 function invalidateProjectCaches(projectId: string | null | undefined) {

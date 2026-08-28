@@ -1,3 +1,4 @@
+import { toVersionedApiPath } from "@/app/config/apiVersion";
 import type { SupervisorDashboard } from "../types";
 
 type ApiClient = typeof import("@/services/apiClient").apiClient;
@@ -11,7 +12,9 @@ export function createSupervisorDashboardApi({
 }: CreateSupervisorDashboardApiDeps) {
   return {
     getDashboard(): Promise<SupervisorDashboard> {
-      return apiClient.get<SupervisorDashboard>("/api/supervisor/dashboard");
+      return apiClient.get<SupervisorDashboard>(
+        toVersionedApiPath("/api/supervisor/dashboard"),
+      );
     },
   };
 }

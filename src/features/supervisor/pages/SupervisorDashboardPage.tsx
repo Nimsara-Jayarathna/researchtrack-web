@@ -49,6 +49,8 @@ export function SupervisorDashboardPage() {
         pageSize={viewModel.pageSize}
         safeCurrentPage={viewModel.safeCurrentPage}
         totalPages={viewModel.totalPages}
+        hasAnyProjects={viewModel.projects.length > 0}
+        hasSearchQuery={viewModel.normalizedQuery.length > 0}
         pagingStateHandlers={{ setCurrentPage: viewModel.setCurrentPage }}
       />
 

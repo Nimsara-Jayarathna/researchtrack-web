@@ -135,7 +135,8 @@ Supervisor feature currently uses these APIs:
 ### Data source
 
 - Uses `useSupervisorDashboard`
-- Calls `GET /api/supervisor/dashboard`
+- Feature API calls logical `GET /api/supervisor/dashboard`; API version configuration resolves this to the public Gateway endpoint `GET /api/v1/supervisor/dashboard`.
+- The endpoint is a dedicated .NET Supervisor dashboard aggregate implemented by Project Service; it is not the project-list endpoint.
 
 ### Current behavior
 
@@ -146,7 +147,8 @@ Supervisor feature currently uses these APIs:
   - behind
   - upcoming milestones
 - Project health table:
-  - backend project summary rows
+  - backend dashboard project summary rows, including member count
+  - explicit `NOT_CONNECTED` Jira state until Jira dashboard data is available
   - local search by title/summary
   - FE-only pagination at 5 rows per page
 - Attention and upcoming sections:
@@ -156,7 +158,8 @@ Supervisor feature currently uses these APIs:
 
 - Loading: skeleton cards/rows
 - Error: `ErrorState` with retry
-- Empty results: `EmptyState` or fallback text blocks
+- Empty dashboard: `EmptyState` with `Create project` next action
+- Empty search result: separate `No projects found` state without pretending the Supervisor has no projects
 
 ---
 

@@ -20,6 +20,7 @@ import type {
 } from "../types";
 
 import { normalizeGitHubRepositoryUrl } from "../utils/githubRepositoryUrl";
+import { invalidateSupervisorDashboardCache } from "../cache/supervisorDashboardCache";
 
 type ApiClient = typeof import("@/services/apiClient").apiClient;
 
@@ -106,6 +107,7 @@ export function createSupervisorProjectsApi({
     const project = toSupervisorDetail(updated);
 
     cachedProjectsById[projectId] = project;
+    invalidateSupervisorDashboardCache();
 
     return project;
   }
@@ -168,10 +170,13 @@ export function createSupervisorProjectsApi({
     async createProject(
       body: CreateSupervisorProjectRequest,
     ): Promise<CreateSupervisorProjectResponse> {
-      return apiClient.post<CreateSupervisorProjectResponse>(
+      const created = await apiClient.post<CreateSupervisorProjectResponse>(
         PROJECTS_RESOURCE_PATH,
         body,
       );
+
+      invalidateSupervisorDashboardCache();
+      return created;
     },
 
     // ============================================================
@@ -191,6 +196,7 @@ export function createSupervisorProjectsApi({
       const project = toSupervisorDetail(updated);
 
       cachedProjectsById[projectId] = project;
+      invalidateSupervisorDashboardCache();
 
       return project;
     },
@@ -314,6 +320,7 @@ export function createSupervisorProjectsApi({
       const project = toSupervisorDetail(updated);
 
       cachedProjectsById[projectId] = project;
+      invalidateSupervisorDashboardCache();
 
       return project;
     },
@@ -335,6 +342,7 @@ export function createSupervisorProjectsApi({
       const project = toSupervisorDetail(updated);
 
       cachedProjectsById[projectId] = project;
+      invalidateSupervisorDashboardCache();
 
       return project;
     },
@@ -355,6 +363,7 @@ export function createSupervisorProjectsApi({
       const project = toSupervisorDetail(updated);
 
       cachedProjectsById[projectId] = project;
+      invalidateSupervisorDashboardCache();
 
       return project;
     },

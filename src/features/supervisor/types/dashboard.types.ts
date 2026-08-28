@@ -16,6 +16,7 @@ export type SupervisorDashboardProjectItem = {
   milestoneDate: string | null;
   lastActivityAt: string | null;
   progressPercent: number | null;
+  memberCount: number;
   jiraHealthIndicator:
     "AT_RISK" | "BEHIND" | "HEALTHY" | "NOT_CONNECTED" | null;
 };

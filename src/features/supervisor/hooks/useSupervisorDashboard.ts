@@ -1,9 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { isApiException } from "@/services/apiClient";
 import type { ApiError } from "@/types";
-import { registerSessionCacheClearer } from "@/services/sessionCache";
 import { supervisorApi } from "../api/supervisorApi";
 import type { SupervisorDashboard } from "../types";
+import {
+  getCachedSupervisorDashboard,
+  getInFlightSupervisorDashboardRequest,
+  invalidateSupervisorDashboardCache,
+  setCachedSupervisorDashboard,
+  setInFlightSupervisorDashboardRequest,
+} from "../cache/supervisorDashboardCache";
 import { getSessionVersion, isCurrentSession } from "@/services/sessionState";
 
 type SupervisorDashboardState = {
@@ -11,9 +17,6 @@ type SupervisorDashboardState = {
   isLoading: boolean;
   error: ApiError | null;
 };
-
-let cachedDashboard: SupervisorDashboard | null = null;
-let inFlightDashboardRequest: Promise<SupervisorDashboard> | null = null;
 
 const UNKNOWN_ERROR_BASE: ApiError = {
   code: "INTERNAL_ERROR",
@@ -26,17 +29,13 @@ const UNKNOWN_ERROR_BASE: ApiError = {
   traceId: null,
 };
 
-export function invalidateSupervisorDashboardCache() {
-  cachedDashboard = null;
-  inFlightDashboardRequest = null;
-}
-
-registerSessionCacheClearer(invalidateSupervisorDashboardCache);
+export { invalidateSupervisorDashboardCache };
 
 export function useSupervisorDashboard() {
+  const initialDashboard = getCachedSupervisorDashboard();
   const [state, setState] = useState<SupervisorDashboardState>({
-    dashboard: cachedDashboard,
-    isLoading: cachedDashboard ? false : true,
+    dashboard: initialDashboard,
+    isLoading: initialDashboard ? false : true,
     error: null,
   });
 
@@ -73,6 +72,7 @@ export function useSupervisorDashboard() {
       });
     };
 
+    const cachedDashboard = getCachedSupervisorDashboard();
     if (!forceRefresh && cachedDashboard) {
       if (!isCurrentSession(requestSessionVersion)) {
         return;
@@ -82,18 +82,24 @@ export function useSupervisorDashboard() {
       return;
     }
 
-    const request =
-      !forceRefresh && inFlightDashboardRequest
-        ? inFlightDashboardRequest
-        : (inFlightDashboardRequest = supervisorApi.getDashboard());
+    const inFlightDashboardRequest = getInFlightSupervisorDashboardRequest();
+    const startsNewRequest = forceRefresh || !inFlightDashboardRequest;
+    const request = startsNewRequest
+      ? supervisorApi.getDashboard()
+      : inFlightDashboardRequest;
+
+    if (startsNewRequest) {
+      setInFlightSupervisorDashboardRequest(request);
+    }
 
     setState((current) => ({ ...current, isLoading: true, error: null }));
 
     try {
       const dashboard = await request;
-      const shouldCommitCache = inFlightDashboardRequest === request;
+      const shouldCommitCache =
+        getInFlightSupervisorDashboardRequest() === request;
       if (shouldCommitCache) {
-        cachedDashboard = dashboard;
+        setCachedSupervisorDashboard(dashboard);
       }
 
       if (!isCurrentSession(requestSessionVersion)) {
@@ -126,8 +132,8 @@ export function useSupervisorDashboard() {
         applyDashboardError(error);
       }
     } finally {
-      if (inFlightDashboardRequest === request) {
-        inFlightDashboardRequest = null;
+      if (getInFlightSupervisorDashboardRequest() === request) {
+        setInFlightSupervisorDashboardRequest(null);
       }
     }
   }, []);

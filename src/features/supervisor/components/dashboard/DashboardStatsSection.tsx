@@ -57,6 +57,12 @@ export function DashboardStatsSection({
   isLoading,
 }: DashboardStatsSectionProps) {
   const showSkeleton = isLoading || !dashboard;
+  const hasConnectedJiraProject =
+    dashboard?.projects.some(
+      (project) =>
+        project.jiraHealthIndicator !== null &&
+        project.jiraHealthIndicator !== "NOT_CONNECTED",
+    ) ?? false;
 
   return (
     <section className="grid grid-cols-2 auto-rows-fr gap-3 sm:gap-4 xl:grid-cols-7">
@@ -66,7 +72,16 @@ export function DashboardStatsSection({
           label={stat.label}
           tone={stat.tone}
           value={
-            showSkeleton || !dashboard ? undefined : stat.getValue(dashboard)
+            showSkeleton || !dashboard ? undefined : (stat.key ===
+                "jiraAtRiskCount" ||
+                stat.key === "jiraBehindCount") &&
+              !hasConnectedJiraProject ? (
+              <span className="text-sm font-semibold normal-case tracking-normal text-slate-500">
+                Not linked
+              </span>
+            ) : (
+              stat.getValue(dashboard)
+            )
           }
           loading={showSkeleton}
         />

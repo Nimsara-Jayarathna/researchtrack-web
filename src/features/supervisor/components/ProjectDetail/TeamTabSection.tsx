@@ -362,7 +362,8 @@ export function TeamTabSection({ project, team }: TeamTabSectionProps) {
         description={
           team.studentPendingRemoval ? (
             <>
-              Remove <strong>{memberDisplayName(team.studentPendingRemoval)}</strong>{" "}
+              Remove{" "}
+              <strong>{memberDisplayName(team.studentPendingRemoval)}</strong>{" "}
               from this project? The student will lose normal access to the
               project workspace.
             </>

@@ -94,7 +94,9 @@ describe("TeamTabSection US-105 membership UI", () => {
     expect(screen.getByText("Manage Students")).toBeInTheDocument();
     expect(screen.getByText("Current students (1)")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Remove Bob Student" }));
+    await user.click(
+      screen.getByRole("button", { name: "Remove Bob Student" }),
+    );
     expect(requestStudentRemoval).toHaveBeenCalledWith(student);
   });
 
@@ -105,7 +107,10 @@ describe("TeamTabSection US-105 membership UI", () => {
     render(
       <TeamTabSection
         project={project}
-        team={teamState({ studentPendingRemoval: student, confirmStudentRemoval })}
+        team={teamState({
+          studentPendingRemoval: student,
+          confirmStudentRemoval,
+        })}
       />,
     );
 

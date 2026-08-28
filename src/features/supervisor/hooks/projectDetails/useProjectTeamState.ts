@@ -266,10 +266,8 @@ export function useProjectTeamState({
         removeException,
         "Unable to remove this student right now.",
       );
-      showErrorModal(
-        "Unable to remove student",
-        apiError.message,
-        () => submitRemoveStudent(student),
+      showErrorModal("Unable to remove student", apiError.message, () =>
+        submitRemoveStudent(student),
       );
     } finally {
       setIsRemovingStudent(false);

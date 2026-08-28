@@ -297,24 +297,44 @@ export function createSupervisorProjectsApi({
     },
 
     // ============================================================
-    // FUTURE: ADD PROJECT MEMBERS
+    // ADD PROJECT MEMBERS
+    // POST /api/v1/projects/{projectId}/members
     // ============================================================
 
     async addProjectMembers(
       projectId: string,
       body: AddSupervisorProjectMembersRequest,
     ): Promise<SupervisorProjectDetail> {
-      /*
-       * The current ProjectsController.cs does not expose
-       * an add-members endpoint.
-       */
-      void projectId;
-      void body;
-
-      throw new Error(
-        "addProjectMembers is not implemented by the current " +
-          "ProjectService backend.",
+      const updated = await apiClient.post<ProjectResourceDetail>(
+        `${PROJECTS_RESOURCE_PATH}/${projectId}/members`,
+        body,
       );
+
+      const project = toSupervisorDetail(updated);
+
+      cachedProjectsById[projectId] = project;
+
+      return project;
+    },
+
+    // ============================================================
+    // REMOVE PROJECT STUDENT
+    // DELETE /api/v1/projects/{projectId}/members/{studentId}
+    // ============================================================
+
+    async removeProjectMember(
+      projectId: string,
+      studentId: string,
+    ): Promise<SupervisorProjectDetail> {
+      const updated = await apiClient.del<ProjectResourceDetail>(
+        `${PROJECTS_RESOURCE_PATH}/${projectId}/members/${studentId}`,
+      );
+
+      const project = toSupervisorDetail(updated);
+
+      cachedProjectsById[projectId] = project;
+
+      return project;
     },
   };
 }

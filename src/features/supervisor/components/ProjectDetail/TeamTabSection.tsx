@@ -14,6 +14,7 @@ import { RoleBadge } from "@/components/ui/RoleBadge";
 import { buttonStyles } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { memberDisplayName } from "../../projectDetails.shared";
 import type { TeamState } from "../../hooks/useProjectDetailsPageState";
 import type { SupervisorProjectDetail } from "../../types";
@@ -151,7 +152,7 @@ export function TeamTabSection({ project, team }: TeamTabSectionProps) {
       {team.isManagingStudents &&
         createPortal(
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl animate-in zoom-in-95 duration-200 mx-4">
+            <div className="mx-4 max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl animate-in zoom-in-95 duration-200">
               <div className="mb-5 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-600">
@@ -159,10 +160,10 @@ export function TeamTabSection({ project, team }: TeamTabSectionProps) {
                   </div>
                   <div>
                     <h3 className="text-sm font-bold uppercase tracking-wider text-indigo-700">
-                      Add Team Members
+                      Manage Students
                     </h3>
                     <p className="text-xs font-medium text-indigo-500/70">
-                      Search and assign students to this project
+                      Add or remove students assigned to this project
                     </p>
                   </div>
                 </div>
@@ -170,7 +171,7 @@ export function TeamTabSection({ project, team }: TeamTabSectionProps) {
                   type="button"
                   className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-100 bg-white text-slate-400 shadow-sm transition-all hover:border-slate-200 hover:text-slate-600 hover:shadow-md"
                   onClick={team.cancelManagement}
-                  disabled={team.isAddingStudents}
+                  disabled={team.isAddingStudents || team.isRemovingStudent}
                   aria-label="Close student management"
                 >
                   <X className="h-4 w-4" />
@@ -178,6 +179,41 @@ export function TeamTabSection({ project, team }: TeamTabSectionProps) {
               </div>
 
               <div className="space-y-4">
+                <div className="space-y-3">
+                  <p className="ml-1 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                    Current students ({team.studentMembers.length})
+                  </p>
+                  {team.studentMembers.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {team.studentMembers.map((student) => (
+                        <div
+                          key={student.id}
+                          className="inline-flex items-center gap-2 rounded-2xl border border-slate-100 bg-white py-1.5 pl-4 pr-2 shadow-sm"
+                        >
+                          <span className="text-xs font-black text-slate-700">
+                            {memberDisplayName(student)}
+                          </span>
+                          <button
+                            type="button"
+                            className="flex h-6 w-6 items-center justify-center rounded-xl bg-slate-50 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600"
+                            onClick={() => team.requestStudentRemoval(student)}
+                            disabled={
+                              team.isAddingStudents || team.isRemovingStudent
+                            }
+                            aria-label={`Remove ${memberDisplayName(student)}`}
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="rounded-2xl border border-dashed border-slate-200 px-4 py-3 text-xs font-medium text-slate-400">
+                      No students are currently assigned to this project.
+                    </p>
+                  )}
+                </div>
+
                 <div className="relative">
                   <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
                   <input
@@ -185,7 +221,7 @@ export function TeamTabSection({ project, team }: TeamTabSectionProps) {
                     onChange={(e) => team.setStudentQuery(e.target.value)}
                     placeholder="Search by student email..."
                     className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-11 text-sm font-medium outline-none transition-all focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50"
-                    disabled={team.isAddingStudents}
+                    disabled={team.isAddingStudents || team.isRemovingStudent}
                   />
                 </div>
 
@@ -262,7 +298,9 @@ export function TeamTabSection({ project, team }: TeamTabSectionProps) {
                             onClick={() =>
                               team.removeSelectedStudent(student.id)
                             }
-                            disabled={team.isAddingStudents}
+                            disabled={
+                              team.isAddingStudents || team.isRemovingStudent
+                            }
                           >
                             <X className="h-3.5 w-3.5" />
                           </button>
@@ -282,7 +320,7 @@ export function TeamTabSection({ project, team }: TeamTabSectionProps) {
                     className: "rounded-xl",
                   })}
                   onClick={team.cancelManagement}
-                  disabled={team.isAddingStudents}
+                  disabled={team.isAddingStudents || team.isRemovingStudent}
                 >
                   Cancel
                 </button>
@@ -296,6 +334,7 @@ export function TeamTabSection({ project, team }: TeamTabSectionProps) {
                   onClick={team.addStudents}
                   disabled={
                     team.isAddingStudents ||
+                    team.isRemovingStudent ||
                     team.selectedStudentsToAdd.length === 0
                   }
                 >
@@ -316,6 +355,26 @@ export function TeamTabSection({ project, team }: TeamTabSectionProps) {
           </div>,
           document.body,
         )}
+
+      <ConfirmDialog
+        isOpen={team.studentPendingRemoval !== null}
+        title="Remove student?"
+        description={
+          team.studentPendingRemoval ? (
+            <>
+              Remove <strong>{memberDisplayName(team.studentPendingRemoval)}</strong>{" "}
+              from this project? The student will lose normal access to the
+              project workspace.
+            </>
+          ) : (
+            "Remove this student from the project?"
+          )
+        }
+        confirmLabel={team.isRemovingStudent ? "Removing..." : "Remove"}
+        confirmVariant="danger"
+        onCancel={team.cancelStudentRemoval}
+        onConfirm={() => void team.confirmStudentRemoval()}
+      />
 
       <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {project.members.map((member) => (

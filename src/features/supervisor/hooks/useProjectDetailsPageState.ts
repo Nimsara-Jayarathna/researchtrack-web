@@ -66,6 +66,7 @@ export function useProjectDetailsPageState({
     api: {
       searchStudents: supervisorApi.searchStudents,
       addProjectMembers: supervisorApi.addProjectMembers,
+      removeProjectMember: supervisorApi.removeProjectMember,
       updateProject: supervisorApi.updateProject,
     },
   });

@@ -7,6 +7,8 @@ import type {
 import type { SearchState } from "../../projectDetails.shared";
 import { toApiError } from "../../projectDetails.shared";
 
+type ProjectMember = SupervisorProjectDetail["members"][number];
+
 export type TeamState = {
   isManagingStudents: boolean;
   studentQuery: string;
@@ -15,6 +17,8 @@ export type TeamState = {
   studentSearchResults: SupervisorStudentSearchResult[];
   selectedStudentsToAdd: SupervisorStudentSearchResult[];
   isAddingStudents: boolean;
+  studentPendingRemoval: ProjectMember | null;
+  isRemovingStudent: boolean;
   leaderDraftId: string;
   isUpdatingLeader: boolean;
   studentMembers: SupervisorProjectDetail["members"];
@@ -25,6 +29,9 @@ export type TeamState = {
   selectStudentToAdd: (student: SupervisorStudentSearchResult) => void;
   removeSelectedStudent: (studentId: string) => void;
   addStudents: () => void;
+  requestStudentRemoval: (student: ProjectMember) => void;
+  cancelStudentRemoval: () => void;
+  confirmStudentRemoval: () => Promise<void>;
   submitLeaderUpdate: () => Promise<void>;
 };
 
@@ -44,6 +51,10 @@ type UseProjectTeamStateDeps = {
     addProjectMembers: (
       projectId: string,
       payload: { studentIds: string[] },
+    ) => Promise<SupervisorProjectDetail>;
+    removeProjectMember: (
+      projectId: string,
+      studentId: string,
     ) => Promise<SupervisorProjectDetail>;
     updateProject: (
       projectId: string,
@@ -83,6 +94,9 @@ export function useProjectTeamState({
     SupervisorStudentSearchResult[]
   >([]);
   const [isAddingStudents, setIsAddingStudents] = useState(false);
+  const [studentPendingRemoval, setStudentPendingRemoval] =
+    useState<ProjectMember | null>(null);
+  const [isRemovingStudent, setIsRemovingStudent] = useState(false);
   const [leaderDraftId, setLeaderDraftId] = useState<string>("");
   const [isUpdatingLeader, setIsUpdatingLeader] = useState(false);
   const projectMembers = useMemo(
@@ -156,13 +170,19 @@ export function useProjectTeamState({
     setIsManagingStudents(true);
   }
 
-  function cancelManagement() {
+  function resetManagement() {
     setIsManagingStudents(false);
     setStudentQuery("");
     setStudentSearchResults([]);
     setStudentSearchState("idle");
     setStudentSearchError(null);
     setSelectedStudentsToAdd([]);
+    setStudentPendingRemoval(null);
+  }
+
+  function cancelManagement() {
+    if (isAddingStudents || isRemovingStudent) return;
+    resetManagement();
   }
 
   function selectStudentToAdd(student: SupervisorStudentSearchResult) {
@@ -194,7 +214,7 @@ export function useProjectTeamState({
         studentIds: selectedStudentsToAdd.map((student) => student.id),
       });
       setProject(updatedProject);
-      cancelManagement();
+      resetManagement();
       showSuccessModal(
         "Team updated",
         "Selected students were added to the project.",
@@ -216,6 +236,57 @@ export function useProjectTeamState({
 
   function addStudents() {
     void submitAddStudents();
+  }
+
+  function requestStudentRemoval(student: ProjectMember) {
+    if (student.memberRole !== "STUDENT" || isRemovingStudent) return;
+    setStudentPendingRemoval(student);
+  }
+
+  function cancelStudentRemoval() {
+    if (isRemovingStudent) return;
+    setStudentPendingRemoval(null);
+  }
+
+  async function submitRemoveStudent(student: ProjectMember) {
+    if (!projectId || student.memberRole !== "STUDENT") return;
+
+    setIsRemovingStudent(true);
+    setStudentPendingRemoval(null);
+    showLoadingModal(
+      "Removing team member",
+      "Removing this student's project access.",
+    );
+
+    try {
+      const updatedProject = await api.removeProjectMember(
+        projectId,
+        student.id,
+      );
+      setProject(updatedProject);
+      showSuccessModal(
+        "Team updated",
+        "The student was removed from the project.",
+      );
+    } catch (removeException) {
+      const apiError = toApiError(
+        removeException,
+        "Unable to remove this student right now.",
+      );
+      showErrorModal(
+        "Unable to remove student",
+        apiError.message,
+        () => submitRemoveStudent(student),
+      );
+    } finally {
+      setIsRemovingStudent(false);
+    }
+  }
+
+  async function confirmStudentRemoval() {
+    const student = studentPendingRemoval;
+    if (!student) return;
+    await submitRemoveStudent(student);
   }
 
   async function submitLeaderUpdate() {
@@ -268,6 +339,8 @@ export function useProjectTeamState({
     studentSearchResults,
     selectedStudentsToAdd,
     isAddingStudents,
+    studentPendingRemoval,
+    isRemovingStudent,
     leaderDraftId,
     isUpdatingLeader,
     studentMembers,
@@ -278,6 +351,9 @@ export function useProjectTeamState({
     selectStudentToAdd,
     removeSelectedStudent,
     addStudents,
+    requestStudentRemoval,
+    cancelStudentRemoval,
+    confirmStudentRemoval,
     submitLeaderUpdate,
   };
 }

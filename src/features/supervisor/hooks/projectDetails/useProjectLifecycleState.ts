@@ -45,7 +45,7 @@ function buildLifecycleUpdateRequest(
 }
 
 function lifecycleLabel(status: SupervisorProjectLifecycle): string {
-  return status.replaceAll("_", " ");
+  return status.replace(/_/g, " ");
 }
 
 export function useProjectLifecycleState({

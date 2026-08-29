@@ -87,7 +87,7 @@ export function useProjectDetailsPageState({
     showLoadingModal,
     showSuccessModal,
     showErrorModal,
-    api: { updateProjectStatus: supervisorApi.updateProjectStatus },
+    api: { updateProject: supervisorApi.updateProject },
   });
 
   const milestones: MilestonesState = useProjectMilestonesState({

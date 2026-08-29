@@ -14,6 +14,7 @@ import { getBlockingErrorTitle, isBlockingError } from "@/utils/errorSeverity";
 import { AuthPageShell } from "../components/shell/AuthPageShell";
 import { AuthDialogCard } from "../components/shell/AuthDialogCard";
 import { toRequestStateModalView } from "../utils/requestStateModalView";
+import { useRegisterConfig } from "../hooks/useRegisterConfig";
 
 type ValidationStatus = "loading" | "valid" | "invalid" | "error";
 type SubmitStatus = "idle" | "loading" | "success" | "error";
@@ -30,6 +31,9 @@ export function ResetPasswordPage() {
   const [submitErrorMessage, setSubmitErrorMessage] = useState<string | null>(
     null,
   );
+  const { config: registerConfig } = useRegisterConfig({
+    fallbackMessage: "Unable to load password requirements.",
+  });
 
   useEffect(() => {
     document.title = "Reset your password - ResearchTrack";
@@ -159,6 +163,7 @@ export function ResetPasswordPage() {
                   setSubmitStatus("idle");
                 }
               }}
+              passwordPolicy={registerConfig?.passwordPolicy}
             />
           </AuthDialogCard>
         ) : null}

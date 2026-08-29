@@ -79,7 +79,7 @@ export function createStudentProjectsApi({
         return cachedProjectsById[projectId] as StudentProjectDetail;
       }
 
-      if (!forceRefresh && inFlightProjectRequests[projectId]) {
+      if (inFlightProjectRequests[projectId]) {
         return inFlightProjectRequests[
           projectId
         ] as Promise<StudentProjectDetail>;
@@ -94,6 +94,11 @@ export function createStudentProjectsApi({
         const project = await request;
         cachedProjectsById[projectId] = project;
         return project;
+      } catch (error) {
+        if (forceRefresh) {
+          delete cachedProjectsById[projectId];
+        }
+        throw error;
       } finally {
         delete inFlightProjectRequests[projectId];
       }

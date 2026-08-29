@@ -7,7 +7,6 @@ import { invalidateSupervisorDashboardCache } from "../cache/supervisorDashboard
 import { createSupervisorDashboardApi } from "./supervisorDashboardApi";
 import { createSupervisorGitHubApi } from "./supervisorGitHubApi";
 import { createSupervisorJiraApi } from "./supervisorJiraApi";
-import { createSupervisorMeApi } from "./supervisorMeApi";
 import { createSupervisorProjectsApi } from "./supervisorProjectsApi";
 import { createSupervisorStudentsApi } from "./supervisorStudentsApi";
 
@@ -20,7 +19,6 @@ const { clearCache: clearRoleProjectCache, ...roleProjectApi } =
     apiClient,
     roleBasePath: "/api/supervisor",
   });
-const supervisorMeApi = createSupervisorMeApi({ apiClient });
 const supervisorDashboardApi = createSupervisorDashboardApi({ apiClient });
 const supervisorStudentsApi = createSupervisorStudentsApi({ apiClient });
 const supervisorJiraApi = createSupervisorJiraApi({
@@ -53,7 +51,6 @@ registerSessionCacheClearer(clearSupervisorApiCache);
 
 export const supervisorApi = {
   ...roleProjectApi,
-  ...supervisorMeApi,
   ...supervisorDashboardApi,
   ...supervisorStudentsApi,
   ...supervisorJiraApi,

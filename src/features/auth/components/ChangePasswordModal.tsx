@@ -5,12 +5,14 @@ import { isApiException } from "@/services/apiClient";
 import { X } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { PasswordRequirementsPanel } from "./PasswordRequirementsPanel";
+import type { PasswordPolicyConfig } from "../types";
+import { useRegisterConfig } from "../hooks/useRegisterConfig";
 import {
   getPasswordChecks,
   isPasswordPolicyPassed,
+  resolvePasswordPolicy,
 } from "../utils/passwordRules";
 import { PasswordField } from "./PasswordField";
-import { PASSWORD_MAX_LENGTH } from "../utils/passwordRules";
 import { toRequestStateModalView } from "../utils/requestStateModalView";
 
 type RequestStatus =
@@ -26,12 +28,14 @@ type ChangePasswordModalProps = {
     currentPassword: string;
     newPassword: string;
   }) => Promise<void>;
+  passwordPolicy?: PasswordPolicyConfig | null;
 };
 
 export function ChangePasswordModal({
   isOpen,
   onClose,
   onSubmit,
+  passwordPolicy,
 }: ChangePasswordModalProps) {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -44,7 +48,14 @@ export function ChangePasswordModal({
   const [requestStatus, setRequestStatus] = useState<RequestStatus>({
     kind: "idle",
   });
-  const passwordChecks = getPasswordChecks(newPassword);
+  const { config: registerConfig } = useRegisterConfig({
+    autoLoad: isOpen && !passwordPolicy,
+    fallbackMessage: "Unable to load password requirements.",
+  });
+  const resolvedPasswordPolicy = resolvePasswordPolicy(
+    passwordPolicy ?? registerConfig?.passwordPolicy,
+  );
+  const passwordChecks = getPasswordChecks(newPassword, resolvedPasswordPolicy);
   const isCurrentPasswordFilled = currentPassword.trim().length > 0;
   const isConfirmPasswordFilled = confirmPassword.trim().length > 0;
   const isConfirmMatched =
@@ -195,7 +206,7 @@ export function ChangePasswordModal({
               label="Current password"
               value={currentPassword}
               onChange={setCurrentPassword}
-              maxLength={PASSWORD_MAX_LENGTH}
+              maxLength={resolvedPasswordPolicy.maximumLength}
               isVisible={showCurrentPassword}
               onToggleVisibility={() =>
                 setShowCurrentPassword((value) => !value)
@@ -206,7 +217,7 @@ export function ChangePasswordModal({
               label="New password"
               value={newPassword}
               onChange={setNewPassword}
-              maxLength={PASSWORD_MAX_LENGTH}
+              maxLength={resolvedPasswordPolicy.maximumLength}
               isVisible={showNewPassword}
               onToggleVisibility={() => setShowNewPassword((value) => !value)}
               onFocus={() => setIsNewPasswordFocused(true)}
@@ -215,13 +226,14 @@ export function ChangePasswordModal({
             <PasswordRequirementsPanel
               password={newPassword}
               isNewPasswordFocused={isNewPasswordFocused}
+              policy={resolvedPasswordPolicy}
             />
             <PasswordField
               id="confirm-password"
               label="Confirm new password"
               value={confirmPassword}
               onChange={setConfirmPassword}
-              maxLength={PASSWORD_MAX_LENGTH}
+              maxLength={resolvedPasswordPolicy.maximumLength}
               isVisible={showConfirmPassword}
               onToggleVisibility={() =>
                 setShowConfirmPassword((value) => !value)

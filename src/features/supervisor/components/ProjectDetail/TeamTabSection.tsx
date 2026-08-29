@@ -13,7 +13,6 @@ import { createPortal } from "react-dom";
 import { RoleBadge } from "@/components/ui/RoleBadge";
 import { buttonStyles } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
-import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { memberDisplayName } from "../../projectDetails.shared";
 import type { TeamState } from "../../hooks/useProjectDetailsPageState";
@@ -25,6 +24,12 @@ type TeamTabSectionProps = {
 };
 
 export function TeamTabSection({ project, team }: TeamTabSectionProps) {
+  const orderedMembers = [...project.members].sort(
+    (left, right) =>
+      Number(left.memberRole !== "SUPERVISOR") -
+      Number(right.memberRole !== "SUPERVISOR"),
+  );
+
   return (
     <section className="rounded-3xl border border-border bg-white p-6 shadow-sm transition-all hover:shadow-md">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -378,9 +383,10 @@ export function TeamTabSection({ project, team }: TeamTabSectionProps) {
       />
 
       <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {project.members.map((member) => (
+        {orderedMembers.map((member) => (
           <div
             key={member.id}
+            data-member-role={member.memberRole}
             className={`group relative overflow-hidden rounded-3xl border p-5 transition-all hover:shadow-lg ${
               member.memberRole === "SUPERVISOR"
                 ? "border-indigo-100 bg-indigo-50/20"
@@ -419,18 +425,6 @@ export function TeamTabSection({ project, team }: TeamTabSectionProps) {
 
               <div className="mt-5 flex flex-wrap items-center gap-2">
                 <RoleBadge role={member.memberRole} />
-
-                {project.leader?.id === member.id && (
-                  <div className="flex items-center gap-1.5">
-                    <Crown className="h-3.5 w-3.5 text-amber-500" />
-                    <StatusBadge
-                      tone="warning"
-                      className="border-none bg-amber-100 text-[10px] font-black uppercase tracking-wider text-amber-700"
-                    >
-                      Leader
-                    </StatusBadge>
-                  </div>
-                )}
 
                 {member.registrationNumber && (
                   <div className="flex items-center gap-1.5 rounded-xl border border-dotted border-slate-200 bg-slate-50/50 px-2.5 py-1 text-[10px] font-black tracking-tight text-slate-500">

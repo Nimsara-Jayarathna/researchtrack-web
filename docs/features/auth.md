@@ -442,3 +442,21 @@ To restore mock mode for offline development, set `USE_MOCK = true` in `authApi.
 | `ss_refresh_token` | `/api/auth` | 604800 s (7 days) | Yes | Yes\* | Strict |
 
 \* `Secure` is `false` in the dev Spring profile so cookies work over plain HTTP locally (see `application-dev.yaml`). Must be `true` in production.
+
+---
+
+## Authenticated account password change
+
+The account menu uses a role-neutral authenticated-user endpoint rather than the legacy Student/Supervisor-specific routes:
+
+- `PATCH /api/v1/users/me/password`
+- Request: `{ currentPassword, newPassword }`
+- Success: `204 No Content`
+- The backend identifies the account from the authenticated JWT subject.
+- Incorrect current password returns `400 CURRENT_PASSWORD_INCORRECT`.
+- Reusing the existing password or violating password policy returns field-level `VALIDATION_ERROR` details for `newPassword`.
+- Successful password change revokes all active refresh sessions for the account; the current access token expires normally and a later revoked refresh returns the user to sign-in.
+
+`accountApi.changePassword()` is shared by both Student and Supervisor shells. The legacy `/api/student/me/password` and `/api/supervisor/me/password` frontend calls are no longer used.
+
+Password creation/change UI uses the `passwordPolicy` returned by `GET /api/v1/auth/register/config` when available, with the current .NET policy as a safe loading fallback. This keeps minimum/maximum length, uppercase, lowercase, digit, and special-character requirements aligned with Auth Service instead of hard-coding only a length check.

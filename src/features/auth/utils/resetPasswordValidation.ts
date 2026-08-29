@@ -1,23 +1,32 @@
-import { getPasswordChecks } from "./passwordRules";
-import { PASSWORD_MIN_LENGTH } from "./passwordRules";
 import type { ApiError } from "@/types";
+import type { PasswordPolicyConfig } from "../types";
+import {
+  getPasswordChecks,
+  isPasswordPolicyPassed,
+  resolvePasswordPolicy,
+} from "./passwordRules";
 
 export type ResetPasswordFieldErrors = {
   newPassword?: string;
   confirmNewPassword?: string;
 };
 
-export function validateResetPasswordForm(fields: {
-  newPassword: string;
-  confirmNewPassword: string;
-}): ResetPasswordFieldErrors {
+export function validateResetPasswordForm(
+  fields: {
+    newPassword: string;
+    confirmNewPassword: string;
+  },
+  passwordPolicy?: PasswordPolicyConfig | null,
+): ResetPasswordFieldErrors {
   const { newPassword, confirmNewPassword } = fields;
   const errors: ResetPasswordFieldErrors = {};
-  const checks = getPasswordChecks(newPassword);
+  const resolvedPolicy = resolvePasswordPolicy(passwordPolicy);
+  const checks = getPasswordChecks(newPassword, resolvedPolicy);
 
   if (!newPassword) errors.newPassword = "Password is required.";
-  else if (!checks.minLength)
-    errors.newPassword = `Password must be at least ${PASSWORD_MIN_LENGTH} characters.`;
+  else if (!isPasswordPolicyPassed(checks))
+    errors.newPassword =
+      "Password does not satisfy the required security policy.";
 
   if (!confirmNewPassword)
     errors.confirmNewPassword = "Please confirm your password.";

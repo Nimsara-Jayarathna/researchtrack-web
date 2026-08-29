@@ -25,8 +25,8 @@ export function StudentProjectsPage() {
           .includes(normalizedQuery),
   );
 
-  // The empty state changes its action label depending on whether the user is filtering.
   const hasActiveFilters = normalizedQuery.length > 0;
+  const hasNoAssignedProjects = projects.length === 0;
 
   useEffect(() => {
     if (error && isBlockingError(error)) {
@@ -54,15 +54,28 @@ export function StudentProjectsPage() {
         <StudentProjectCard key={project.id} project={project} />
       )}
       listGridClassName="grid gap-4 xl:grid-cols-2 2xl:grid-cols-3"
-      emptyState={{
-        title: "No projects found",
-        description:
-          "You don't have any assigned projects matching your filters yet.",
-        secondaryAction: {
-          label: hasActiveFilters ? "Clear filters" : "Refresh",
-          onClick: hasActiveFilters ? () => setQuery("") : () => void reload(),
-        },
-      }}
+      emptyState={
+        hasNoAssignedProjects
+          ? {
+              title: "No research project assigned yet",
+              description:
+                "You are not currently assigned to a research project. Once your Supervisor adds you to a project, it will appear here.",
+              secondaryAction: {
+                label: "Refresh",
+                onClick: () => void reload(),
+              },
+            }
+          : {
+              title: "No projects found",
+              description: "No assigned projects match your search.",
+              secondaryAction: hasActiveFilters
+                ? {
+                    label: "Clear search",
+                    onClick: () => setQuery(""),
+                  }
+                : undefined,
+            }
+      }
     />
   );
 }

@@ -70,7 +70,7 @@ export function useStudentProject(projectId: string | undefined) {
     setState((current) => ({ ...current, isLoading: true, error: null }));
 
     void studentApi
-      .getProjectById(projectId)
+      .getProjectById(projectId, true)
       .then((project) => {
         if (isCancelled) {
           return;

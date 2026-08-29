@@ -75,10 +75,6 @@ export type UpdateSupervisorProjectMilestoneRequest = {
   status: import("./project.types").SupervisorProjectDetailMilestone["status"];
 };
 
-export type UpdateSupervisorProjectStatusRequest = {
-  lifecycleStatus: SupervisorProjectLifecycle;
-};
-
 export type UpdateRepositoryRequest = {
   repositoryUrl: string | null;
 };

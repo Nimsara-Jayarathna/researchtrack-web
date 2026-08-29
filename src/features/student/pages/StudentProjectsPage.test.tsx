@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 import { StudentProjectsPage } from "./StudentProjectsPage";
 
@@ -108,7 +109,7 @@ describe("StudentProjectsPage error routing", () => {
     expect(screen.getByText("inline-error:Bad input")).toBeInTheDocument();
   });
 
-  it("does not render supervisor New Project CTA", () => {
+  it("shows the true no-assignment empty state with no Student create-project action", () => {
     useStudentProjectsMock.mockReturnValue({
       projects: [],
       isLoading: false,
@@ -119,7 +120,34 @@ describe("StudentProjectsPage error routing", () => {
     render(<StudentProjectsPage />);
 
     expect(
+      screen.getByText("No research project assigned yet"),
+    ).toBeInTheDocument();
+    expect(
       screen.queryByRole("link", { name: /new project/i }),
     ).not.toBeInTheDocument();
+  });
+
+  it("uses a separate search-empty state when assigned projects exist", async () => {
+    const user = userEvent.setup();
+    useStudentProjectsMock.mockReturnValue({
+      projects: [
+        {
+          id: "project-1",
+          title: "ResearchTrack",
+          summary: "Research supervision",
+          supervisorName: "Dr Supervisor",
+          batch: "2026",
+          semester: "Semester 1",
+        },
+      ],
+      isLoading: false,
+      error: null,
+      reload: vi.fn(),
+    });
+
+    render(<StudentProjectsPage />);
+    await user.type(screen.getByLabelText("Search your projects"), "missing");
+
+    expect(await screen.findByText("No projects found")).toBeInTheDocument();
   });
 });

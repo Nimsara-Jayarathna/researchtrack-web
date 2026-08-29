@@ -1,18 +1,21 @@
-import { Crown, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { RoleBadge } from "@/components/ui/RoleBadge";
-import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { StudentProjectDetailMember } from "../../types";
 import { memberDisplayName } from "../../utils/projectDetails/presentation";
 
 type StudentProjectTeamTabProps = {
   members: StudentProjectDetailMember[];
-  leaderId: string | null;
 };
 
 export function StudentProjectTeamTab({
   members,
-  leaderId,
 }: StudentProjectTeamTabProps) {
+  const orderedMembers = [...members].sort(
+    (left, right) =>
+      Number(left.memberRole !== "SUPERVISOR") -
+      Number(right.memberRole !== "SUPERVISOR"),
+  );
+
   return (
     <section className="rounded-3xl border border-border bg-white p-6 shadow-sm transition-all hover:shadow-md">
       <div className="flex flex-col">
@@ -25,16 +28,16 @@ export function StudentProjectTeamTab({
       </div>
 
       <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {members.map((member) => (
+        {orderedMembers.map((member) => (
           <div
             key={member.id}
+            data-member-role={member.memberRole}
             className={`group relative overflow-hidden rounded-3xl border p-5 transition-all hover:shadow-lg ${
               member.memberRole === "SUPERVISOR"
                 ? "border-indigo-100 bg-indigo-50/20"
                 : "border-slate-100 bg-white"
             }`}
           >
-            {/* Background pattern */}
             <div
               className={`absolute -right-4 -top-4 h-20 w-20 rounded-full opacity-10 transition-transform group-hover:scale-150 ${
                 member.memberRole === "SUPERVISOR"
@@ -55,10 +58,16 @@ export function StudentProjectTeamTab({
                   {memberDisplayName(member).charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-base font-black tracking-tight text-slate-800">
+                  <p
+                    className="truncate text-base font-black tracking-tight text-slate-800"
+                    title={memberDisplayName(member)}
+                  >
                     {memberDisplayName(member)}
                   </p>
-                  <p className="truncate text-xs font-bold text-slate-400 group-hover:text-slate-600 transition-colors">
+                  <p
+                    className="truncate text-xs font-bold text-slate-400 transition-colors group-hover:text-slate-600"
+                    title={member.email}
+                  >
                     {member.email}
                   </p>
                 </div>
@@ -66,18 +75,6 @@ export function StudentProjectTeamTab({
 
               <div className="mt-5 flex flex-wrap items-center gap-2">
                 <RoleBadge role={member.memberRole} />
-
-                {leaderId === member.id && (
-                  <div className="flex items-center gap-1.5">
-                    <Crown className="h-3.5 w-3.5 text-amber-500" />
-                    <StatusBadge
-                      tone="warning"
-                      className="border-none bg-amber-100 text-[10px] font-black uppercase tracking-wider text-amber-700"
-                    >
-                      Leader
-                    </StatusBadge>
-                  </div>
-                )}
 
                 {member.registrationNumber && (
                   <div className="flex items-center gap-1.5 rounded-xl border border-dotted border-slate-200 bg-slate-50/50 px-2.5 py-1 text-[10px] font-black tracking-tight text-slate-500">

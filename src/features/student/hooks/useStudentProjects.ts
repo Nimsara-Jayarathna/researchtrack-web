@@ -18,7 +18,6 @@ const UNKNOWN_ERROR_BASE: ApiError = {
 };
 
 export function invalidateStudentProjectsCache() {
-  cachedProjects = null;
   inFlightProjectsRequest = null;
 }
 
@@ -70,26 +69,16 @@ export function useStudentProjects() {
     };
 
     try {
-      if (!forceRefresh && cachedProjects) {
-        if (!isCurrentSession(requestSessionVersion)) {
-          return;
-        }
-        applyProjectsSuccess(cachedProjects);
-        return;
+      if (!forceRefresh && inFlightProjectsRequest) {
+        request = inFlightProjectsRequest;
+      } else {
+        request = studentApi.getProjects();
+        inFlightProjectsRequest = request;
       }
-
-      request =
-        !forceRefresh && inFlightProjectsRequest
-          ? inFlightProjectsRequest
-          : (inFlightProjectsRequest = studentApi.getProjects());
 
       setState((current) => ({ ...current, isLoading: true, error: null }));
 
       const projects = await request;
-      const shouldCommitCache = inFlightProjectsRequest === request;
-      if (shouldCommitCache) {
-        cachedProjects = projects;
-      }
 
       if (!isCurrentSession(requestSessionVersion)) {
         if (import.meta.env.DEV) {
@@ -139,5 +128,4 @@ export function useStudentProjects() {
   };
 }
 
-let cachedProjects: StudentProjectSummary[] | null = null;
 let inFlightProjectsRequest: Promise<StudentProjectSummary[]> | null = null;

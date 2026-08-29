@@ -127,10 +127,7 @@ export function StudentProjectDetailsPage() {
       ) : null}
 
       {activeTab === "team" ? (
-        <StudentProjectTeamTab
-          members={project.members}
-          leaderId={project.leader?.id ?? null}
-        />
+        <StudentProjectTeamTab members={project.members} />
       ) : null}
 
       {activeTab === "milestones" ? (

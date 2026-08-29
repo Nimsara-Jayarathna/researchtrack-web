@@ -5,7 +5,7 @@ import type { useRegistrationFlow } from "../../hooks/useRegistrationFlow";
 import type { RegisterConfig } from "../../types";
 import { PasswordRequirementsPanel } from "../PasswordRequirementsPanel";
 import { PasswordField } from "../PasswordField";
-import { PASSWORD_MAX_LENGTH } from "../../utils/passwordRules";
+import { resolvePasswordPolicy } from "../../utils/passwordRules";
 import {
   type ProfileFieldErrors,
   validateProfile,
@@ -31,6 +31,7 @@ export function Step4ProfileDetails({
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [registrationNumber, setRegistrationNumber] = useState("");
   const [fieldErrors, setFieldErrors] = useState<ProfileFieldErrors>({});
+  const passwordPolicy = resolvePasswordPolicy(config.passwordPolicy);
 
   const requireRegistrationNumber = flow.effectiveRole === "STUDENT";
   const shouldLockRegistrationNumber =
@@ -56,14 +57,17 @@ export function Step4ProfileDetails({
   const isMismatch = isConfirmPasswordFilled && !isConfirmMatched;
   const liveErrors = useMemo(
     () =>
-      validateProfile({
-        firstName,
-        lastName,
-        password,
-        confirmPassword,
-        registrationNumber,
-        requireRegistrationNumber,
-      }),
+      validateProfile(
+        {
+          firstName,
+          lastName,
+          password,
+          confirmPassword,
+          registrationNumber,
+          requireRegistrationNumber,
+        },
+        passwordPolicy,
+      ),
     [
       firstName,
       lastName,
@@ -71,19 +75,23 @@ export function Step4ProfileDetails({
       confirmPassword,
       registrationNumber,
       requireRegistrationNumber,
+      passwordPolicy,
     ],
   );
   const canSubmit = Object.keys(liveErrors).length === 0;
 
   function runValidation(currentRegistrationNumber = registrationNumber) {
-    return validateProfile({
-      firstName,
-      lastName,
-      password,
-      confirmPassword,
-      registrationNumber: currentRegistrationNumber,
-      requireRegistrationNumber,
-    });
+    return validateProfile(
+      {
+        firstName,
+        lastName,
+        password,
+        confirmPassword,
+        registrationNumber: currentRegistrationNumber,
+        requireRegistrationNumber,
+      },
+      passwordPolicy,
+    );
   }
 
   async function onSubmit(event: React.FormEvent) {
@@ -155,7 +163,7 @@ export function Step4ProfileDetails({
         label="Password"
         value={password}
         onChange={setPassword}
-        maxLength={PASSWORD_MAX_LENGTH}
+        maxLength={passwordPolicy.maximumLength}
         autoComplete="new-password"
         isVisible={showPassword}
         onToggleVisibility={() => setShowPassword((value) => !value)}
@@ -166,6 +174,7 @@ export function Step4ProfileDetails({
         password={password}
         compact
         isNewPasswordFocused={isNewPasswordFocused}
+        policy={passwordPolicy}
       />
       {fieldErrors.password && (
         <p className="text-xs text-red-600">{fieldErrors.password}</p>
@@ -176,7 +185,7 @@ export function Step4ProfileDetails({
         label="Confirm password"
         value={confirmPassword}
         onChange={setConfirmPassword}
-        maxLength={PASSWORD_MAX_LENGTH}
+        maxLength={passwordPolicy.maximumLength}
         autoComplete="new-password"
         isVisible={showConfirmPassword}
         onToggleVisibility={() => setShowConfirmPassword((value) => !value)}

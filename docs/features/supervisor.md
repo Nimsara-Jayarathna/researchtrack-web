@@ -73,14 +73,14 @@ Supervisor feature currently uses these APIs:
 - `POST /api/github/access-requests/continue?token=...`
 - `GET /api/github/access-updated/summary?token=...`
 - `POST /api/github/access-updated/acknowledge?token=...`
-- `GET /api/supervisor/students/search?q=...`
-- `POST /api/supervisor/projects`
-- `PATCH /api/supervisor/projects/{projectId}`
-- `PATCH /api/supervisor/projects/{projectId}/status`
+- `GET /api/v1/users/students?query=...`
+- `POST /api/v1/projects`
+- `PUT /api/v1/projects/{projectId}`
+- Lifecycle changes reuse `PUT /api/v1/projects/{projectId}` (no dedicated status endpoint)
 - `PATCH /api/supervisor/projects/{projectId}/repository`
-- `POST /api/supervisor/projects/{projectId}/members`
-- `POST /api/supervisor/projects/{projectId}/milestones`
-- `PATCH /api/supervisor/projects/{projectId}/milestones/{milestoneId}`
+- `POST /api/v1/projects/{projectId}/members`
+- `POST /api/v1/projects/{projectId}/milestones`
+- `PUT /api/v1/projects/{projectId}/milestones/{milestoneId}`
 
 ---
 
@@ -257,8 +257,9 @@ Supervisor feature currently uses these APIs:
 ### Header status control
 
 - Lifecycle status is editable from the top chip row dropdown.
-- Calls `PATCH /api/supervisor/projects/{projectId}/status`.
-- On failure, UI reverts to previous status and shows inline error.
+- Reuses the canonical project update contract: `PUT /api/v1/projects/{projectId}`.
+- The frontend sends the current project metadata with the selected `lifecycleStatus`; there is no separate lifecycle-status endpoint.
+- On failure, the quick control reverts to the previous status and the existing request-error flow is shown.
 
 ### Overview tab: core edit mode
 
@@ -270,7 +271,7 @@ Supervisor feature currently uses these APIs:
   - semester
   - lifecycle status
   - health note
-- Save calls `PATCH /api/supervisor/projects/{projectId}`.
+- Save calls the same canonical `PUT /api/v1/projects/{projectId}` project update endpoint.
 - Cancel resets form to latest loaded data.
 
 ### Overview tab: GitHub repository link management

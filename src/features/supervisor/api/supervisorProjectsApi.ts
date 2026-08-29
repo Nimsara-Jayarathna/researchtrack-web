@@ -16,7 +16,6 @@ import type {
   UpdateSupervisorProjectLeaderRequest,
   UpdateSupervisorProjectMilestoneRequest,
   UpdateSupervisorProjectRequest,
-  UpdateSupervisorProjectStatusRequest,
 } from "../types";
 
 import { normalizeGitHubRepositoryUrl } from "../utils/githubRepositoryUrl";
@@ -246,31 +245,6 @@ export function createSupervisorProjectsApi({
        * Refresh the project to update the cache.
        */
       return refreshProject(projectId);
-    },
-
-    // ============================================================
-    // FUTURE: UPDATE PROJECT STATUS
-    // ============================================================
-
-    async updateProjectStatus(
-      projectId: string,
-      body: UpdateSupervisorProjectStatusRequest,
-    ): Promise<SupervisorProjectDetail> {
-      /*
-       * The current ProjectsController.cs does not expose
-       * a dedicated project-status endpoint.
-       *
-       * LifecycleStatus is already part of UpdateProjectRequest,
-       * so use updateProject() when changing project status.
-       */
-      void projectId;
-      void body;
-
-      throw new Error(
-        "Use updateProject() to update lifecycleStatus. " +
-          "The current ProjectService backend does not expose " +
-          "a separate updateProjectStatus endpoint.",
-      );
     },
 
     // ============================================================

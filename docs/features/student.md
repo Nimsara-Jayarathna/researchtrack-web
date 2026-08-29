@@ -22,8 +22,8 @@ Student workspace for browsing assigned projects and reading project detail.
 
 Student pages currently use:
 
-- `GET /api/student/projects`
-- `GET /api/student/projects/{projectId}`
+- `GET /api/v1/projects`
+- `GET /api/v1/projects/{projectId}`
 - `GET /api/student/projects/{projectId}/github`
 - `GET /api/student/projects/{projectId}/github/activity?page=...&size=...`
 - `GET /api/student/projects/{projectId}/github/contributors?page=...&size=...`
@@ -76,7 +76,8 @@ Student pages currently use:
 ### Data source
 
 - Uses `useStudentProjects`
-- Calls `GET /api/student/projects`
+- Calls `GET /api/v1/projects`
+- Revalidates the collection whenever the Student project home mounts so membership additions/removals are reflected without relying on a long-lived in-memory list cache.
 
 ### Current card behavior
 
@@ -94,7 +95,8 @@ Student pages currently use:
 
 - Loading: `StudentProjectCardSkeleton`
 - Error: `ErrorState` with retry
-- Empty: `EmptyState` with clear/refresh action depending on filter state
+- Empty with no assignments: dedicated `No research project assigned yet` state with Refresh action.
+- Empty after search: `No projects found` state with Clear search action.
 
 ---
 
@@ -103,7 +105,8 @@ Student pages currently use:
 ### Data source
 
 - Uses `useStudentProject`
-- Calls `GET /api/student/projects/{projectId}`
+- Calls `GET /api/v1/projects/{projectId}`
+- Revalidates project access whenever the detail route mounts so a removed membership cannot be represented by stale cached detail data.
 
 ### Tabs
 
@@ -126,6 +129,8 @@ Student pages currently use:
   - batch, semester, health note, primary milestone summary
 - Team:
   - assigned member cards (name/email/member role/registration number)
+  - Supervisor is rendered before Student members for a stable role hierarchy.
+  - Leader identity is kept in the project model but is not repeated as a disruptive badge inside the generic member-card list.
 - Milestones:
   - milestone list with sequence, status, due date, description
 - GitHub (read-only shared dashboard):
@@ -156,7 +161,7 @@ Student pages currently use:
 ### Files (student scope)
 
 - Data source:
-  - Primary seed from `GET /api/student/projects/{projectId}` via embedded `data.files`.
+  - Primary seed from `GET /api/v1/projects/{projectId}` via embedded `data.files`.
   - Refresh/list endpoint: `GET /api/student/projects/{projectId}/files`.
 - Upload flow:
   - `POST /files/upload-url` -> direct S3 PUT -> `POST /files/confirm`.
@@ -191,6 +196,7 @@ Jira tab data rules come from backend analytics configuration (no student-side o
 
 ## Notes
 
+- `/student/projects` is the Student Sprint 1 home/dashboard surface; it intentionally reuses the canonical role-aware Project Service read model rather than introducing a duplicate Student dashboard backend.
 - Student list and detail routes are backend-connected.
 - Student mock project seed data is removed from active list/detail rendering.
 - GitHub tab is always present in detail tabs, but displays role-safe empty state when no repository is linked.

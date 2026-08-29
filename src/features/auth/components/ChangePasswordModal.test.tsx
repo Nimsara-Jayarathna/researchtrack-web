@@ -4,6 +4,25 @@ import { vi } from "vitest";
 import { ChangePasswordModal } from "./ChangePasswordModal";
 import { ApiException } from "@/services/apiClient";
 
+vi.mock("../hooks/useRegisterConfig", () => ({
+  useRegisterConfig: () => ({
+    config: {
+      passwordPolicy: {
+        minimumLength: 12,
+        maximumLength: 128,
+        requireUppercase: true,
+        requireLowercase: true,
+        requireDigit: true,
+        requireSpecialCharacter: true,
+      },
+    },
+    isLoading: false,
+    error: null,
+    clearError: vi.fn(),
+    reload: vi.fn(),
+  }),
+}));
+
 describe("ChangePasswordModal", () => {
   it("shows requirements panel only when new password is focused", () => {
     render(
@@ -15,7 +34,7 @@ describe("ChangePasswordModal", () => {
     );
 
     const panel = screen
-      .getByText(/Requirement:\s*At least 12 characters\./i)
+      .getByText(/At least 12 characters/i)
       .closest("div[aria-hidden]");
     const newPassword = screen.getByLabelText("New password");
 
@@ -34,7 +53,7 @@ describe("ChangePasswordModal", () => {
     );
 
     const panel = screen
-      .getByText(/Requirement:\s*At least 12 characters\./i)
+      .getByText(/At least 12 characters/i)
       .closest("div[aria-hidden]");
     const newPassword = screen.getByLabelText("New password");
 
@@ -53,7 +72,7 @@ describe("ChangePasswordModal", () => {
     );
 
     const panel = screen
-      .getByText(/Requirement:\s*At least 12 characters\./i)
+      .getByText(/At least 12 characters/i)
       .closest("div[aria-hidden]");
     const newPassword = screen.getByLabelText("New password");
 
@@ -62,7 +81,7 @@ describe("ChangePasswordModal", () => {
     fireEvent.blur(newPassword);
     expect(panel).toHaveAttribute("aria-hidden", "false");
     expect(
-      screen.getByText(/Requirement:\s*At least 12 characters\./i),
+      screen.getByText(/At least 12 characters/i),
     ).toBeInTheDocument();
   });
 
@@ -79,18 +98,18 @@ describe("ChangePasswordModal", () => {
 
     fireEvent.focus(newPassword);
     fireEvent.change(newPassword, {
-      target: { value: "my dog loves eating pizza" },
+      target: { value: "My dog loves eating pizza! 2026" },
     });
     fireEvent.blur(newPassword);
 
-    expect(screen.getByText("✓ Strong password")).toBeInTheDocument();
+    expect(screen.getByText("✓ Password requirements met")).toBeInTheDocument();
     expect(
-      screen.queryByText(/Requirement:\s*At least 12 characters\./i),
+      screen.queryByText(/At least 12 characters/i),
     ).not.toBeInTheDocument();
 
     fireEvent.focus(newPassword);
     expect(
-      screen.getByText(/Requirement:\s*At least 12 characters\./i),
+      screen.getByText(/At least 12 characters/i),
     ).toBeInTheDocument();
   });
 
@@ -136,6 +155,44 @@ describe("ChangePasswordModal", () => {
     expect(currentToggle).toHaveAttribute("aria-label", "Hide password");
   });
 
+  it("shows the canonical incorrect-current-password message from the backend", async () => {
+    const onSubmit = vi.fn().mockRejectedValue(
+      new ApiException({
+        code: "CURRENT_PASSWORD_INCORRECT",
+        status: 400,
+        message: "Current password is incorrect.",
+        details: [],
+        timestamp: "2026-08-29T00:00:00Z",
+        path: "/api/v1/users/me/password",
+        traceId: "trace-password",
+      }),
+    );
+
+    render(
+      <ChangePasswordModal
+        isOpen={true}
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText("Current password"), {
+      target: { value: "WrongCurrentPassword!1" },
+    });
+    fireEvent.change(screen.getByLabelText("New password"), {
+      target: { value: "A valid replacement Password!2" },
+    });
+    fireEvent.change(screen.getByLabelText("Confirm new password"), {
+      target: { value: "A valid replacement Password!2" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Save password" }));
+
+    expect(
+      await screen.findByText("Current password is incorrect."),
+    ).toBeInTheDocument();
+  });
+
   it("shows field-level newPassword backend error instead of generic validation message", async () => {
     const onSubmit = vi.fn().mockRejectedValue(
       new ApiException({
@@ -149,7 +206,7 @@ describe("ChangePasswordModal", () => {
           },
         ],
         timestamp: "2026-04-14T00:00:00Z",
-        path: "/api/supervisor/me/password",
+        path: "/api/v1/users/me/password",
         traceId: null,
       }),
     );

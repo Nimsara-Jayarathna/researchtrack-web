@@ -129,8 +129,10 @@ Student pages currently use:
   - batch, semester, health note, primary milestone summary
 - Team:
   - assigned member cards (name/email/member role/registration number)
-  - Supervisor is rendered before Student members for a stable role hierarchy.
-  - Leader identity is kept in the project model but is not repeated as a disruptive badge inside the generic member-card list.
+  - deterministic hierarchy: Supervisor first, Project Leader second, then remaining Students.
+  - a compact Team-header summary names the current Project Leader; when no leader is assigned it explicitly shows `Not assigned yet`.
+  - the leader Student receives a subtle visual accent/crown marker while retaining the normal `Student` role badge, so leader status does not disrupt the member-card layout or rely on color alone.
+  - Student users can view leader/member identity but receive no add/remove/change-leader controls.
 - Milestones:
   - milestone list with sequence, status, due date, description
 - GitHub (read-only shared dashboard):

@@ -72,6 +72,15 @@ export type RegisterCompleteRequest = {
 };
 export type RegisterCompleteResponse = { user: AuthUser };
 
+export type PasswordPolicyConfig = {
+  minimumLength: number;
+  maximumLength: number;
+  requireUppercase: boolean;
+  requireLowercase: boolean;
+  requireDigit: boolean;
+  requireSpecialCharacter: boolean;
+};
+
 export type RegisterConfig = {
   domainRestrictionEnabled: boolean;
   studentDomain: string | null;
@@ -80,14 +89,7 @@ export type RegisterConfig = {
   studentEmailPrefixRegex: string | null;
   requireStudentRegistrationNumber?: boolean;
   requireStudentRegistrationNumberToMatchEmail?: boolean;
-  passwordPolicy?: {
-    minimumLength: number;
-    maximumLength: number;
-    requireUppercase: boolean;
-    requireLowercase: boolean;
-    requireDigit: boolean;
-    requireSpecialCharacter: boolean;
-  };
+  passwordPolicy?: PasswordPolicyConfig;
 };
 
 export type ForgotPasswordRequest = { email: string };

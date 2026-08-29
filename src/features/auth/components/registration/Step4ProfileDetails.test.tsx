@@ -50,7 +50,7 @@ describe("Step4ProfileDetails", () => {
     render(<Step4ProfileDetails flow={createFlow()} config={createConfig()} />);
 
     const panel = screen
-      .getByText(/Requirement:\s*At least 12 characters\./i)
+      .getByText(/At least 12 characters/i)
       .closest("div[aria-hidden]");
     const passwordInput = screen.getByLabelText("Password");
 
@@ -63,7 +63,7 @@ describe("Step4ProfileDetails", () => {
     render(<Step4ProfileDetails flow={createFlow()} config={createConfig()} />);
 
     const panel = screen
-      .getByText(/Requirement:\s*At least 12 characters\./i)
+      .getByText(/At least 12 characters/i)
       .closest("div[aria-hidden]");
     const passwordInput = screen.getByLabelText("Password");
 
@@ -76,7 +76,7 @@ describe("Step4ProfileDetails", () => {
     render(<Step4ProfileDetails flow={createFlow()} config={createConfig()} />);
 
     const panel = screen
-      .getByText(/Requirement:\s*At least 12 characters\./i)
+      .getByText(/At least 12 characters/i)
       .closest("div[aria-hidden]");
     const passwordInput = screen.getByLabelText("Password");
 
@@ -85,7 +85,7 @@ describe("Step4ProfileDetails", () => {
     fireEvent.blur(passwordInput);
     expect(panel).toHaveAttribute("aria-hidden", "false");
     expect(
-      screen.getByText(/Requirement:\s*At least 12 characters\./i),
+      screen.getByText(/At least 12 characters/i),
     ).toBeInTheDocument();
   });
 
@@ -96,18 +96,18 @@ describe("Step4ProfileDetails", () => {
 
     fireEvent.focus(passwordInput);
     fireEvent.change(passwordInput, {
-      target: { value: "my dog loves eating pizza" },
+      target: { value: "My dog loves eating pizza! 2026" },
     });
     fireEvent.blur(passwordInput);
 
-    expect(screen.getByText("✓ Strong password")).toBeInTheDocument();
+    expect(screen.getByText("✓ Password requirements met")).toBeInTheDocument();
     expect(
-      screen.queryByText(/Requirement:\s*At least 12 characters\./i),
+      screen.queryByText(/At least 12 characters/i),
     ).not.toBeInTheDocument();
 
     fireEvent.focus(passwordInput);
     expect(
-      screen.getByText(/Requirement:\s*At least 12 characters\./i),
+      screen.getByText(/At least 12 characters/i),
     ).toBeInTheDocument();
   });
 
@@ -177,10 +177,10 @@ describe("Step4ProfileDetails", () => {
       target: { value: "Perera" },
     });
     fireEvent.change(screen.getByLabelText("Password"), {
-      target: { value: "long passphrase one" },
+      target: { value: "Long passphrase one! 2026" },
     });
     fireEvent.change(screen.getByLabelText("Confirm password"), {
-      target: { value: "long passphrase one" },
+      target: { value: "Long passphrase one! 2026" },
     });
     await waitFor(() => {
       expect(
@@ -193,7 +193,7 @@ describe("Step4ProfileDetails", () => {
       expect(submitProfile).toHaveBeenCalledWith({
         firstName: "Nimal",
         lastName: "Perera",
-        password: "long passphrase one",
+        password: "Long passphrase one! 2026",
         registrationNumber: "IT24103464",
       });
     });
@@ -203,7 +203,7 @@ describe("Step4ProfileDetails", () => {
     render(<Step4ProfileDetails flow={createFlow()} config={createConfig()} />);
 
     fireEvent.change(screen.getByLabelText("Password"), {
-      target: { value: "long passphrase one" },
+      target: { value: "Long passphrase one! 2026" },
     });
     fireEvent.change(screen.getByLabelText("Confirm password"), {
       target: { value: "long passphrase two" },

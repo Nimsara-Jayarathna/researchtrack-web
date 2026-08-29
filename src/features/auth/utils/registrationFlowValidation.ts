@@ -1,8 +1,10 @@
+import type { PasswordPolicyConfig } from "../types";
 import {
   getPasswordChecks,
   getPasswordStrength as sharedGetPasswordStrength,
+  isPasswordPolicyPassed,
+  resolvePasswordPolicy,
 } from "./passwordRules";
-import { PASSWORD_MIN_LENGTH } from "./passwordRules";
 
 export type ProfileFieldErrors = {
   firstName?: string;
@@ -25,22 +27,26 @@ export function validateOtp(otp: string): string | null {
   return null;
 }
 
-export function validateProfile(fields: {
-  firstName: string;
-  lastName: string;
-  password: string;
-  confirmPassword: string;
-  registrationNumber?: string;
-  requireRegistrationNumber?: boolean;
-}): ProfileFieldErrors {
+export function validateProfile(
+  fields: {
+    firstName: string;
+    lastName: string;
+    password: string;
+    confirmPassword: string;
+    registrationNumber?: string;
+    requireRegistrationNumber?: boolean;
+  },
+  passwordPolicy?: PasswordPolicyConfig | null,
+): ProfileFieldErrors {
   const errors: ProfileFieldErrors = {};
-  const checks = getPasswordChecks(fields.password);
+  const resolvedPolicy = resolvePasswordPolicy(passwordPolicy);
+  const checks = getPasswordChecks(fields.password, resolvedPolicy);
 
   if (!fields.firstName.trim()) errors.firstName = "First name is required.";
   if (!fields.lastName.trim()) errors.lastName = "Last name is required.";
   if (!fields.password) errors.password = "Password is required.";
-  else if (!checks.minLength)
-    errors.password = `Must be at least ${PASSWORD_MIN_LENGTH} characters.`;
+  else if (!isPasswordPolicyPassed(checks))
+    errors.password = "Password does not satisfy the required security policy.";
 
   if (!fields.confirmPassword)
     errors.confirmPassword = "Please confirm your password.";
@@ -59,6 +65,7 @@ export function validateProfile(fields: {
 
 export function getPasswordStrength(
   password: string,
+  passwordPolicy?: PasswordPolicyConfig | null,
 ): "weak" | "fair" | "strong" {
-  return sharedGetPasswordStrength(password);
+  return sharedGetPasswordStrength(password, passwordPolicy);
 }

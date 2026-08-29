@@ -80,9 +80,7 @@ describe("ChangePasswordModal", () => {
     fireEvent.change(newPassword, { target: { value: "short" } });
     fireEvent.blur(newPassword);
     expect(panel).toHaveAttribute("aria-hidden", "false");
-    expect(
-      screen.getByText(/At least 12 characters/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/At least 12 characters/i)).toBeInTheDocument();
   });
 
   it("collapses to compact success on blur when password is strong, and expands again on focus", () => {
@@ -108,9 +106,7 @@ describe("ChangePasswordModal", () => {
     ).not.toBeInTheDocument();
 
     fireEvent.focus(newPassword);
-    expect(
-      screen.getByText(/At least 12 characters/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/At least 12 characters/i)).toBeInTheDocument();
   });
 
   it("shows mismatch tooltip on confirm new password mismatch", () => {

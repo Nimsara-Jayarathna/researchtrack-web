@@ -13,7 +13,6 @@ const { validateResetTokenMock, resetPasswordMock, logoutMock, navigateMock } =
     navigateMock: vi.fn(),
   }));
 
-
 vi.mock("../hooks/useRegisterConfig", () => ({
   useRegisterConfig: () => ({
     config: {

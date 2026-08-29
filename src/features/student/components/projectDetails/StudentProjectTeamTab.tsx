@@ -77,7 +77,8 @@ export function StudentProjectTeamTab({
       <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {orderedMembers.map((member) => {
           const isSupervisor = member.memberRole === "SUPERVISOR";
-          const isLeader = member.memberRole === "STUDENT" && member.id === leaderId;
+          const isLeader =
+            member.memberRole === "STUDENT" && member.id === leaderId;
 
           return (
             <div

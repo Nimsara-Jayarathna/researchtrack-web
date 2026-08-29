@@ -55,10 +55,7 @@ export function ChangePasswordModal({
   const resolvedPasswordPolicy = resolvePasswordPolicy(
     passwordPolicy ?? registerConfig?.passwordPolicy,
   );
-  const passwordChecks = getPasswordChecks(
-    newPassword,
-    resolvedPasswordPolicy,
-  );
+  const passwordChecks = getPasswordChecks(newPassword, resolvedPasswordPolicy);
   const isCurrentPasswordFilled = currentPassword.trim().length > 0;
   const isConfirmPasswordFilled = confirmPassword.trim().length > 0;
   const isConfirmMatched =

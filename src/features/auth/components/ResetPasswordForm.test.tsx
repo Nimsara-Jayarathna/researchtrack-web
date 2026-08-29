@@ -16,9 +16,7 @@ describe("ResetPasswordForm", () => {
     const panel = screen
       .getByText(/At least 12 characters/i)
       .closest("div[aria-hidden]");
-    const requirements = screen.getByText(
-      /At least 12 characters/i,
-    );
+    const requirements = screen.getByText(/At least 12 characters/i);
     const newPassword = screen.getByLabelText("New Password");
 
     expect(panel).toHaveAttribute("aria-hidden", "true");
@@ -67,9 +65,7 @@ describe("ResetPasswordForm", () => {
     fireEvent.change(newPassword, { target: { value: "short" } });
     fireEvent.blur(newPassword);
     expect(panel).toHaveAttribute("aria-hidden", "false");
-    expect(
-      screen.getByText(/At least 12 characters/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/At least 12 characters/i)).toBeInTheDocument();
   });
 
   it("collapses to compact success on blur when password is strong, and expands again on focus", () => {
@@ -95,9 +91,7 @@ describe("ResetPasswordForm", () => {
     ).not.toBeInTheDocument();
 
     fireEvent.focus(newPassword);
-    expect(
-      screen.getByText(/At least 12 characters/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/At least 12 characters/i)).toBeInTheDocument();
   });
 
   it("confirm field focus does not control helper state", () => {
@@ -111,9 +105,7 @@ describe("ResetPasswordForm", () => {
 
     const confirmPassword = screen.getByLabelText("Confirm New Password");
     fireEvent.focus(confirmPassword);
-    expect(
-      screen.queryByText(/At least 12 characters/i),
-    ).toBeInTheDocument();
+    expect(screen.queryByText(/At least 12 characters/i)).toBeInTheDocument();
     const panel = screen
       .getByText(/At least 12 characters/i)
       .closest("div[aria-hidden]");

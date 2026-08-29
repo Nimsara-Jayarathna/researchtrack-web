@@ -84,9 +84,7 @@ describe("Step4ProfileDetails", () => {
     fireEvent.change(passwordInput, { target: { value: "short" } });
     fireEvent.blur(passwordInput);
     expect(panel).toHaveAttribute("aria-hidden", "false");
-    expect(
-      screen.getByText(/At least 12 characters/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/At least 12 characters/i)).toBeInTheDocument();
   });
 
   it("collapses to compact success on blur when password is strong, and expands again on focus", () => {
@@ -106,9 +104,7 @@ describe("Step4ProfileDetails", () => {
     ).not.toBeInTheDocument();
 
     fireEvent.focus(passwordInput);
-    expect(
-      screen.getByText(/At least 12 characters/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/At least 12 characters/i)).toBeInTheDocument();
   });
 
   it("auto-fills registration number from student email local-part and locks the field", async () => {

@@ -61,7 +61,9 @@ describe("useProjectLifecycleState", () => {
       });
     });
 
-    await waitFor(() => expect(setProject).toHaveBeenCalledWith(updatedProject));
+    await waitFor(() =>
+      expect(setProject).toHaveBeenCalledWith(updatedProject),
+    );
     expect(showSuccessModal).toHaveBeenCalledWith(
       "Project status updated",
       "Lifecycle status is now ACTIVE.",
@@ -70,7 +72,9 @@ describe("useProjectLifecycleState", () => {
 
   it("rolls the quick control back when the backend update fails", async () => {
     const currentProject = projectWithStatus("PLANNING");
-    const updateProject = vi.fn().mockRejectedValue(new Error("Network failed"));
+    const updateProject = vi
+      .fn()
+      .mockRejectedValue(new Error("Network failed"));
     const showErrorModal = vi.fn();
 
     const { result } = renderHook(() =>

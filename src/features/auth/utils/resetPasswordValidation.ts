@@ -25,7 +25,8 @@ export function validateResetPasswordForm(
 
   if (!newPassword) errors.newPassword = "Password is required.";
   else if (!isPasswordPolicyPassed(checks))
-    errors.newPassword = "Password does not satisfy the required security policy.";
+    errors.newPassword =
+      "Password does not satisfy the required security policy.";
 
   if (!confirmNewPassword)
     errors.confirmNewPassword = "Please confirm your password.";

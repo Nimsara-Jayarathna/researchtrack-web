@@ -426,7 +426,6 @@ export function TeamTabSection({ project, team }: TeamTabSectionProps) {
               <div className="mt-5 flex flex-wrap items-center gap-2">
                 <RoleBadge role={member.memberRole} />
 
-
                 {member.registrationNumber && (
                   <div className="flex items-center gap-1.5 rounded-xl border border-dotted border-slate-200 bg-slate-50/50 px-2.5 py-1 text-[10px] font-black tracking-tight text-slate-500">
                     <ShieldCheck className="h-3 w-3" />

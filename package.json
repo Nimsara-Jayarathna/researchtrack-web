@@ -15,6 +15,7 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,cjs,mjs,css,json}\" \"*.{md,json,ts,tsx,cjs,mjs}\"",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --config vitest.config.ts",
+    "test:selenium:student-dashboard": "node --test tests/selenium/student-dashboard.test.mjs",
     "test:watch": "vitest --config vitest.config.ts",
     "verify": "npm run format:check && npm run lint && npm run typecheck"
   },
@@ -44,6 +45,7 @@
     "jsdom": "^28.1.0",
     "postcss": "^8.4.49",
     "prettier": "^3.3.3",
+    "selenium-webdriver": "^4.48.0",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.6.3",
     "vite": "^6.4.3",

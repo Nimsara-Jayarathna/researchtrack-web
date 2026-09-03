@@ -35,7 +35,6 @@ type UseProjectOverviewStateParams = {
         batch: string;
         semester: string;
         lifecycleStatus: SupervisorProjectDetail["lifecycleStatus"];
-        leaderStudentId: string | null;
       },
     ) => Promise<SupervisorProjectDetail>;
   };
@@ -104,7 +103,6 @@ export function useProjectOverviewState({
         batch: overviewForm.batch.trim(),
         semester: overviewForm.semester.trim(),
         lifecycleStatus: overviewForm.lifecycleStatus,
-        leaderStudentId: project.leader?.id ?? null,
       });
       setProject(updatedProject);
       setIsEditingOverview(false);

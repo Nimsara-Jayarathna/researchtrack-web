@@ -4,8 +4,7 @@ import type { ReactNode } from "react";
 import { TopBar } from "@/components/ui/TopBar";
 import { AccountModal } from "@/features/auth/components/AccountModal";
 import { ChangePasswordModal } from "@/features/auth/components/ChangePasswordModal";
-import { studentApi } from "@/features/student/api/studentApi";
-import { supervisorApi } from "@/features/supervisor/api/supervisorApi";
+import { accountApi } from "@/features/auth/api/accountApi";
 import { isApiException } from "@/services/apiClient";
 import type { ApiError } from "@/types";
 import { normalizeUserRole } from "@/types/roles";
@@ -77,12 +76,7 @@ export function AppShell({
     currentPassword: string;
     newPassword: string;
   }) {
-    const normalizedRole = normalizeUserRole(userRole);
-    if (normalizedRole === "SUPERVISOR") {
-      await supervisorApi.changePassword(payload);
-      return;
-    }
-    await studentApi.changePassword(payload);
+    await accountApi.changePassword(payload);
   }
 
   const showBlockingError = useCallback(

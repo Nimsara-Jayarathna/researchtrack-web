@@ -62,7 +62,7 @@ describe("useSupervisorDashboard", () => {
     timestamp: "2026-04-21T00:00:00Z",
     status: 400,
     error: "Bad Request",
-    path: "/api/supervisor/dashboard",
+    path: "/api/v1/supervisor/dashboard",
     traceId: null,
   };
 

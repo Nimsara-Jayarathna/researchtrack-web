@@ -5,6 +5,7 @@ import type { ApiError } from "@/types";
 const ERROR_TITLES: Record<ApiError["code"], string> = {
   VALIDATION_ERROR: "Invalid Input",
   BAD_REQUEST: "Bad Request",
+  CURRENT_PASSWORD_INCORRECT: "Current Password Incorrect",
   UNAUTHORIZED: "Session Expired",
   FORBIDDEN: "Access Denied",
   NOT_FOUND: "Not Found",

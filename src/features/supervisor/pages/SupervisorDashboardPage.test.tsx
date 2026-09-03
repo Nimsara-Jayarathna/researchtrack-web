@@ -58,7 +58,7 @@ describe("SupervisorDashboardPage error routing", () => {
       error: "Service Unavailable",
       code: "SERVICE_UNAVAILABLE",
       message: "Service down",
-      path: "/api/supervisor/dashboard",
+      path: "/api/v1/supervisor/dashboard",
       traceId: null,
       details: [],
     };
@@ -93,7 +93,7 @@ describe("SupervisorDashboardPage error routing", () => {
       error: "Bad Request",
       code: "BAD_REQUEST",
       message: "Bad dashboard filters",
-      path: "/api/supervisor/dashboard",
+      path: "/api/v1/supervisor/dashboard",
       traceId: null,
       details: [],
     };

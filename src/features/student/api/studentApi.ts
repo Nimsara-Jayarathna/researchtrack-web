@@ -3,7 +3,6 @@ import { registerSessionCacheClearer } from "@/services/sessionCache";
 import { createRoleProjectApi } from "@/features/shared/api/createRoleProjectApi";
 import { clearRecord } from "@/services/apiCacheUtils";
 import type { StudentProjectDetail } from "../types";
-import { createStudentMeApi } from "./studentMeApi";
 import { createStudentProjectsApi } from "./studentProjectsApi";
 
 const cachedProjectsById: Partial<Record<string, StudentProjectDetail>> = {};
@@ -15,7 +14,6 @@ const { clearCache: clearRoleProjectCache, ...roleProjectApi } =
     apiClient,
     roleBasePath: "/api/student",
   });
-const studentMeApi = createStudentMeApi({ apiClient });
 const studentProjectsApi = createStudentProjectsApi({
   apiClient,
   cachedProjectsById,
@@ -36,6 +34,5 @@ export const studentApi = {
   },
 
   ...roleProjectApi,
-  ...studentMeApi,
   ...studentProjectsApi,
 };

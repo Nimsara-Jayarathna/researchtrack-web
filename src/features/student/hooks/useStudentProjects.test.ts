@@ -54,4 +54,29 @@ describe("useStudentProjects", () => {
       { id: "b", title: "User B Project" },
     ]);
   });
+
+  it("revalidates the project collection when the Student home mounts again", async () => {
+    getProjects
+      .mockResolvedValueOnce([{ id: "a", title: "First Assignment" }])
+      .mockResolvedValueOnce([{ id: "b", title: "Updated Assignment" }]);
+
+    const firstMount = renderHook(() => useStudentProjects());
+    await waitFor(() => {
+      expect(firstMount.result.current.isLoading).toBe(false);
+    });
+    expect(firstMount.result.current.projects).toEqual([
+      { id: "a", title: "First Assignment" },
+    ]);
+    firstMount.unmount();
+
+    const secondMount = renderHook(() => useStudentProjects());
+    await waitFor(() => {
+      expect(secondMount.result.current.isLoading).toBe(false);
+    });
+
+    expect(getProjects).toHaveBeenCalledTimes(2);
+    expect(secondMount.result.current.projects).toEqual([
+      { id: "b", title: "Updated Assignment" },
+    ]);
+  });
 });

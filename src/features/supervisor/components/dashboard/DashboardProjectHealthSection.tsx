@@ -1,5 +1,5 @@
 import { ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { buttonStyles } from "@/components/ui/Button";
 import type { SupervisorDashboardProjectItem } from "../../types";
@@ -69,6 +69,14 @@ function ProjectHealthMobileCard({
         </div>
         <div className="space-y-1">
           <dt className="font-medium uppercase tracking-wide text-slate-500">
+            Members
+          </dt>
+          <dd className="text-base font-bold leading-none text-foreground">
+            {project.memberCount}
+          </dd>
+        </div>
+        <div className="space-y-1">
+          <dt className="font-medium uppercase tracking-wide text-slate-500">
             Milestone
           </dt>
           <dd className="text-sm font-semibold text-foreground">
@@ -103,6 +111,8 @@ type DashboardProjectHealthSectionProps = {
   pageSize: number;
   safeCurrentPage: number;
   totalPages: number;
+  hasAnyProjects: boolean;
+  hasSearchQuery: boolean;
   pagingStateHandlers: PagingStateHandlers;
 };
 
@@ -113,9 +123,12 @@ export function DashboardProjectHealthSection({
   pageSize,
   safeCurrentPage,
   totalPages,
+  hasAnyProjects,
+  hasSearchQuery,
   pagingStateHandlers,
 }: DashboardProjectHealthSectionProps) {
   const { setCurrentPage } = pagingStateHandlers;
+  const navigate = useNavigate();
 
   return (
     <section className="rounded-3xl border border-border bg-white p-4 shadow-sm sm:p-6">
@@ -149,19 +162,21 @@ export function DashboardProjectHealthSection({
       ) : visibleProjects.length > 0 ? (
         <div className="mt-5 space-y-3">
           <div className="hidden overflow-x-auto md:block">
-            <table className="w-full min-w-[920px] table-fixed text-left text-sm">
+            <table className="w-full min-w-[1020px] table-fixed text-left text-sm">
               <colgroup>
-                <col className="w-[44%]" />
+                <col className="w-[36%]" />
+                <col className="w-[11%]" />
+                <col className="w-[9%]" />
                 <col className="w-[12%]" />
-                <col className="w-[12%]" />
-                <col className="w-[10%]" />
-                <col className="w-[12%]" />
+                <col className="w-[9%]" />
+                <col className="w-[13%]" />
                 <col className="w-[10%]" />
               </colgroup>
               <thead className="border-b border-slate-200 text-xs uppercase tracking-[0.2em] text-muted-foreground">
                 <tr>
                   <th className="px-3 py-3">Project</th>
                   <th className="px-3 py-3 whitespace-nowrap">Status</th>
+                  <th className="px-3 py-3 whitespace-nowrap">Members</th>
                   <th className="px-3 py-3 whitespace-nowrap">Milestone</th>
                   <th className="px-3 py-3 whitespace-nowrap">Progress</th>
                   <th className="px-3 py-3 whitespace-nowrap">Jira Health</th>
@@ -194,6 +209,9 @@ export function DashboardProjectHealthSection({
                       >
                         {project.lifecycleStatus.replace("_", " ")}
                       </span>
+                    </td>
+                    <td className="px-3 py-4 align-top whitespace-nowrap text-muted-foreground">
+                      {project.memberCount}
                     </td>
                     <td className="px-3 py-4 align-top whitespace-nowrap text-muted-foreground">
                       {formatMilestoneDate(project.milestoneDate)}
@@ -262,10 +280,25 @@ export function DashboardProjectHealthSection({
         </div>
       ) : (
         <div className="mt-5">
-          <EmptyState
-            title="No projects found"
-            description="No supervised projects match your current filters."
-          />
+          {hasAnyProjects ? (
+            <EmptyState
+              title="No projects found"
+              description={
+                hasSearchQuery
+                  ? "No supervised projects match your current search."
+                  : "No supervised projects match your current filters."
+              }
+            />
+          ) : (
+            <EmptyState
+              title="No research projects yet"
+              description="Create your first research project to start supervising a research group."
+              primaryAction={{
+                label: "Create project",
+                onClick: () => navigate("/supervisor/projects/new"),
+              }}
+            />
+          )}
         </div>
       )}
     </section>

@@ -50,6 +50,7 @@ describe("dashboard scoring helpers", () => {
         milestoneDate: "2026-04-10",
         lastActivityAt: "2026-04-01T00:00:00Z",
         progressPercent: 10,
+        memberCount: 3,
         jiraHealthIndicator: "BEHIND",
       },
       {
@@ -60,6 +61,7 @@ describe("dashboard scoring helpers", () => {
         milestoneDate: "2026-04-25",
         lastActivityAt: "2026-04-18T00:00:00Z",
         progressPercent: 50,
+        memberCount: 3,
         jiraHealthIndicator: "AT_RISK",
       },
       {
@@ -70,6 +72,7 @@ describe("dashboard scoring helpers", () => {
         milestoneDate: null,
         lastActivityAt: "2026-04-20T00:00:00Z",
         progressPercent: 80,
+        memberCount: 3,
         jiraHealthIndicator: "HEALTHY",
       },
       {
@@ -80,6 +83,7 @@ describe("dashboard scoring helpers", () => {
         milestoneDate: "2026-04-19",
         lastActivityAt: "2026-04-19T00:00:00Z",
         progressPercent: 80,
+        memberCount: 3,
         jiraHealthIndicator: "HEALTHY",
       },
       {
@@ -90,6 +94,7 @@ describe("dashboard scoring helpers", () => {
         milestoneDate: "2026-04-20",
         lastActivityAt: "2026-03-01T00:00:00Z",
         progressPercent: 0,
+        memberCount: 3,
         jiraHealthIndicator: "AT_RISK",
       },
     ];
@@ -113,6 +118,7 @@ describe("dashboard scoring helpers", () => {
         milestoneDate: "2026-04-10",
         lastActivityAt: null,
         progressPercent: 10,
+        memberCount: 3,
         jiraHealthIndicator: null,
       },
       {
@@ -123,6 +129,7 @@ describe("dashboard scoring helpers", () => {
         milestoneDate: "2026-04-22",
         lastActivityAt: null,
         progressPercent: 50,
+        memberCount: 3,
         jiraHealthIndicator: null,
       },
       {
@@ -133,6 +140,7 @@ describe("dashboard scoring helpers", () => {
         milestoneDate: "2026-06-01",
         lastActivityAt: null,
         progressPercent: 50,
+        memberCount: 3,
         jiraHealthIndicator: null,
       },
       {
@@ -143,6 +151,7 @@ describe("dashboard scoring helpers", () => {
         milestoneDate: "2026-04-22",
         lastActivityAt: null,
         progressPercent: 100,
+        memberCount: 3,
         jiraHealthIndicator: null,
       },
     ];

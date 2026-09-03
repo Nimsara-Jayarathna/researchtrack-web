@@ -48,11 +48,14 @@ export type CreateSupervisorProjectResponse = {
 
 export type UpdateSupervisorProjectRequest = {
   title: string;
-  summary: string;
+  summary: string | null;
   batch: string;
   semester: string;
   lifecycleStatus: SupervisorProjectLifecycle;
-  leaderStudentId?: string | null;
+};
+
+export type UpdateSupervisorProjectLeaderRequest = {
+  leaderStudentId: string | null;
 };
 
 export type AddSupervisorProjectMembersRequest = {
@@ -70,10 +73,6 @@ export type UpdateSupervisorProjectMilestoneRequest = {
   description: string | null;
   dueDate: string;
   status: import("./project.types").SupervisorProjectDetailMilestone["status"];
-};
-
-export type UpdateSupervisorProjectStatusRequest = {
-  lifecycleStatus: SupervisorProjectLifecycle;
 };
 
 export type UpdateRepositoryRequest = {

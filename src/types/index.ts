@@ -2,6 +2,7 @@
 export type ApiErrorCode =
   | "VALIDATION_ERROR"
   | "BAD_REQUEST"
+  | "CURRENT_PASSWORD_INCORRECT"
   | "UNAUTHORIZED"
   | "FORBIDDEN"
   | "NOT_FOUND"
@@ -14,6 +15,7 @@ export type ApiErrorCode =
 export type BackendApiErrorCode =
   | "VALIDATION_ERROR"
   | "BAD_REQUEST"
+  | "CURRENT_PASSWORD_INCORRECT"
   | "UNAUTHORIZED"
   | "FORBIDDEN"
   | "NOT_FOUND"

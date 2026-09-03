@@ -17,7 +17,9 @@ export type StatusBadgeTone = NonNullable<
   ComponentProps<typeof StatusBadge>["tone"]
 >;
 
-export function memberDisplayName(member: StudentProjectDetailMember): string {
+export function memberDisplayName(
+  member: Pick<StudentProjectDetailMember, "firstName" | "lastName" | "email">,
+): string {
   return (
     `${member.firstName ?? ""} ${member.lastName ?? ""}`.trim() || member.email
   );

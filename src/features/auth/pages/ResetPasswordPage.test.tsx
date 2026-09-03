@@ -13,6 +13,25 @@ const { validateResetTokenMock, resetPasswordMock, logoutMock, navigateMock } =
     navigateMock: vi.fn(),
   }));
 
+vi.mock("../hooks/useRegisterConfig", () => ({
+  useRegisterConfig: () => ({
+    config: {
+      passwordPolicy: {
+        minimumLength: 12,
+        maximumLength: 128,
+        requireUppercase: true,
+        requireLowercase: true,
+        requireDigit: true,
+        requireSpecialCharacter: true,
+      },
+    },
+    isLoading: false,
+    error: null,
+    clearError: vi.fn(),
+    reload: vi.fn(),
+  }),
+}));
+
 vi.mock("../api/authApi", () => ({
   authApi: {
     validateResetToken: validateResetTokenMock,
@@ -82,11 +101,11 @@ describe("ResetPasswordPage", () => {
 
     await user.type(
       screen.getByLabelText("New Password"),
-      "my dog loves eating pizza",
+      "My dog loves eating pizza! 2026",
     );
     await user.type(
       screen.getByLabelText("Confirm New Password"),
-      "my dog loves eating pizza",
+      "My dog loves eating pizza! 2026",
     );
     await user.click(screen.getByRole("button", { name: "Update password" }));
 
@@ -117,11 +136,11 @@ describe("ResetPasswordPage", () => {
 
     await user.type(
       screen.getByLabelText("New Password"),
-      "my dog loves eating pizza",
+      "My dog loves eating pizza! 2026",
     );
     await user.type(
       screen.getByLabelText("Confirm New Password"),
-      "my dog loves eating pizza",
+      "My dog loves eating pizza! 2026",
     );
     await user.click(screen.getByRole("button", { name: "Update password" }));
 

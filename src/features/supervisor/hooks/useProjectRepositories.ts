@@ -30,8 +30,7 @@ export function useProjectRepositories(
     setError(null);
 
     try {
-      const project = await supervisorApi.getProjectById(projectId);
-      const next = project.githubRepositories ?? null;
+      const next = await supervisorApi.getProjectGitHubRepositories(projectId);
       setData(next);
       return next;
     } catch (loadError) {
@@ -45,7 +44,7 @@ export function useProjectRepositories(
               error: "Internal Server Error",
               code: "INTERNAL_ERROR",
               message: "Unable to load project repositories right now.",
-              path: `/api/supervisor/projects/${projectId}`,
+              path: `/api/projects/${projectId}/github-repositories`,
               traceId: null,
               details: [],
             },

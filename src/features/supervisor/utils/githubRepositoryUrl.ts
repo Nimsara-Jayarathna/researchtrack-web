@@ -25,7 +25,16 @@ export function normalizeGitHubRepositoryUrl(rawValue: string): string | null {
 
   const protocol = parsed.protocol.toLowerCase();
   const host = parsed.hostname.toLowerCase();
-  if (protocol !== "https:" || !GITHUB_HOSTS.has(host)) {
+  if (
+    protocol !== "https:" ||
+    !GITHUB_HOSTS.has(host) ||
+    parsed.username !== "" ||
+    parsed.password !== "" ||
+    parsed.port !== "" ||
+    parsed.search !== "" ||
+    parsed.hash !== "" ||
+    parsed.pathname.includes("%")
+  ) {
     return null;
   }
 
@@ -36,7 +45,10 @@ export function normalizeGitHubRepositoryUrl(rawValue: string): string | null {
 
   const owner = segments[0];
   const repository = segments[1].replace(/\.git$/i, "");
-  if (!owner || !repository) {
+  if (
+    !/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$/.test(owner) ||
+    !/^[A-Za-z0-9._-]{1,100}$/.test(repository)
+  ) {
     return null;
   }
 

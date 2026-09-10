@@ -1,0 +1,111 @@
+import { createSupervisorGitHubApi } from "./supervisorGitHubApi";
+import type {
+  GitHubAvailableRepositories,
+  LinkGitHubRepositoriesPayload,
+  ProjectGitHubRepositories,
+} from "../types";
+
+const available: GitHubAvailableRepositories = {
+  sourceId: "source-1",
+  items: [
+    {
+      id: "repository-1",
+      githubRepoId: 1296269,
+      fullName: "openai/example",
+      name: "example",
+      ownerLogin: "openai",
+      defaultBranch: "main",
+      url: "https://github.com/openai/example",
+    },
+  ],
+  totalCount: 1,
+};
+
+const projectRepositories: ProjectGitHubRepositories = {
+  projectId: "project-1",
+  maxLinkedRepositories: 5,
+  maxEnabledRepositories: 5,
+  accessSources: [],
+  repositories: [],
+};
+
+function createApi() {
+  const apiClient = {
+    get: vi.fn(),
+    post: vi.fn(),
+  };
+  const invalidateProjectCaches = vi.fn();
+  const api = createSupervisorGitHubApi({
+    apiClient: apiClient as never,
+    roleProjectApi: {} as never,
+    cachedProjectsById: {},
+    invalidateProjectCaches,
+  });
+  return { api, apiClient, invalidateProjectCaches };
+}
+
+describe("supervisor GitHub API contract", () => {
+  it("creates a public source with the normalized URL", async () => {
+    const { api, apiClient } = createApi();
+    apiClient.post.mockResolvedValue(available);
+
+    await api.createPublicGitHubAccessSource(
+      "project-1",
+      "github.com/openai/example.git/",
+    );
+
+    expect(apiClient.post).toHaveBeenCalledWith(
+      "/api/github/access-source/public",
+      {
+        projectId: "project-1",
+        repositoryUrl: "https://github.com/openai/example",
+      },
+    );
+  });
+
+  it("loads available repositories from the persisted source endpoint", async () => {
+    const { api, apiClient } = createApi();
+    apiClient.get.mockResolvedValue(available);
+
+    await api.getAvailableGitHubRepositories("source-1");
+
+    expect(apiClient.get).toHaveBeenCalledWith(
+      "/api/github/repositories/available?sourceId=source-1",
+    );
+  });
+
+  it("links using the internal validated repository id", async () => {
+    const { api, apiClient, invalidateProjectCaches } = createApi();
+    apiClient.post.mockResolvedValue(projectRepositories);
+    const payload: LinkGitHubRepositoriesPayload = {
+      projectId: "project-1",
+      sourceId: "source-1",
+      repositories: [
+        {
+          githubRepositoryId: "repository-1",
+          customName: "Research repository",
+          primary: true,
+        },
+      ],
+    };
+
+    await api.linkGitHubRepositories(payload);
+
+    expect(apiClient.post).toHaveBeenCalledWith(
+      "/api/github/repositories/link",
+      payload,
+    );
+    expect(invalidateProjectCaches).toHaveBeenCalledWith("project-1");
+  });
+
+  it("loads linked repositories from the project GitHub read endpoint", async () => {
+    const { api, apiClient } = createApi();
+    apiClient.get.mockResolvedValue(projectRepositories);
+
+    await api.getProjectGitHubRepositories("project-1");
+
+    expect(apiClient.get).toHaveBeenCalledWith(
+      "/api/projects/project-1/github-repositories",
+    );
+  });
+});

@@ -60,6 +60,31 @@ describe("authApi registration endpoints", () => {
     expect(apiClientMock.get).toHaveBeenCalledWith("/api/v1/auth/me");
   });
 
+  it("uses canonical password-reset endpoints", async () => {
+    const authApi = await loadAuthApi();
+    vi.mocked(apiClientMock.post).mockResolvedValue(undefined);
+    vi.mocked(apiClientMock.get).mockResolvedValue({ valid: true });
+
+    await authApi.forgotPassword({ email: "user@example.edu" });
+    await authApi.validateResetToken("reset token");
+    await authApi.resetPassword({
+      token: "reset-token",
+      newPassword: "DifferentPassword!2",
+    });
+
+    expect(apiClientMock.post).toHaveBeenCalledWith(
+      "/api/v1/auth/forgot-password",
+      { email: "user@example.edu" },
+    );
+    expect(apiClientMock.get).toHaveBeenCalledWith(
+      "/api/v1/auth/reset-password/validate?token=reset%20token",
+    );
+    expect(apiClientMock.post).toHaveBeenCalledWith(
+      "/api/v1/auth/reset-password",
+      { token: "reset-token", newPassword: "DifferentPassword!2" },
+    );
+  });
+
   it("uses /api/v1/auth/register for direct student registration", async () => {
     const authApi = await loadAuthApi();
     const payload = {

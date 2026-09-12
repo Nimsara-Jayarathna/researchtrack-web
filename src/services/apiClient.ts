@@ -38,8 +38,8 @@ function isRefreshExcludedPath(path: string): boolean {
     path === REFRESH_PATH ||
     path === `${AUTH_BASE}/logout` ||
     path.startsWith(`${AUTH_BASE}/register`) ||
-    path.startsWith("/api/auth/forgot-password") ||
-    path.startsWith("/api/auth/reset-password")
+    path.startsWith(`${AUTH_BASE}/forgot-password`) ||
+    path.startsWith(`${AUTH_BASE}/reset-password`)
   );
 }
 let inFlightRefresh: Promise<boolean> | null = null;

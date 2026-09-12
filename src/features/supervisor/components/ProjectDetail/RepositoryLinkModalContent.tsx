@@ -113,7 +113,7 @@ export function RepositoryLinkModalContent({
       repositorySelectionEntryMode === "callback-requested"
         ? "Access request completed. Select repositories to link."
         : repositorySelectionEntryMode === "callback-direct"
-          ? "GitHub installation completed. Select repositories to link."
+          ? "GitHub installation completed. Select one repository to link."
           : selectedSourceLabel
             ? `Connected Source: ${selectedSourceLabel}`
             : "Select one or more repositories from this source.";
@@ -127,7 +127,9 @@ export function RepositoryLinkModalContent({
             </div>
             <div>
               <p className="text-sm font-black text-slate-800">
-                Select Repositories
+                {repositorySelectionEntryMode === "callback-direct"
+                  ? "Select Repository"
+                  : "Select Repositories"}
               </p>
               <p className="text-[10px] font-bold text-indigo-500/70">
                 {sourceDescription}
@@ -172,7 +174,9 @@ export function RepositoryLinkModalContent({
           <div className="rounded-3xl border border-slate-100 bg-slate-50/50 p-12 text-center text-slate-400 shadow-sm">
             <Github className="mx-auto h-10 w-10 opacity-20" />
             <p className="mt-4 text-sm font-bold">
-              No repositories available here.
+              {repositorySelectionEntryMode === "callback-direct"
+                ? "No repositories are available to this GitHub installation."
+                : "No repositories available here."}
             </p>
           </div>
         ) : (
@@ -369,7 +373,11 @@ export function RepositoryLinkModalContent({
             ) : (
               <Check className="mr-2 h-4 w-4" />
             )}
-            {isConfirmingRepositorySelection ? "Linking..." : "Link Selected"}
+            {isConfirmingRepositorySelection
+              ? "Linking..."
+              : repositorySelectionEntryMode === "callback-direct"
+                ? "Link Repository"
+                : "Link Selected"}
           </button>
         </div>
       </div>

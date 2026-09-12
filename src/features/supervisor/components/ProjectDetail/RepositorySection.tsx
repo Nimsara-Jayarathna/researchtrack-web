@@ -151,7 +151,11 @@ export function RepositorySection({
   const linkedLimitReached = remainingLinkSlots < 1;
   const enabledLimitReached = remainingEnabledSlots < 1;
   const bothLimitsReached = linkedLimitReached && enabledLimitReached;
-  const repositorySelectionCapacity = remainingLinkSlots;
+  const isDirectInstallationSelection =
+    selectionEntryMode === "callback-direct";
+  const repositorySelectionCapacity = isDirectInstallationSelection
+    ? Math.min(1, remainingLinkSlots)
+    : remainingLinkSlots;
 
   const managementRows = useMemo<RepositoryManagementRow[]>(() => {
     const rowsByRepoId = new Map<number, RepositoryManagementRow>();
@@ -233,11 +237,34 @@ export function RepositorySection({
     ? (sourceById.get(selectedSourceId) ?? null)
     : null;
 
+  const availableRepositoriesErrorMessage = useMemo(() => {
+    if (!availableRepositoriesError) {
+      return null;
+    }
+
+    if (
+      availableRepositoriesError.code === "UNAUTHORIZED" ||
+      availableRepositoriesError.code === "FORBIDDEN"
+    ) {
+      return "You no longer have permission to manage this project's GitHub integration.";
+    }
+    if (availableRepositoriesError.code === "NOT_FOUND") {
+      return isDirectInstallationSelection
+        ? "GitHub App access was removed or is no longer available for this project. Reconnect GitHub and try again."
+        : availableRepositoriesError.message;
+    }
+    if (availableRepositoriesError.code === "SERVICE_UNAVAILABLE") {
+      return "GitHub is unavailable right now. Retry loading repositories shortly.";
+    }
+    return availableRepositoriesError.message;
+  }, [availableRepositoriesError, isDirectInstallationSelection]);
+
   useEffect(() => {
     if (!pendingSourceId) {
       return;
     }
 
+    clearSelection();
     setIsModalOpen(true);
     setModalStep("repository-selection");
     setSelectedMethod(
@@ -252,7 +279,12 @@ export function RepositorySection({
         : "callback-direct",
     );
     onPendingSourceHandled?.();
-  }, [onPendingSourceHandled, pendingFlowType, pendingSourceId]);
+  }, [
+    clearSelection,
+    onPendingSourceHandled,
+    pendingFlowType,
+    pendingSourceId,
+  ]);
 
   useEffect(() => {
     if (!isModalOpen && !pendingSourceId) {
@@ -550,7 +582,21 @@ export function RepositorySection({
       openRequestModal(
         "error",
         "No repositories selected",
-        "Select at least one repository.",
+        isDirectInstallationSelection
+          ? "Select one repository to link."
+          : "Select at least one repository.",
+      );
+      return;
+    }
+
+    if (
+      isDirectInstallationSelection &&
+      selection.selectionsPayload.length !== 1
+    ) {
+      openRequestModal(
+        "error",
+        "Select one repository",
+        "The direct GitHub App connection links exactly one repository at a time.",
       );
       return;
     }
@@ -558,8 +604,12 @@ export function RepositorySection({
     setIsConfirmingRepositorySelection(true);
     openRequestModal(
       "loading",
-      "Linking repositories",
-      "Saving selected repositories for this project.",
+      isDirectInstallationSelection
+        ? "Linking repository"
+        : "Linking repositories",
+      isDirectInstallationSelection
+        ? "Verifying and linking the selected repository."
+        : "Saving selected repositories for this project.",
     );
 
     try {
@@ -573,8 +623,12 @@ export function RepositorySection({
       setIsModalOpen(false);
       openRequestModal(
         "success",
-        "Repositories linked",
-        "Selected repositories were linked successfully.",
+        isDirectInstallationSelection
+          ? "Repository linked"
+          : "Repositories linked",
+        isDirectInstallationSelection
+          ? "The repository was linked successfully. Synchronization status is available in the project GitHub view."
+          : "Selected repositories were linked successfully.",
       );
     } catch (error) {
       const message = isApiException(error)
@@ -950,7 +1004,11 @@ export function RepositorySection({
 
       <GithubDetailsModal
         isOpen={isModalOpen}
-        title="Link repositories"
+        title={
+          isDirectInstallationSelection
+            ? "Link repository"
+            : "Link repositories"
+        }
         onClose={() => {
           setIsModalOpen(false);
           onPendingSourceHandled?.();
@@ -989,9 +1047,7 @@ export function RepositorySection({
           }
           availableRepositories={availableRepositoriesData?.items ?? []}
           isLoadingAvailableRepositories={isLoadingAvailableRepositories}
-          availableRepositoriesError={
-            availableRepositoriesError?.message ?? null
-          }
+          availableRepositoriesError={availableRepositoriesErrorMessage}
           onReloadAvailableRepositories={() =>
             void reloadAvailableRepositories()
           }

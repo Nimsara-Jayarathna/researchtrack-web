@@ -45,6 +45,24 @@ function createApi() {
 }
 
 describe("supervisor GitHub API contract", () => {
+  it("starts the GitHub App install flow through the canonical backend endpoint", async () => {
+    const { api, apiClient } = createApi();
+    apiClient.post.mockResolvedValue({
+      projectId: "project-1",
+      githubAuthorizeUrl:
+        "https://github.com/apps/researchtrack/installations/new?state=safe",
+      flowType: "INSTALLATION_DIRECT",
+      expiresAt: "2026-09-12T06:00:00Z",
+    });
+
+    await api.startGitHubAccessSourceInstall({ projectId: "project-1" });
+
+    expect(apiClient.post).toHaveBeenCalledWith(
+      "/api/github/access-source/install/start",
+      { projectId: "project-1" },
+    );
+  });
+
   it("creates a public source with the normalized URL", async () => {
     const { api, apiClient } = createApi();
     apiClient.post.mockResolvedValue(available);
@@ -96,6 +114,20 @@ describe("supervisor GitHub API contract", () => {
       payload,
     );
     expect(invalidateProjectCaches).toHaveBeenCalledWith("project-1");
+  });
+
+  it("surfaces repository-link API failures without inventing success", async () => {
+    const { api, apiClient } = createApi();
+    const failure = new Error("forbidden");
+    apiClient.post.mockRejectedValue(failure);
+
+    await expect(
+      api.linkGitHubRepositories({
+        projectId: "project-1",
+        sourceId: "source-1",
+        repositories: [{ githubRepositoryId: "repository-1" }],
+      }),
+    ).rejects.toBe(failure);
   });
 
   it("loads linked repositories from the project GitHub read endpoint", async () => {

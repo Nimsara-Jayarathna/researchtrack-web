@@ -135,6 +135,18 @@ describe("TopBar", () => {
     ) as HTMLElement | null;
     expect(desktopHeader).not.toBeNull();
 
+    const mobileHeader = container.querySelector(
+      "header.md\\:hidden",
+    ) as HTMLElement | null;
+    expect(mobileHeader).not.toBeNull();
+
+    expect(
+      within(desktopHeader as HTMLElement).getByAltText("ResearchTrack"),
+    ).toHaveAttribute("src", "/logo.png");
+    expect(
+      within(mobileHeader as HTMLElement).getByAltText("ResearchTrack"),
+    ).toHaveAttribute("src", "/logo.png");
+
     fireEvent.click(
       within(desktopHeader as HTMLElement).getByRole("button", {
         name: "Log in",

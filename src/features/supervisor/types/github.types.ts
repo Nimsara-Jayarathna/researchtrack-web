@@ -21,7 +21,7 @@ export type GitHubInstallationRepository = {
   fullName: string;
   url: string;
   ownerLogin: string;
-  defaultBranch: string;
+  defaultBranch: string | null;
 };
 
 export type GitHubInstallationRepositoriesPage = {
@@ -48,7 +48,7 @@ export type ProjectGitHubRepositoryLink = {
   fullName: string;
   url: string;
   ownerLogin: string;
-  defaultBranch: string;
+  defaultBranch: string | null;
   lastSyncedAt: string | null;
 };
 

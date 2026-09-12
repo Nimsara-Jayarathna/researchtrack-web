@@ -19,6 +19,7 @@ export type GitHubSetupRedirectState = {
   sourceId: string | null;
   installationId: number | null;
   flowType: "INSTALLATION_DIRECT" | "INSTALLATION_REQUESTED" | null;
+  errorCode: string | null;
   githubAccessUpdated: boolean;
 };
 
@@ -46,13 +47,61 @@ export function parseGitHubSetupRedirect(
       ? flowRaw
       : null;
 
+  const errorCodeRaw = searchParams.get("githubError")?.trim() ?? "";
+
   return {
     setupStatus,
     sourceId,
     installationId,
     flowType,
+    errorCode: errorCodeRaw.length > 0 ? errorCodeRaw : null,
     githubAccessUpdated: searchParams.get("githubAccessUpdated") === "true",
   };
+}
+
+export type GitHubRedirect = (url: string) => void;
+
+function defaultGitHubRedirect(url: string) {
+  window.location.assign(url);
+}
+
+async function startInstallAndRedirect(
+  body: { projectId?: string; requestToken?: string },
+  redirect: GitHubRedirect,
+) {
+  const response = await supervisorApi.startGitHubAccessSourceInstall(body);
+  if (!response.githubAuthorizeUrl?.trim()) {
+    throw new Error("GitHub authorize URL is missing.");
+  }
+  if (!isValidGitHubAuthorizeUrl(response.githubAuthorizeUrl)) {
+    throw new Error("GitHub authorize URL is invalid.");
+  }
+  redirect(response.githubAuthorizeUrl);
+  return response;
+}
+
+export function redirectToGitHubOwnerInstall(
+  projectId: string,
+  redirect: GitHubRedirect = defaultGitHubRedirect,
+) {
+  const normalizedProjectId = projectId.trim();
+  if (!normalizedProjectId) {
+    throw new Error("Project id is required to start owner install flow.");
+  }
+  return startInstallAndRedirect({ projectId: normalizedProjectId }, redirect);
+}
+
+export function redirectToRequestedGitHubInstall(
+  requestToken: string,
+  redirect: GitHubRedirect = defaultGitHubRedirect,
+) {
+  const token = requestToken.trim();
+  if (!token) {
+    throw new Error(
+      "Request token is required to continue access request flow.",
+    );
+  }
+  return startInstallAndRedirect({ requestToken: token }, redirect);
 }
 
 export function useGitHubSetupFlow(projectId: string | undefined) {
@@ -67,41 +116,16 @@ export function useGitHubSetupFlow(projectId: string | undefined) {
 
     setIsStartingOwnerInstall(true);
     try {
-      const response = await supervisorApi.startGitHubAccessSourceInstall({
-        projectId,
-      });
-      if (!response.githubAuthorizeUrl?.trim()) {
-        throw new Error("GitHub authorize URL is missing.");
-      }
-      if (!isValidGitHubAuthorizeUrl(response.githubAuthorizeUrl)) {
-        throw new Error("GitHub authorize URL is invalid.");
-      }
-      window.location.assign(response.githubAuthorizeUrl);
+      await redirectToGitHubOwnerInstall(projectId);
     } finally {
       setIsStartingOwnerInstall(false);
     }
   }
 
   async function startRequestedInstall(requestToken: string) {
-    const token = requestToken.trim();
-    if (!token) {
-      throw new Error(
-        "Request token is required to continue access request flow.",
-      );
-    }
-
     setIsStartingRequestedInstall(true);
     try {
-      const response = await supervisorApi.startGitHubAccessSourceInstall({
-        requestToken: token,
-      });
-      if (!response.githubAuthorizeUrl?.trim()) {
-        throw new Error("GitHub authorize URL is missing.");
-      }
-      if (!isValidGitHubAuthorizeUrl(response.githubAuthorizeUrl)) {
-        throw new Error("GitHub authorize URL is invalid.");
-      }
-      window.location.assign(response.githubAuthorizeUrl);
+      await redirectToRequestedGitHubInstall(requestToken);
     } finally {
       setIsStartingRequestedInstall(false);
     }

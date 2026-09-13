@@ -17,8 +17,7 @@ import { toVersionedApiPath } from "@/app/config/apiVersion";
 const AUTH_BASE = toVersionedApiPath("/api/auth");
 const REGISTRATION_BASE = `${AUTH_BASE}/register`;
 
-// Story 2 migrates login/session endpoints to the canonical ResearchTrack API.
-// Password-reset endpoints remain on their existing contract until that story is migrated.
+// Authentication endpoints use the canonical versioned ResearchTrack API.
 // Mock credentials must never reach a production build.
 const USE_MOCK = false;
 
@@ -147,16 +146,16 @@ export const authApi = {
   },
 
   async forgotPassword(body: ForgotPasswordRequest): Promise<void> {
-    return apiClient.post<void>("/api/auth/forgot-password", body);
+    return apiClient.post<void>(`${AUTH_BASE}/forgot-password`, body);
   },
 
   async validateResetToken(token: string): Promise<ValidateResetTokenResponse> {
     return apiClient.get<ValidateResetTokenResponse>(
-      `/api/auth/reset-password/validate?token=${encodeURIComponent(token)}`,
+      `${AUTH_BASE}/reset-password/validate?token=${encodeURIComponent(token)}`,
     );
   },
 
   async resetPassword(body: ResetPasswordRequest): Promise<void> {
-    return apiClient.post<void>("/api/auth/reset-password", body);
+    return apiClient.post<void>(`${AUTH_BASE}/reset-password`, body);
   },
 };

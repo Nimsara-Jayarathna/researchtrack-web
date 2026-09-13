@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { buttonStyles } from "@/components/ui/Button";
 import { LastSyncedBadge } from "@/components/ui/LastSyncedBadge";
 import { RequestStateModal } from "@/components/ui/RequestStateModal";
@@ -13,7 +13,6 @@ import { useProjectRepositories } from "../../hooks/useProjectRepositories";
 import { useRepositorySelection } from "../../hooks/useRepositorySelection";
 import { normalizeGitHubRepositoryUrl } from "../../utils/githubRepositoryUrl";
 import type {
-  GitHubRepositoryOption,
   ProjectGitHubRepositories,
   SupervisorProjectDetail,
 } from "../../types";
@@ -94,11 +93,6 @@ export function RepositorySection({
   >(null);
   const [generatedAccessRequestExpiresAt, setGeneratedAccessRequestExpiresAt] =
     useState<string | null>(null);
-  const [inventoryBySourceId, setInventoryBySourceId] = useState<
-    Record<string, GitHubRepositoryOption[]>
-  >({});
-  const [isLoadingInventory, setIsLoadingInventory] = useState(false);
-  const [inventoryError, setInventoryError] = useState<string | null>(null);
   const [editingDisplayNameRowKey, setEditingDisplayNameRowKey] = useState<
     string | null
   >(null);
@@ -151,74 +145,55 @@ export function RepositorySection({
   const linkedLimitReached = remainingLinkSlots < 1;
   const enabledLimitReached = remainingEnabledSlots < 1;
   const bothLimitsReached = linkedLimitReached && enabledLimitReached;
-  const repositorySelectionCapacity = remainingLinkSlots;
+  const isDirectInstallationSelection =
+    selectionEntryMode === "callback-direct";
+  const repositorySelectionCapacity = isDirectInstallationSelection
+    ? Math.min(1, remainingLinkSlots)
+    : remainingLinkSlots;
 
   const managementRows = useMemo<RepositoryManagementRow[]>(() => {
-    const rowsByRepoId = new Map<number, RepositoryManagementRow>();
+    // The management modal is intentionally limited to repositories that are
+    // already linked to this project. Available repositories from an access
+    // source belong to the separate "Add repository" flow. Mixing both sets
+    // made the UI show dozens of unlinked installation repositories even when
+    // the project only had one or two actual links.
+    return linkedRepositories
+      .map((linked) => {
+        const source = linked.sourceId
+          ? accessSources.find((candidate) => candidate.id === linked.sourceId)
+          : null;
 
-    // 1. Process all linked repositories first to ensure they are the "authoritative" rows
-    for (const linked of linkedRepositories) {
-      const source = linked.sourceId
-        ? accessSources.find((s) => s.id === linked.sourceId)
-        : null;
-      const rowKey = linked.sourceId
-        ? `${linked.sourceId}:${linked.githubRepoId}`
-        : `linked:${linked.id}`;
-
-      rowsByRepoId.set(linked.githubRepoId, {
-        rowKey,
-        sourceId: linked.sourceId ?? null,
-        accessType:
-          source?.accessType ??
-          linked.accessType ??
-          (linked.sourceId ? "UNKNOWN" : "MANUAL"),
-        githubRepositoryId: linked.githubRepositoryId,
-        githubRepoId: linked.githubRepoId,
-        linkId: linked.id,
-        enabled: linked.enabled,
-        primary: Boolean(linked.primary),
-        customName: linked.customName,
-        fullName: linked.fullName,
-        ownerLogin: linked.ownerLogin,
-        url: linked.url,
-        syncStatus: linked.syncStatus,
-      });
-    }
-
-    // 2. Add unlinked repositories from inventories if they aren't already represented by a link
-    for (const source of accessSources) {
-      const items = inventoryBySourceId[source.id] ?? [];
-      for (const item of items) {
-        if (rowsByRepoId.has(item.githubRepoId)) {
-          continue;
+        return {
+          rowKey: linked.sourceId
+            ? `${linked.sourceId}:${linked.githubRepoId}`
+            : `linked:${linked.id}`,
+          sourceId: linked.sourceId ?? null,
+          accessType:
+            source?.accessType ??
+            linked.accessType ??
+            (linked.sourceId ? "UNKNOWN" : "MANUAL"),
+          githubRepositoryId: linked.githubRepositoryId,
+          githubRepoId: linked.githubRepoId,
+          linkId: linked.id,
+          enabled: linked.enabled,
+          primary: Boolean(linked.primary),
+          customName: linked.customName,
+          name: linked.name,
+          fullName: linked.fullName,
+          ownerLogin: linked.ownerLogin,
+          url: linked.url,
+          syncStatus: linked.syncStatus,
+        };
+      })
+      .sort((a, b) => {
+        if (a.enabled !== b.enabled) {
+          return a.enabled ? -1 : 1;
         }
-
-        const rowKey = `${source.id}:${item.githubRepoId}`;
-        rowsByRepoId.set(item.githubRepoId, {
-          rowKey,
-          sourceId: source.id,
-          accessType: source.accessType,
-          githubRepositoryId: item.id,
-          githubRepoId: item.githubRepoId,
-          linkId: null,
-          enabled: false,
-          primary: false,
-          customName: null,
-          fullName: item.fullName,
-          ownerLogin: item.ownerLogin,
-          url: item.url,
-          syncStatus: null,
-        });
-      }
-    }
-
-    return Array.from(rowsByRepoId.values()).sort((a, b) => {
-      if (a.enabled !== b.enabled) {
-        return a.enabled ? -1 : 1;
-      }
-      return (a.fullName ?? "").localeCompare(b.fullName ?? "");
-    });
-  }, [accessSources, inventoryBySourceId, linkedRepositories]);
+        return (a.fullName ?? a.name ?? "").localeCompare(
+          b.fullName ?? b.name ?? "",
+        );
+      });
+  }, [accessSources, linkedRepositories]);
 
   const selection = useRepositorySelection(
     repositorySelectionCapacity > 0 ? repositorySelectionCapacity : 0,
@@ -233,11 +208,34 @@ export function RepositorySection({
     ? (sourceById.get(selectedSourceId) ?? null)
     : null;
 
+  const availableRepositoriesErrorMessage = useMemo(() => {
+    if (!availableRepositoriesError) {
+      return null;
+    }
+
+    if (
+      availableRepositoriesError.code === "UNAUTHORIZED" ||
+      availableRepositoriesError.code === "FORBIDDEN"
+    ) {
+      return "You no longer have permission to manage this project's GitHub integration.";
+    }
+    if (availableRepositoriesError.code === "NOT_FOUND") {
+      return isDirectInstallationSelection
+        ? "GitHub App access was removed or is no longer available for this project. Reconnect GitHub and try again."
+        : availableRepositoriesError.message;
+    }
+    if (availableRepositoriesError.code === "SERVICE_UNAVAILABLE") {
+      return "GitHub is unavailable right now. Retry loading repositories shortly.";
+    }
+    return availableRepositoriesError.message;
+  }, [availableRepositoriesError, isDirectInstallationSelection]);
+
   useEffect(() => {
     if (!pendingSourceId) {
       return;
     }
 
+    clearSelection();
     setIsModalOpen(true);
     setModalStep("repository-selection");
     setSelectedMethod(
@@ -252,7 +250,12 @@ export function RepositorySection({
         : "callback-direct",
     );
     onPendingSourceHandled?.();
-  }, [onPendingSourceHandled, pendingFlowType, pendingSourceId]);
+  }, [
+    clearSelection,
+    onPendingSourceHandled,
+    pendingFlowType,
+    pendingSourceId,
+  ]);
 
   useEffect(() => {
     if (!isModalOpen && !pendingSourceId) {
@@ -269,37 +272,15 @@ export function RepositorySection({
     }
   }, [clearSelection, isModalOpen, pendingSourceId]);
 
-  const loadRepositoryInventory = useCallback(async () => {
-    setIsLoadingInventory(true);
-    setInventoryError(null);
-    try {
-      const listing = await supervisorApi.getProjectRepositoriesInventory(
-        project.id,
-      );
-      const mapping: Record<string, GitHubRepositoryOption[]> = {};
-      listing.inventory.forEach((res) => {
-        mapping[res.sourceId] = res.items;
-      });
-      setInventoryBySourceId(mapping);
-    } catch (error) {
-      const message = isApiException(error)
-        ? error.apiError.message
-        : "Unable to load repository inventory for this project.";
-      setInventoryError(message);
-    } finally {
-      setIsLoadingInventory(false);
-    }
-  }, [project.id]);
-
   useEffect(() => {
-    if (!isManagementModalOpen) {
-      setEditingDisplayNameRowKey(null);
-      setEditingDisplayNameDraft("");
-      setDisplayNameEditError(null);
+    if (isManagementModalOpen) {
       return;
     }
-    void loadRepositoryInventory();
-  }, [accessSources, isManagementModalOpen, loadRepositoryInventory]);
+
+    setEditingDisplayNameRowKey(null);
+    setEditingDisplayNameDraft("");
+    setDisplayNameEditError(null);
+  }, [isManagementModalOpen]);
 
   async function reloadProjectAndRepositories(projectId: string) {
     await reloadRepositoriesData();
@@ -550,7 +531,21 @@ export function RepositorySection({
       openRequestModal(
         "error",
         "No repositories selected",
-        "Select at least one repository.",
+        isDirectInstallationSelection
+          ? "Select one repository to link."
+          : "Select at least one repository.",
+      );
+      return;
+    }
+
+    if (
+      isDirectInstallationSelection &&
+      selection.selectionsPayload.length !== 1
+    ) {
+      openRequestModal(
+        "error",
+        "Select one repository",
+        "The direct GitHub App connection links exactly one repository at a time.",
       );
       return;
     }
@@ -558,8 +553,12 @@ export function RepositorySection({
     setIsConfirmingRepositorySelection(true);
     openRequestModal(
       "loading",
-      "Linking repositories",
-      "Saving selected repositories for this project.",
+      isDirectInstallationSelection
+        ? "Linking repository"
+        : "Linking repositories",
+      isDirectInstallationSelection
+        ? "Verifying and linking the selected repository."
+        : "Saving selected repositories for this project.",
     );
 
     try {
@@ -573,8 +572,12 @@ export function RepositorySection({
       setIsModalOpen(false);
       openRequestModal(
         "success",
-        "Repositories linked",
-        "Selected repositories were linked successfully.",
+        isDirectInstallationSelection
+          ? "Repository linked"
+          : "Repositories linked",
+        isDirectInstallationSelection
+          ? "The repository was linked successfully. Synchronization status is available in the project GitHub view."
+          : "Selected repositories were linked successfully.",
       );
     } catch (error) {
       const message = isApiException(error)
@@ -616,15 +619,15 @@ export function RepositorySection({
     openRequestModal(
       "loading",
       "Refreshing repository",
-      "Syncing repository metadata, commits, and contributors.",
+      "Syncing repository metadata, default-branch commits, contributors, pull requests, reviews, and branches.",
     );
     try {
-      await supervisorApi.refreshGitHubRepository(linkId);
+      await supervisorApi.refreshGitHubRepository(project.id, linkId);
       await reloadProjectAndRepositories(project.id);
       openRequestModal(
         "success",
         "Repository refreshed",
-        "Repository sync completed.",
+        "Repository synchronization has started. ResearchTrack will update the status when the background sync completes.",
       );
     } catch (error) {
       const message = isApiException(error)
@@ -950,7 +953,11 @@ export function RepositorySection({
 
       <GithubDetailsModal
         isOpen={isModalOpen}
-        title="Link repositories"
+        title={
+          isDirectInstallationSelection
+            ? "Link repository"
+            : "Link repositories"
+        }
         onClose={() => {
           setIsModalOpen(false);
           onPendingSourceHandled?.();
@@ -989,9 +996,7 @@ export function RepositorySection({
           }
           availableRepositories={availableRepositoriesData?.items ?? []}
           isLoadingAvailableRepositories={isLoadingAvailableRepositories}
-          availableRepositoriesError={
-            availableRepositoriesError?.message ?? null
-          }
+          availableRepositoriesError={availableRepositoriesErrorMessage}
           onReloadAvailableRepositories={() =>
             void reloadAvailableRepositories()
           }
@@ -1030,9 +1035,6 @@ export function RepositorySection({
           remainingLinkSlots={remainingLinkSlots}
           remainingEnabledSlots={remainingEnabledSlots}
           isMutating={isMutatingLinks}
-          isLoadingInventory={isLoadingInventory}
-          inventoryError={inventoryError}
-          onReloadInventory={() => void loadRepositoryInventory()}
           onSelectPrimary={(linkId) => void handleSelectPrimary(linkId)}
           onRefresh={(linkId) => void handleRefreshRepository(linkId)}
           onToggleEnabled={(row) => void handleToggleRepositoryEnabled(row)}

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const clearInMemoryAuthState = vi.hoisted(() => vi.fn());
 const clearSessionCaches = vi.hoisted(() => vi.fn(() => 3));
 const clearAll = vi.hoisted(() => vi.fn());
-const abortAllInFlightRequests = vi.hoisted(() => vi.fn(() => 2));
+const abortRequestsByScope = vi.hoisted(() => vi.fn(() => 2));
 
 vi.mock("@/features/auth/state/authState", () => ({
   clearInMemoryAuthState,
@@ -20,7 +20,7 @@ vi.mock("./tokenStorage", () => ({
 }));
 
 vi.mock("./requestRegistry", () => ({
-  abortAllInFlightRequests,
+  abortRequestsByScope,
 }));
 
 describe("sessionState", () => {
@@ -40,13 +40,24 @@ describe("sessionState", () => {
     expect(getSessionVersion()).toBe(next);
   });
 
-  it("resets state in deterministic order", async () => {
+  it("clears authentication state without aborting requests or clearing caches", async () => {
+    const { clearAuthenticationState } = await import("./sessionState");
+
+    clearAuthenticationState();
+
+    expect(clearInMemoryAuthState).toHaveBeenCalledTimes(1);
+    expect(clearAll).toHaveBeenCalledTimes(1);
+    expect(abortRequestsByScope).not.toHaveBeenCalled();
+    expect(clearSessionCaches).not.toHaveBeenCalled();
+  });
+
+  it("resets authenticated session state in deterministic order", async () => {
     const order: string[] = [];
 
     clearInMemoryAuthState.mockImplementation(() => {
       order.push("auth");
     });
-    abortAllInFlightRequests.mockImplementation(() => {
+    abortRequestsByScope.mockImplementation(() => {
       order.push("abort");
       return 2;
     });
@@ -62,5 +73,9 @@ describe("sessionState", () => {
     resetSessionState();
 
     expect(order).toEqual(["auth", "abort", "cache", "storage"]);
+    expect(abortRequestsByScope).toHaveBeenCalledWith(
+      "session",
+      "session-transition",
+    );
   });
 });

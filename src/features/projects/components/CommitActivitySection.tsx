@@ -34,6 +34,7 @@ type CommitActivitySectionProps = {
   isLoading: boolean;
   error: ApiError | null;
   data: ProjectGitHubPreview | null;
+  hasLinkedRepository?: boolean;
   onRetry: () => void;
   loadActivityPage: (
     page: number,
@@ -403,6 +404,7 @@ export function CommitActivitySection({
   isLoading,
   error,
   data,
+  hasLinkedRepository: explicitHasLinkedRepository,
   onRetry,
   loadActivityPage,
   loadContributorsPage,
@@ -455,13 +457,10 @@ export function CommitActivitySection({
     );
   }
 
-  if (!data) {
-    return null;
-  }
-
-  const normalized = normalizeDashboardPayload(data);
+  const normalized = data ? normalizeDashboardPayload(data) : null;
   const hasLinkedRepository =
-    normalized.repositoryLinked && normalized.repositories.length > 0;
+    explicitHasLinkedRepository ??
+    Boolean(normalized?.repositoryLinked && normalized.repositories.length > 0);
 
   if (!hasLinkedRepository) {
     return (
@@ -490,6 +489,31 @@ export function CommitActivitySection({
           </button>
         )}
       </div>
+    );
+  }
+
+  if (!normalized) {
+    return (
+      <section className="rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+        <h3 className="text-base font-semibold text-slate-800">
+          Repository connected
+        </h3>
+        <p className="mt-2 text-sm text-slate-500">
+          GitHub activity will appear here as soon as the repository dashboard
+          finishes loading or the current synchronization completes.
+        </p>
+        <button
+          type="button"
+          className={buttonStyles({
+            variant: "secondary",
+            size: "sm",
+            className: "mt-4",
+          })}
+          onClick={onRetry}
+        >
+          Reload activity
+        </button>
+      </section>
     );
   }
 

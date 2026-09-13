@@ -103,3 +103,80 @@ export type ProjectGitHubRepositoryListing = {
   projectId: string;
   inventory: GitHubAvailableRepositories[];
 };
+
+
+export type GitHubEvidencePage<T> = {
+  items: T[];
+  page: number;
+  size: number;
+  totalCount: number;
+  hasNext: boolean;
+};
+
+export type GitHubCommitEvidence = {
+  sha: string;
+  message: string;
+  authorGitHubId: number | null;
+  authorLogin: string | null;
+  authorName: string | null;
+  authoredAt: string | null;
+  committedAt: string | null;
+  htmlUrl: string;
+  additions: number | null;
+  deletions: number | null;
+  changedFiles: number | null;
+};
+
+export type GitHubContributorEvidence = {
+  gitHubUserId: number;
+  login: string;
+  avatarUrl: string | null;
+  profileUrl: string | null;
+  gitHubContributionCount: number;
+  observedCommitCount: number;
+  observedAdditions: number;
+  observedDeletions: number;
+  observedChangedFiles: number;
+  firstCommitAt: string | null;
+  lastCommitAt: string | null;
+  lastSyncedAt: string;
+};
+
+export type GitHubPullRequestEvidence = {
+  gitHubPullRequestId: number;
+  number: number;
+  title: string;
+  body: string | null;
+  state: string;
+  isDraft: boolean;
+  isMerged: boolean;
+  authorLogin: string | null;
+  sourceBranch: string;
+  targetBranch: string;
+  createdAt: string;
+  updatedAt: string;
+  closedAt: string | null;
+  mergedAt: string | null;
+  htmlUrl: string;
+  additions: number | null;
+  deletions: number | null;
+  changedFiles: number | null;
+  commitsCount: number | null;
+  commentsCount: number | null;
+  reviewCommentsCount: number | null;
+};
+
+export type GitHubSyncRunEvidence = {
+  id: string;
+  trigger: string;
+  status: string;
+  startedAt: string;
+  completedAt: string | null;
+  commitsFetched: number;
+  contributorsFetched: number;
+  pullRequestsFetched: number;
+  reviewsFetched: number;
+  branchesFetched: number;
+  errorCode: string | null;
+  errorMessage: string | null;
+};

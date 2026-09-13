@@ -9,24 +9,19 @@ import { CommitActivitySection } from "@/features/projects/components/CommitActi
 import { LastSyncedBadge } from "@/components/ui/LastSyncedBadge";
 import { SyncStatusBadge } from "@/components/ui/SyncStatusBadge";
 import { studentApi } from "../../api/studentApi";
-import type { ProjectGitHubActivity } from "../../types";
 import type { ProjectGitHubRepositories } from "@/features/shared/types/github.types";
 import { useStudentProjectGitHubDashboard } from "../../hooks/projectDetails/useStudentProjectGitHubDashboard";
 
 type StudentProjectGitHubTabProps = {
   projectId: string | undefined;
-  projectGithubView: ProjectGitHubActivity | null;
   githubRepositories: ProjectGitHubRepositories | null | undefined;
   isPageLoading: boolean;
-  onRetryReloadProject: () => void;
 };
 
 export function StudentProjectGitHubTab({
   projectId,
-  projectGithubView,
   githubRepositories,
   isPageLoading,
-  onRetryReloadProject,
 }: StudentProjectGitHubTabProps) {
   const {
     enabledRepositories,
@@ -36,13 +31,14 @@ export function StudentProjectGitHubTab({
     activeRepository,
     activeRepositorySyncStatus,
     githubView,
+    githubViewError,
     isGitHubViewLoading,
+    retryGitHubView,
     selectRepository,
     loadActivityPage,
     loadContributorsPage,
   } = useStudentProjectGitHubDashboard({
     projectId,
-    projectGithubView,
     githubRepositories,
     fetchDashboard: studentApi.getProjectGitHubDashboard,
     fetchActivityPage: studentApi.getProjectGitHubActivityPage,
@@ -188,9 +184,10 @@ export function StudentProjectGitHubTab({
 
       <CommitActivitySection
         isLoading={isPageLoading || isGitHubViewLoading}
-        error={null}
+        error={githubViewError}
         data={githubView}
-        onRetry={onRetryReloadProject}
+        hasLinkedRepository={enabledRepositories.length > 0}
+        onRetry={() => void retryGitHubView()}
         loadActivityPage={loadActivityPage}
         loadContributorsPage={loadContributorsPage}
         emptyStateDescription="Please wait for your supervisor to link a GitHub repository to this project. Repository management is restricted to supervisors."

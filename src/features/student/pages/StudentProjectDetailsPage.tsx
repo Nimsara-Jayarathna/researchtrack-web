@@ -147,10 +147,8 @@ export function StudentProjectDetailsPage() {
       {activeTab === "github" ? (
         <StudentProjectGitHubTab
           projectId={projectId}
-          projectGithubView={project.github ?? null}
           githubRepositories={project.githubRepositories}
           isPageLoading={isLoading}
-          onRetryReloadProject={() => void reload()}
         />
       ) : null}
 

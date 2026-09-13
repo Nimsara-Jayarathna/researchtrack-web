@@ -15,6 +15,11 @@ import type {
   LinkProjectGitHubRepositoryRequest,
   ProjectGitHubRepositoryLink,
   SupervisorProjectDetail,
+  GitHubEvidencePage,
+  GitHubCommitEvidence,
+  GitHubContributorEvidence,
+  GitHubPullRequestEvidence,
+  GitHubSyncRunEvidence,
 } from "../types";
 import { normalizeGitHubRepositoryUrl } from "../utils/githubRepositoryUrl";
 
@@ -157,14 +162,58 @@ export function createSupervisorGitHubApi({
     },
 
     async refreshGitHubRepository(
+      projectId: string,
       linkedRepositoryId: string,
-    ): Promise<ProjectGitHubRepositories> {
-      const data = await apiClient.post<ProjectGitHubRepositories>(
-        `/api/github/repositories/${linkedRepositoryId}/refresh`,
+    ): Promise<void> {
+      await apiClient.post<void>(
+        `/api/supervisor/projects/${projectId}/github/repositories/${linkedRepositoryId}/sync`,
         {},
       );
-      invalidateProjectCaches(data.projectId);
-      return data;
+      invalidateProjectCaches(projectId);
+    },
+
+    getGitHubRepositoryCommits(
+      projectId: string,
+      linkedRepositoryId: string,
+      page = 1,
+      size = 50,
+    ): Promise<GitHubEvidencePage<GitHubCommitEvidence>> {
+      return apiClient.get<GitHubEvidencePage<GitHubCommitEvidence>>(
+        `/api/supervisor/projects/${projectId}/github/repositories/${linkedRepositoryId}/commits?page=${page}&size=${size}`,
+      );
+    },
+
+    getGitHubRepositoryContributors(
+      projectId: string,
+      linkedRepositoryId: string,
+      page = 1,
+      size = 50,
+    ): Promise<GitHubEvidencePage<GitHubContributorEvidence>> {
+      return apiClient.get<GitHubEvidencePage<GitHubContributorEvidence>>(
+        `/api/supervisor/projects/${projectId}/github/repositories/${linkedRepositoryId}/contributors?page=${page}&size=${size}`,
+      );
+    },
+
+    getGitHubRepositoryPullRequests(
+      projectId: string,
+      linkedRepositoryId: string,
+      page = 1,
+      size = 50,
+    ): Promise<GitHubEvidencePage<GitHubPullRequestEvidence>> {
+      return apiClient.get<GitHubEvidencePage<GitHubPullRequestEvidence>>(
+        `/api/supervisor/projects/${projectId}/github/repositories/${linkedRepositoryId}/pull-requests?page=${page}&size=${size}`,
+      );
+    },
+
+    getGitHubRepositorySyncRuns(
+      projectId: string,
+      linkedRepositoryId: string,
+      page = 1,
+      size = 25,
+    ): Promise<GitHubEvidencePage<GitHubSyncRunEvidence>> {
+      return apiClient.get<GitHubEvidencePage<GitHubSyncRunEvidence>>(
+        `/api/supervisor/projects/${projectId}/github/repositories/${linkedRepositoryId}/sync-runs?page=${page}&size=${size}`,
+      );
     },
 
     async selectPrimaryGitHubRepository(

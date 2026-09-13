@@ -670,15 +670,15 @@ export function RepositorySection({
     openRequestModal(
       "loading",
       "Refreshing repository",
-      "Syncing repository metadata, commits, and contributors.",
+      "Syncing repository metadata, default-branch commits, contributors, pull requests, reviews, and branches.",
     );
     try {
-      await supervisorApi.refreshGitHubRepository(linkId);
+      await supervisorApi.refreshGitHubRepository(project.id, linkId);
       await reloadProjectAndRepositories(project.id);
       openRequestModal(
         "success",
         "Repository refreshed",
-        "Repository sync completed.",
+        "Repository synchronization has started. ResearchTrack will update the status when the background sync completes.",
       );
     } catch (error) {
       const message = isApiException(error)

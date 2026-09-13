@@ -5,13 +5,17 @@ import { vi } from "vitest";
 import { ApiException } from "@/services/apiClient";
 import { ResetPasswordPage } from "./ResetPasswordPage";
 
-const { validateResetTokenMock, resetPasswordMock, navigateMock, clearAuthenticationStateMock } =
-  vi.hoisted(() => ({
-    validateResetTokenMock: vi.fn(),
-    resetPasswordMock: vi.fn(),
-    navigateMock: vi.fn(),
-    clearAuthenticationStateMock: vi.fn(),
-  }));
+const {
+  validateResetTokenMock,
+  resetPasswordMock,
+  navigateMock,
+  clearAuthenticationStateMock,
+} = vi.hoisted(() => ({
+  validateResetTokenMock: vi.fn(),
+  resetPasswordMock: vi.fn(),
+  navigateMock: vi.fn(),
+  clearAuthenticationStateMock: vi.fn(),
+}));
 
 vi.mock("../hooks/useRegisterConfig", () => ({
   useRegisterConfig: () => ({

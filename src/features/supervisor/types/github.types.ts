@@ -104,7 +104,6 @@ export type ProjectGitHubRepositoryListing = {
   inventory: GitHubAvailableRepositories[];
 };
 
-
 export type GitHubEvidencePage<T> = {
   items: T[];
   page: number;

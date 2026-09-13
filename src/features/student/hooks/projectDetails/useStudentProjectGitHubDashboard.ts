@@ -175,13 +175,10 @@ export function useStudentProjectGitHubDashboard({
     void loadDashboard(selectedRepoId, true);
   }, [loadDashboard, selectedRepoId]);
 
-  const selectRepository = useCallback(
-    async (linkedRepositoryId: string) => {
-      setSelectedRepoId(linkedRepositoryId);
-      setRepoSelectorOpen(false);
-    },
-    [],
-  );
+  const selectRepository = useCallback(async (linkedRepositoryId: string) => {
+    setSelectedRepoId(linkedRepositoryId);
+    setRepoSelectorOpen(false);
+  }, []);
 
   const retryGitHubView = useCallback(async () => {
     if (!selectedRepoId) return;

@@ -95,7 +95,9 @@ export function useSupervisorProjectGitHubDashboard({
   const [isGitHubViewLoading, setIsGitHubViewLoading] = useState(false);
   const [githubViewError, setGithubViewError] = useState<ApiError | null>(null);
   const [selectedRepoId, setSelectedRepoId] = useState<string | null>(null);
-  const [githubView, setGithubView] = useState<ProjectGitHubActivity | null>(null);
+  const [githubView, setGithubView] = useState<ProjectGitHubActivity | null>(
+    null,
+  );
   const [isRepoSelectorOpen, setIsRepoSelectorOpen] = useState(false);
 
   const dashboardRequestVersionRef = useRef(0);
@@ -330,15 +332,12 @@ export function useSupervisorProjectGitHubDashboard({
     showSuccess,
   ]);
 
-  const selectRepository = useCallback(
-    async (linkedRepositoryId: string) => {
-      setSelectedRepoId(linkedRepositoryId);
-      setIsRepoSelectorOpen(false);
-      // The selection effect will load the dashboard. Avoid starting a second
-      // identical request here.
-    },
-    [],
-  );
+  const selectRepository = useCallback(async (linkedRepositoryId: string) => {
+    setSelectedRepoId(linkedRepositoryId);
+    setIsRepoSelectorOpen(false);
+    // The selection effect will load the dashboard. Avoid starting a second
+    // identical request here.
+  }, []);
 
   const retryGitHubView = useCallback(async () => {
     if (!selectedRepoId) {
@@ -389,7 +388,8 @@ export function useSupervisorProjectGitHubDashboard({
     });
 
     try {
-      refreshBaselineSyncedAtRef.current = activeRepository?.lastSyncedAt ?? null;
+      refreshBaselineSyncedAtRef.current =
+        activeRepository?.lastSyncedAt ?? null;
       refreshSawRunningRef.current = false;
       refreshPollAttemptsRef.current = 0;
       refreshAwaitingCompletionRef.current = true;

@@ -22,9 +22,7 @@ function logDev(message: string, payload?: Record<string, unknown>): void {
   console.info(`[requestRegistry] ${message}`);
 }
 
-export function createManagedAbortSignal(
-  scope: RequestScope = "session",
-): {
+export function createManagedAbortSignal(scope: RequestScope = "session"): {
   id: number;
   signal: AbortSignal;
   release: () => void;

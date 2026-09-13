@@ -282,8 +282,6 @@ export function RepositorySection({
     setDisplayNameEditError(null);
   }, [isManagementModalOpen]);
 
-
-
   async function reloadProjectAndRepositories(projectId: string) {
     await reloadRepositoriesData();
     const updatedProject = await supervisorApi.getProjectById(projectId, true);

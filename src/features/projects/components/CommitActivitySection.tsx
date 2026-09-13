@@ -460,10 +460,7 @@ export function CommitActivitySection({
   const normalized = data ? normalizeDashboardPayload(data) : null;
   const hasLinkedRepository =
     explicitHasLinkedRepository ??
-    Boolean(
-      normalized?.repositoryLinked &&
-        normalized.repositories.length > 0,
-    );
+    Boolean(normalized?.repositoryLinked && normalized.repositories.length > 0);
 
   if (!hasLinkedRepository) {
     return (

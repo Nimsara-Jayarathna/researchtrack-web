@@ -11,10 +11,7 @@ import type {
 import { tokenStorage } from "./tokenStorage";
 import type { StoredUser } from "./tokenStorage";
 import { beginSessionTransition, resetSessionState } from "./sessionState";
-import {
-  createManagedAbortSignal,
-  type RequestScope,
-} from "./requestRegistry";
+import { createManagedAbortSignal, type RequestScope } from "./requestRegistry";
 
 export class ApiException extends Error {
   readonly apiError: ApiError;

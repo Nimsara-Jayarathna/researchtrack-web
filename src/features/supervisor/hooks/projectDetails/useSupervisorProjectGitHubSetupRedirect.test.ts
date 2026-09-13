@@ -29,6 +29,7 @@ describe("useSupervisorProjectGitHubSetupRedirect", () => {
     expect(result.current.pendingGitHubFlowType).toBe("INSTALLATION_DIRECT");
     expect(showError).not.toHaveBeenCalled();
     expect(setSearchParams).toHaveBeenCalled();
+    expect(setSearchParams.mock.calls[0][0].get("tab")).toBe("integrations");
   });
 
   it("shows an understandable cancelled message with a retry action", async () => {

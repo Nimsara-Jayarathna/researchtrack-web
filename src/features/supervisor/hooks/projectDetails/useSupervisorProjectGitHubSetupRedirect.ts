@@ -122,7 +122,7 @@ export function useSupervisorProjectGitHubSetupRedirect({
       nextParams.delete("githubFlow");
       nextParams.delete("githubError");
       nextParams.delete("githubAccessUpdated");
-      nextParams.delete("tab");
+      nextParams.set("tab", "integrations");
       setSearchParams(nextParams, { replace: true });
       return;
     }

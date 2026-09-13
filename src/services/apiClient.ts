@@ -11,7 +11,10 @@ import type {
 import { tokenStorage } from "./tokenStorage";
 import type { StoredUser } from "./tokenStorage";
 import { beginSessionTransition, resetSessionState } from "./sessionState";
-import { createManagedAbortSignal } from "./requestRegistry";
+import {
+  createManagedAbortSignal,
+  type RequestScope,
+} from "./requestRegistry";
 
 export class ApiException extends Error {
   readonly apiError: ApiError;
@@ -42,6 +45,27 @@ function isRefreshExcludedPath(path: string): boolean {
     path.startsWith(`${AUTH_BASE}/reset-password`)
   );
 }
+
+function getRequestScope(path: string): RequestScope {
+  if (
+    path === `${AUTH_BASE}/login` ||
+    path === `${AUTH_BASE}/logout` ||
+    path === REFRESH_PATH
+  ) {
+    return "auth-transition";
+  }
+
+  if (
+    path.startsWith(`${AUTH_BASE}/register`) ||
+    path.startsWith(`${AUTH_BASE}/forgot-password`) ||
+    path.startsWith(`${AUTH_BASE}/reset-password`)
+  ) {
+    return "public";
+  }
+
+  return "session";
+}
+
 let inFlightRefresh: Promise<boolean> | null = null;
 
 async function tryRefresh(): Promise<boolean> {
@@ -216,7 +240,7 @@ async function request<T>(
   const headers = new Headers(init.headers);
   headers.set("Content-Type", "application/json");
 
-  const managed = createManagedAbortSignal();
+  const managed = createManagedAbortSignal(getRequestScope(path));
   let response: Response;
 
   try {

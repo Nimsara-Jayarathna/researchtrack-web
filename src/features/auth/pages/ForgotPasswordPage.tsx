@@ -2,13 +2,14 @@ import { Button } from "@/components/ui/Button";
 import { RequestStateModal } from "@/components/ui/RequestStateModal";
 import { isApiException } from "@/services/apiClient";
 import type { ApiError } from "@/types";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { authApi } from "../api/authApi";
 import { ForgotPasswordForm } from "../components/ForgotPasswordForm";
 import { AuthPageShell } from "../components/shell/AuthPageShell";
 import { AuthDialogCard } from "../components/shell/AuthDialogCard";
 import { toRequestStateModalView } from "../utils/requestStateModalView";
+import { useDocumentTitle } from "@/utils/useDocumentTitle";
 
 type RequestStatus = "idle" | "loading" | "success" | "error";
 
@@ -21,9 +22,7 @@ export function ForgotPasswordPage() {
   const [error, setError] = useState<ApiError | null>(null);
   const [cooldownKey, setCooldownKey] = useState(0);
 
-  useEffect(() => {
-    document.title = "Forgot your password - ResearchTrack";
-  }, []);
+  useDocumentTitle("Forgot your password - ResearchTrack");
 
   async function handleSubmit(email: string) {
     setError(null);

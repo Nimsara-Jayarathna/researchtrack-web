@@ -1,8 +1,6 @@
-import { buttonStyles } from "@/components/ui/Button";
 import { SyncStatusBadge } from "@/components/ui/SyncStatusBadge";
 import { normalizeSyncStatus } from "@/lib/syncStatus";
 import { Pencil, RefreshCw, Github, Unlink } from "lucide-react";
-import { RepositoryRowSkeleton } from "./RepositoryRowSkeleton";
 
 export type RepositoryManagementRow = {
   rowKey: string;
@@ -14,6 +12,7 @@ export type RepositoryManagementRow = {
   enabled: boolean;
   primary: boolean;
   customName: string | null;
+  name: string | null;
   fullName: string | null;
   ownerLogin: string | null;
   url: string | null;
@@ -29,9 +28,6 @@ type RepositoryManagementModalContentProps = {
   remainingLinkSlots: number;
   remainingEnabledSlots: number;
   isMutating: boolean;
-  isLoadingInventory: boolean;
-  inventoryError: string | null;
-  onReloadInventory: () => void;
   onSelectPrimary: (linkId: string) => void;
   onRefresh: (linkId: string) => void;
   onToggleEnabled: (row: RepositoryManagementRow) => void;
@@ -55,6 +51,26 @@ function formatAccessTypeLabel(value: string | null | undefined): string {
     .join(" ");
 }
 
+function repositoryDisplayName(row: RepositoryManagementRow): string {
+  const customName = row.customName?.trim();
+  if (customName) {
+    return customName;
+  }
+
+  const repositoryName = row.name?.trim();
+  if (repositoryName) {
+    return repositoryName;
+  }
+
+  const fullName = row.fullName?.trim();
+  if (fullName) {
+    const slashIndex = fullName.lastIndexOf("/");
+    return slashIndex >= 0 ? fullName.slice(slashIndex + 1) : fullName;
+  }
+
+  return "Unnamed repository";
+}
+
 export function RepositoryManagementModalContent({
   rows,
   linkedCount,
@@ -64,9 +80,6 @@ export function RepositoryManagementModalContent({
   remainingLinkSlots,
   remainingEnabledSlots,
   isMutating,
-  isLoadingInventory,
-  inventoryError,
-  onReloadInventory,
   onSelectPrimary,
   onRefresh,
   onToggleEnabled,
@@ -165,54 +178,9 @@ export function RepositoryManagementModalContent({
         ) : null}
       </div>
 
-      {isLoadingInventory ? (
-        <>
-          <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm md:hidden">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <div
-                key={`repo-mobile-skeleton-${index}`}
-                className="h-28 animate-pulse rounded-2xl border border-slate-100 bg-slate-50"
-              />
-            ))}
-          </div>
-          <div className="hidden overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm md:block">
-            <table className="min-w-full divide-y divide-slate-200 text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-[0.14em] text-muted-foreground">
-                <tr>
-                  <th className="px-5 py-4 text-left font-medium">
-                    Display name
-                  </th>
-                  <th className="px-5 py-4 text-left font-medium">Owner</th>
-                  <th className="px-5 py-4 text-left font-medium whitespace-nowrap">
-                    Access type
-                  </th>
-                  <th className="px-5 py-4 text-left font-medium">Status</th>
-                  <th className="px-5 py-4 text-center font-medium">Actions</th>
-                  <th className="px-5 py-4 text-center font-medium">Danger</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {Array.from({ length: 3 }).map((_, index) => (
-                  <RepositoryRowSkeleton key={`repo-row-skeleton-${index}`} />
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </>
-      ) : inventoryError ? (
-        <div className="space-y-3 rounded-2xl border border-rose-200 bg-rose-50 p-5 shadow-sm">
-          <p className="text-sm text-rose-700">{inventoryError}</p>
-          <button
-            type="button"
-            className={buttonStyles({ variant: "secondary", size: "sm" })}
-            onClick={onReloadInventory}
-          >
-            Retry
-          </button>
-        </div>
-      ) : rows.length === 0 ? (
+      {rows.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-muted-foreground shadow-sm">
-          No repositories are available for this project yet.
+          No repositories are linked to this project yet.
         </div>
       ) : (
         <>
@@ -240,10 +208,10 @@ export function RepositoryManagementModalContent({
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-bold text-slate-900">
-                        {row.customName?.trim() || "Unnamed repository"}
+                        {repositoryDisplayName(row)}
                       </p>
                       <p className="mt-0.5 truncate text-xs text-slate-500">
-                        {row.ownerLogin || "unknown"}
+                        {row.fullName || row.ownerLogin || "unknown"}
                       </p>
                     </div>
                     <div className="shrink-0 pt-0.5">
@@ -452,7 +420,7 @@ export function RepositoryManagementModalContent({
               <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-[0.14em] text-muted-foreground">
                 <tr>
                   <th className="px-5 py-4 text-left font-medium">
-                    Display name
+                    Repository
                   </th>
                   <th className="px-5 py-4 text-left font-medium">Owner</th>
                   <th className="px-5 py-4 text-left font-medium whitespace-nowrap">
@@ -489,9 +457,16 @@ export function RepositoryManagementModalContent({
                       }`}
                     >
                       <td className="px-5 py-4.5 text-sm font-medium text-foreground">
-                        {row.customName?.trim() || (
-                          <span className="text-slate-400">-</span>
-                        )}
+                        <div className="min-w-0">
+                          <span className="block truncate font-semibold text-slate-900">
+                            {repositoryDisplayName(row)}
+                          </span>
+                          {row.fullName ? (
+                            <span className="mt-0.5 block truncate text-xs font-normal text-slate-400">
+                              {row.fullName}
+                            </span>
+                          ) : null}
+                        </div>
                       </td>
                       <td className="px-5 py-4.5 text-sm text-slate-600">
                         {row.ownerLogin || "unknown"}

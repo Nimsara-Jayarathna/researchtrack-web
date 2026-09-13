@@ -172,7 +172,9 @@ export function useStudentProjectGitHubDashboard({
 
   useEffect(() => {
     if (!selectedRepoId) return;
-    void loadDashboard(selectedRepoId, true);
+    // Switching repositories should use the dashboard cache/in-flight dedupe.
+    // Explicit retries are the paths that intentionally force a fresh request.
+    void loadDashboard(selectedRepoId);
   }, [loadDashboard, selectedRepoId]);
 
   const selectRepository = useCallback(async (linkedRepositoryId: string) => {

@@ -207,7 +207,10 @@ export function useSupervisorProjectGitHubDashboard({
   // potentially stale snapshot from the project details response.
   useEffect(() => {
     if (!isActive || !selectedRepoId) return;
-    void loadDashboard(selectedRepoId, { forceRefresh: true });
+    // Repository selection is a read operation. Let the shared API cache/in-flight
+    // dedupe satisfy it when possible; only explicit retry/sync-completion paths
+    // should bypass the cache with forceRefresh=true.
+    void loadDashboard(selectedRepoId);
   }, [isActive, loadDashboard, selectedRepoId]);
 
   // One polling owner only. It handles both background/initial syncs and a

@@ -31,17 +31,17 @@ describe("useProjectRepositories", () => {
     expect(result.current.data).toEqual(response);
     expect(result.current.error).toBeNull();
   });
-});
 
-it("does not request GitHub repository state while the consumer is disabled", async () => {
-  getProjectGitHubRepositories.mockResolvedValue(response);
+  it("does not request GitHub repository state while the consumer is disabled", async () => {
+    getProjectGitHubRepositories.mockResolvedValue(response);
 
-  const { result } = renderHook(() =>
-    useProjectRepositories("project-1", { enabled: false }),
-  );
+    const { result } = renderHook(() =>
+      useProjectRepositories("project-1", { enabled: false }),
+    );
 
-  await waitFor(() => expect(result.current.isLoading).toBe(false));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-  expect(getProjectGitHubRepositories).not.toHaveBeenCalled();
-  expect(result.current.data).toBeNull();
+    expect(getProjectGitHubRepositories).not.toHaveBeenCalled();
+    expect(result.current.data).toBeNull();
+  });
 });

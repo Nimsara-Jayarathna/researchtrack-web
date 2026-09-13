@@ -6,9 +6,8 @@ function AuthSessionBootstrap({ children }: { children: ReactNode }) {
   const location = useLocation();
 
   useEffect(() => {
-    // A reset link is deliberately self-contained and anonymous. Bootstrapping
-    // /me here can race with token validation during development StrictMode and
-    // provides no value to the reset flow.
+    // Password reset is intentionally anonymous. Bootstrapping /me on this
+    // route can race with reset-token validation and provides no value here.
     if (location.pathname === "/reset-password") {
       return;
     }

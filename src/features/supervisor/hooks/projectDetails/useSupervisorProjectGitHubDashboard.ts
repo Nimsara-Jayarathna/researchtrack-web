@@ -75,7 +75,7 @@ function toApiError(error: unknown, projectId: string): ApiError {
     timestamp: new Date().toISOString(),
     status: 500,
     error: "Internal Server Error",
-    code: "GITHUB_DASHBOARD_LOAD_FAILED",
+    code: "INTERNAL_ERROR",
     message: "Unable to load GitHub activity right now.",
     path: `/api/supervisor/projects/${projectId}/github`,
     traceId: null,

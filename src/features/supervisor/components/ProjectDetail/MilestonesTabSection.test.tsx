@@ -36,7 +36,6 @@ function buildProject(
     milestoneDate: null,
     progressPercent: 0,
     lastActivityAt: null,
-    repositoryUrl: null,
     github: {
       repositoryLinked: false,
       repositories: [],

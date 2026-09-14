@@ -47,7 +47,6 @@ function toStudentDetail(project: ProjectResourceDetail): StudentProjectDetail {
     milestoneDate: project.milestoneDate,
     lastActivityAt: project.lastActivityAt,
     progressPercent: project.progressPercent,
-    repositoryUrl: null,
     github: createEmptyProjectGitHubPreview(),
     githubRepositories: null,
     jira: null,

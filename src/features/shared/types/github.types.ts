@@ -1,5 +1,4 @@
-export type GitHubAccessType =
-  "PUBLIC_URL" | "INSTALLATION_DIRECT" | "INSTALLATION_REQUESTED";
+export type GitHubAccessType = "INSTALLATION_DIRECT" | "INSTALLATION_REQUESTED";
 export type GitHubOwnerType = "USER" | "ORG";
 export type GitHubSyncStatus =
   "IN_PROGRESS" | "PENDING" | "SUCCESS" | "FAILED" | "DISABLED";

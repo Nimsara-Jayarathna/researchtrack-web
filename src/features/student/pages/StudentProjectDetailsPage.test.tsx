@@ -113,7 +113,6 @@ describe("StudentProjectDetailsPage", () => {
         milestoneDate: null,
         lastActivityAt: null,
         progressPercent: 0,
-        repositoryUrl: null,
         github: githubView,
         githubRepositories: {
           projectId: "project-1",
@@ -202,7 +201,6 @@ describe("StudentProjectDetailsPage", () => {
         milestoneDate: null,
         lastActivityAt: null,
         progressPercent: 0,
-        repositoryUrl: null,
         github: githubView,
         githubRepositories: {
           projectId: "project-1",

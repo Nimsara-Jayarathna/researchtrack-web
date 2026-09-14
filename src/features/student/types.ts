@@ -60,7 +60,6 @@ export type StudentProjectDetail = {
   milestoneDate: string | null;
   lastActivityAt: string | null;
   progressPercent: number | null;
-  repositoryUrl?: string | null;
   github: ProjectGitHubPreview;
   githubRepositories?: ProjectGitHubRepositories | null;
   jira?: {

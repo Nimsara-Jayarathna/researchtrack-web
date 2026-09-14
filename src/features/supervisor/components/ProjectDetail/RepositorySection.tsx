@@ -11,7 +11,6 @@ import { useAvailableRepositories } from "../../hooks/useAvailableRepositories";
 import { useGitHubSetupFlow } from "../../hooks/useGitHubSetupFlow";
 import { useProjectRepositories } from "../../hooks/useProjectRepositories";
 import { useRepositorySelection } from "../../hooks/useRepositorySelection";
-import { normalizeGitHubRepositoryUrl } from "../../utils/githubRepositoryUrl";
 import type {
   ProjectGitHubRepositories,
   SupervisorProjectDetail,
@@ -73,11 +72,6 @@ export function RepositorySection({
   const [selectionEntryMode, setSelectionEntryMode] =
     useState<RepositorySelectionEntryMode>("manual");
 
-  const [publicRepositoryUrl, setPublicRepositoryUrl] = useState("");
-  const [publicCustomName, setPublicCustomName] = useState("");
-
-  const [isSubmittingPublicRepository, setIsSubmittingPublicRepository] =
-    useState(false);
   const [isCreatingAccessRequest, setIsCreatingAccessRequest] = useState(false);
   const [isConfirmingRepositorySelection, setIsConfirmingRepositorySelection] =
     useState(false);
@@ -259,8 +253,6 @@ export function RepositorySection({
 
   useEffect(() => {
     if (!isModalOpen && !pendingSourceId) {
-      setPublicRepositoryUrl("");
-      setPublicCustomName("");
       setGeneratedAccessRequestUrl(null);
       setGeneratedAccessRequestExpiresAt(null);
       setIsAccessRequestLinkCopied(false);
@@ -394,69 +386,6 @@ export function RepositorySection({
       "Enabled repository limit reached",
       "Disable one enabled repository first, then enable another.",
     );
-  }
-
-  async function handleSubmitPublicRepository() {
-    const repositoryUrl = normalizeGitHubRepositoryUrl(publicRepositoryUrl);
-    if (!repositoryUrl) {
-      openRequestModal(
-        "error",
-        "Invalid repository URL",
-        "Enter a valid GitHub repository URL (for example: https://github.com/owner/repo).",
-      );
-      return;
-    }
-
-    if (linkedLimitReached) {
-      openLinkedLimitError("link");
-      return;
-    }
-    setIsSubmittingPublicRepository(true);
-    openRequestModal(
-      "loading",
-      "Linking public repository",
-      "Creating access source and linking repository.",
-    );
-
-    try {
-      const created = await supervisorApi.createPublicGitHubAccessSource(
-        project.id,
-        repositoryUrl,
-      );
-      const repository = created.items[0];
-      if (!repository) {
-        throw new Error(
-          "No repository returned from public access source creation.",
-        );
-      }
-
-      await supervisorApi.linkGitHubRepositories({
-        projectId: project.id,
-        sourceId: created.sourceId,
-        repositories: [
-          {
-            githubRepositoryId: repository.id,
-            customName: publicCustomName.trim() || undefined,
-            primary: enabledCount === 0,
-          },
-        ],
-      });
-
-      await reloadProjectAndRepositories(project.id);
-      setIsModalOpen(false);
-      openRequestModal(
-        "success",
-        "Repository linked",
-        "Public repository linked successfully.",
-      );
-    } catch (error) {
-      const message = isApiException(error)
-        ? error.apiError.message
-        : "Unable to link public repository right now.";
-      openRequestModal("error", "Repository link failed", message);
-    } finally {
-      setIsSubmittingPublicRepository(false);
-    }
   }
 
   async function handleCreateAccessRequest() {
@@ -977,12 +906,6 @@ export function RepositorySection({
             setSelectedSourceId(null);
             setSelectionEntryMode("manual");
           }}
-          publicRepositoryUrl={publicRepositoryUrl}
-          publicCustomName={publicCustomName}
-          onChangePublicRepositoryUrl={setPublicRepositoryUrl}
-          onChangePublicCustomName={setPublicCustomName}
-          onSubmitPublicRepository={() => void handleSubmitPublicRepository()}
-          isSubmittingPublicRepository={isSubmittingPublicRepository}
           onStartOwnerInstall={() => void handleStartOwnerInstall()}
           isStartingOwnerInstall={isStartingOwnerInstall}
           onCreateAccessRequest={() => void handleCreateAccessRequest()}

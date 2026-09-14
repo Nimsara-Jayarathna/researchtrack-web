@@ -66,7 +66,6 @@ export type SupervisorProjectDetail = {
   milestoneDate: string | null;
   progressPercent: number | null;
   lastActivityAt: string | null;
-  repositoryUrl?: string | null;
   github: ProjectGitHubPreview;
   githubRepositories?: ProjectGitHubRepositories | null;
   jira?: {
@@ -168,7 +167,6 @@ export type SupervisorProject = {
   lastActivityAt: string;
   progress: number;
   communicationUrl?: string;
-  repositoryUrl?: string | null;
   jiraBoardUrl?: string;
   members: SupervisorProjectMember[];
   metrics: SupervisorProjectMetric[];

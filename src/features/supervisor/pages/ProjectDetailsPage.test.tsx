@@ -117,7 +117,6 @@ describe("ProjectDetailsPage", () => {
       milestoneDate: null,
       progressPercent: 0,
       lastActivityAt: null,
-      repositoryUrl: null,
       github: githubView,
       githubRepositories: null,
       jira: null,

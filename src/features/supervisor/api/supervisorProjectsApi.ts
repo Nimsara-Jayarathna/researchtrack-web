@@ -63,7 +63,6 @@ function toSupervisorDetail(
     progressPercent: project.progressPercent,
     lastActivityAt: project.lastActivityAt,
 
-
     github: createEmptyProjectGitHubPreview(),
 
     githubRepositories: null,

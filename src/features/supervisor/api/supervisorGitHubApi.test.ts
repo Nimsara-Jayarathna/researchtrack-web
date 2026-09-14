@@ -63,7 +63,6 @@ describe("supervisor GitHub API contract", () => {
     );
   });
 
-
   it("loads available repositories from the persisted source endpoint", async () => {
     const { api, apiClient } = createApi();
     apiClient.get.mockResolvedValue(available);

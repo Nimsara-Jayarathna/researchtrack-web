@@ -74,4 +74,3 @@ export type UpdateSupervisorProjectMilestoneRequest = {
   dueDate: string;
   status: import("./project.types").SupervisorProjectDetailMilestone["status"];
 };
-

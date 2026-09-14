@@ -36,8 +36,15 @@ function baseProps(overrides: Partial<Props> = {}): Props {
     onBackToMethods: () => undefined,
     onStartOwnerInstall: () => undefined,
     isStartingOwnerInstall: false,
+    accessRequestOwnerLogin: "",
+    onAccessRequestOwnerLoginChange: () => undefined,
     onCreateAccessRequest: () => undefined,
     isCreatingAccessRequest: false,
+    accessRequests: [],
+    isLoadingAccessRequests: false,
+    revokingAccessRequestId: null,
+    onReloadAccessRequests: () => undefined,
+    onRevokeAccessRequest: () => undefined,
     generatedAccessRequestUrl: null,
     generatedAccessRequestExpiresAt: null,
     onCopyAccessRequestUrl: () => undefined,
@@ -108,7 +115,6 @@ describe("RepositoryLinkModalContent", () => {
     );
 
     expect(screen.getByText("Connect GitHub")).toBeInTheDocument();
-    expect(screen.queryByText("Public URL")).not.toBeInTheDocument();
     expect(screen.getByText("Request Access")).toBeInTheDocument();
   });
 

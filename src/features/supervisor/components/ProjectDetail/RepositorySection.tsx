@@ -12,6 +12,7 @@ import { useGitHubSetupFlow } from "../../hooks/useGitHubSetupFlow";
 import { useProjectRepositories } from "../../hooks/useProjectRepositories";
 import { useRepositorySelection } from "../../hooks/useRepositorySelection";
 import type {
+  GitHubAccessRequestSummary,
   ProjectGitHubRepositories,
   SupervisorProjectDetail,
 } from "../../types";
@@ -22,6 +23,7 @@ import {
 import {
   RepositoryManagementModalContent,
   type RepositoryManagementRow,
+  type RepositoryManagementSource,
 } from "./RepositoryManagementModalContent";
 import { RepositoryRenameModal } from "./RepositoryRenameModal";
 
@@ -73,6 +75,10 @@ export function RepositorySection({
     useState<RepositorySelectionEntryMode>("manual");
 
   const [isCreatingAccessRequest, setIsCreatingAccessRequest] = useState(false);
+  const [accessRequestOwnerLogin, setAccessRequestOwnerLogin] = useState("");
+  const [accessRequests, setAccessRequests] = useState<GitHubAccessRequestSummary[]>([]);
+  const [isLoadingAccessRequests, setIsLoadingAccessRequests] = useState(false);
+  const [revokingAccessRequestId, setRevokingAccessRequestId] = useState<string | null>(null);
   const [isConfirmingRepositorySelection, setIsConfirmingRepositorySelection] =
     useState(false);
   const [isDismissingPendingAccess, setIsDismissingPendingAccess] =
@@ -189,6 +195,21 @@ export function RepositorySection({
       });
   }, [accessSources, linkedRepositories]);
 
+  const managementSources = useMemo<RepositoryManagementSource[]>(() =>
+    accessSources.map((source) => {
+      const sourceLinks = linkedRepositories.filter((repository) => repository.sourceId === source.id);
+      return {
+        id: source.id,
+        ownerLogin: source.ownerLogin,
+        accessType: source.accessType,
+        installationId: source.installationId,
+        linkedRepositoryCount: sourceLinks.length,
+        hasSyncInProgress: sourceLinks.some(
+          (repository) => normalizeSyncStatus(repository.syncStatus) === "IN_PROGRESS",
+        ),
+      };
+    }), [accessSources, linkedRepositories]);
+
   const selection = useRepositorySelection(
     repositorySelectionCapacity > 0 ? repositorySelectionCapacity : 0,
   );
@@ -256,6 +277,7 @@ export function RepositorySection({
       setGeneratedAccessRequestUrl(null);
       setGeneratedAccessRequestExpiresAt(null);
       setIsAccessRequestLinkCopied(false);
+      setAccessRequestOwnerLogin("");
       setSelectedMethod(null);
       setSelectedSourceId(null);
       setSelectionEntryMode("manual");
@@ -263,6 +285,15 @@ export function RepositorySection({
       clearSelection();
     }
   }, [clearSelection, isModalOpen, pendingSourceId]);
+
+  useEffect(() => {
+    if (!isModalOpen || selectedMethod !== "INSTALLATION_REQUESTED" || modalStep !== "method") {
+      return;
+    }
+    void loadAccessRequests();
+    // loadAccessRequests intentionally reads the current project id only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isModalOpen, modalStep, selectedMethod, project.id]);
 
   useEffect(() => {
     if (isManagementModalOpen) {
@@ -388,7 +419,47 @@ export function RepositorySection({
     );
   }
 
+  async function loadAccessRequests() {
+    setIsLoadingAccessRequests(true);
+    try {
+      const requests = await supervisorApi.listGitHubAccessSourceRequests(project.id);
+      setAccessRequests(requests);
+    } catch (error) {
+      const message = isApiException(error)
+        ? error.apiError.message
+        : "Unable to load GitHub access requests right now.";
+      openRequestModal("error", "Access requests unavailable", message);
+    } finally {
+      setIsLoadingAccessRequests(false);
+    }
+  }
+
+  async function handleRevokeAccessRequest(requestId: string) {
+    if (!window.confirm("Revoke this pending GitHub access request? The shared link will stop working immediately.")) {
+      return;
+    }
+    setRevokingAccessRequestId(requestId);
+    try {
+      await supervisorApi.revokeGitHubAccessSourceRequest(project.id, requestId);
+      if (accessRequests.find((request) => request.id === requestId)?.requestUrl === generatedAccessRequestUrl) {
+        setGeneratedAccessRequestUrl(null);
+        setGeneratedAccessRequestExpiresAt(null);
+      }
+      await loadAccessRequests();
+    } catch (error) {
+      const message = isApiException(error) ? error.apiError.message : "Unable to revoke the access request.";
+      openRequestModal("error", "Request revoke failed", message);
+    } finally {
+      setRevokingAccessRequestId(null);
+    }
+  }
+
   async function handleCreateAccessRequest() {
+    const ownerLogin = accessRequestOwnerLogin.trim();
+    if (!ownerLogin) {
+      openRequestModal("error", "GitHub owner required", "Enter the GitHub user or organization that should authorize the app.");
+      return;
+    }
     setIsCreatingAccessRequest(true);
     setGeneratedAccessRequestUrl(null);
     setGeneratedAccessRequestExpiresAt(null);
@@ -396,6 +467,7 @@ export function RepositorySection({
     try {
       const response = await supervisorApi.createGitHubAccessSourceRequest(
         project.id,
+        ownerLogin,
       );
       const absoluteUrl = new URL(
         response.requestUrl,
@@ -403,7 +475,9 @@ export function RepositorySection({
       ).toString();
       setGeneratedAccessRequestUrl(absoluteUrl);
       setGeneratedAccessRequestExpiresAt(response.expiresAt ?? null);
+      setAccessRequestOwnerLogin(response.ownerLogin);
       setIsAccessRequestLinkCopied(false);
+      await loadAccessRequests();
     } catch (error) {
       const message = isApiException(error)
         ? error.apiError.message
@@ -544,6 +618,12 @@ export function RepositorySection({
   }
 
   async function handleRefreshRepository(linkId: string) {
+    const target = linkedRepositories.find((repository) => repository.id === linkId);
+    const syncStatus = normalizeSyncStatus(target?.syncStatus);
+    if (syncStatus === "IN_PROGRESS" || syncStatus === "PENDING") {
+      openRequestModal("error", "Synchronization already active", "This repository already has a synchronization queued or in progress.");
+      return;
+    }
     setIsMutatingLinks(true);
     openRequestModal(
       "loading",
@@ -578,6 +658,9 @@ export function RepositorySection({
         "Repository is syncing",
         "Cannot unlink repository while sync is in progress.",
       );
+      return;
+    }
+    if (!window.confirm(`Unlink ${target?.fullName || target?.name || "this repository"} from this ResearchTrack project? Existing synchronized evidence will no longer be attached to the active link.`)) {
       return;
     }
 
@@ -628,6 +711,11 @@ export function RepositorySection({
       );
       return;
     }
+    const source = accessSources.find((candidate) => candidate.id === sourceId);
+    const affectedCount = linkedRepositories.filter((repository) => repository.sourceId === sourceId).length;
+    if (!window.confirm(`Disconnect GitHub App access for ${source?.ownerLogin || "this source"}? This removes ${affectedCount} linked repositor${affectedCount === 1 ? "y" : "ies"} from the project, but does not uninstall the GitHub App from GitHub.`)) {
+      return;
+    }
 
     setIsMutatingLinks(true);
     openRequestModal(
@@ -649,7 +737,7 @@ export function RepositorySection({
         openRequestModal(
           "error",
           "Repository is syncing",
-          "Cannot unlink while repository sync is in progress. Try again after sync completes.",
+          "Cannot disconnect this access source while a repository sync is in progress. Try again after sync completes.",
         );
       } else {
         const message = isApiException(error)
@@ -663,6 +751,10 @@ export function RepositorySection({
   }
 
   async function handleEnableRepository(row: RepositoryManagementRow) {
+    if (normalizeSyncStatus(row.syncStatus) === "IN_PROGRESS") {
+      openRequestModal("error", "Repository is syncing", "Wait for synchronization to finish before changing repository state.");
+      return;
+    }
     if (row.linkId) {
       if (enabledLimitReached) {
         openEnabledLimitError();
@@ -746,6 +838,14 @@ export function RepositorySection({
   }
 
   async function handleDisableRepository(linkId: string) {
+    const target = linkedRepositories.find((repository) => repository.id === linkId);
+    if (normalizeSyncStatus(target?.syncStatus) === "IN_PROGRESS") {
+      openRequestModal("error", "Repository is syncing", "Cannot disable a repository while synchronization is in progress.");
+      return;
+    }
+    if (!window.confirm(`Disable ${target?.fullName || target?.name || "this repository"}? The link and synchronized history are kept, but new synchronization is paused until it is enabled again.`)) {
+      return;
+    }
     setIsMutatingLinks(true);
     openRequestModal(
       "loading",
@@ -908,8 +1008,15 @@ export function RepositorySection({
           }}
           onStartOwnerInstall={() => void handleStartOwnerInstall()}
           isStartingOwnerInstall={isStartingOwnerInstall}
+          accessRequestOwnerLogin={accessRequestOwnerLogin}
+          onAccessRequestOwnerLoginChange={setAccessRequestOwnerLogin}
           onCreateAccessRequest={() => void handleCreateAccessRequest()}
           isCreatingAccessRequest={isCreatingAccessRequest}
+          accessRequests={accessRequests}
+          isLoadingAccessRequests={isLoadingAccessRequests}
+          revokingAccessRequestId={revokingAccessRequestId}
+          onReloadAccessRequests={() => void loadAccessRequests()}
+          onRevokeAccessRequest={(requestId) => void handleRevokeAccessRequest(requestId)}
           generatedAccessRequestUrl={generatedAccessRequestUrl}
           generatedAccessRequestExpiresAt={generatedAccessRequestExpiresAt}
           onCopyAccessRequestUrl={() => void handleCopyAccessRequestUrl()}
@@ -951,6 +1058,7 @@ export function RepositorySection({
       >
         <RepositoryManagementModalContent
           rows={managementRows}
+          sources={managementSources}
           linkedCount={linkedCount}
           maxLinkedRepositories={maxLinkedRepositories}
           enabledCount={enabledCount}

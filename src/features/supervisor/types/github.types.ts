@@ -52,17 +52,18 @@ export type ProjectGitHubRepositoryLink = {
   lastSyncedAt: string | null;
 };
 
-export type GitHubRepositoryAccessRequestCreate = {
-  projectId: string;
-  requestToken: string;
-  requestUrl: string;
-  expiresAt: string;
-};
+export type GitHubAccessRequestStatus =
+  | "PENDING"
+  | "COMPLETED"
+  | "FAILED"
+  | "EXPIRED"
+  | "REVOKED";
 
 export type GitHubRepositoryAccessRequestValidation = {
   projectId: string;
   projectTitle: string;
-  status: string;
+  ownerLogin: string;
+  status: GitHubAccessRequestStatus | string;
   expiresAt: string;
 };
 
@@ -94,9 +95,28 @@ export type GitHubInstallStart = {
 };
 
 export type GitHubAccessRequestCreateV2 = {
+  id: string;
   projectId: string;
+  ownerLogin: string;
   requestUrl: string;
+  status: GitHubAccessRequestStatus | string;
   expiresAt: string;
+};
+
+export type GitHubAccessRequestSummary = {
+  id: string;
+  projectId: string;
+  projectTitle: string;
+  ownerLogin: string;
+  status: GitHubAccessRequestStatus | string;
+  requestUrl: string | null;
+  createdAt: string;
+  expiresAt: string;
+  completedAt: string | null;
+  revokedAt: string | null;
+  sourceId: string | null;
+  installationId: number | null;
+  errorCode: string | null;
 };
 
 export type ProjectGitHubRepositoryListing = {

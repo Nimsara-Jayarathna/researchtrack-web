@@ -33,6 +33,7 @@ function createApi() {
   const apiClient = {
     get: vi.fn(),
     post: vi.fn(),
+    del: vi.fn(),
   };
   const invalidateProjectCaches = vi.fn();
   const api = createSupervisorGitHubApi({
@@ -122,4 +123,92 @@ describe("supervisor GitHub API contract", () => {
       "/api/projects/project-1/github-repositories",
     );
   });
+
+  it("creates a GitHub access request for the expected GitHub owner", async () => {
+    const { api, apiClient } = createApi();
+    apiClient.post.mockResolvedValue({
+      id: "request-1",
+      projectId: "project-1",
+      ownerLogin: "openai",
+      requestUrl: "https://app.example.test/github/request-access?token=safe",
+      status: "PENDING",
+      expiresAt: "2026-09-15T06:00:00Z",
+    });
+
+    await api.createGitHubAccessSourceRequest("project-1", "openai");
+
+    expect(apiClient.post).toHaveBeenCalledWith(
+      "/api/github/access-source/request",
+      { projectId: "project-1", ownerLogin: "openai" },
+    );
+  });
+
+  it("continues external Request Access through the shared GitHub App flow", async () => {
+    const { api, apiClient } = createApi();
+    apiClient.post.mockResolvedValue({
+      projectId: "project-1",
+      githubAuthorizeUrl:
+        "https://github.com/apps/researchtrack/installations/new?state=safe",
+    });
+
+    await api.continueExternalGitHubAccessRequest("request-token");
+
+    expect(apiClient.post).toHaveBeenCalledWith(
+      "/api/github/access-requests/continue?token=request-token",
+      {},
+    );
+  });
+
+  it("revokes a pending access request through the project-scoped endpoint", async () => {
+    const { api, apiClient } = createApi();
+    apiClient.del.mockResolvedValue({
+      projectId: "project-1",
+      requestId: "request-1",
+      status: "REVOKED",
+    });
+
+    await api.revokeGitHubAccessSourceRequest("project-1", "request-1");
+
+    expect(apiClient.del).toHaveBeenCalledWith(
+      "/api/github/access-source/requests/request-1?projectId=project-1",
+    );
+  });
+
+  it("unlinks one repository without disconnecting its GitHub App source", async () => {
+    const { api, apiClient, invalidateProjectCaches } = createApi();
+    apiClient.del.mockResolvedValue(projectRepositories);
+
+    await api.unlinkGitHubRepository("link-1");
+
+    expect(apiClient.del).toHaveBeenCalledWith(
+      "/api/github/repositories/link-1",
+    );
+    expect(invalidateProjectCaches).toHaveBeenCalledWith("project-1");
+  });
+
+  it("disables an existing linked repository through the lifecycle endpoint", async () => {
+    const { api, apiClient, invalidateProjectCaches } = createApi();
+    apiClient.post.mockResolvedValue(projectRepositories);
+
+    await api.disableGitHubRepository("link-1");
+
+    expect(apiClient.post).toHaveBeenCalledWith(
+      "/api/github/repositories/link-1/disable",
+      {},
+    );
+    expect(invalidateProjectCaches).toHaveBeenCalledWith("project-1");
+  });
+
+  it("disconnects an access source separately from repository unlink", async () => {
+    const { api, apiClient, invalidateProjectCaches } = createApi();
+    apiClient.del.mockResolvedValue(projectRepositories);
+
+    await api.disconnectGitHubAccessSource("source-1");
+
+    expect(apiClient.del).toHaveBeenCalledWith(
+      "/api/github/access-source/source-1",
+    );
+    expect(invalidateProjectCaches).toHaveBeenCalledWith("project-1");
+  });
+
 });

@@ -170,6 +170,14 @@ export function AppRoutes() {
         element={<RequestGitHubRepositoryAccessPage />}
       />
       <Route
+        path="/github/access-request/:token"
+        element={<RequestGitHubRepositoryAccessPage />}
+      />
+      <Route
+        path="/github/access-request/result"
+        element={<GitHubAccessUpdatedPage />}
+      />
+      <Route
         path="/github/access-updated"
         element={<GitHubAccessUpdatedPage />}
       />

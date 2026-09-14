@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { buttonStyles } from "@/components/ui/Button";
 import { isApiException } from "@/services/apiClient";
 import type { ApiError } from "@/types";
 import { ExternalLink, FolderGit2, Github, ShieldCheck } from "lucide-react";
-import { supervisorApi } from "../api/supervisorApi";
+import { publicGitHubAccessApi } from "../api/publicGitHubAccessApi";
 import type { GitHubRepositoryAccessRequestValidation } from "../types";
 
 const INVALID_LINK_MESSAGE =
@@ -49,7 +49,11 @@ function statusMessage(status: string): string | null {
 
 export function RequestGitHubRepositoryAccessPage() {
   const [searchParams] = useSearchParams();
-  const token = useMemo(() => searchParams.get("token")?.trim() ?? "", [searchParams]);
+  const { token: pathToken } = useParams();
+  const token = useMemo(
+    () => pathToken?.trim() || searchParams.get("token")?.trim() || "",
+    [pathToken, searchParams],
+  );
   const [validation, setValidation] = useState<GitHubRepositoryAccessRequestValidation | null>(null);
   const [isLoading, setIsLoading] = useState(Boolean(token));
   const [isContinuing, setIsContinuing] = useState(false);
@@ -60,8 +64,8 @@ export function RequestGitHubRepositoryAccessPage() {
     if (!token) return;
     setIsLoading(true);
     setError(null);
-    void supervisorApi
-      .validateExternalGitHubAccessRequest(token)
+    void publicGitHubAccessApi
+      .validate(token)
       .then((data) => {
         if (!cancelled) setValidation(data);
       })
@@ -86,7 +90,7 @@ export function RequestGitHubRepositoryAccessPage() {
     setIsContinuing(true);
     setError(null);
     try {
-      const data = await supervisorApi.continueExternalGitHubAccessRequest(token);
+      const data = await publicGitHubAccessApi.continue(token);
       if (!data.githubAuthorizeUrl || !isValidGitHubAuthorizeUrl(data.githubAuthorizeUrl)) {
         setError(apiError("GitHub authorization URL could not be prepared. Please try again.", 503));
         return;

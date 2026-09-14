@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supervisorApi } from "../api/supervisorApi";
+import { publicGitHubAccessApi } from "../api/publicGitHubAccessApi";
 import { useGitHubAccessUpdatedQuery } from "./githubAccessUpdated/useGitHubAccessUpdatedQuery";
 import { useGitHubAccessUpdatedSummaryState } from "./githubAccessUpdated/useGitHubAccessUpdatedSummaryState";
 
@@ -38,7 +39,7 @@ export function useGitHubAccessUpdatedPageState() {
         : null,
       api: {
         getExternalGitHubAccessUpdatedSummary:
-          supervisorApi.getExternalGitHubAccessUpdatedSummary,
+          publicGitHubAccessApi.getResult,
         getProjectGitHubAccessUpdatedSummary:
           supervisorApi.getProjectGitHubAccessUpdatedSummary,
       },
@@ -61,7 +62,7 @@ export function useGitHubAccessUpdatedPageState() {
     if (token) {
       setIsAcknowledging(true);
       try {
-        await supervisorApi.acknowledgeExternalGitHubAccessUpdated(token);
+        await publicGitHubAccessApi.acknowledgeResult(token);
       } catch {
         // The authorization has already completed. Acknowledge is best effort for
         // the external recipient and must not expose supervisor-only navigation.

@@ -233,11 +233,14 @@ async function request<T>(
   path: string,
   init: RequestInit = {},
   isRetry = false,
+  isPublic = false,
 ): Promise<T> {
   const headers = new Headers(init.headers);
   headers.set("Content-Type", "application/json");
 
-  const managed = createManagedAbortSignal(getRequestScope(path));
+  const managed = createManagedAbortSignal(
+    isPublic ? "public" : getRequestScope(path),
+  );
   let response: Response;
 
   try {
@@ -245,7 +248,7 @@ async function request<T>(
       ...init,
       signal: managed.signal,
       headers,
-      credentials: "include",
+      credentials: isPublic ? "omit" : "include",
     });
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") {
@@ -276,7 +279,12 @@ async function request<T>(
     managed.release();
   }
 
-  if (response.status === 401 && !isRefreshExcludedPath(path) && !isRetry) {
+  if (
+    response.status === 401 &&
+    !isPublic &&
+    !isRefreshExcludedPath(path) &&
+    !isRetry
+  ) {
     const refreshed = await tryRefreshSingleFlight();
     if (refreshed) return request<T>(path, init, true);
 
@@ -337,5 +345,21 @@ export const apiClient = {
   },
   del<T>(path: string): Promise<T> {
     return request<T>(path, { method: "DELETE" });
+  },
+};
+
+// Public token-based endpoints deliberately omit ResearchTrack cookies and do
+// not refresh, clear, or redirect the authenticated application session.
+export const publicApiClient = {
+  get<T>(path: string): Promise<T> {
+    return request<T>(path, { method: "GET" }, false, true);
+  },
+  post<T>(path: string, body: unknown): Promise<T> {
+    return request<T>(
+      path,
+      { method: "POST", body: JSON.stringify(body) },
+      false,
+      true,
+    );
   },
 };

@@ -582,8 +582,8 @@ export function RepositoryLinkModalContent({
               Access Request
             </h5>
             <p className="mt-3 text-xs font-bold text-slate-500/70 leading-relaxed">
-              Generate a secure link for the repository owner to approve
-              access to one exact repository.
+              Generate a secure link for the repository owner to approve access
+              to one exact repository.
             </p>
 
             {!generatedAccessRequestUrl && (

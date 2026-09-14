@@ -284,8 +284,7 @@ describe("apiClient ResearchTrack .NET contract", () => {
       ),
     ).rejects.toMatchObject<ApiException>({
       apiError: expect.objectContaining({
-        path:
-          "/api/github/access-requests/validate?token=%5BREDACTED%5D&other=1",
+        path: "/api/github/access-requests/validate?token=%5BREDACTED%5D&other=1",
       }),
     } as ApiException);
   });

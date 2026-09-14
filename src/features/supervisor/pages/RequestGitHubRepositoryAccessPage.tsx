@@ -30,7 +30,6 @@ function createPageError(
   };
 }
 
-
 function terminalRequestError(
   request: GitHubRepositoryAccessRequestValidation,
 ): ApiError | null {
@@ -70,9 +69,7 @@ export function RequestGitHubRepositoryAccessPage() {
   const [isValidating, setIsValidating] = useState(Boolean(token));
   const [isContinuing, setIsContinuing] = useState(false);
   const [error, setError] = useState<ApiError | null>(
-    token
-      ? null
-      : createPageError(400, "BAD_REQUEST", INVALID_LINK_MESSAGE),
+    token ? null : createPageError(400, "BAD_REQUEST", INVALID_LINK_MESSAGE),
   );
 
   useEffect(() => {
@@ -199,7 +196,7 @@ export function RequestGitHubRepositoryAccessPage() {
               <p className="mt-2 break-all text-sm font-semibold text-slate-700">
                 {isValidating
                   ? "Validating request..."
-                  : validation?.repositoryFullName ?? "Unavailable"}
+                  : (validation?.repositoryFullName ?? "Unavailable")}
               </p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
@@ -208,7 +205,9 @@ export function RequestGitHubRepositoryAccessPage() {
                 Request status
               </div>
               <p className="mt-2 text-sm text-slate-700">
-                {isValidating ? "Checking..." : validation?.status ?? "Invalid"}
+                {isValidating
+                  ? "Checking..."
+                  : (validation?.status ?? "Invalid")}
               </p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">

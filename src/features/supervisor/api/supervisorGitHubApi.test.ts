@@ -99,13 +99,10 @@ describe("supervisor GitHub API contract", () => {
       "github.com/openai/example.git/",
     );
 
-    expect(apiClient.post).toHaveBeenCalledWith(
-      "/api/github/access-requests",
-      {
-        projectId: "project-1",
-        repositoryUrl: "https://github.com/openai/example",
-      },
-    );
+    expect(apiClient.post).toHaveBeenCalledWith("/api/github/access-requests", {
+      projectId: "project-1",
+      repositoryUrl: "https://github.com/openai/example",
+    });
   });
 
   it("rejects invalid owner-granted repository URLs before calling the backend", async () => {

@@ -45,9 +45,8 @@ function redactSensitiveQueryForDiagnostics(path: string): string {
   const base = path.slice(0, questionMarkIndex);
   const queryAndFragment = path.slice(questionMarkIndex + 1);
   const hashIndex = queryAndFragment.indexOf("#");
-  const query = hashIndex >= 0
-    ? queryAndFragment.slice(0, hashIndex)
-    : queryAndFragment;
+  const query =
+    hashIndex >= 0 ? queryAndFragment.slice(0, hashIndex) : queryAndFragment;
   const fragment = hashIndex >= 0 ? queryAndFragment.slice(hashIndex) : "";
   const params = new URLSearchParams(query);
   let changed = false;

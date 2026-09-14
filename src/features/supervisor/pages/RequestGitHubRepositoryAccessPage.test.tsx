@@ -40,9 +40,7 @@ describe("RequestGitHubRepositoryAccessPage", () => {
     renderPage("/github/request-access?token=safe-token");
 
     expect(screen.getByRole("button", { name: /Validating/i })).toBeDisabled();
-    expect(
-      await screen.findByText("openai/example"),
-    ).toBeInTheDocument();
+    expect(await screen.findByText("openai/example")).toBeInTheDocument();
     expect(screen.getByText("PENDING")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /Continue to GitHub/i }),

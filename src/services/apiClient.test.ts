@@ -267,6 +267,29 @@ describe("apiClient ResearchTrack .NET contract", () => {
     expect(resetSessionState).toHaveBeenCalledTimes(1);
   });
 
+  it("redacts sensitive query parameters from diagnostic error paths", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse(
+        404,
+        errorEnvelope({
+          code: "NOT_FOUND",
+          message: "Owner-granted GitHub request is unavailable.",
+        }),
+      ),
+    );
+
+    await expect(
+      apiClient.get(
+        "/api/github/access-requests/validate?token=owner-grant-secret&other=1",
+      ),
+    ).rejects.toMatchObject<ApiException>({
+      apiError: expect.objectContaining({
+        path:
+          "/api/github/access-requests/validate?token=%5BREDACTED%5D&other=1",
+      }),
+    } as ApiException);
+  });
+
   it("rejects 2xx responses that do not use the .NET envelope", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
       jsonResponse(200, { registrationToken: "raw-token" }),

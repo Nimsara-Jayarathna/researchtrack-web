@@ -1,18 +1,6 @@
 import { useState } from "react";
 import { supervisorApi } from "../api/supervisorApi";
-
-function isValidGitHubAuthorizeUrl(value: string): boolean {
-  try {
-    const parsed = new URL(value);
-    if (parsed.protocol !== "https:") {
-      return false;
-    }
-    const host = parsed.hostname.toLowerCase();
-    return host === "github.com" || host.endsWith(".github.com");
-  } catch {
-    return false;
-  }
-}
+import { isTrustedGitHubInstallationUrl } from "../utils/githubAuthorizeUrl";
 
 export type GitHubSetupRedirectState = {
   setupStatus: "success" | "failed" | null;
@@ -66,14 +54,14 @@ function defaultGitHubRedirect(url: string) {
 }
 
 async function startInstallAndRedirect(
-  body: { projectId?: string; requestToken?: string },
+  body: { projectId: string },
   redirect: GitHubRedirect,
 ) {
   const response = await supervisorApi.startGitHubAccessSourceInstall(body);
   if (!response.githubAuthorizeUrl?.trim()) {
     throw new Error("GitHub authorize URL is missing.");
   }
-  if (!isValidGitHubAuthorizeUrl(response.githubAuthorizeUrl)) {
+  if (!isTrustedGitHubInstallationUrl(response.githubAuthorizeUrl)) {
     throw new Error("GitHub authorize URL is invalid.");
   }
   redirect(response.githubAuthorizeUrl);
@@ -91,23 +79,8 @@ export function redirectToGitHubOwnerInstall(
   return startInstallAndRedirect({ projectId: normalizedProjectId }, redirect);
 }
 
-export function redirectToRequestedGitHubInstall(
-  requestToken: string,
-  redirect: GitHubRedirect = defaultGitHubRedirect,
-) {
-  const token = requestToken.trim();
-  if (!token) {
-    throw new Error(
-      "Request token is required to continue access request flow.",
-    );
-  }
-  return startInstallAndRedirect({ requestToken: token }, redirect);
-}
-
 export function useGitHubSetupFlow(projectId: string | undefined) {
   const [isStartingOwnerInstall, setIsStartingOwnerInstall] = useState(false);
-  const [isStartingRequestedInstall, setIsStartingRequestedInstall] =
-    useState(false);
 
   async function startOwnerInstall() {
     if (!projectId) {
@@ -122,19 +95,8 @@ export function useGitHubSetupFlow(projectId: string | undefined) {
     }
   }
 
-  async function startRequestedInstall(requestToken: string) {
-    setIsStartingRequestedInstall(true);
-    try {
-      await redirectToRequestedGitHubInstall(requestToken);
-    } finally {
-      setIsStartingRequestedInstall(false);
-    }
-  }
-
   return {
     isStartingOwnerInstall,
-    isStartingRequestedInstall,
     startOwnerInstall,
-    startRequestedInstall,
   };
 }

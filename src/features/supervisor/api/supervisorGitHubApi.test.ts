@@ -48,7 +48,6 @@ describe("supervisor GitHub API contract", () => {
   it("starts the GitHub App install flow through the canonical backend endpoint", async () => {
     const { api, apiClient } = createApi();
     apiClient.post.mockResolvedValue({
-      projectId: "project-1",
       githubAuthorizeUrl:
         "https://github.com/apps/researchtrack/installations/new?state=safe",
       flowType: "INSTALLATION_DIRECT",
@@ -78,6 +77,77 @@ describe("supervisor GitHub API contract", () => {
         projectId: "project-1",
         repositoryUrl: "https://github.com/openai/example",
       },
+    );
+  });
+
+  it("creates an owner-granted request with the exact normalized repository URL", async () => {
+    const { api, apiClient } = createApi();
+    apiClient.post.mockResolvedValue({
+      requestId: "request-1",
+      projectId: "project-1",
+      repositoryOwner: "openai",
+      repositoryName: "example",
+      repositoryFullName: "openai/example",
+      repositoryUrl: "https://github.com/openai/example",
+      status: "PENDING",
+      expiresAt: "2026-09-14T12:00:00Z",
+      requestUrl: "https://app.example/github/request-access?token=safe",
+    });
+
+    await api.createGitHubRepositoryAccessRequest(
+      "project-1",
+      "github.com/openai/example.git/",
+    );
+
+    expect(apiClient.post).toHaveBeenCalledWith(
+      "/api/github/access-requests",
+      {
+        projectId: "project-1",
+        repositoryUrl: "https://github.com/openai/example",
+      },
+    );
+  });
+
+  it("rejects invalid owner-granted repository URLs before calling the backend", async () => {
+    const { api, apiClient } = createApi();
+
+    await expect(
+      api.createGitHubRepositoryAccessRequest(
+        "project-1",
+        "https://github.com/openai/example/issues",
+      ),
+    ).rejects.toThrow("Invalid GitHub repository URL.");
+    expect(apiClient.post).not.toHaveBeenCalled();
+  });
+
+  it("validates and continues a public owner-granted request through canonical endpoints", async () => {
+    const { api, apiClient } = createApi();
+    apiClient.get.mockResolvedValue({
+      requestId: "request-1",
+      repositoryOwner: "openai",
+      repositoryName: "example",
+      repositoryFullName: "openai/example",
+      repositoryUrl: "https://github.com/openai/example",
+      status: "PENDING",
+      expiresAt: "2026-09-14T12:00:00Z",
+      failureCode: null,
+    });
+    apiClient.post.mockResolvedValue({
+      requestId: "request-1",
+      githubAuthorizeUrl:
+        "https://github.com/apps/researchtrack/installations/new?state=safe",
+      expiresAt: "2026-09-14T12:00:00Z",
+    });
+
+    await api.validatePublicGitHubRepositoryAccessRequest("safe token");
+    await api.continuePublicGitHubRepositoryAccessRequest("safe token");
+
+    expect(apiClient.get).toHaveBeenCalledWith(
+      "/api/github/access-requests/validate?token=safe+token",
+    );
+    expect(apiClient.post).toHaveBeenCalledWith(
+      "/api/github/access-requests/continue?token=safe+token",
+      {},
     );
   });
 

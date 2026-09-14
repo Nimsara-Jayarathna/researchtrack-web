@@ -13,14 +13,14 @@ import {
   Crown,
 } from "lucide-react";
 import type { GitHubRepositoryOption } from "../../types";
+import { normalizeGitHubRepositoryUrl } from "../../utils/githubRepositoryUrl";
 
 export type RepositoryLinkMethod =
   "PUBLIC_URL" | "INSTALLATION_DIRECT" | "INSTALLATION_REQUESTED";
 
 type RepositoryLinkModalContentProps = {
   step: "method" | "repository-selection";
-  repositorySelectionEntryMode:
-    "manual" | "callback-direct" | "callback-requested";
+  repositorySelectionEntryMode: "manual" | "callback-direct";
   canReturnToMethods: boolean;
   selectedMethod: RepositoryLinkMethod | null;
   onSelectMethod: (method: RepositoryLinkMethod) => void;
@@ -33,10 +33,13 @@ type RepositoryLinkModalContentProps = {
   isSubmittingPublicRepository: boolean;
   onStartOwnerInstall: () => void;
   isStartingOwnerInstall: boolean;
+  accessRequestRepositoryUrl: string;
+  onChangeAccessRequestRepositoryUrl: (value: string) => void;
   onCreateAccessRequest: () => void;
   isCreatingAccessRequest: boolean;
   generatedAccessRequestUrl: string | null;
   generatedAccessRequestExpiresAt: string | null;
+  generatedAccessRequestRepositoryFullName: string | null;
   onCopyAccessRequestUrl: () => void;
   isAccessRequestLinkCopied: boolean;
   selectedSourceLabel: string | null;
@@ -86,10 +89,13 @@ export function RepositoryLinkModalContent({
   isSubmittingPublicRepository,
   onStartOwnerInstall,
   isStartingOwnerInstall,
+  accessRequestRepositoryUrl,
+  onChangeAccessRequestRepositoryUrl,
   onCreateAccessRequest,
   isCreatingAccessRequest,
   generatedAccessRequestUrl,
   generatedAccessRequestExpiresAt,
+  generatedAccessRequestRepositoryFullName,
   onCopyAccessRequestUrl,
   isAccessRequestLinkCopied,
   selectedSourceLabel,
@@ -108,15 +114,17 @@ export function RepositoryLinkModalContent({
   onConfirmRepositorySelection,
   isConfirmingRepositorySelection,
 }: RepositoryLinkModalContentProps) {
+  const normalizedAccessRequestRepositoryUrl = normalizeGitHubRepositoryUrl(
+    accessRequestRepositoryUrl,
+  );
+
   if (step === "repository-selection") {
     const sourceDescription =
-      repositorySelectionEntryMode === "callback-requested"
-        ? "Access request completed. Select repositories to link."
-        : repositorySelectionEntryMode === "callback-direct"
-          ? "GitHub installation completed. Select one repository to link."
-          : selectedSourceLabel
-            ? `Connected Source: ${selectedSourceLabel}`
-            : "Select one or more repositories from this source.";
+      repositorySelectionEntryMode === "callback-direct"
+        ? "GitHub installation completed. Select one repository to link."
+        : selectedSourceLabel
+          ? `Connected Source: ${selectedSourceLabel}`
+          : "Select one or more repositories from this source.";
 
     return (
       <div className="space-y-4">
@@ -574,9 +582,26 @@ export function RepositoryLinkModalContent({
               Access Request
             </h5>
             <p className="mt-3 text-xs font-bold text-slate-500/70 leading-relaxed">
-              Generate a secure link for the project owner to approve access
-              automatically.
+              Generate a secure link for the repository owner to approve
+              access to one exact repository.
             </p>
+
+            {!generatedAccessRequestUrl && (
+              <div className="mt-4 space-y-1.5">
+                <label className="ml-1 text-[9px] font-black uppercase tracking-widest text-slate-500/70">
+                  Repository URL
+                </label>
+                <input
+                  value={accessRequestRepositoryUrl}
+                  onChange={(event) =>
+                    onChangeAccessRequestRepositoryUrl(event.target.value)
+                  }
+                  placeholder="https://github.com/owner/repository"
+                  disabled={isCreatingAccessRequest}
+                  className="h-10 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-800 outline-none transition-all focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
+                />
+              </div>
+            )}
 
             <div className="mt-6 flex justify-end">
               {!generatedAccessRequestUrl && (
@@ -589,7 +614,10 @@ export function RepositoryLinkModalContent({
                       "rounded-xl px-8 shadow-lg shadow-slate-200 text-[10px] font-black uppercase tracking-wider bg-slate-800 hover:bg-slate-900",
                   })}
                   onClick={onCreateAccessRequest}
-                  disabled={isCreatingAccessRequest}
+                  disabled={
+                    isCreatingAccessRequest ||
+                    !normalizedAccessRequestRepositoryUrl
+                  }
                 >
                   {isCreatingAccessRequest ? (
                     <RefreshCw className="mr-2 h-3.5 w-3.5 animate-spin" />
@@ -617,6 +645,11 @@ export function RepositoryLinkModalContent({
                       </span>
                     )}
                   </div>
+                  {generatedAccessRequestRepositoryFullName && (
+                    <p className="mt-2 text-xs font-bold text-slate-700">
+                      Repository: {generatedAccessRequestRepositoryFullName}
+                    </p>
+                  )}
                   <div className="mt-2.5 flex items-center gap-3 rounded-xl bg-slate-50 p-3 font-mono text-[10px] text-slate-600 break-all select-all">
                     {generatedAccessRequestUrl}
                   </div>

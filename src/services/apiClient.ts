@@ -30,6 +30,38 @@ export function isApiException(error: unknown): error is ApiException {
 const AUTH_BASE = toVersionedApiPath("/api/auth");
 const REFRESH_PATH = `${AUTH_BASE}/refresh`;
 
+const SENSITIVE_QUERY_PARAMS = new Set([
+  "token",
+  "state",
+  "code",
+  "access_token",
+  "refresh_token",
+]);
+
+function redactSensitiveQueryForDiagnostics(path: string): string {
+  const questionMarkIndex = path.indexOf("?");
+  if (questionMarkIndex < 0) return path;
+
+  const base = path.slice(0, questionMarkIndex);
+  const queryAndFragment = path.slice(questionMarkIndex + 1);
+  const hashIndex = queryAndFragment.indexOf("#");
+  const query = hashIndex >= 0
+    ? queryAndFragment.slice(0, hashIndex)
+    : queryAndFragment;
+  const fragment = hashIndex >= 0 ? queryAndFragment.slice(hashIndex) : "";
+  const params = new URLSearchParams(query);
+  let changed = false;
+
+  for (const key of [...params.keys()]) {
+    if (SENSITIVE_QUERY_PARAMS.has(key.toLowerCase())) {
+      params.set(key, "[REDACTED]");
+      changed = true;
+    }
+  }
+
+  return changed ? `${base}?${params.toString()}${fragment}` : path;
+}
+
 // These endpoints must never trigger a refresh loop. /me is intentionally not
 // included: a 401 from /me should attempt refresh once, then retry /me.
 function isRefreshExcludedPath(path: string): boolean {
@@ -234,6 +266,7 @@ async function request<T>(
   init: RequestInit = {},
   isRetry = false,
 ): Promise<T> {
+  const diagnosticPath = redactSensitiveQueryForDiagnostics(path);
   const headers = new Headers(init.headers);
   headers.set("Content-Type", "application/json");
 
@@ -255,7 +288,7 @@ async function request<T>(
         error: "Client Closed Request",
         code: "INTERNAL_ERROR",
         message: "Request was cancelled.",
-        path,
+        path: diagnosticPath,
         traceId: null,
         details: [],
       });
@@ -268,7 +301,7 @@ async function request<T>(
       code: "SERVICE_UNAVAILABLE",
       message:
         "Unable to reach the server. Please check your connection and try again.",
-      path,
+      path: diagnosticPath,
       traceId: null,
       details: [],
     });
@@ -288,7 +321,7 @@ async function request<T>(
       error: "Unauthorized",
       code: "UNAUTHORIZED",
       message: "Your session has expired. Please log in again.",
-      path,
+      path: diagnosticPath,
       traceId: null,
       details: [],
     });
@@ -299,7 +332,7 @@ async function request<T>(
   const body = await parseJsonSafely(response);
 
   if (!response.ok) {
-    throw new ApiException(normalizeError(path, response, body));
+    throw new ApiException(normalizeError(diagnosticPath, response, body));
   }
 
   if (!hasApiEnvelopeShape(body)) {
@@ -309,14 +342,14 @@ async function request<T>(
       error: "Invalid API Response",
       code: "INTERNAL_ERROR",
       message: "The server returned an invalid response.",
-      path,
+      path: diagnosticPath,
       traceId: null,
       details: [],
     });
   }
 
   if (body.success === false) {
-    throw new ApiException(normalizeError(path, response, body));
+    throw new ApiException(normalizeError(diagnosticPath, response, body));
   }
 
   return body.data as T;

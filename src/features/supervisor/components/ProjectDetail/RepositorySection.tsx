@@ -35,8 +35,7 @@ type RepositorySectionProps = {
 };
 
 type ModalStep = "method" | "repository-selection";
-type RepositorySelectionEntryMode =
-  "manual" | "callback-direct" | "callback-requested";
+type RepositorySelectionEntryMode = "manual" | "callback-direct";
 
 type RequestModalState = {
   isOpen: boolean;
@@ -75,6 +74,8 @@ export function RepositorySection({
 
   const [publicRepositoryUrl, setPublicRepositoryUrl] = useState("");
   const [publicCustomName, setPublicCustomName] = useState("");
+  const [accessRequestRepositoryUrl, setAccessRequestRepositoryUrl] =
+    useState("");
 
   const [isSubmittingPublicRepository, setIsSubmittingPublicRepository] =
     useState(false);
@@ -93,6 +94,10 @@ export function RepositorySection({
   >(null);
   const [generatedAccessRequestExpiresAt, setGeneratedAccessRequestExpiresAt] =
     useState<string | null>(null);
+  const [
+    generatedAccessRequestRepositoryFullName,
+    setGeneratedAccessRequestRepositoryFullName,
+  ] = useState<string | null>(null);
   const [editingDisplayNameRowKey, setEditingDisplayNameRowKey] = useState<
     string | null
   >(null);
@@ -235,34 +240,37 @@ export function RepositorySection({
       return;
     }
 
+    if (pendingFlowType === "INSTALLATION_REQUESTED") {
+      // Owner-granted access is already verified and linked by the backend.
+      // Do not reopen unrestricted repository selection for this flow.
+      onPendingSourceHandled?.();
+      void reloadRepositoriesData();
+      return;
+    }
+
     clearSelection();
     setIsModalOpen(true);
     setModalStep("repository-selection");
-    setSelectedMethod(
-      pendingFlowType === "INSTALLATION_REQUESTED"
-        ? "INSTALLATION_REQUESTED"
-        : "INSTALLATION_DIRECT",
-    );
+    setSelectedMethod("INSTALLATION_DIRECT");
     setSelectedSourceId(pendingSourceId);
-    setSelectionEntryMode(
-      pendingFlowType === "INSTALLATION_REQUESTED"
-        ? "callback-requested"
-        : "callback-direct",
-    );
+    setSelectionEntryMode("callback-direct");
     onPendingSourceHandled?.();
   }, [
     clearSelection,
     onPendingSourceHandled,
     pendingFlowType,
     pendingSourceId,
+    reloadRepositoriesData,
   ]);
 
   useEffect(() => {
     if (!isModalOpen && !pendingSourceId) {
       setPublicRepositoryUrl("");
       setPublicCustomName("");
+      setAccessRequestRepositoryUrl("");
       setGeneratedAccessRequestUrl(null);
       setGeneratedAccessRequestExpiresAt(null);
+      setGeneratedAccessRequestRepositoryFullName(null);
       setIsAccessRequestLinkCopied(false);
       setSelectedMethod(null);
       setSelectedSourceId(null);
@@ -460,13 +468,27 @@ export function RepositorySection({
   }
 
   async function handleCreateAccessRequest() {
+    const repositoryUrl = normalizeGitHubRepositoryUrl(
+      accessRequestRepositoryUrl,
+    );
+    if (!repositoryUrl) {
+      openRequestModal(
+        "error",
+        "Invalid repository URL",
+        "Enter a valid GitHub repository URL such as https://github.com/owner/repository.",
+      );
+      return;
+    }
+
     setIsCreatingAccessRequest(true);
     setGeneratedAccessRequestUrl(null);
     setGeneratedAccessRequestExpiresAt(null);
+    setGeneratedAccessRequestRepositoryFullName(null);
 
     try {
-      const response = await supervisorApi.createGitHubAccessSourceRequest(
+      const response = await supervisorApi.createGitHubRepositoryAccessRequest(
         project.id,
+        repositoryUrl,
       );
       const absoluteUrl = new URL(
         response.requestUrl,
@@ -474,6 +496,10 @@ export function RepositorySection({
       ).toString();
       setGeneratedAccessRequestUrl(absoluteUrl);
       setGeneratedAccessRequestExpiresAt(response.expiresAt ?? null);
+      setGeneratedAccessRequestRepositoryFullName(
+        response.repositoryFullName ?? null,
+      );
+      setAccessRequestRepositoryUrl(response.repositoryUrl ?? repositoryUrl);
       setIsAccessRequestLinkCopied(false);
     } catch (error) {
       const message = isApiException(error)
@@ -904,6 +930,14 @@ export function RepositorySection({
           ? summary.flowType
           : "INSTALLATION_REQUESTED";
 
+      if (resolvedFlowType === "INSTALLATION_REQUESTED") {
+        await supervisorApi.acknowledgeProjectGitHubAccessUpdated(project.id);
+        await reloadProjectAndRepositories(project.id);
+        closeRequestModal();
+        setIsManagementModalOpen(true);
+        return;
+      }
+
       if (!resolvedSourceId) {
         closeRequestModal();
         setIsManagementModalOpen(true);
@@ -916,16 +950,8 @@ export function RepositorySection({
       }
 
       closeRequestModal();
-      setSelectedMethod(
-        resolvedFlowType === "INSTALLATION_REQUESTED"
-          ? "INSTALLATION_REQUESTED"
-          : "INSTALLATION_DIRECT",
-      );
-      setSelectionEntryMode(
-        resolvedFlowType === "INSTALLATION_REQUESTED"
-          ? "callback-requested"
-          : "callback-direct",
-      );
+      setSelectedMethod("INSTALLATION_DIRECT");
+      setSelectionEntryMode("callback-direct");
       setSelectedSourceId(resolvedSourceId);
       setModalStep("repository-selection");
       setIsModalOpen(true);
@@ -985,10 +1011,15 @@ export function RepositorySection({
           isSubmittingPublicRepository={isSubmittingPublicRepository}
           onStartOwnerInstall={() => void handleStartOwnerInstall()}
           isStartingOwnerInstall={isStartingOwnerInstall}
+          accessRequestRepositoryUrl={accessRequestRepositoryUrl}
+          onChangeAccessRequestRepositoryUrl={setAccessRequestRepositoryUrl}
           onCreateAccessRequest={() => void handleCreateAccessRequest()}
           isCreatingAccessRequest={isCreatingAccessRequest}
           generatedAccessRequestUrl={generatedAccessRequestUrl}
           generatedAccessRequestExpiresAt={generatedAccessRequestExpiresAt}
+          generatedAccessRequestRepositoryFullName={
+            generatedAccessRequestRepositoryFullName
+          }
           onCopyAccessRequestUrl={() => void handleCopyAccessRequestUrl()}
           isAccessRequestLinkCopied={isAccessRequestLinkCopied}
           selectedSourceLabel={

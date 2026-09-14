@@ -1,6 +1,5 @@
 import type { createRoleProjectApi } from "@/features/shared/api/createRoleProjectApi";
 import type {
-  GitHubAccessRequestCreateV2,
   GitHubAvailableRepositories,
   GitHubInstallStart,
   GitHubAccessUpdatedAcknowledge,
@@ -8,6 +7,7 @@ import type {
   LinkGitHubRepositoriesPayload,
   GitHubRepositoryAccessRequestContinue,
   GitHubRepositoryAccessRequestCreate,
+  GitHubRepositoryAccessRequestMemberStatus,
   GitHubRepositoryAccessRequestValidation,
   GitHubInstallationRepositoriesPage,
   ProjectGitHubRepositories,
@@ -53,8 +53,7 @@ export function createSupervisorGitHubApi({
     },
 
     startGitHubAccessSourceInstall(body: {
-      projectId?: string;
-      requestToken?: string;
+      projectId: string;
     }): Promise<GitHubInstallStart> {
       return apiClient.post<GitHubInstallStart>(
         "/api/github/access-source/install/start",
@@ -76,17 +75,6 @@ export function createSupervisorGitHubApi({
         {
           projectId,
           repositoryUrl: normalizedRepositoryUrl,
-        },
-      );
-    },
-
-    createGitHubAccessSourceRequest(
-      projectId: string,
-    ): Promise<GitHubAccessRequestCreateV2> {
-      return apiClient.post<GitHubAccessRequestCreateV2>(
-        "/api/github/access-source/request",
-        {
-          projectId,
         },
       );
     },
@@ -266,20 +254,27 @@ export function createSupervisorGitHubApi({
 
     createGitHubRepositoryAccessRequest(
       projectId: string,
+      repositoryUrl: string,
     ): Promise<GitHubRepositoryAccessRequestCreate> {
+      const normalizedRepositoryUrl =
+        normalizeGitHubRepositoryUrl(repositoryUrl);
+      if (!normalizedRepositoryUrl) {
+        throw new Error("Invalid GitHub repository URL.");
+      }
       return apiClient.post<GitHubRepositoryAccessRequestCreate>(
-        `/api/supervisor/projects/${projectId}/github/access-requests`,
-        {},
+        "/api/github/access-requests",
+        {
+          projectId,
+          repositoryUrl: normalizedRepositoryUrl,
+        },
       );
     },
 
-    validateGitHubRepositoryAccessRequest(
-      projectId: string,
-      token: string,
-    ): Promise<GitHubRepositoryAccessRequestValidation> {
-      const params = new URLSearchParams({ token });
-      return apiClient.get<GitHubRepositoryAccessRequestValidation>(
-        `/api/supervisor/projects/${projectId}/github/access-requests/validate?${params.toString()}`,
+    getGitHubRepositoryAccessRequestStatus(
+      requestId: string,
+    ): Promise<GitHubRepositoryAccessRequestMemberStatus> {
+      return apiClient.get<GitHubRepositoryAccessRequestMemberStatus>(
+        `/api/github/access-requests/${encodeURIComponent(requestId)}`,
       );
     },
 
@@ -289,17 +284,6 @@ export function createSupervisorGitHubApi({
       const params = new URLSearchParams({ token });
       return apiClient.get<GitHubRepositoryAccessRequestValidation>(
         `/api/github/access-requests/validate?${params.toString()}`,
-      );
-    },
-
-    continueGitHubRepositoryAccessRequest(
-      projectId: string,
-      token: string,
-    ): Promise<GitHubRepositoryAccessRequestContinue> {
-      const params = new URLSearchParams({ token });
-      return apiClient.post<GitHubRepositoryAccessRequestContinue>(
-        `/api/supervisor/projects/${projectId}/github/access-requests/continue?${params.toString()}`,
-        {},
       );
     },
 

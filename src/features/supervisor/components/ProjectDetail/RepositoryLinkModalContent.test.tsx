@@ -42,10 +42,13 @@ function baseProps(overrides: Partial<Props> = {}): Props {
     isSubmittingPublicRepository: false,
     onStartOwnerInstall: () => undefined,
     isStartingOwnerInstall: false,
+    accessRequestRepositoryUrl: "",
+    onChangeAccessRequestRepositoryUrl: () => undefined,
     onCreateAccessRequest: () => undefined,
     isCreatingAccessRequest: false,
     generatedAccessRequestUrl: null,
     generatedAccessRequestExpiresAt: null,
+    generatedAccessRequestRepositoryFullName: null,
     onCopyAccessRequestUrl: () => undefined,
     isAccessRequestLinkCopied: false,
     selectedSourceLabel: "GitHub",
@@ -116,6 +119,98 @@ describe("RepositoryLinkModalContent", () => {
     expect(screen.getByText("Connect GitHub")).toBeInTheDocument();
     expect(screen.getByText("Public URL")).toBeInTheDocument();
     expect(screen.getByText("Request Access")).toBeInTheDocument();
+  });
+
+  it("requires an exact repository URL before generating an owner access request", () => {
+    const onChangeRepositoryUrl = vi.fn();
+    const onCreateAccessRequest = vi.fn();
+    const { rerender } = render(
+      <RepositoryLinkModalContent
+        {...baseProps({
+          step: "method",
+          repositorySelectionEntryMode: "manual",
+          selectedMethod: "INSTALLATION_REQUESTED",
+          accessRequestRepositoryUrl: "",
+          onChangeAccessRequestRepositoryUrl: onChangeRepositoryUrl,
+          onCreateAccessRequest,
+        })}
+      />,
+    );
+
+    const input = screen.getByPlaceholderText(
+      "https://github.com/owner/repository",
+    );
+    expect(
+      screen.getByRole("button", { name: "Generate Request" }),
+    ).toBeDisabled();
+
+    rerender(
+      <RepositoryLinkModalContent
+        {...baseProps({
+          step: "method",
+          repositorySelectionEntryMode: "manual",
+          selectedMethod: "INSTALLATION_REQUESTED",
+          accessRequestRepositoryUrl:
+            "https://github.com/openai/example/issues",
+          onChangeAccessRequestRepositoryUrl: onChangeRepositoryUrl,
+          onCreateAccessRequest,
+        })}
+      />,
+    );
+    expect(
+      screen.getByRole("button", { name: "Generate Request" }),
+    ).toBeDisabled();
+
+    fireEvent.change(input, {
+      target: { value: "https://github.com/openai/example" },
+    });
+    expect(onChangeRepositoryUrl).toHaveBeenCalledWith(
+      "https://github.com/openai/example",
+    );
+
+    rerender(
+      <RepositoryLinkModalContent
+        {...baseProps({
+          step: "method",
+          repositorySelectionEntryMode: "manual",
+          selectedMethod: "INSTALLATION_REQUESTED",
+          accessRequestRepositoryUrl: "https://github.com/openai/example",
+          onChangeAccessRequestRepositoryUrl: onChangeRepositoryUrl,
+          onCreateAccessRequest,
+        })}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Generate Request" }));
+    expect(onCreateAccessRequest).toHaveBeenCalledOnce();
+  });
+
+  it("shows the generated share link and preserves copy-link behavior", () => {
+    const copy = vi.fn();
+    render(
+      <RepositoryLinkModalContent
+        {...baseProps({
+          step: "method",
+          repositorySelectionEntryMode: "manual",
+          selectedMethod: "INSTALLATION_REQUESTED",
+          accessRequestRepositoryUrl: "https://github.com/openai/example",
+          generatedAccessRequestUrl:
+            "https://researchtrack.example/github/request-access?token=safe",
+          generatedAccessRequestExpiresAt: "2026-09-14T12:00:00Z",
+          generatedAccessRequestRepositoryFullName: "openai/example",
+          onCopyAccessRequestUrl: copy,
+        })}
+      />,
+    );
+
+    expect(
+      screen.getByText(
+        "https://researchtrack.example/github/request-access?token=safe",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Repository: openai/example")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Copy Link" }));
+    expect(copy).toHaveBeenCalledOnce();
   });
 
   it("shows a clear empty state for an installation with no repositories", () => {

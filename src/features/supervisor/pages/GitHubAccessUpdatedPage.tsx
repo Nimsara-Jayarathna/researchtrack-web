@@ -17,7 +17,19 @@ export function GitHubAccessUpdatedPage() {
         onClose={state.onClose}
         onRetry={state.onRetry}
         content={
-          state.status === "success" && state.summary ? (
+          state.status === "success" && state.isRequestedCompletion ? (
+            <div className="space-y-2 text-center text-sm text-slate-600">
+              <p className="font-semibold text-slate-800">
+                {state.requestedRepositoryFullName
+                  ? `Repository linked: ${state.requestedRepositoryFullName}`
+                  : "The requested repository was linked successfully."}
+              </p>
+              <p>
+                ResearchTrack verified the exact requested repository. No
+                additional repository selection is required.
+              </p>
+            </div>
+          ) : state.status === "success" && state.summary ? (
             <GitHubAccessUpdatedSuccessContent
               summary={state.summary}
               scopeLabel={state.scopeLabel}
@@ -33,9 +45,13 @@ export function GitHubAccessUpdatedPage() {
                 onClick={() => void state.handleConfirmAndContinue()}
                 disabled={state.isAcknowledging}
               >
-                {state.isAcknowledging
-                  ? "Opening repository selection..."
-                  : "Review repositories"}
+                {state.isRequestedCompletion
+                  ? state.canReturnToProject
+                    ? "Back to project"
+                    : "Done"
+                  : state.isAcknowledging
+                    ? "Opening repository selection..."
+                    : "Review repositories"}
               </button>
             </div>
           ) : undefined

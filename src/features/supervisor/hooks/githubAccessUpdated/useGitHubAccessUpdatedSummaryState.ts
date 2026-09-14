@@ -9,6 +9,7 @@ type UseGitHubAccessUpdatedSummaryStateParams = {
   token: string;
   projectId: string;
   showFailedStatus: boolean;
+  skipLoad?: boolean;
   api: {
     getPublicGitHubAccessUpdatedSummary: (
       token: string,
@@ -23,6 +24,7 @@ export function useGitHubAccessUpdatedSummaryState({
   token,
   projectId,
   showFailedStatus,
+  skipLoad = false,
   api,
 }: UseGitHubAccessUpdatedSummaryStateParams) {
   const {
@@ -84,6 +86,15 @@ export function useGitHubAccessUpdatedSummaryState({
   ]);
 
   useEffect(() => {
+    if (skipLoad) {
+      setSummary(null);
+      setStatus("success");
+      setTitle("Repository access granted");
+      setMessage(
+        "ResearchTrack verified and linked the exact requested repository. No repository selection is required.",
+      );
+      return;
+    }
     if (showFailedStatus && !token && !projectId) {
       setSummary(null);
       setStatus("error");
@@ -94,7 +105,7 @@ export function useGitHubAccessUpdatedSummaryState({
       return;
     }
     void loadSummary();
-  }, [loadSummary, projectId, showFailedStatus, token]);
+  }, [loadSummary, projectId, showFailedStatus, skipLoad, token]);
 
   return { summary, status, title, message, loadSummary };
 }

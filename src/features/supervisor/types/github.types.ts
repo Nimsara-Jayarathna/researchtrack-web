@@ -53,22 +53,44 @@ export type ProjectGitHubRepositoryLink = {
 };
 
 export type GitHubRepositoryAccessRequestCreate = {
+  requestId: string;
   projectId: string;
-  requestToken: string;
+  repositoryOwner: string;
+  repositoryName: string;
+  repositoryFullName: string;
+  repositoryUrl: string;
+  status: "PENDING" | "COMPLETED" | "FAILED" | "EXPIRED";
   requestUrl: string;
   expiresAt: string;
 };
 
 export type GitHubRepositoryAccessRequestValidation = {
-  projectId: string;
-  projectTitle: string;
-  status: string;
+  requestId: string;
+  repositoryOwner: string;
+  repositoryName: string;
+  repositoryFullName: string;
+  repositoryUrl: string;
+  status: "PENDING" | "COMPLETED" | "FAILED" | "EXPIRED";
   expiresAt: string;
+  failureCode: string | null;
 };
 
 export type GitHubRepositoryAccessRequestContinue = {
-  projectId: string;
+  requestId: string;
   githubAuthorizeUrl: string;
+  expiresAt: string;
+};
+
+export type GitHubRepositoryAccessRequestMemberStatus = {
+  requestId: string;
+  projectId: string;
+  repositoryOwner: string;
+  repositoryName: string;
+  repositoryFullName: string;
+  repositoryUrl: string;
+  status: "PENDING" | "COMPLETED" | "FAILED" | "EXPIRED";
+  expiresAt: string;
+  failureCode: string | null;
 };
 
 export type GitHubAccessUpdatedSummary = {
@@ -90,12 +112,6 @@ export type GitHubInstallStart = {
   projectId: string;
   githubAuthorizeUrl: string;
   flowType: "INSTALLATION_DIRECT" | "INSTALLATION_REQUESTED";
-  expiresAt: string;
-};
-
-export type GitHubAccessRequestCreateV2 = {
-  projectId: string;
-  requestUrl: string;
   expiresAt: string;
 };
 

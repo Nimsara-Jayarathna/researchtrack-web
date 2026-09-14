@@ -63,24 +63,6 @@ describe("supervisor GitHub API contract", () => {
     );
   });
 
-  it("creates a public source with the normalized URL", async () => {
-    const { api, apiClient } = createApi();
-    apiClient.post.mockResolvedValue(available);
-
-    await api.createPublicGitHubAccessSource(
-      "project-1",
-      "github.com/openai/example.git/",
-    );
-
-    expect(apiClient.post).toHaveBeenCalledWith(
-      "/api/github/access-source/public",
-      {
-        projectId: "project-1",
-        repositoryUrl: "https://github.com/openai/example",
-      },
-    );
-  });
-
   it("loads available repositories from the persisted source endpoint", async () => {
     const { api, apiClient } = createApi();
     apiClient.get.mockResolvedValue(available);

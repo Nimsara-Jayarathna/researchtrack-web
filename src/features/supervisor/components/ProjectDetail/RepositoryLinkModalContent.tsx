@@ -2,7 +2,6 @@ import { buttonStyles } from "@/components/ui/Button";
 import {
   ExternalLink,
   Github,
-  Link2,
   ShieldCheck,
   Info,
   Check,
@@ -15,7 +14,7 @@ import {
 import type { GitHubRepositoryOption } from "../../types";
 
 export type RepositoryLinkMethod =
-  "PUBLIC_URL" | "INSTALLATION_DIRECT" | "INSTALLATION_REQUESTED";
+  "INSTALLATION_DIRECT" | "INSTALLATION_REQUESTED";
 
 type RepositoryLinkModalContentProps = {
   step: "method" | "repository-selection";
@@ -25,12 +24,6 @@ type RepositoryLinkModalContentProps = {
   selectedMethod: RepositoryLinkMethod | null;
   onSelectMethod: (method: RepositoryLinkMethod) => void;
   onBackToMethods: () => void;
-  publicRepositoryUrl: string;
-  publicCustomName: string;
-  onChangePublicRepositoryUrl: (value: string) => void;
-  onChangePublicCustomName: (value: string) => void;
-  onSubmitPublicRepository: () => void;
-  isSubmittingPublicRepository: boolean;
   onStartOwnerInstall: () => void;
   isStartingOwnerInstall: boolean;
   onCreateAccessRequest: () => void;
@@ -78,12 +71,6 @@ export function RepositoryLinkModalContent({
   selectedMethod,
   onSelectMethod,
   onBackToMethods,
-  publicRepositoryUrl,
-  publicCustomName,
-  onChangePublicRepositoryUrl,
-  onChangePublicCustomName,
-  onSubmitPublicRepository,
-  isSubmittingPublicRepository,
   onStartOwnerInstall,
   isStartingOwnerInstall,
   onCreateAccessRequest,
@@ -395,7 +382,7 @@ export function RepositoryLinkModalContent({
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {[
           {
             id: "INSTALLATION_DIRECT",
@@ -404,14 +391,6 @@ export function RepositoryLinkModalContent({
             title: "Connect GitHub",
             subtitle: "RECOMMENDED",
             description: "Link from your account or organizations.",
-          },
-          {
-            id: "PUBLIC_URL",
-            icon: Link2,
-            color: "amber",
-            title: "Public URL",
-            subtitle: "NO AUTH",
-            description: "Quickly link any public repo via URL.",
           },
           {
             id: "INSTALLATION_REQUESTED",
@@ -473,67 +452,6 @@ export function RepositoryLinkModalContent({
       </div>
 
       <div className="mt-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        {selectedMethod === "PUBLIC_URL" && (
-          <div className="overflow-hidden rounded-3xl border border-amber-100 bg-amber-50/20 p-6 shadow-sm">
-            <h5 className="flex items-center gap-2 text-[10px] font-black text-amber-900 uppercase tracking-widest">
-              <Link2 className="h-3.5 w-3.5" />
-              Public URL Details
-            </h5>
-            <div className="mt-4 flex flex-col gap-3">
-              <div className="space-y-1.5">
-                <label className="ml-1 text-[9px] font-black uppercase tracking-widest text-amber-700/60">
-                  Repository URL
-                </label>
-                <input
-                  value={publicRepositoryUrl}
-                  onChange={(event) =>
-                    onChangePublicRepositoryUrl(event.target.value)
-                  }
-                  placeholder="https://github.com/owner/repo"
-                  disabled={isSubmittingPublicRepository}
-                  className="h-10 w-full rounded-2xl border border-amber-100 bg-white px-4 text-sm font-bold text-slate-800 outline-none transition-all focus:border-amber-400 focus:ring-4 focus:ring-amber-50"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="ml-1 text-[9px] font-black uppercase tracking-widest text-amber-700/60">
-                  Display Name (Optional)
-                </label>
-                <input
-                  value={publicCustomName}
-                  onChange={(event) =>
-                    onChangePublicCustomName(event.target.value)
-                  }
-                  placeholder="e.g. My Awesome Project"
-                  disabled={isSubmittingPublicRepository}
-                  className="h-10 w-full rounded-2xl border border-amber-100 bg-white px-4 text-sm font-bold text-slate-800 outline-none transition-all focus:border-amber-400 focus:ring-4 focus:ring-amber-50"
-                />
-              </div>
-            </div>
-            <div className="mt-6 flex justify-end">
-              <button
-                type="button"
-                className={buttonStyles({
-                  variant: "primary",
-                  size: "sm",
-                  className:
-                    "rounded-xl px-8 bg-amber-600 hover:bg-amber-700 shadow-lg shadow-amber-100 text-[10px] font-black uppercase tracking-wider",
-                })}
-                onClick={onSubmitPublicRepository}
-                disabled={
-                  isSubmittingPublicRepository || !publicRepositoryUrl.trim()
-                }
-              >
-                {isSubmittingPublicRepository ? (
-                  <RefreshCw className="mr-2 h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Check className="mr-2 h-3.5 w-3.5" />
-                )}
-                Link Repository
-              </button>
-            </div>
-          </div>
-        )}
-
         {selectedMethod === "INSTALLATION_DIRECT" && (
           <div className="overflow-hidden rounded-3xl border border-indigo-100 bg-indigo-50/20 p-6 shadow-sm">
             <h5 className="flex items-center gap-2 text-[10px] font-black text-indigo-900 uppercase tracking-widest">

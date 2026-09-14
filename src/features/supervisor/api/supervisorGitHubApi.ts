@@ -21,7 +21,6 @@ import type {
   GitHubPullRequestEvidence,
   GitHubSyncRunEvidence,
 } from "../types";
-import { normalizeGitHubRepositoryUrl } from "../utils/githubRepositoryUrl";
 
 type RoleProjectApi = Omit<
   ReturnType<typeof createRoleProjectApi>,
@@ -59,24 +58,6 @@ export function createSupervisorGitHubApi({
       return apiClient.post<GitHubInstallStart>(
         "/api/github/access-source/install/start",
         body,
-      );
-    },
-
-    createPublicGitHubAccessSource(
-      projectId: string,
-      repositoryUrl: string,
-    ): Promise<GitHubAvailableRepositories> {
-      const normalizedRepositoryUrl =
-        normalizeGitHubRepositoryUrl(repositoryUrl);
-      if (!normalizedRepositoryUrl) {
-        throw new Error("Invalid GitHub repository URL.");
-      }
-      return apiClient.post<GitHubAvailableRepositories>(
-        "/api/github/access-source/public",
-        {
-          projectId,
-          repositoryUrl: normalizedRepositoryUrl,
-        },
       );
     },
 

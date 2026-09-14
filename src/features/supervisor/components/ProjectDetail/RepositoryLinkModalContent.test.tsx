@@ -34,12 +34,6 @@ function baseProps(overrides: Partial<Props> = {}): Props {
     selectedMethod: "INSTALLATION_DIRECT",
     onSelectMethod: () => undefined,
     onBackToMethods: () => undefined,
-    publicRepositoryUrl: "",
-    publicCustomName: "",
-    onChangePublicRepositoryUrl: () => undefined,
-    onChangePublicCustomName: () => undefined,
-    onSubmitPublicRepository: () => undefined,
-    isSubmittingPublicRepository: false,
     onStartOwnerInstall: () => undefined,
     isStartingOwnerInstall: false,
     onCreateAccessRequest: () => undefined,
@@ -101,7 +95,7 @@ describe("RepositoryLinkModalContent", () => {
     expect(screen.getByText("Selected 1 / 1")).toBeInTheDocument();
   });
 
-  it("preserves Connect GitHub, Public URL, and Request Access methods", () => {
+  it("shows only GitHub App connection and access-request methods", () => {
     render(
       <RepositoryLinkModalContent
         {...baseProps({
@@ -114,7 +108,7 @@ describe("RepositoryLinkModalContent", () => {
     );
 
     expect(screen.getByText("Connect GitHub")).toBeInTheDocument();
-    expect(screen.getByText("Public URL")).toBeInTheDocument();
+    expect(screen.queryByText("Public URL")).not.toBeInTheDocument();
     expect(screen.getByText("Request Access")).toBeInTheDocument();
   });
 

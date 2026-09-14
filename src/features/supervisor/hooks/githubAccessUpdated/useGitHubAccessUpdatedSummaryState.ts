@@ -86,21 +86,21 @@ export function useGitHubAccessUpdatedSummaryState({
   ]);
 
   useEffect(() => {
-    if (skipLoad) {
-      setSummary(null);
-      setStatus("success");
-      setTitle("Repository access granted");
-      setMessage(
-        "ResearchTrack verified and linked the exact requested repository. No repository selection is required.",
-      );
-      return;
-    }
-    if (showFailedStatus && !token && !projectId) {
+    if (showFailedStatus) {
       setSummary(null);
       setStatus("error");
       setTitle("GitHub access update failed");
       setMessage(
-        "GitHub authorization did not complete. Please create a new access request.",
+        "GitHub authorization did not complete. Please return to the original access request or project to check its status.",
+      );
+      return;
+    }
+    if (skipLoad) {
+      setSummary(null);
+      setStatus("success");
+      setTitle("GitHub authorization returned");
+      setMessage(
+        "Return to the original access link to check the request status. The requester can also confirm the connection from their project.",
       );
       return;
     }

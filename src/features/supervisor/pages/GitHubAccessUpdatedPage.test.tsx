@@ -51,7 +51,9 @@ describe("GitHubAccessUpdatedPage", () => {
     );
 
     expect(
-      await screen.findByText(/exact requested repository/i),
+      await screen.findByRole("heading", {
+        name: "GitHub authorization returned",
+      }),
     ).toBeInTheDocument();
     expect(
       screen.getByText(/No additional repository selection is required/i),
@@ -97,6 +99,50 @@ describe("GitHubAccessUpdatedPage", () => {
       "request-1",
     );
   });
+
+  it("does not turn a failed requested callback with a project query into success", async () => {
+    renderPage(
+      "/github/access-updated?githubSetup=failed&githubFlow=INSTALLATION_REQUESTED&projectId=project-1",
+    );
+    expect(
+      await screen.findByRole("heading", {
+        name: "GitHub access update failed",
+      }),
+    ).toBeInTheDocument();
+    expect(getProjectGitHubAccessUpdatedSummary).not.toHaveBeenCalled();
+    expect(
+      screen.queryByRole("button", { name: "Review repositories" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it.each(["PENDING", "FAILED", "EXPIRED"])(
+    "does not claim completion when authenticated request status is %s",
+    async (status) => {
+      authStateValue.current = {
+        status: "authenticated",
+        user: { role: "SUPERVISOR" },
+        isLoading: false,
+        error: null,
+      };
+      getGitHubRepositoryAccessRequestStatus.mockResolvedValue({
+        requestId: "request-1",
+        projectId: "project-1",
+        status,
+        repositoryFullName: "openai/example",
+      });
+      renderPage(
+        "/github/access-updated?githubSetup=success&githubFlow=INSTALLATION_REQUESTED&githubRequestId=request-1",
+      );
+      expect(
+        await screen.findByRole("heading", {
+          name: "Repository access is not completed",
+        }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByText("Repository linked: openai/example"),
+      ).not.toBeInTheDocument();
+    },
+  );
 
   it("preserves direct-flow repository review behavior", async () => {
     getProjectGitHubAccessUpdatedSummary.mockResolvedValue({

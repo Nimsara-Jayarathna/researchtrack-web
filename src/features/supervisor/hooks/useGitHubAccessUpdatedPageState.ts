@@ -33,16 +33,19 @@ export function useGitHubAccessUpdatedPageState() {
     useState<GitHubRepositoryAccessRequestMemberStatus | null>(null);
 
   const normalizedSetupStatus = setupStatus.toLowerCase();
+  const isRequestedFlow = flowType === "INSTALLATION_REQUESTED";
   const isRequestedCompletion =
-    flowType === "INSTALLATION_REQUESTED" && normalizedSetupStatus === "success";
-  const showFailedStatus = normalizedSetupStatus === "failed";
+    isRequestedFlow && normalizedSetupStatus === "success";
+  const showFailedStatus =
+    normalizedSetupStatus === "failed" ||
+    (isRequestedFlow && !isRequestedCompletion);
 
   const { summary, status, title, message, loadSummary } =
     useGitHubAccessUpdatedSummaryState({
       token,
       projectId,
       showFailedStatus,
-      skipLoad: isRequestedCompletion,
+      skipLoad: isRequestedFlow,
       api: {
         getPublicGitHubAccessUpdatedSummary:
           supervisorApi.getPublicGitHubAccessUpdatedSummary,
@@ -85,8 +88,12 @@ export function useGitHubAccessUpdatedPageState() {
     };
   }, [authState.user?.role, isRequestedCompletion, requestId]);
 
-  const resolvedProjectId =
-    projectId || requestedMemberStatus?.projectId || summary?.projectId || "";
+  const resolvedProjectId = isRequestedFlow
+    ? (requestedMemberStatus?.projectId ?? "")
+    : projectId || summary?.projectId || "";
+  const confirmedCompletion = requestedMemberStatus?.status === "COMPLETED";
+  const uncompletedRequest =
+    requestedMemberStatus !== null && !confirmedCompletion;
 
   const onClose =
     status === "loading"
@@ -151,16 +158,26 @@ export function useGitHubAccessUpdatedPageState() {
 
   return {
     summary,
-    status,
-    title,
-    message,
+    status: uncompletedRequest ? ("error" as const) : status,
+    title: uncompletedRequest
+      ? "Repository access is not completed"
+      : confirmedCompletion
+        ? "Repository access granted"
+        : title,
+    message: uncompletedRequest
+      ? `This request is ${requestedMemberStatus.status.toLowerCase()}. No repository was linked by this request.`
+      : confirmedCompletion
+        ? "ResearchTrack verified and linked the exact requested repository."
+        : message,
     isAcknowledging,
     onClose,
     onRetry,
     scopeLabel,
     handleConfirmAndContinue,
     isRequestedCompletion,
-    requestedRepositoryFullName: requestedMemberStatus?.repositoryFullName ?? null,
+    requestedRepositoryFullName: confirmedCompletion
+      ? requestedMemberStatus.repositoryFullName
+      : null,
     canReturnToProject: Boolean(resolvedProjectId),
   };
 }

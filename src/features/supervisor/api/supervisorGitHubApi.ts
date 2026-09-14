@@ -252,7 +252,7 @@ export function createSupervisorGitHubApi({
       );
     },
 
-    createGitHubRepositoryAccessRequest(
+    async createGitHubRepositoryAccessRequest(
       projectId: string,
       repositoryUrl: string,
     ): Promise<GitHubRepositoryAccessRequestCreate> {

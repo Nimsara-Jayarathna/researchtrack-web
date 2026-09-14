@@ -22,11 +22,10 @@ export function GitHubAccessUpdatedPage() {
               <p className="font-semibold text-slate-800">
                 {state.requestedRepositoryFullName
                   ? `Repository linked: ${state.requestedRepositoryFullName}`
-                  : "The requested repository was linked successfully."}
+                  : "GitHub authorization has returned to ResearchTrack."}
               </p>
               <p>
-                ResearchTrack verified the exact requested repository. No
-                additional repository selection is required.
+                No additional repository selection is required on this page.
               </p>
             </div>
           ) : state.status === "success" && state.summary ? (

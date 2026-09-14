@@ -1,99 +1,56 @@
-# Owner-granted GitHub repository access
+# Owner-granted GitHub repository access (SCRUM-17 / US-203)
 
-## Purpose
+An authenticated owning supervisor requests access to one exact repository. A repository owner or administrator can open the bearer link anonymously and authorize the existing ResearchTrack GitHub App flow. Creating a request does not create a repository connection.
 
-This feature lets an authorized ResearchTrack project member request access to a specific GitHub repository when that member cannot grant the ResearchTrack GitHub App access. A repository owner or administrator completes the GitHub authorization step; ResearchTrack activates the project connection only after the backend verifies that the resulting installation contains the exact repository named in the request.
+## Requester
 
-A pending request is not an active repository connection. A private repository URL by itself is never treated as proof of access.
+In the existing repository modal, choose **Request Access**, enter a GitHub repository URL, and choose **Generate Request**. The existing URL helper normalizes the URL and disables generation for invalid input. The API receives both `projectId` and `repositoryUrl`. The UI displays the generated share link, normalized repository, and expiry and preserves the copy interaction. The requester does not sign into GitHub. The generated-link panel does not poll status automatically; refresh project data to see a completed link.
 
-## User flow
+## Owner
 
-### Project member
+`/github/request-access?token=...` validates the token before enabling **Continue to GitHub**. It displays only the fixed repository, lifecycle, and expiry. There is no repository editor or selector. The public validation API can display terminal `COMPLETED`, `FAILED`, or `EXPIRED` states, but none can continue.
 
-1. Open the Research Project repository controls and choose **Owner-Granted Access**.
-2. Enter the intended GitHub repository URL in the form `https://github.com/{owner}/{repository}`.
-3. Review the normalized owner/repository name and submit the request.
-4. Copy the generated, expiring authorization link and share it with an appropriate repository owner or administrator.
-5. Keep seeing the request as **Pending** until the backend reports a terminal result.
+Continue calls the backend and accepts only an HTTPS `github.com/apps/{slug}/installations/new` URL containing a single nonempty `state` parameter. The backend creates server-bound installation state and verifies the installation and exact repository before linking. Browser project/repository values cannot replace this context.
 
-The UI must not imply that creating or sharing the request linked the repository.
+## Result
 
-### Repository owner or administrator
+The existing backend callback redirects requested flows to `/github/access-updated?githubSetup=success|failed&githubFlow=INSTALLATION_REQUESTED&githubRequestId=...` (plus safe tab/error parameters). It does not include the raw owner token.
 
-1. Open the shared ResearchTrack URL.
-2. The public request page validates the opaque request token with the backend and displays only the minimum context needed to make a safe decision: the ResearchTrack project, requested repository, request status, and expiry.
-3. Choose **Continue to GitHub**.
-4. Complete the backend-generated GitHub App installation or repository-selection flow.
-5. Return through the backend callback and view the outcome.
+The anonymous result is informational: a query string alone is not proof of a completed connection. The owner can reopen the original bearer link to check the persisted status. If the original requester is signed in as a supervisor, the page loads the authenticated request status and shows **Repository linked** only for `COMPLETED`. Pending, failed, and expired statuses cannot become linked claims. Project navigation for requested flows comes from this authenticated response. Requested flows never enter unrestricted repository selection, including failed callbacks with injected project parameters.
 
-The frontend never asks for, receives, stores, or logs a GitHub password, personal access token, App private key, OAuth client secret, GitHub user token, or installation access token.
+`INSTALLATION_DIRECT` retains its existing project callback and repository-selection behavior. No second OAuth/PKCE architecture was introduced.
 
-## Required UI states
+## Actual APIs
 
-| State | Member experience | Owner/admin experience |
+The frontend calls these paths; the backend also exposes `/api/v1/github/...` aliases:
+
+| Method | Path | Authentication |
 | --- | --- | --- |
-| `PENDING` | Show the shareable link and expiry; do not show an active connection. | Allow continuation while the request remains valid. |
-| `COMPLETED` | Refresh project repository data and show the verified repository/default branch and initial-sync status. | Show a success result without permitting the token to be consumed again. |
-| `FAILED` | Explain that access was not granted or verification failed; keep the project unlinked. | Show a safe failure result with no credentials or sensitive GitHub response data. |
-| `EXPIRED` | Offer creation of a new request; keep the project unlinked. | Reject continuation and direct the requester to create a new link. |
+| POST | `/api/github/access-requests` | Supervisor and Project Service authorization; body `{ projectId, repositoryUrl }` |
+| GET | `/api/github/access-requests/{requestId}` | Authorized original requester |
+| GET | `/api/github/access-requests/validate?token=...` | Anonymous bearer |
+| POST | `/api/github/access-requests/continue?token=...` | Anonymous bearer |
+| GET | `/api/github/access-source/install/callback` | GitHub callback; backend validates stored state |
 
-Malformed, unknown, consumed, expired, or replayed tokens use a non-success state. They must never fall back to normal repository URL linking.
+There is no SCRUM-17 public completion-summary or acknowledgement endpoint. Legacy summary helpers used elsewhere are not the requested-flow completion contract.
 
-## Frontend routes
+## Safety and configuration
 
-- `/github/request-access?token=...` is the public owner/admin landing page. It validates the token before enabling **Continue to GitHub**.
-- `/github/access-updated?token=...` is the public result page. It reads the backend-derived result and must not infer success from query-string values supplied by GitHub or the browser.
-- The authenticated Research Project repository controls create the request, expose its status/expiry, and refresh the project after successful completion.
+- The backend uses 32 CSPRNG bytes for owner tokens and installation state, persists SHA-256 hashes, and enforces `GitHub__StateExpiryMinutes` (1–30 minutes).
+- Share and result URLs use trusted `GitHub__FrontendReturnOrigin`; App identity and credentials remain backend-only.
+- The deployed `nginx/nginx.conf` disables access logging and caching for `/github/request-access`, and sends `Referrer-Policy: no-referrer`. API diagnostic errors redact token/state/code query values.
+- Existing project capacity remains configurable (currently five linked and five enabled repositories). One request targets one repository; it does not reduce global project capacity.
+- Successful completion uses the existing Story 11 sync queue and scheduled recovery. No new sync engine was added.
 
-Both public pages are intentionally outside the ResearchTrack authentication guard so the repository owner does not need the requester's ResearchTrack account. Possession of the request URL permits only this narrowly scoped, time-bounded authorization flow; it does not grant general project access.
+## Automated evidence and manual QA
 
-## Backend API contract consumed by the web app
+Frontend tests cover normalized create payloads, invalid URL rejection, owner-link validation/terminal states, trusted redirect checks, requested results without repository selection, forged success versus authenticated terminal status, failed returns with injected project context, direct repository review, and diagnostic token redaction.
 
-Endpoint names must follow the Gateway's versioning conventions. The feature needs these operations even if compatibility aliases are retained:
+Using a non-production GitHub App and disposable private repositories:
 
-| Operation | Authentication | Required behavior |
-| --- | --- | --- |
-| Create request for a project and repository | ResearchTrack project member | Accept the target repository URL/full name and return an opaque request URL, status, and expiry. |
-| Get request status | ResearchTrack project member | Return `PENDING`, `COMPLETED`, `FAILED`, or `EXPIRED` for display. |
-| Validate public request token | Public, token-scoped | Return safe project/repository context, status, and expiry; never return secrets or a stored token hash. |
-| Continue public request | Public, token-scoped | Return only a backend-generated GitHub authorization URL after atomically validating the request. |
-| Read public completion result | Public, token-scoped | Return the backend-verified result; do not accept repository identity from the browser. |
-
-The create request payload must identify both the Research Project and the exact intended repository. A project-only request is insufficient for this story.
-
-## Validation and safety requirements
-
-- Normalize only supported `github.com/{owner}/{repository}` URLs and show the normalized full name before submission.
-- Do not determine repository access in browser code.
-- Redirect only to an HTTPS GitHub authorization URL returned by the backend. Existing local URL validation should remain defensive, not authoritative.
-- Do not place GitHub credentials in frontend environment variables, browser storage, telemetry, or application state.
-- Treat callback/query parameters as untrusted display inputs until exchanged and verified by the backend.
-- Disable duplicate submits while a mutation is in flight, but rely on backend idempotency for correctness.
-- If the owner grants a different repository, denies access, or the request expires, show failure/expiry and leave the active project connection unchanged.
-- After `COMPLETED`, invalidate cached project/GitHub data so the verified metadata and initial synchronization state are loaded from the backend.
-
-## Acceptance criteria mapping
-
-| Acceptance criterion | Web responsibility |
-| --- | --- |
-| AC1 | Collect the exact repository, submit it in project context, and render the returned request as pending. |
-| AC2 | Display the backend-issued opaque link and expiry without exposing credentials. |
-| AC3 | Carry the opaque token through the public start/result pages; do not reconstruct project context locally. |
-| AC4 | Render success only from a backend result that confirms the requested repository. |
-| AC5 | Render wrong-repository, denied, expired, and failed outcomes without showing an active connection. |
-| AC6 | Refresh project repository/default-branch and synchronization data after completion. |
-| AC7 | Reject invalid/replayed links in the UI based on the backend response and provide no link action. |
-
-## QA checklist
-
-- Create a request for a repository as an authorized project member and verify the project and normalized repository shown are correct.
-- Open a valid link in a signed-out browser and continue to GitHub.
-- Complete authorization for the exact repository and verify the project shows the repository/default branch only after backend confirmation.
-- Grant a different repository and confirm that no active connection appears.
-- Exercise denial, malformed token, expired token, already-consumed token, and callback replay paths.
-- Refresh and repeat the success callback; confirm no duplicate link or duplicate completion is shown.
-- Confirm secrets and GitHub tokens are absent from URLs, browser storage, UI error details, and frontend logs.
-
-## Scope boundary
-
-This document covers only the owner-granted access request. It does not bypass GitHub organization policy, grant GitHub roles, accept personal access tokens, or make an ordinary private repository URL an authorization mechanism.
+1. Generate/copy a request for an exact repository as the owning supervisor.
+2. Open it signed out; check repository/expiry, and confirm that the owner cannot edit the target.
+3. Authorize the exact repository, then reopen the original link and verify `COMPLETED`. Refresh the project and verify canonical metadata/default branch and a sync attempt.
+4. Repeat with only a different repository, denial, expiry, invalid state, replay, and revoked access. Existing connections must remain unchanged.
+5. Test another distinct repository within capacity, an exact duplicate, and concurrent attempts at the limit.
+6. Confirm direct installation still opens its repository selector. Inspect browser/API/proxy logs for bearer or credential leakage.

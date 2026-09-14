@@ -143,22 +143,6 @@ describe("supervisor GitHub API contract", () => {
     );
   });
 
-  it("continues external Request Access through the shared GitHub App flow", async () => {
-    const { api, apiClient } = createApi();
-    apiClient.post.mockResolvedValue({
-      projectId: "project-1",
-      githubAuthorizeUrl:
-        "https://github.com/apps/researchtrack/installations/new?state=safe",
-    });
-
-    await api.continueExternalGitHubAccessRequest("request-token");
-
-    expect(apiClient.post).toHaveBeenCalledWith(
-      "/api/github/access-requests/continue?token=request-token",
-      {},
-    );
-  });
-
   it("revokes a pending access request through the project-scoped endpoint", async () => {
     const { api, apiClient } = createApi();
     apiClient.del.mockResolvedValue({

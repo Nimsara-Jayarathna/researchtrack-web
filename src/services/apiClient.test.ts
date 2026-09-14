@@ -23,7 +23,11 @@ vi.mock("@/services/sessionState", () => ({
   resetSessionState,
 }));
 
-import { ApiException, apiClient } from "@/services/apiClient";
+import {
+  ApiException,
+  apiClient,
+  publicApiClient,
+} from "@/services/apiClient";
 
 function jsonResponse(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
@@ -185,6 +189,35 @@ describe("apiClient ResearchTrack .NET contract", () => {
     } as ApiException);
 
     expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps public token requests outside the authenticated session", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse(
+        401,
+        errorEnvelope({
+          code: "UNAUTHORIZED",
+          message: "Public token is invalid.",
+        }),
+      ),
+    );
+
+    await expect(
+      publicApiClient.get("/api/github/access-requests/validate?token=invalid"),
+    ).rejects.toMatchObject<ApiException>({
+      apiError: expect.objectContaining({
+        status: 401,
+        message: "Public token is invalid.",
+      }),
+    } as ApiException);
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch).toHaveBeenCalledWith(
+      "http://localhost:8081/api/github/access-requests/validate?token=invalid",
+      expect.objectContaining({ credentials: "omit" }),
+    );
+    expect(beginSessionTransition).not.toHaveBeenCalled();
+    expect(resetSessionState).not.toHaveBeenCalled();
   });
 
   it("refreshes once and retries a protected request after access-token expiry", async () => {

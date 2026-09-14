@@ -7,8 +7,6 @@ import type {
   GitHubAccessUpdatedAcknowledge,
   GitHubAccessUpdatedSummary,
   LinkGitHubRepositoriesPayload,
-  GitHubRepositoryAccessRequestContinue,
-  GitHubRepositoryAccessRequestValidation,
   GitHubInstallationRepositoriesPage,
   ProjectGitHubRepositories,
   ProjectGitHubRepositoryListing,
@@ -260,44 +258,6 @@ export function createSupervisorGitHubApi({
     ): Promise<ProjectGitHubRepositoryListing> {
       return apiClient.get<ProjectGitHubRepositoryListing>(
         `/api/supervisor/projects/${projectId}/github/repositories/inventory`,
-      );
-    },
-
-    validateExternalGitHubAccessRequest(
-      token: string,
-    ): Promise<GitHubRepositoryAccessRequestValidation> {
-      const params = new URLSearchParams({ token });
-      return apiClient.get<GitHubRepositoryAccessRequestValidation>(
-        `/api/github/access-requests/validate?${params.toString()}`,
-      );
-    },
-
-    continueExternalGitHubAccessRequest(
-      token: string,
-    ): Promise<GitHubRepositoryAccessRequestContinue> {
-      const params = new URLSearchParams({ token });
-      return apiClient.post<GitHubRepositoryAccessRequestContinue>(
-        `/api/github/access-requests/continue?${params.toString()}`,
-        {},
-      );
-    },
-
-    getExternalGitHubAccessUpdatedSummary(
-      token: string,
-    ): Promise<GitHubAccessUpdatedSummary> {
-      const params = new URLSearchParams({ token });
-      return apiClient.get<GitHubAccessUpdatedSummary>(
-        `/api/github/access-updated/summary?${params.toString()}`,
-      );
-    },
-
-    acknowledgeExternalGitHubAccessUpdated(
-      token: string,
-    ): Promise<GitHubAccessUpdatedAcknowledge> {
-      const params = new URLSearchParams({ token });
-      return apiClient.post<GitHubAccessUpdatedAcknowledge>(
-        `/api/github/access-updated/acknowledge?${params.toString()}`,
-        {},
       );
     },
 

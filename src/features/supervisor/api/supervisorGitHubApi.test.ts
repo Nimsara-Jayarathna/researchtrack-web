@@ -25,6 +25,7 @@ const projectRepositories: ProjectGitHubRepositories = {
   projectId: "project-1",
   maxLinkedRepositories: 5,
   maxEnabledRepositories: 5,
+  hasUnacknowledgedAccess: false,
   accessSources: [],
   repositories: [],
 };

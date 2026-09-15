@@ -121,19 +121,51 @@ export function RepositoryLinkModalContent({
 
     return (
       <div className="space-y-4">
-        <div className="overflow-hidden rounded-3xl border border-indigo-100 bg-indigo-50/10 p-4 shadow-sm">
+        <div
+          className={`overflow-hidden rounded-3xl border p-4 shadow-sm ${
+            repositorySelectionEntryMode === "callback-requested"
+              ? "border-emerald-200 bg-emerald-50"
+              : "border-indigo-100 bg-indigo-50/10"
+          }`}
+        >
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
-              <Search className="h-4.5 w-4.5" />
+            <div
+              className={`flex h-9 w-9 items-center justify-center rounded-xl ${
+                repositorySelectionEntryMode === "callback-requested"
+                  ? "bg-emerald-100 text-emerald-700"
+                  : "bg-indigo-100 text-indigo-600"
+              }`}
+            >
+              {repositorySelectionEntryMode === "callback-requested" ? (
+                <ShieldCheck className="h-4.5 w-4.5" />
+              ) : (
+                <Search className="h-4.5 w-4.5" />
+              )}
             </div>
             <div>
-              <p className="text-sm font-black text-slate-800">
-                {repositorySelectionEntryMode === "callback-direct"
-                  ? "Select Repository"
-                  : "Select Repositories"}
+              <p
+                className={`text-sm font-black ${
+                  repositorySelectionEntryMode === "callback-requested"
+                    ? "text-emerald-950"
+                    : "text-slate-800"
+                }`}
+              >
+                {repositorySelectionEntryMode === "callback-requested"
+                  ? "GitHub access granted — choose repositories"
+                  : repositorySelectionEntryMode === "callback-direct"
+                    ? "Select Repository"
+                    : "Select Repositories"}
               </p>
-              <p className="text-[10px] font-bold text-indigo-500/70">
-                {sourceDescription}
+              <p
+                className={`text-[10px] font-bold ${
+                  repositorySelectionEntryMode === "callback-requested"
+                    ? "text-emerald-700"
+                    : "text-indigo-500/70"
+                }`}
+              >
+                {repositorySelectionEntryMode === "callback-requested"
+                  ? `${availableRepositories.length} repositories are available. Select up to ${maxSelectableCount} to link, then choose the primary repository.`
+                  : sourceDescription}
               </p>
             </div>
           </div>

@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { buttonStyles } from "@/components/ui/Button";
 import { LastSyncedBadge } from "@/components/ui/LastSyncedBadge";
 import { RequestStateModal } from "@/components/ui/RequestStateModal";
 import { GithubDetailsModal } from "@/features/projects/components/GithubDetailsModal";
 import { normalizeSyncStatus, toSyncLabel } from "@/lib/syncStatus";
 import { isApiException } from "@/services/apiClient";
-import { Github } from "lucide-react";
+import { CheckCircle2, Github } from "lucide-react";
 import { supervisorApi } from "../../api/supervisorApi";
 import { useAvailableRepositories } from "../../hooks/useAvailableRepositories";
 import { useGitHubSetupFlow } from "../../hooks/useGitHubSetupFlow";
@@ -109,6 +109,11 @@ export function RepositorySection({
     message: "",
   });
 
+  // Request Access is completed in another person's browser, so this page
+  // cannot rely on callback query parameters. Track whether we already
+  // auto-opened the newly granted access during this mount to avoid loops.
+  const autoOpenedPendingAccessRef = useRef(false);
+
   const { isStartingOwnerInstall, startOwnerInstall } = useGitHubSetupFlow(
     project.id,
   );
@@ -137,6 +142,9 @@ export function RepositorySection({
   const enabledCount = linkedRepositories.filter(
     (repository) => repository.enabled,
   ).length;
+  const hasUnacknowledgedAccess =
+    repositoriesData?.hasUnacknowledgedAccess ??
+    Boolean(project.github.hasUnacknowledgedAccess);
   const remainingLinkSlots = Math.max(0, maxLinkedRepositories - linkedCount);
   const remainingEnabledSlots = Math.max(
     0,
@@ -305,6 +313,37 @@ export function RepositorySection({
     setDisplayNameEditError(null);
   }, [isManagementModalOpen]);
 
+  useEffect(() => {
+    if (!hasUnacknowledgedAccess) {
+      autoOpenedPendingAccessRef.current = false;
+      return;
+    }
+    if (
+      autoOpenedPendingAccessRef.current ||
+      pendingSourceId ||
+      isModalOpen ||
+      isManagementModalOpen ||
+      isResolvingPendingAccess ||
+      isLoadingRepositoriesData
+    ) {
+      return;
+    }
+
+    autoOpenedPendingAccessRef.current = true;
+    void handleOpenManageRepositories();
+    // handleOpenManageRepositories is intentionally invoked only once for the
+    // current unacknowledged access state.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    hasUnacknowledgedAccess,
+    isLoadingRepositoriesData,
+    isManagementModalOpen,
+    isModalOpen,
+    isResolvingPendingAccess,
+    pendingSourceId,
+    project.id,
+  ]);
+
   async function reloadProjectAndRepositories(projectId: string) {
     await reloadRepositoriesData();
     const updatedProject = await supervisorApi.getProjectById(projectId, true);
@@ -312,7 +351,7 @@ export function RepositorySection({
   }
 
   async function acknowledgePendingAccessIfPresent() {
-    if (!project.github.hasUnacknowledgedAccess) {
+    if (!hasUnacknowledgedAccess) {
       return;
     }
     try {
@@ -910,7 +949,7 @@ export function RepositorySection({
   }
 
   async function handleOpenManageRepositories() {
-    if (!project.github.hasUnacknowledgedAccess) {
+    if (!hasUnacknowledgedAccess) {
       setIsManagementModalOpen(true);
       return;
     }
@@ -1109,14 +1148,14 @@ export function RepositorySection({
             >
               {isResolvingPendingAccess ? "Loading..." : "Manage repositories"}
             </button>
-            {project.github.hasUnacknowledgedAccess && (
+            {hasUnacknowledgedAccess && (
               <span className="absolute -right-1 -top-1 flex h-3 w-3">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
                 <span className="relative inline-flex h-3 w-3 rounded-full bg-red-500"></span>
               </span>
             )}
           </div>
-          {project.github.hasUnacknowledgedAccess ? (
+          {hasUnacknowledgedAccess ? (
             <button
               type="button"
               className={buttonStyles({ variant: "ghost", size: "sm" })}
@@ -1153,6 +1192,32 @@ export function RepositorySection({
         Linked {linkedCount} / {maxLinkedRepositories} repositories · Enabled{" "}
         {enabledCount} / {maxEnabledRepositories}.
       </p>
+
+      {hasUnacknowledgedAccess ? (
+        <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-start gap-3">
+            <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+              <CheckCircle2 className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-emerald-950">
+                GitHub access granted
+              </p>
+              <p className="mt-1 text-xs leading-5 text-emerald-800">
+                A GitHub App access request was completed. Choose the repositories to link to this project and select the primary repository.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            className={buttonStyles({ variant: "primary", size: "sm" })}
+            onClick={() => void handleOpenManageRepositories()}
+            disabled={isResolvingPendingAccess}
+          >
+            {isResolvingPendingAccess ? "Loading..." : "Choose repositories"}
+          </button>
+        </div>
+      ) : null}
 
       {isLoadingRepositoriesData ? (
         <p className="mt-4 text-sm text-muted-foreground">

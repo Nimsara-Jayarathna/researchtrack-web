@@ -63,6 +63,7 @@ export type ProjectGitHubRepositories = {
   projectId: string;
   maxLinkedRepositories: number;
   maxEnabledRepositories: number;
+  hasUnacknowledgedAccess: boolean;
   accessSources: GitHubAccessSource[];
   repositories: ProjectRepositoryLink[];
 };

@@ -162,6 +162,7 @@ describe("ProjectDetailsPage", () => {
         projectId: "project-1",
         maxLinkedRepositories: 3,
         maxEnabledRepositories: 2,
+        hasUnacknowledgedAccess: false,
         accessSources: [],
         repositories: [
           {

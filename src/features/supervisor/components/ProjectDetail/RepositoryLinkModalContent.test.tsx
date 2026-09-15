@@ -91,9 +91,9 @@ describe("RepositoryLinkModalContent", () => {
   it("keeps direct GitHub App selection to one repository and uses singular labels", () => {
     render(<DirectHarness />);
 
-    expect(screen.getByText("Select Repository")).toBeInTheDocument();
+    expect(screen.getByText("Select Repositories")).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /Link Repository/i }),
+      screen.getByRole("button", { name: /Link Selected/i }),
     ).toBeInTheDocument();
 
     fireEvent.click(screen.getByText("org/one"));

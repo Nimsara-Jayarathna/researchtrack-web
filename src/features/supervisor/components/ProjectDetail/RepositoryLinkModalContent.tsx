@@ -114,7 +114,7 @@ export function RepositoryLinkModalContent({
       repositorySelectionEntryMode === "callback-requested"
         ? "Access request completed. Select repositories to link."
         : repositorySelectionEntryMode === "callback-direct"
-          ? "GitHub installation completed. Select one repository to link."
+          ? "GitHub installation completed. Select repositories to link."
           : selectedSourceLabel
             ? `Connected Source: ${selectedSourceLabel}`
             : "Select one or more repositories from this source.";
@@ -152,9 +152,7 @@ export function RepositoryLinkModalContent({
               >
                 {repositorySelectionEntryMode === "callback-requested"
                   ? "GitHub access granted — choose repositories"
-                  : repositorySelectionEntryMode === "callback-direct"
-                    ? "Select Repository"
-                    : "Select Repositories"}
+                  : "Select Repositories"}
               </p>
               <p
                 className={`text-[10px] font-bold ${
@@ -408,9 +406,7 @@ export function RepositoryLinkModalContent({
             )}
             {isConfirmingRepositorySelection
               ? "Linking..."
-              : repositorySelectionEntryMode === "callback-direct"
-                ? "Link Repository"
-                : "Link Selected"}
+              : "Link Selected"}
           </button>
         </div>
       </div>

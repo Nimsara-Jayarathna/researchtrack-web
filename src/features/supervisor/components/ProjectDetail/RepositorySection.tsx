@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { buttonStyles } from "@/components/ui/Button";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { LastSyncedBadge } from "@/components/ui/LastSyncedBadge";
 import { RequestStateModal } from "@/components/ui/RequestStateModal";
 import { GithubDetailsModal } from "@/features/projects/components/GithubDetailsModal";
@@ -108,10 +109,7 @@ export function RepositorySection({
     title: "",
     message: "",
   });
-
-  // Request Access is completed in another person's browser, so this page
-  // cannot rely on callback query parameters. Track whether we already
-  // auto-opened the newly granted access during this mount to avoid loops.
+  const [pendingUnlinkRepositoryId, setPendingUnlinkRepositoryId] = useState<string | null>(null);
   const autoOpenedPendingAccessRef = useRef(false);
 
   const { isStartingOwnerInstall, startOwnerInstall } = useGitHubSetupFlow(
@@ -155,9 +153,10 @@ export function RepositorySection({
   const bothLimitsReached = linkedLimitReached && enabledLimitReached;
   const isDirectInstallationSelection =
     selectionEntryMode === "callback-direct";
-  const repositorySelectionCapacity = isDirectInstallationSelection
-    ? Math.min(1, remainingLinkSlots)
-    : remainingLinkSlots;
+  const repositorySelectionCapacity = Math.min(
+    remainingLinkSlots,
+    remainingEnabledSlots,
+  );
 
   const managementRows = useMemo<RepositoryManagementRow[]>(() => {
     // The management modal is intentionally limited to repositories that are
@@ -573,21 +572,7 @@ export function RepositorySection({
       openRequestModal(
         "error",
         "No repositories selected",
-        isDirectInstallationSelection
-          ? "Select one repository to link."
-          : "Select at least one repository.",
-      );
-      return;
-    }
-
-    if (
-      isDirectInstallationSelection &&
-      selection.selectionsPayload.length !== 1
-    ) {
-      openRequestModal(
-        "error",
-        "Select one repository",
-        "The direct GitHub App connection links exactly one repository at a time.",
+        "Select at least one repository.",
       );
       return;
     }
@@ -595,12 +580,8 @@ export function RepositorySection({
     setIsConfirmingRepositorySelection(true);
     openRequestModal(
       "loading",
-      isDirectInstallationSelection
-        ? "Linking repository"
-        : "Linking repositories",
-      isDirectInstallationSelection
-        ? "Verifying and linking the selected repository."
-        : "Saving selected repositories for this project.",
+      "Linking repositories",
+      "Verifying and saving the selected repositories for this project.",
     );
 
     try {
@@ -667,7 +648,7 @@ export function RepositorySection({
     openRequestModal(
       "loading",
       "Refreshing repository",
-      "Syncing repository metadata, default-branch commits, contributors, pull requests, reviews, and branches.",
+      "Syncing repository metadata, default-branch commits, contributors, pull requests, and reviews.",
     );
     try {
       await supervisorApi.refreshGitHubRepository(project.id, linkId);
@@ -687,7 +668,7 @@ export function RepositorySection({
     }
   }
 
-  async function handleUnlinkRepository(linkId: string) {
+  function handleUnlinkRepository(linkId: string) {
     const target = linkedRepositories.find(
       (repository) => repository.id === linkId,
     );
@@ -699,10 +680,17 @@ export function RepositorySection({
       );
       return;
     }
-    if (!window.confirm(`Unlink ${target?.fullName || target?.name || "this repository"} from this ResearchTrack project? Existing synchronized evidence will no longer be attached to the active link.`)) {
+
+    setPendingUnlinkRepositoryId(linkId);
+  }
+
+  async function confirmUnlinkRepository() {
+    const linkId = pendingUnlinkRepositoryId;
+    if (!linkId) {
       return;
     }
 
+    setPendingUnlinkRepositoryId(null);
     setIsMutatingLinks(true);
     openRequestModal(
       "loading",
@@ -1116,6 +1104,26 @@ export function RepositorySection({
           onStartDisplayNameEdit={startDisplayNameEdit}
         />
       </GithubDetailsModal>
+
+      <ConfirmDialog
+        isOpen={pendingUnlinkRepositoryId !== null}
+        title="Unlink repository?"
+        description={(() => {
+          const repository = linkedRepositories.find(
+            (item) => item.id === pendingUnlinkRepositoryId,
+          );
+          const label = repository?.customName || repository?.fullName || repository?.name || "this repository";
+          return (
+            <span>
+              Unlink <strong>{label}</strong> from this ResearchTrack project? Existing synchronized evidence will remain in history, but it will no longer be attached to an active repository link.
+            </span>
+          );
+        })()}
+        confirmLabel="Unlink"
+        confirmVariant="danger"
+        onCancel={() => setPendingUnlinkRepositoryId(null)}
+        onConfirm={() => void confirmUnlinkRepository()}
+      />
 
       <RepositoryRenameModal
         isOpen={!!editingDisplayNameRowKey}

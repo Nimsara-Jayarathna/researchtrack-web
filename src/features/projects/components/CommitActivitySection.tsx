@@ -16,6 +16,8 @@ import {
 import type { ApiError } from "@/types";
 import { buttonStyles } from "@/components/ui/Button";
 import { TimeAgo } from "@/components/ui/TimeAgo";
+import { parseApiDate } from "@/lib/dateTime";
+import { isDevelopmentActivity } from "../utils/developmentActivity";
 import type {
   PaginatedListResult,
   ProjectGitHubContributor,
@@ -59,7 +61,10 @@ function formatDateTime(value: string | null) {
     return "Not recorded";
   }
 
-  return dateTimeFormatter.format(new Date(value));
+  const date = parseApiDate(value);
+  return Number.isNaN(date.getTime())
+    ? "Not recorded"
+    : dateTimeFormatter.format(date);
 }
 
 function toDisplayStatus(value: "active" | "idle") {
@@ -295,6 +300,7 @@ type LegacyCommitPayload = {
     committedAt?: string | null;
     githubUsername?: string | null;
     avatarUrl?: string | null;
+    type?: string | null;
   }>;
   contributors?: Array<ProjectGitHubContributor>;
   recentCommits?: ProjectGitHubRecentCommit[];
@@ -343,6 +349,7 @@ function normalizeDashboardPayload(
       githubUsername: commit.githubUsername ?? null,
       avatarUrl: commit.avatarUrl ?? null,
       committedAt: commit.committedAt ?? null,
+      type: commit.type,
     }),
   );
 
@@ -518,7 +525,9 @@ export function CommitActivitySection({
   }
 
   const topContributors = normalized.contributorsPreview.slice(0, 4);
-  const recentCommits = normalized.recentCommitsPreview.slice(0, 6);
+  const recentCommits = normalized.recentCommitsPreview
+    .filter(isDevelopmentActivity)
+    .slice(0, 6);
 
   return (
     <div className="space-y-6">

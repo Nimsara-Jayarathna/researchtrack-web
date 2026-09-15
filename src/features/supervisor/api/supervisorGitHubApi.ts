@@ -139,7 +139,8 @@ export function createSupervisorGitHubApi({
           );
           return data;
         });
-      const request = baseRequest.finally(() =>
+      let request!: Promise<GitHubAvailableRepositories>;
+      request = baseRequest.finally(() =>
         clearAvailableGitHubRepositoriesInFlight(sourceId, request),
       );
       setAvailableGitHubRepositoriesInFlight(sourceId, request);
@@ -180,7 +181,8 @@ export function createSupervisorGitHubApi({
           setProjectGitHubRepositoriesCache(data, Date.now(), cacheGeneration);
           return data;
         });
-      const request = baseRequest.finally(() =>
+      let request!: Promise<ProjectGitHubRepositories>;
+      request = baseRequest.finally(() =>
         clearProjectGitHubRepositoriesInFlight(projectId, request),
       );
       setProjectGitHubRepositoriesInFlight(projectId, request);

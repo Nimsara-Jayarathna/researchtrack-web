@@ -58,7 +58,7 @@ export function ProjectDetailsPage() {
     });
 
   const projectRepositoriesState = useProjectRepositories(projectId, {
-    enabled: activeTab === "github",
+    enabled: activeTab === "github" || activeTab === "integrations",
   });
 
   const githubSetupRedirect = useSupervisorProjectGitHubSetupRedirect({
@@ -351,10 +351,7 @@ export function ProjectDetailsPage() {
       {activeTab === "integrations" ? (
         <IntegrationsTabSection
           project={project}
-          onProjectUpdate={(updatedProject) => {
-            actions.handleProjectUpdate(updatedProject);
-            void projectRepositoriesState.reload();
-          }}
+          repositoriesState={projectRepositoriesState}
           onConnectJira={jiraFlow.handleConnectJira}
           onDisconnectJira={jiraFlow.handleDisconnectJira}
           isConnectingJira={jiraFlow.isConnectingJira}

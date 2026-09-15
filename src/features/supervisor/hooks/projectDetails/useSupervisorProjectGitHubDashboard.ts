@@ -110,7 +110,8 @@ export function useSupervisorProjectGitHubDashboard({
   const enabledRepositories = useMemo(
     () =>
       githubRepositories?.repositories?.filter(
-        (repository) => repository.enabled,
+        (repository) =>
+          repository.enabled && repository.accessStatus === "AVAILABLE",
       ) ?? [],
     [githubRepositories?.repositories],
   );

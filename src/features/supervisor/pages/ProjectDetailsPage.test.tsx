@@ -182,6 +182,7 @@ describe("ProjectDetailsPage", () => {
             linkedAt: "2026-04-01T00:00:00Z",
             lastSyncedAt: null,
             syncStatus: "SUCCESS",
+            accessStatus: "AVAILABLE",
           },
           {
             id: "link-2",
@@ -200,6 +201,7 @@ describe("ProjectDetailsPage", () => {
             linkedAt: "2026-04-01T00:00:00Z",
             lastSyncedAt: null,
             syncStatus: "SUCCESS",
+            accessStatus: "AVAILABLE",
           },
         ],
       },

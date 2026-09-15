@@ -17,6 +17,7 @@ export type RepositoryManagementRow = {
   ownerLogin: string | null;
   url: string | null;
   syncStatus: string | null;
+  accessStatus: string;
 };
 
 export type RepositoryManagementSource = {
@@ -24,6 +25,7 @@ export type RepositoryManagementSource = {
   ownerLogin: string;
   accessType: string;
   installationId: number | null;
+  connectionStatus: string;
   linkedRepositoryCount: number;
   hasSyncInProgress: boolean;
 };
@@ -53,6 +55,30 @@ function accessLabel(value: string) {
     .split("_")
     .map((part) => (part ? part[0].toUpperCase() + part.slice(1) : part))
     .join(" ");
+}
+
+function connectionStatusLabel(value: string) {
+  switch (value) {
+    case "SUSPENDED":
+      return "Installation suspended";
+    case "REMOVED":
+      return "Installation removed";
+    default:
+      return "Connected";
+  }
+}
+
+function repositoryAccessLabel(value: string) {
+  switch (value) {
+    case "REPOSITORY_ACCESS_REVOKED":
+      return "Repository access revoked";
+    case "INSTALLATION_SUSPENDED":
+      return "Installation suspended";
+    case "INSTALLATION_REMOVED":
+      return "Installation removed";
+    default:
+      return "Available";
+  }
 }
 
 function nameFor(row: RepositoryManagementRow) {
@@ -135,6 +161,15 @@ export function RepositoryManagementModalContent({
                       ? ` · installation ${source.installationId}`
                       : ""}
                   </p>
+                  <p
+                    className={`mt-2 text-xs font-semibold ${
+                      source.connectionStatus === "CONNECTED"
+                        ? "text-emerald-700"
+                        : "text-rose-700"
+                    }`}
+                  >
+                    {connectionStatusLabel(source.connectionStatus)}
+                  </p>
                   {source.hasSyncInProgress ? (
                     <p className="mt-2 text-xs font-semibold text-amber-700">
                       Disconnect is locked while a repository sync is in
@@ -176,7 +211,9 @@ export function RepositoryManagementModalContent({
               const syncStatus = normalizeSyncStatus(row.syncStatus);
               const isSyncing = syncStatus === "IN_PROGRESS";
               const isQueued = syncStatus === "PENDING";
-              const enablingBlocked = !row.enabled && remainingEnabledSlots < 1;
+              const accessAvailable = row.accessStatus === "AVAILABLE";
+              const enablingBlocked =
+                !row.enabled && (remainingEnabledSlots < 1 || !accessAvailable);
               const mutationBlocked = isMutating || isSavingDisplayName;
               return (
                 <article
@@ -195,6 +232,11 @@ export function RepositoryManagementModalContent({
                           </span>
                         ) : null}
                         <SyncStatusBadge syncStatus={syncStatus} mode="sync" />
+                        {!accessAvailable ? (
+                          <span className="rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-bold text-rose-700">
+                            {repositoryAccessLabel(row.accessStatus)}
+                          </span>
+                        ) : null}
                       </div>
                       <p className="mt-1 truncate text-xs text-slate-500">
                         {row.fullName || row.ownerLogin || "Unknown repository"}
@@ -221,13 +263,15 @@ export function RepositoryManagementModalContent({
                             mutationBlocked || isSyncing || enablingBlocked
                           }
                           title={
-                            isSyncing
-                              ? "Cannot change state while synchronization is in progress"
-                              : enablingBlocked
-                                ? "Enabled repository limit reached"
-                                : row.enabled
-                                  ? "Disable repository"
-                                  : "Enable repository"
+                            !accessAvailable
+                              ? repositoryAccessLabel(row.accessStatus)
+                              : isSyncing
+                                ? "Cannot change state while synchronization is in progress"
+                                : enablingBlocked
+                                  ? "Enabled repository limit reached"
+                                  : row.enabled
+                                    ? "Disable repository"
+                                    : "Enable repository"
                           }
                           className={`relative inline-flex h-6 w-11 items-center rounded-full border transition ${row.enabled ? "border-emerald-500 bg-emerald-500" : "border-slate-300 bg-slate-200"} disabled:cursor-not-allowed disabled:opacity-50`}
                         >
@@ -237,7 +281,10 @@ export function RepositoryManagementModalContent({
                         </button>
                       </label>
 
-                      {row.enabled && !row.primary && row.linkId ? (
+                      {row.enabled &&
+                      accessAvailable &&
+                      !row.primary &&
+                      row.linkId ? (
                         <button
                           type="button"
                           onClick={() => onSelectPrimary(row.linkId!)}
@@ -269,7 +316,7 @@ export function RepositoryManagementModalContent({
                           <Pencil className="h-4 w-4" />
                         </button>
                       ) : null}
-                      {row.enabled && row.linkId ? (
+                      {row.enabled && accessAvailable && row.linkId ? (
                         <button
                           type="button"
                           onClick={() => onRefresh(row.linkId!)}

@@ -1,3 +1,5 @@
+import { parseApiDate } from "./dateTime";
+
 const SECOND_MS = 1000;
 const MINUTE_MS = 60 * SECOND_MS;
 const HOUR_MS = 60 * MINUTE_MS;
@@ -37,7 +39,7 @@ export function formatLastSynced(
     };
   }
 
-  const parsed = new Date(lastSyncedAt);
+  const parsed = parseApiDate(lastSyncedAt);
   if (Number.isNaN(parsed.getTime())) {
     return {
       isSynced: false,

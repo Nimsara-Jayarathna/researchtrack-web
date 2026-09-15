@@ -204,6 +204,7 @@ export function RepositorySection({
           ownerLogin: linked.ownerLogin,
           url: linked.url,
           syncStatus: linked.syncStatus,
+          accessStatus: linked.accessStatus,
         };
       })
       .sort((a, b) => {
@@ -227,6 +228,7 @@ export function RepositorySection({
           ownerLogin: source.ownerLogin,
           accessType: source.accessType,
           installationId: source.installationId,
+          connectionStatus: source.connectionStatus,
           linkedRepositoryCount: sourceLinks.length,
           hasSyncInProgress: sourceLinks.some(
             (repository) =>

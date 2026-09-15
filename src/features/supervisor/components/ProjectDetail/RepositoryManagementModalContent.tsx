@@ -269,9 +269,9 @@ export function RepositoryManagementModalContent({
                                 ? "Cannot change state while synchronization is in progress"
                                 : enablingBlocked
                                   ? "Enabled repository limit reached"
-                                : row.enabled
-                                  ? "Disable repository"
-                                  : "Enable repository"
+                                  : row.enabled
+                                    ? "Disable repository"
+                                    : "Enable repository"
                           }
                           className={`relative inline-flex h-6 w-11 items-center rounded-full border transition ${row.enabled ? "border-emerald-500 bg-emerald-500" : "border-slate-300 bg-slate-200"} disabled:cursor-not-allowed disabled:opacity-50`}
                         >
@@ -281,7 +281,10 @@ export function RepositoryManagementModalContent({
                         </button>
                       </label>
 
-                      {row.enabled && accessAvailable && !row.primary && row.linkId ? (
+                      {row.enabled &&
+                      accessAvailable &&
+                      !row.primary &&
+                      row.linkId ? (
                         <button
                           type="button"
                           onClick={() => onSelectPrimary(row.linkId!)}

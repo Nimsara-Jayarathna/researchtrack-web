@@ -1,6 +1,9 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import type { ProjectGitHubRepositories } from "../types";
-import { clearGitHubIntegrationCache, setProjectGitHubRepositoriesCache } from "../cache/githubIntegrationCache";
+import {
+  clearGitHubIntegrationCache,
+  setProjectGitHubRepositoriesCache,
+} from "../cache/githubIntegrationCache";
 
 const getProjectGitHubRepositories = vi.hoisted(() => vi.fn());
 
@@ -60,5 +63,4 @@ describe("useProjectRepositories", () => {
     expect(result.current.data).toEqual(response);
     expect(getProjectGitHubRepositories).not.toHaveBeenCalled();
   });
-
 });

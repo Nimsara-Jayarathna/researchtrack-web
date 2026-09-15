@@ -25,10 +25,11 @@ export function GitHubAccessUpdatedSuccessContent({
         ) : null}
       </div>
 
-
       {isExternalRecipient ? (
         <div className="rounded-xl border border-sky-200 bg-sky-50/70 p-3 text-sm text-sky-900">
-          GitHub App authorization is complete. You can close this page. The ResearchTrack supervisor will choose which authorized repositories to link to the project.
+          GitHub App authorization is complete. You can close this page. The
+          ResearchTrack supervisor will choose which authorized repositories to
+          link to the project.
         </div>
       ) : null}
 

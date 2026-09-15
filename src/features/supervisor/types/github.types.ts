@@ -53,11 +53,7 @@ export type ProjectGitHubRepositoryLink = {
 };
 
 export type GitHubAccessRequestStatus =
-  | "PENDING"
-  | "COMPLETED"
-  | "FAILED"
-  | "EXPIRED"
-  | "REVOKED";
+  "PENDING" | "COMPLETED" | "FAILED" | "EXPIRED" | "REVOKED";
 
 export type GitHubRepositoryAccessRequestValidation = {
   projectId: string;

@@ -91,7 +91,8 @@ export function useGitHubAccessUpdatedSummaryState({
       setStatus("error");
       setTitle("GitHub access update failed");
       setMessage(
-        failureMessage || "GitHub authorization did not complete. Please create a new access request.",
+        failureMessage ||
+          "GitHub authorization did not complete. Please create a new access request.",
       );
       return;
     }

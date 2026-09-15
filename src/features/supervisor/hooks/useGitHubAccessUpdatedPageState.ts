@@ -38,8 +38,7 @@ export function useGitHubAccessUpdatedPageState() {
         ? `GitHub authorization did not complete (${githubError.replace(/_/g, " ")}). Ask the supervisor for a new request if needed.`
         : null,
       api: {
-        getExternalGitHubAccessUpdatedSummary:
-          publicGitHubAccessApi.getResult,
+        getExternalGitHubAccessUpdatedSummary: publicGitHubAccessApi.getResult,
         getProjectGitHubAccessUpdatedSummary:
           supervisorApi.getProjectGitHubAccessUpdatedSummary,
       },
@@ -79,7 +78,8 @@ export function useGitHubAccessUpdatedPageState() {
     }
 
     const resolvedSourceId = sourceId || summary?.sourceId || "";
-    const resolvedFlowType = flowType || summary?.flowType || "INSTALLATION_DIRECT";
+    const resolvedFlowType =
+      flowType || summary?.flowType || "INSTALLATION_DIRECT";
     const nextParams = new URLSearchParams();
     nextParams.set("githubSetup", "success");
     nextParams.set("tab", "overview");
@@ -88,7 +88,10 @@ export function useGitHubAccessUpdatedPageState() {
     if (resolvedFlowType) nextParams.set("githubFlow", resolvedFlowType);
 
     setIsAcknowledging(true);
-    navigate(`/supervisor/projects/${resolvedProjectId}?${nextParams.toString()}`, { replace: true });
+    navigate(
+      `/supervisor/projects/${resolvedProjectId}?${nextParams.toString()}`,
+      { replace: true },
+    );
   }
 
   const scopeLabel = useMemo(() => {

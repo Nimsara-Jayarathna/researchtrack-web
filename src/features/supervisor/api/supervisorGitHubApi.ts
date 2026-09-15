@@ -104,7 +104,11 @@ export function createSupervisorGitHubApi({
       requestId: string,
     ): Promise<{ projectId: string; requestId: string; status: string }> {
       const params = new URLSearchParams({ projectId });
-      return apiClient.del<{ projectId: string; requestId: string; status: string }>(
+      return apiClient.del<{
+        projectId: string;
+        requestId: string;
+        status: string;
+      }>(
         `/api/github/access-source/requests/${requestId}?${params.toString()}`,
       );
     },
@@ -174,11 +178,7 @@ export function createSupervisorGitHubApi({
           `/api/projects/${projectId}/github-repositories`,
         )
         .then((data) => {
-          setProjectGitHubRepositoriesCache(
-            data,
-            Date.now(),
-            cacheGeneration,
-          );
+          setProjectGitHubRepositoriesCache(data, Date.now(), cacheGeneration);
           return data;
         });
       let request!: Promise<ProjectGitHubRepositories>;

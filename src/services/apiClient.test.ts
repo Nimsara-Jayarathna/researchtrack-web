@@ -23,11 +23,7 @@ vi.mock("@/services/sessionState", () => ({
   resetSessionState,
 }));
 
-import {
-  ApiException,
-  apiClient,
-  publicApiClient,
-} from "@/services/apiClient";
+import { ApiException, apiClient, publicApiClient } from "@/services/apiClient";
 
 function jsonResponse(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {

@@ -26,7 +26,10 @@ function apiError(message: string, status = 400): ApiError {
 function isValidGitHubAuthorizeUrl(value: string): boolean {
   try {
     const parsed = new URL(value);
-    return parsed.protocol === "https:" && parsed.hostname.toLowerCase() === "github.com";
+    return (
+      parsed.protocol === "https:" &&
+      parsed.hostname.toLowerCase() === "github.com"
+    );
   } catch {
     return false;
   }
@@ -54,10 +57,13 @@ export function RequestGitHubRepositoryAccessPage() {
     () => pathToken?.trim() || searchParams.get("token")?.trim() || "",
     [pathToken, searchParams],
   );
-  const [validation, setValidation] = useState<GitHubRepositoryAccessRequestValidation | null>(null);
+  const [validation, setValidation] =
+    useState<GitHubRepositoryAccessRequestValidation | null>(null);
   const [isLoading, setIsLoading] = useState(Boolean(token));
   const [isContinuing, setIsContinuing] = useState(false);
-  const [error, setError] = useState<ApiError | null>(token ? null : apiError(INVALID_LINK_MESSAGE));
+  const [error, setError] = useState<ApiError | null>(
+    token ? null : apiError(INVALID_LINK_MESSAGE),
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -71,7 +77,11 @@ export function RequestGitHubRepositoryAccessPage() {
       })
       .catch((caught) => {
         if (cancelled) return;
-        setError(isApiException(caught) ? caught.apiError : apiError(INVALID_LINK_MESSAGE, 404));
+        setError(
+          isApiException(caught)
+            ? caught.apiError
+            : apiError(INVALID_LINK_MESSAGE, 404),
+        );
       })
       .finally(() => {
         if (!cancelled) setIsLoading(false);
@@ -82,8 +92,12 @@ export function RequestGitHubRepositoryAccessPage() {
   }, [token]);
 
   const normalizedStatus = validation?.status?.toUpperCase() ?? "";
-  const requestUnavailableMessage = validation ? statusMessage(normalizedStatus) : null;
-  const canContinue = Boolean(token && validation && normalizedStatus === "PENDING" && !error);
+  const requestUnavailableMessage = validation
+    ? statusMessage(normalizedStatus)
+    : null;
+  const canContinue = Boolean(
+    token && validation && normalizedStatus === "PENDING" && !error,
+  );
 
   async function handleContinue() {
     if (!canContinue) return;
@@ -91,8 +105,16 @@ export function RequestGitHubRepositoryAccessPage() {
     setError(null);
     try {
       const data = await publicGitHubAccessApi.continue(token);
-      if (!data.githubAuthorizeUrl || !isValidGitHubAuthorizeUrl(data.githubAuthorizeUrl)) {
-        setError(apiError("GitHub authorization URL could not be prepared. Please try again.", 503));
+      if (
+        !data.githubAuthorizeUrl ||
+        !isValidGitHubAuthorizeUrl(data.githubAuthorizeUrl)
+      ) {
+        setError(
+          apiError(
+            "GitHub authorization URL could not be prepared. Please try again.",
+            503,
+          ),
+        );
         return;
       }
       window.location.assign(data.githubAuthorizeUrl);
@@ -100,7 +122,10 @@ export function RequestGitHubRepositoryAccessPage() {
       setError(
         isApiException(caught)
           ? caught.apiError
-          : apiError("Unable to continue to GitHub right now. Please try again.", 503),
+          : apiError(
+              "Unable to continue to GitHub right now. Please try again.",
+              503,
+            ),
       );
     } finally {
       setIsContinuing(false);
@@ -118,7 +143,10 @@ export function RequestGitHubRepositoryAccessPage() {
             Authorize Repository Access
           </h1>
           <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
-            This request uses the same ResearchTrack GitHub App authorization as a direct connection. You are only authorizing the app on behalf of the requested GitHub owner; the ResearchTrack supervisor will choose which authorized repositories to link afterwards.
+            This request uses the same ResearchTrack GitHub App authorization as
+            a direct connection. You are only authorizing the app on behalf of
+            the requested GitHub owner; the ResearchTrack supervisor will choose
+            which authorized repositories to link afterwards.
           </p>
 
           {isLoading ? (
@@ -128,25 +156,50 @@ export function RequestGitHubRepositoryAccessPage() {
           ) : validation ? (
             <div className="mt-7 grid gap-3 sm:grid-cols-3">
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">Project</p>
-                <p className="mt-1 text-sm font-semibold text-slate-800">{validation.projectTitle}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                  Project
+                </p>
+                <p className="mt-1 text-sm font-semibold text-slate-800">
+                  {validation.projectTitle}
+                </p>
               </div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">GitHub owner</p>
-                <p className="mt-1 text-sm font-semibold text-slate-800">{validation.ownerLogin}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                  GitHub owner
+                </p>
+                <p className="mt-1 text-sm font-semibold text-slate-800">
+                  {validation.ownerLogin}
+                </p>
               </div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">Status</p>
-                <p className="mt-1 text-sm font-semibold text-slate-800">{validation.status}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                  Status
+                </p>
+                <p className="mt-1 text-sm font-semibold text-slate-800">
+                  {validation.status}
+                </p>
               </div>
             </div>
           ) : null}
 
           <div className="mt-7 grid gap-3 sm:grid-cols-3">
-            {["Authorize the ResearchTrack GitHub App", "Choose repositories in GitHub", "Return here; supervisor links repositories"].map((label, index) => (
-              <div key={label} className="rounded-2xl border border-slate-200 bg-white p-4">
+            {[
+              "Authorize the ResearchTrack GitHub App",
+              "Choose repositories in GitHub",
+              "Return here; supervisor links repositories",
+            ].map((label, index) => (
+              <div
+                key={label}
+                className="rounded-2xl border border-slate-200 bg-white p-4"
+              >
                 <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                  {index === 0 ? <Github className="h-4 w-4" /> : index === 1 ? <ShieldCheck className="h-4 w-4" /> : <FolderGit2 className="h-4 w-4" />}
+                  {index === 0 ? (
+                    <Github className="h-4 w-4" />
+                  ) : index === 1 ? (
+                    <ShieldCheck className="h-4 w-4" />
+                  ) : (
+                    <FolderGit2 className="h-4 w-4" />
+                  )}
                   Step {index + 1}
                 </div>
                 <p className="mt-2 text-sm text-slate-700">{label}</p>
@@ -166,7 +219,12 @@ export function RequestGitHubRepositoryAccessPage() {
           ) : null}
 
           <div className="mt-8 flex items-center justify-between gap-3">
-            <Link to="/" className={buttonStyles({ variant: "secondary", size: "md" })}>Close</Link>
+            <Link
+              to="/"
+              className={buttonStyles({ variant: "secondary", size: "md" })}
+            >
+              Close
+            </Link>
             <button
               type="button"
               onClick={() => void handleContinue()}

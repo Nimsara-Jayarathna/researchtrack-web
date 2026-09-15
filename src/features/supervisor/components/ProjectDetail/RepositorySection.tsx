@@ -77,9 +77,13 @@ export function RepositorySection({
 
   const [isCreatingAccessRequest, setIsCreatingAccessRequest] = useState(false);
   const [accessRequestOwnerLogin, setAccessRequestOwnerLogin] = useState("");
-  const [accessRequests, setAccessRequests] = useState<GitHubAccessRequestSummary[]>([]);
+  const [accessRequests, setAccessRequests] = useState<
+    GitHubAccessRequestSummary[]
+  >([]);
   const [isLoadingAccessRequests, setIsLoadingAccessRequests] = useState(false);
-  const [revokingAccessRequestId, setRevokingAccessRequestId] = useState<string | null>(null);
+  const [revokingAccessRequestId, setRevokingAccessRequestId] = useState<
+    string | null
+  >(null);
   const [isConfirmingRepositorySelection, setIsConfirmingRepositorySelection] =
     useState(false);
   const [isDismissingPendingAccess, setIsDismissingPendingAccess] =
@@ -109,10 +113,17 @@ export function RepositorySection({
     title: "",
     message: "",
   });
-  const [pendingUnlinkRepositoryId, setPendingUnlinkRepositoryId] = useState<string | null>(null);
-  const [pendingDisconnectSourceId, setPendingDisconnectSourceId] = useState<string | null>(null);
-  const [pendingDisableRepositoryId, setPendingDisableRepositoryId] = useState<string | null>(null);
-  const [pendingRevokeAccessRequestId, setPendingRevokeAccessRequestId] = useState<string | null>(null);
+  const [pendingUnlinkRepositoryId, setPendingUnlinkRepositoryId] = useState<
+    string | null
+  >(null);
+  const [pendingDisconnectSourceId, setPendingDisconnectSourceId] = useState<
+    string | null
+  >(null);
+  const [pendingDisableRepositoryId, setPendingDisableRepositoryId] = useState<
+    string | null
+  >(null);
+  const [pendingRevokeAccessRequestId, setPendingRevokeAccessRequestId] =
+    useState<string | null>(null);
   const autoOpenedPendingAccessRef = useRef(false);
 
   const { isStartingOwnerInstall, startOwnerInstall } = useGitHubSetupFlow(
@@ -205,20 +216,26 @@ export function RepositorySection({
       });
   }, [accessSources, linkedRepositories]);
 
-  const managementSources = useMemo<RepositoryManagementSource[]>(() =>
-    accessSources.map((source) => {
-      const sourceLinks = linkedRepositories.filter((repository) => repository.sourceId === source.id);
-      return {
-        id: source.id,
-        ownerLogin: source.ownerLogin,
-        accessType: source.accessType,
-        installationId: source.installationId,
-        linkedRepositoryCount: sourceLinks.length,
-        hasSyncInProgress: sourceLinks.some(
-          (repository) => normalizeSyncStatus(repository.syncStatus) === "IN_PROGRESS",
-        ),
-      };
-    }), [accessSources, linkedRepositories]);
+  const managementSources = useMemo<RepositoryManagementSource[]>(
+    () =>
+      accessSources.map((source) => {
+        const sourceLinks = linkedRepositories.filter(
+          (repository) => repository.sourceId === source.id,
+        );
+        return {
+          id: source.id,
+          ownerLogin: source.ownerLogin,
+          accessType: source.accessType,
+          installationId: source.installationId,
+          linkedRepositoryCount: sourceLinks.length,
+          hasSyncInProgress: sourceLinks.some(
+            (repository) =>
+              normalizeSyncStatus(repository.syncStatus) === "IN_PROGRESS",
+          ),
+        };
+      }),
+    [accessSources, linkedRepositories],
+  );
 
   const selection = useRepositorySelection(
     repositorySelectionCapacity > 0 ? repositorySelectionCapacity : 0,
@@ -297,7 +314,11 @@ export function RepositorySection({
   }, [clearSelection, isModalOpen, pendingSourceId]);
 
   useEffect(() => {
-    if (!isModalOpen || selectedMethod !== "INSTALLATION_REQUESTED" || modalStep !== "method") {
+    if (
+      !isModalOpen ||
+      selectedMethod !== "INSTALLATION_REQUESTED" ||
+      modalStep !== "method"
+    ) {
       return;
     }
     void loadAccessRequests();
@@ -456,7 +477,9 @@ export function RepositorySection({
   async function loadAccessRequests() {
     setIsLoadingAccessRequests(true);
     try {
-      const requests = await supervisorApi.listGitHubAccessSourceRequests(project.id);
+      const requests = await supervisorApi.listGitHubAccessSourceRequests(
+        project.id,
+      );
       setAccessRequests(requests);
     } catch (error) {
       const message = isApiException(error)
@@ -478,14 +501,22 @@ export function RepositorySection({
     setPendingRevokeAccessRequestId(null);
     setRevokingAccessRequestId(requestId);
     try {
-      await supervisorApi.revokeGitHubAccessSourceRequest(project.id, requestId);
-      if (accessRequests.find((request) => request.id === requestId)?.requestUrl === generatedAccessRequestUrl) {
+      await supervisorApi.revokeGitHubAccessSourceRequest(
+        project.id,
+        requestId,
+      );
+      if (
+        accessRequests.find((request) => request.id === requestId)
+          ?.requestUrl === generatedAccessRequestUrl
+      ) {
         setGeneratedAccessRequestUrl(null);
         setGeneratedAccessRequestExpiresAt(null);
       }
       await loadAccessRequests();
     } catch (error) {
-      const message = isApiException(error) ? error.apiError.message : "Unable to revoke the access request.";
+      const message = isApiException(error)
+        ? error.apiError.message
+        : "Unable to revoke the access request.";
       openRequestModal("error", "Request revoke failed", message);
     } finally {
       setRevokingAccessRequestId(null);
@@ -495,7 +526,11 @@ export function RepositorySection({
   async function handleCreateAccessRequest() {
     const ownerLogin = accessRequestOwnerLogin.trim();
     if (!ownerLogin) {
-      openRequestModal("error", "GitHub owner required", "Enter the GitHub user or organization that should authorize the app.");
+      openRequestModal(
+        "error",
+        "GitHub owner required",
+        "Enter the GitHub user or organization that should authorize the app.",
+      );
       return;
     }
     setIsCreatingAccessRequest(true);
@@ -636,10 +671,16 @@ export function RepositorySection({
   }
 
   async function handleRefreshRepository(linkId: string) {
-    const target = linkedRepositories.find((repository) => repository.id === linkId);
+    const target = linkedRepositories.find(
+      (repository) => repository.id === linkId,
+    );
     const syncStatus = normalizeSyncStatus(target?.syncStatus);
     if (syncStatus === "IN_PROGRESS" || syncStatus === "PENDING") {
-      openRequestModal("error", "Synchronization already active", "This repository already has a synchronization queued or in progress.");
+      openRequestModal(
+        "error",
+        "Synchronization already active",
+        "This repository already has a synchronization queued or in progress.",
+      );
       return;
     }
     setIsMutatingLinks(true);
@@ -775,7 +816,11 @@ export function RepositorySection({
 
   async function handleEnableRepository(row: RepositoryManagementRow) {
     if (normalizeSyncStatus(row.syncStatus) === "IN_PROGRESS") {
-      openRequestModal("error", "Repository is syncing", "Wait for synchronization to finish before changing repository state.");
+      openRequestModal(
+        "error",
+        "Repository is syncing",
+        "Wait for synchronization to finish before changing repository state.",
+      );
       return;
     }
     if (row.linkId) {
@@ -792,7 +837,7 @@ export function RepositorySection({
       );
       try {
         await supervisorApi.enableGitHubRepository(row.linkId);
-          openRequestModal(
+        openRequestModal(
           "success",
           "Repository enabled",
           "Repository is now active for this project.",
@@ -859,9 +904,15 @@ export function RepositorySection({
   }
 
   function handleDisableRepository(linkId: string) {
-    const target = linkedRepositories.find((repository) => repository.id === linkId);
+    const target = linkedRepositories.find(
+      (repository) => repository.id === linkId,
+    );
     if (normalizeSyncStatus(target?.syncStatus) === "IN_PROGRESS") {
-      openRequestModal("error", "Repository is syncing", "Cannot disable a repository while synchronization is in progress.");
+      openRequestModal(
+        "error",
+        "Repository is syncing",
+        "Cannot disable a repository while synchronization is in progress.",
+      );
       return;
     }
     setPendingDisableRepositoryId(linkId);
@@ -1039,7 +1090,9 @@ export function RepositorySection({
           isLoadingAccessRequests={isLoadingAccessRequests}
           revokingAccessRequestId={revokingAccessRequestId}
           onReloadAccessRequests={() => void loadAccessRequests()}
-          onRevokeAccessRequest={(requestId) => void handleRevokeAccessRequest(requestId)}
+          onRevokeAccessRequest={(requestId) =>
+            void handleRevokeAccessRequest(requestId)
+          }
           generatedAccessRequestUrl={generatedAccessRequestUrl}
           generatedAccessRequestExpiresAt={generatedAccessRequestExpiresAt}
           onCopyAccessRequestUrl={() => void handleCopyAccessRequestUrl()}
@@ -1108,10 +1161,16 @@ export function RepositorySection({
           const repository = linkedRepositories.find(
             (item) => item.id === pendingUnlinkRepositoryId,
           );
-          const label = repository?.customName || repository?.fullName || repository?.name || "this repository";
+          const label =
+            repository?.customName ||
+            repository?.fullName ||
+            repository?.name ||
+            "this repository";
           return (
             <span>
-              Unlink <strong>{label}</strong> from this ResearchTrack project? Existing synchronized evidence will remain in history, but it will no longer be attached to an active repository link.
+              Unlink <strong>{label}</strong> from this ResearchTrack project?
+              Existing synchronized evidence will remain in history, but it will
+              no longer be attached to an active repository link.
             </span>
           );
         })()}
@@ -1133,7 +1192,11 @@ export function RepositorySection({
           ).length;
           return (
             <span>
-              Disconnect GitHub App access for <strong>{source?.ownerLogin ?? "this source"}</strong>? This removes {affectedCount} linked repositor{affectedCount === 1 ? "y" : "ies"} from this ResearchTrack project. It does not uninstall the GitHub App from GitHub.
+              Disconnect GitHub App access for{" "}
+              <strong>{source?.ownerLogin ?? "this source"}</strong>? This
+              removes {affectedCount} linked repositor
+              {affectedCount === 1 ? "y" : "ies"} from this ResearchTrack
+              project. It does not uninstall the GitHub App from GitHub.
             </span>
           );
         })()}
@@ -1150,10 +1213,16 @@ export function RepositorySection({
           const repository = linkedRepositories.find(
             (item) => item.id === pendingDisableRepositoryId,
           );
-          const label = repository?.customName || repository?.fullName || repository?.name || "this repository";
+          const label =
+            repository?.customName ||
+            repository?.fullName ||
+            repository?.name ||
+            "this repository";
           return (
             <span>
-              Disable <strong>{label}</strong>? The link and synchronized history are kept, but new synchronization pauses until you enable it again.
+              Disable <strong>{label}</strong>? The link and synchronized
+              history are kept, but new synchronization pauses until you enable
+              it again.
             </span>
           );
         })()}
@@ -1202,7 +1271,9 @@ export function RepositorySection({
               onClick={() => void handleOpenManageRepositories()}
               disabled={isResolvingPendingAccess || !limitsLoaded}
             >
-              {isResolvingPendingAccess || !limitsLoaded ? "Loading..." : "Manage repositories"}
+              {isResolvingPendingAccess || !limitsLoaded
+                ? "Loading..."
+                : "Manage repositories"}
             </button>
             {hasUnacknowledgedAccess && (
               <span className="absolute -right-1 -top-1 flex h-3 w-3">
@@ -1247,8 +1318,8 @@ export function RepositorySection({
       <p className="mt-2 text-xs text-muted-foreground">
         {limitsLoaded ? (
           <>
-            Linked {linkedCount} / {maxLinkedRepositories} repositories · Enabled{" "}
-            {enabledCount} / {maxEnabledRepositories}.
+            Linked {linkedCount} / {maxLinkedRepositories} repositories ·
+            Enabled {enabledCount} / {maxEnabledRepositories}.
           </>
         ) : (
           "Loading repository limits..."
@@ -1266,7 +1337,9 @@ export function RepositorySection({
                 GitHub access granted
               </p>
               <p className="mt-1 text-xs leading-5 text-emerald-800">
-                A GitHub App access request was completed. Choose the repositories to link to this project and select the primary repository.
+                A GitHub App access request was completed. Choose the
+                repositories to link to this project and select the primary
+                repository.
               </p>
             </div>
           </div>
@@ -1276,7 +1349,9 @@ export function RepositorySection({
             onClick={() => void handleOpenManageRepositories()}
             disabled={isResolvingPendingAccess || !limitsLoaded}
           >
-            {isResolvingPendingAccess || !limitsLoaded ? "Loading..." : "Choose repositories"}
+            {isResolvingPendingAccess || !limitsLoaded
+              ? "Loading..."
+              : "Choose repositories"}
           </button>
         </div>
       ) : null}

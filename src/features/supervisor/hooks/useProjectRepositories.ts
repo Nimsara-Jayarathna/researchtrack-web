@@ -60,14 +60,21 @@ export function useProjectRepositories(
       setError(null);
 
       try {
-        const next = await supervisorApi.getProjectGitHubRepositories(projectId, {
-          forceRefresh,
-        });
+        const next = await supervisorApi.getProjectGitHubRepositories(
+          projectId,
+          {
+            forceRefresh,
+          },
+        );
         if (requestVersion === requestVersionRef.current) setData(next);
         return next;
       } catch (loadError) {
         if (requestVersion === requestVersionRef.current) {
-          setError(isApiException(loadError) ? loadError.apiError : fallbackError(projectId));
+          setError(
+            isApiException(loadError)
+              ? loadError.apiError
+              : fallbackError(projectId),
+          );
         }
         return null;
       } finally {
@@ -90,10 +97,13 @@ export function useProjectRepositories(
       return;
     }
 
-    const unsubscribe = subscribeProjectGitHubRepositories(projectId, (next) => {
-      setData(next);
-      setError(null);
-    });
+    const unsubscribe = subscribeProjectGitHubRepositories(
+      projectId,
+      (next) => {
+        setData(next);
+        setError(null);
+      },
+    );
 
     const cached = getProjectGitHubRepositoriesCacheSnapshot(projectId);
     setData(cached?.data ?? null);

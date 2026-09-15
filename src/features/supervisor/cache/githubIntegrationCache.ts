@@ -198,7 +198,8 @@ export function invalidateAvailableGitHubRepositoriesCache(
 
 export function invalidateAllAvailableGitHubRepositoriesCache() {
   for (const key of Object.keys(availableEntries)) delete availableEntries[key];
-  for (const key of Object.keys(availableRequests)) delete availableRequests[key];
+  for (const key of Object.keys(availableRequests))
+    delete availableRequests[key];
 }
 
 export function getAvailableGitHubRepositoriesInFlight(sourceId: string) {
@@ -248,5 +249,6 @@ export function clearGitHubIntegrationCache() {
     delete availableEntries[key];
     notify(availableListeners, key, null);
   }
-  for (const key of Object.keys(availableRequests)) delete availableRequests[key];
+  for (const key of Object.keys(availableRequests))
+    delete availableRequests[key];
 }

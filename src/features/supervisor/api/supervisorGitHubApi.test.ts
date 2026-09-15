@@ -271,5 +271,4 @@ describe("supervisor GitHub API contract", () => {
 
     expect(getProjectGitHubRepositoriesCacheSnapshot("project-1")).toBeNull();
   });
-
 });

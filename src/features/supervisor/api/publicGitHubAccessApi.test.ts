@@ -37,7 +37,8 @@ describe("publicGitHubAccessApi", () => {
   it("continues authorization through the public client", async () => {
     publicApiClient.post.mockResolvedValue({
       projectId: "project-1",
-      githubAuthorizeUrl: "https://github.com/apps/researchtrack/installations/new",
+      githubAuthorizeUrl:
+        "https://github.com/apps/researchtrack/installations/new",
     });
 
     await publicGitHubAccessApi.continue("request-token");

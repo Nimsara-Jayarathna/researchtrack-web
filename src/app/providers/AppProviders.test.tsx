@@ -40,8 +40,6 @@ describe("AppProviders auth bootstrap", () => {
       </AppProviders>,
     );
 
-    await waitFor(() =>
-      expect(bootstrapAuthSession).toHaveBeenCalledTimes(1),
-    );
+    await waitFor(() => expect(bootstrapAuthSession).toHaveBeenCalledTimes(1));
   });
 });

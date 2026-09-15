@@ -84,5 +84,4 @@ describe("role project GitHub dashboard cache", () => {
     await api.getProjectGitHubDashboard("project-1", false, "link-1");
     expect(apiClient.get).toHaveBeenCalledTimes(2);
   });
-
 });

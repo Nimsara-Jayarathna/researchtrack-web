@@ -24,7 +24,9 @@ export function useAvailableRepositories(
   const [data, setData] = useState<GitHubAvailableRepositories | null>(
     initialSnapshot?.data ?? null,
   );
-  const [isLoading, setIsLoading] = useState(Boolean(sourceId && !initialSnapshot));
+  const [isLoading, setIsLoading] = useState(
+    Boolean(sourceId && !initialSnapshot),
+  );
   const [error, setError] = useState<ApiError | null>(null);
   const requestVersionRef = useRef(0);
 
@@ -38,9 +40,12 @@ export function useAvailableRepositories(
       setError(null);
 
       try {
-        const next = await supervisorApi.getAvailableGitHubRepositories(sourceId, {
-          forceRefresh,
-        });
+        const next = await supervisorApi.getAvailableGitHubRepositories(
+          sourceId,
+          {
+            forceRefresh,
+          },
+        );
         if (requestVersion === requestVersionRef.current) setData(next);
       } catch (loadError) {
         if (requestVersion === requestVersionRef.current) {
@@ -81,10 +86,13 @@ export function useAvailableRepositories(
       return;
     }
 
-    const unsubscribe = subscribeAvailableGitHubRepositories(sourceId, (next) => {
-      setData(next);
-      setError(null);
-    });
+    const unsubscribe = subscribeAvailableGitHubRepositories(
+      sourceId,
+      (next) => {
+        setData(next);
+        setError(null);
+      },
+    );
     const cached = getAvailableGitHubRepositoriesCacheSnapshot(sourceId);
     setData(cached?.data ?? null);
     if (cached?.isFresh) {

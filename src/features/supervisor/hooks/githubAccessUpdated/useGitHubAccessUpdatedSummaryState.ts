@@ -9,8 +9,9 @@ type UseGitHubAccessUpdatedSummaryStateParams = {
   token: string;
   projectId: string;
   showFailedStatus: boolean;
+  failureMessage?: string | null;
   api: {
-    getPublicGitHubAccessUpdatedSummary: (
+    getExternalGitHubAccessUpdatedSummary: (
       token: string,
     ) => Promise<GitHubAccessUpdatedSummary>;
     getProjectGitHubAccessUpdatedSummary: (
@@ -23,10 +24,11 @@ export function useGitHubAccessUpdatedSummaryState({
   token,
   projectId,
   showFailedStatus,
+  failureMessage,
   api,
 }: UseGitHubAccessUpdatedSummaryStateParams) {
   const {
-    getPublicGitHubAccessUpdatedSummary,
+    getExternalGitHubAccessUpdatedSummary,
     getProjectGitHubAccessUpdatedSummary,
   } = api;
   const [summary, setSummary] = useState<GitHubAccessUpdatedSummary | null>(
@@ -57,7 +59,7 @@ export function useGitHubAccessUpdatedSummaryState({
 
     try {
       const data = token
-        ? await getPublicGitHubAccessUpdatedSummary(token)
+        ? await getExternalGitHubAccessUpdatedSummary(token)
         : await getProjectGitHubAccessUpdatedSummary(projectId);
       setSummary(data);
       setStatus("success");
@@ -78,23 +80,24 @@ export function useGitHubAccessUpdatedSummaryState({
     }
   }, [
     getProjectGitHubAccessUpdatedSummary,
-    getPublicGitHubAccessUpdatedSummary,
+    getExternalGitHubAccessUpdatedSummary,
     projectId,
     token,
   ]);
 
   useEffect(() => {
-    if (showFailedStatus && !token && !projectId) {
+    if (showFailedStatus) {
       setSummary(null);
       setStatus("error");
       setTitle("GitHub access update failed");
       setMessage(
-        "GitHub authorization did not complete. Please create a new access request.",
+        failureMessage ||
+          "GitHub authorization did not complete. Please create a new access request.",
       );
       return;
     }
     void loadSummary();
-  }, [loadSummary, projectId, showFailedStatus, token]);
+  }, [failureMessage, loadSummary, projectId, showFailedStatus, token]);
 
   return { summary, status, title, message, loadSummary };
 }

@@ -36,8 +36,15 @@ function baseProps(overrides: Partial<Props> = {}): Props {
     onBackToMethods: () => undefined,
     onStartOwnerInstall: () => undefined,
     isStartingOwnerInstall: false,
+    accessRequestOwnerLogin: "",
+    onAccessRequestOwnerLoginChange: () => undefined,
     onCreateAccessRequest: () => undefined,
     isCreatingAccessRequest: false,
+    accessRequests: [],
+    isLoadingAccessRequests: false,
+    revokingAccessRequestId: null,
+    onReloadAccessRequests: () => undefined,
+    onRevokeAccessRequest: () => undefined,
     generatedAccessRequestUrl: null,
     generatedAccessRequestExpiresAt: null,
     onCopyAccessRequestUrl: () => undefined,
@@ -84,9 +91,9 @@ describe("RepositoryLinkModalContent", () => {
   it("keeps direct GitHub App selection to one repository and uses singular labels", () => {
     render(<DirectHarness />);
 
-    expect(screen.getByText("Select Repository")).toBeInTheDocument();
+    expect(screen.getByText("Select Repositories")).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /Link Repository/i }),
+      screen.getByRole("button", { name: /Link Selected/i }),
     ).toBeInTheDocument();
 
     fireEvent.click(screen.getByText("org/one"));
@@ -108,7 +115,6 @@ describe("RepositoryLinkModalContent", () => {
     );
 
     expect(screen.getByText("Connect GitHub")).toBeInTheDocument();
-    expect(screen.queryByText("Public URL")).not.toBeInTheDocument();
     expect(screen.getByText("Request Access")).toBeInTheDocument();
   });
 

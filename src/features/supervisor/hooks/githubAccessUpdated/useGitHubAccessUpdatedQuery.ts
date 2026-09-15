@@ -24,6 +24,10 @@ export function useGitHubAccessUpdatedQuery() {
     () => searchParams.get("status")?.trim() ?? "",
     [searchParams],
   );
+  const githubError = useMemo(
+    () => searchParams.get("githubError")?.trim() ?? "",
+    [searchParams],
+  );
 
-  return { token, projectId, sourceId, flowType, setupStatus };
+  return { token, projectId, sourceId, flowType, setupStatus, githubError };
 }

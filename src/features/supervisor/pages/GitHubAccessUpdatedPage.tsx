@@ -21,6 +21,7 @@ export function GitHubAccessUpdatedPage() {
             <GitHubAccessUpdatedSuccessContent
               summary={state.summary}
               scopeLabel={state.scopeLabel}
+              isExternalRecipient={state.isExternalRecipient}
             />
           ) : undefined
         }
@@ -34,8 +35,12 @@ export function GitHubAccessUpdatedPage() {
                 disabled={state.isAcknowledging}
               >
                 {state.isAcknowledging
-                  ? "Opening repository selection..."
-                  : "Review repositories"}
+                  ? state.isExternalRecipient
+                    ? "Finishing..."
+                    : "Opening repository selection..."
+                  : state.isExternalRecipient
+                    ? "Done"
+                    : "Review repositories"}
               </button>
             </div>
           ) : undefined

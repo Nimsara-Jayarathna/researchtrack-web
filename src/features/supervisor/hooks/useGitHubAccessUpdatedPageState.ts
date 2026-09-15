@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supervisorApi } from "../api/supervisorApi";
+import { publicGitHubAccessApi } from "../api/publicGitHubAccessApi";
 import { useGitHubAccessUpdatedQuery } from "./githubAccessUpdated/useGitHubAccessUpdatedQuery";
 import { useGitHubAccessUpdatedSummaryState } from "./githubAccessUpdated/useGitHubAccessUpdatedSummaryState";
 
@@ -23,7 +24,7 @@ function toScopeLabel(
 export function useGitHubAccessUpdatedPageState() {
   const navigate = useNavigate();
 
-  const { token, projectId, sourceId, flowType, setupStatus } =
+  const { token, projectId, sourceId, flowType, setupStatus, githubError } =
     useGitHubAccessUpdatedQuery();
   const [isAcknowledging, setIsAcknowledging] = useState(false);
 
@@ -33,9 +34,11 @@ export function useGitHubAccessUpdatedPageState() {
       token,
       projectId,
       showFailedStatus,
+      failureMessage: githubError
+        ? `GitHub authorization did not complete (${githubError.replace(/_/g, " ")}). Ask the supervisor for a new request if needed.`
+        : null,
       api: {
-        getPublicGitHubAccessUpdatedSummary:
-          supervisorApi.getPublicGitHubAccessUpdatedSummary,
+        getExternalGitHubAccessUpdatedSummary: publicGitHubAccessApi.getResult,
         getProjectGitHubAccessUpdatedSummary:
           supervisorApi.getProjectGitHubAccessUpdatedSummary,
       },
@@ -55,6 +58,19 @@ export function useGitHubAccessUpdatedPageState() {
       : undefined;
 
   async function handleConfirmAndContinue() {
+    if (token) {
+      setIsAcknowledging(true);
+      try {
+        await publicGitHubAccessApi.acknowledgeResult(token);
+      } catch {
+        // The authorization has already completed. Acknowledge is best effort for
+        // the external recipient and must not expose supervisor-only navigation.
+      } finally {
+        navigate("/", { replace: true });
+      }
+      return;
+    }
+
     const resolvedProjectId = projectId || summary?.projectId || "";
     if (!resolvedProjectId) {
       navigate("/", { replace: true });
@@ -63,27 +79,18 @@ export function useGitHubAccessUpdatedPageState() {
 
     const resolvedSourceId = sourceId || summary?.sourceId || "";
     const resolvedFlowType =
-      flowType ||
-      summary?.flowType ||
-      (token ? "INSTALLATION_REQUESTED" : "INSTALLATION_DIRECT");
-
+      flowType || summary?.flowType || "INSTALLATION_DIRECT";
     const nextParams = new URLSearchParams();
     nextParams.set("githubSetup", "success");
     nextParams.set("tab", "overview");
     nextParams.set("githubAccessUpdated", "true");
-    if (resolvedSourceId) {
-      nextParams.set("githubSourceId", resolvedSourceId);
-    }
-    if (resolvedFlowType) {
-      nextParams.set("githubFlow", resolvedFlowType);
-    }
+    if (resolvedSourceId) nextParams.set("githubSourceId", resolvedSourceId);
+    if (resolvedFlowType) nextParams.set("githubFlow", resolvedFlowType);
 
     setIsAcknowledging(true);
     navigate(
       `/supervisor/projects/${resolvedProjectId}?${nextParams.toString()}`,
-      {
-        replace: true,
-      },
+      { replace: true },
     );
   }
 
@@ -102,5 +109,6 @@ export function useGitHubAccessUpdatedPageState() {
     onRetry,
     scopeLabel,
     handleConfirmAndContinue,
+    isExternalRecipient: Boolean(token),
   };
 }

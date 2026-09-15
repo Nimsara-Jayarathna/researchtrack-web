@@ -118,6 +118,7 @@ describe("StudentProjectDetailsPage", () => {
           projectId: "project-1",
           maxLinkedRepositories: 3,
           maxEnabledRepositories: 2,
+          hasUnacknowledgedAccess: false,
           accessSources: [],
           repositories: [],
         },
@@ -206,6 +207,7 @@ describe("StudentProjectDetailsPage", () => {
           projectId: "project-1",
           maxLinkedRepositories: 3,
           maxEnabledRepositories: 2,
+          hasUnacknowledgedAccess: false,
           accessSources: [],
           repositories: [
             {

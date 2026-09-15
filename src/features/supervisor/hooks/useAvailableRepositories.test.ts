@@ -21,7 +21,9 @@ describe("useAvailableRepositories", () => {
     const { result } = renderHook(() => useAvailableRepositories("source-1"));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-    expect(getAvailableGitHubRepositories).toHaveBeenCalledWith("source-1");
+    expect(getAvailableGitHubRepositories).toHaveBeenCalledWith("source-1", {
+      forceRefresh: false,
+    });
     expect(result.current.data?.sourceId).toBe("source-1");
   });
 

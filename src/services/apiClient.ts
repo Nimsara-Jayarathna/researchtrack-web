@@ -11,7 +11,7 @@ import type {
 import { tokenStorage } from "./tokenStorage";
 import type { StoredUser } from "./tokenStorage";
 import { beginSessionTransition, resetSessionState } from "./sessionState";
-import { createManagedAbortSignal } from "./requestRegistry";
+import { createManagedAbortSignal, type RequestScope } from "./requestRegistry";
 
 export class ApiException extends Error {
   readonly apiError: ApiError;
@@ -38,10 +38,31 @@ function isRefreshExcludedPath(path: string): boolean {
     path === REFRESH_PATH ||
     path === `${AUTH_BASE}/logout` ||
     path.startsWith(`${AUTH_BASE}/register`) ||
-    path.startsWith("/api/auth/forgot-password") ||
-    path.startsWith("/api/auth/reset-password")
+    path.startsWith(`${AUTH_BASE}/forgot-password`) ||
+    path.startsWith(`${AUTH_BASE}/reset-password`)
   );
 }
+
+function getRequestScope(path: string): RequestScope {
+  if (
+    path === `${AUTH_BASE}/login` ||
+    path === `${AUTH_BASE}/logout` ||
+    path === REFRESH_PATH
+  ) {
+    return "auth-transition";
+  }
+
+  if (
+    path.startsWith(`${AUTH_BASE}/register`) ||
+    path.startsWith(`${AUTH_BASE}/forgot-password`) ||
+    path.startsWith(`${AUTH_BASE}/reset-password`)
+  ) {
+    return "public";
+  }
+
+  return "session";
+}
+
 let inFlightRefresh: Promise<boolean> | null = null;
 
 async function tryRefresh(): Promise<boolean> {
@@ -212,11 +233,14 @@ async function request<T>(
   path: string,
   init: RequestInit = {},
   isRetry = false,
+  isPublic = false,
 ): Promise<T> {
   const headers = new Headers(init.headers);
   headers.set("Content-Type", "application/json");
 
-  const managed = createManagedAbortSignal();
+  const managed = createManagedAbortSignal(
+    isPublic ? "public" : getRequestScope(path),
+  );
   let response: Response;
 
   try {
@@ -224,7 +248,7 @@ async function request<T>(
       ...init,
       signal: managed.signal,
       headers,
-      credentials: "include",
+      credentials: isPublic ? "omit" : "include",
     });
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") {
@@ -255,7 +279,12 @@ async function request<T>(
     managed.release();
   }
 
-  if (response.status === 401 && !isRefreshExcludedPath(path) && !isRetry) {
+  if (
+    response.status === 401 &&
+    !isPublic &&
+    !isRefreshExcludedPath(path) &&
+    !isRetry
+  ) {
     const refreshed = await tryRefreshSingleFlight();
     if (refreshed) return request<T>(path, init, true);
 
@@ -316,5 +345,21 @@ export const apiClient = {
   },
   del<T>(path: string): Promise<T> {
     return request<T>(path, { method: "DELETE" });
+  },
+};
+
+// Public token-based endpoints deliberately omit ResearchTrack cookies and do
+// not refresh, clear, or redirect the authenticated application session.
+export const publicApiClient = {
+  get<T>(path: string): Promise<T> {
+    return request<T>(path, { method: "GET" }, false, true);
+  },
+  post<T>(path: string, body: unknown): Promise<T> {
+    return request<T>(
+      path,
+      { method: "POST", body: JSON.stringify(body) },
+      false,
+      true,
+    );
   },
 };

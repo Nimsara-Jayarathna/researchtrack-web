@@ -28,7 +28,6 @@ export function createSupervisorProjects(
       lastActivityAt: "2026-03-02T16:30:00.000Z",
       progress: 74,
       communicationUrl: "https://teams.microsoft.com/",
-      repositoryUrl: "https://github.com/example/smart-attendance-tracker",
       jiraBoardUrl: "https://jira.example.com/projects/SAT/board",
       members: [
         { id: "sup-1", name: supervisorName, role: "Supervisor" },
@@ -161,7 +160,6 @@ export function createSupervisorProjects(
       lastActivityAt: "2026-03-01T10:15:00.000Z",
       progress: 32,
       communicationUrl: "https://discord.com/",
-      repositoryUrl: "https://github.com/example/mentorlink-portal",
       members: [
         { id: "sup-1", name: supervisorName, role: "Supervisor" },
         { id: "stu-3", name: "Ayesha Silva", role: "Student" },
@@ -347,7 +345,6 @@ export function createSupervisorProjects(
       milestoneDate: "2026-03-11",
       lastActivityAt: "2026-02-27T17:25:00.000Z",
       progress: 41,
-      repositoryUrl: "https://github.com/example/insight-qa-hub",
       members: [
         { id: "sup-1", name: supervisorName, role: "Supervisor" },
         { id: "stu-7", name: "Sahan Wickramasuriya", role: "Student" },

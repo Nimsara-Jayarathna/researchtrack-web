@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   Users,
   GitCommit,
+  GitPullRequest,
   Clock,
   Activity,
   Github,
@@ -16,15 +17,20 @@ import {
 import type { ApiError } from "@/types";
 import { buttonStyles } from "@/components/ui/Button";
 import { TimeAgo } from "@/components/ui/TimeAgo";
+import { parseApiDate } from "@/lib/dateTime";
+import { isDevelopmentActivity } from "../utils/developmentActivity";
 import type {
   PaginatedListResult,
   ProjectGitHubContributor,
   ProjectGitHubPreview,
   ProjectGitHubRecentCommit,
+  ProjectGitHubPullRequest,
+  ProjectGitHubPullRequestPageOptions,
 } from "../types";
 import { GithubDetailsModal } from "./GithubDetailsModal";
 import { GithubActivityModalContent } from "./GithubActivityModalContent";
 import { GithubContributorsModalContent } from "./GithubContributorsModalContent";
+import { GithubPullRequestsSection } from "./GithubPullRequestsSection";
 import {
   getGeneratedAvatarUrl,
   getGitHubAvatarUrl,
@@ -34,6 +40,7 @@ type CommitActivitySectionProps = {
   isLoading: boolean;
   error: ApiError | null;
   data: ProjectGitHubPreview | null;
+  hasLinkedRepository?: boolean;
   onRetry: () => void;
   loadActivityPage: (
     page: number,
@@ -41,6 +48,13 @@ type CommitActivitySectionProps = {
   loadContributorsPage: (
     page: number,
   ) => Promise<PaginatedListResult<ProjectGitHubContributor>>;
+  loadPullRequestsPage: (
+    page: number,
+    options?: ProjectGitHubPullRequestPageOptions,
+  ) => Promise<PaginatedListResult<ProjectGitHubPullRequest>>;
+  activeRepositoryId?: string | null;
+  activeRepositoryName?: string | null;
+  activeRepositoryLastSyncedAt?: string | null;
   onNavigateToOverview?: () => void;
   emptyStateDescription?: string;
 };
@@ -58,7 +72,10 @@ function formatDateTime(value: string | null) {
     return "Not recorded";
   }
 
-  return dateTimeFormatter.format(new Date(value));
+  const date = parseApiDate(value);
+  return Number.isNaN(date.getTime())
+    ? "Not recorded"
+    : dateTimeFormatter.format(date);
 }
 
 function toDisplayStatus(value: "active" | "idle") {
@@ -284,7 +301,15 @@ type LegacyCommitPayload = {
   recentCommitsPreview?: ProjectGitHubRecentCommit[];
   activitySummary?: {
     totalCommits?: number;
+    totalPullRequests?: number;
+    openPullRequests?: number;
+    draftPullRequests?: number;
+    mergedPullRequests?: number;
+    closedPullRequests?: number;
     lastActivityAt?: string | null;
+    lastActivityType?: string | null;
+    lastActivityPullRequestNumber?: number | null;
+    lastActivityPullRequestStatus?: string | null;
     status?: string;
   };
   commits?: Array<{
@@ -294,6 +319,7 @@ type LegacyCommitPayload = {
     committedAt?: string | null;
     githubUsername?: string | null;
     avatarUrl?: string | null;
+    type?: string | null;
   }>;
   contributors?: Array<ProjectGitHubContributor>;
   recentCommits?: ProjectGitHubRecentCommit[];
@@ -317,7 +343,40 @@ function normalizeDashboardPayload(
         : [],
       activitySummary: {
         totalCommits: Number(maybeDashboard.activitySummary?.totalCommits ?? 0),
+        totalPullRequests: Number(
+          maybeDashboard.activitySummary?.totalPullRequests ?? 0,
+        ),
+        openPullRequests: Number(
+          maybeDashboard.activitySummary?.openPullRequests ?? 0,
+        ),
+        draftPullRequests: Number(
+          maybeDashboard.activitySummary?.draftPullRequests ?? 0,
+        ),
+        mergedPullRequests: Number(
+          maybeDashboard.activitySummary?.mergedPullRequests ?? 0,
+        ),
+        closedPullRequests: Number(
+          maybeDashboard.activitySummary?.closedPullRequests ?? 0,
+        ),
         lastActivityAt: maybeDashboard.activitySummary?.lastActivityAt ?? null,
+        lastActivityType:
+          maybeDashboard.activitySummary?.lastActivityType === "commit" ||
+          maybeDashboard.activitySummary?.lastActivityType === "pull_request"
+            ? maybeDashboard.activitySummary.lastActivityType
+            : null,
+        lastActivityPullRequestNumber:
+          maybeDashboard.activitySummary?.lastActivityPullRequestNumber ?? null,
+        lastActivityPullRequestStatus:
+          maybeDashboard.activitySummary?.lastActivityPullRequestStatus ===
+            "OPEN" ||
+          maybeDashboard.activitySummary?.lastActivityPullRequestStatus ===
+            "DRAFT" ||
+          maybeDashboard.activitySummary?.lastActivityPullRequestStatus ===
+            "MERGED" ||
+          maybeDashboard.activitySummary?.lastActivityPullRequestStatus ===
+            "CLOSED"
+            ? maybeDashboard.activitySummary.lastActivityPullRequestStatus
+            : null,
         status:
           maybeDashboard.activitySummary?.status === "active"
             ? "active"
@@ -342,6 +401,7 @@ function normalizeDashboardPayload(
       githubUsername: commit.githubUsername ?? null,
       avatarUrl: commit.avatarUrl ?? null,
       committedAt: commit.committedAt ?? null,
+      type: commit.type,
     }),
   );
 
@@ -374,15 +434,40 @@ function normalizeDashboardPayload(
       totalCommits: Number(
         legacy.activitySummary?.totalCommits ?? normalizedCommits.length,
       ),
+      totalPullRequests: Number(legacy.activitySummary?.totalPullRequests ?? 0),
+      openPullRequests: Number(legacy.activitySummary?.openPullRequests ?? 0),
+      draftPullRequests: Number(legacy.activitySummary?.draftPullRequests ?? 0),
+      mergedPullRequests: Number(
+        legacy.activitySummary?.mergedPullRequests ?? 0,
+      ),
+      closedPullRequests: Number(
+        legacy.activitySummary?.closedPullRequests ?? 0,
+      ),
       lastActivityAt:
         legacy.activitySummary?.lastActivityAt ??
         normalizedCommits[0]?.committedAt ??
         null,
+      lastActivityType:
+        legacy.activitySummary?.lastActivityType === "pull_request"
+          ? "pull_request"
+          : normalizedCommits.length > 0
+            ? "commit"
+            : null,
+      lastActivityPullRequestNumber:
+        legacy.activitySummary?.lastActivityPullRequestNumber ?? null,
+      lastActivityPullRequestStatus:
+        legacy.activitySummary?.lastActivityPullRequestStatus === "OPEN" ||
+        legacy.activitySummary?.lastActivityPullRequestStatus === "DRAFT" ||
+        legacy.activitySummary?.lastActivityPullRequestStatus === "MERGED" ||
+        legacy.activitySummary?.lastActivityPullRequestStatus === "CLOSED"
+          ? legacy.activitySummary.lastActivityPullRequestStatus
+          : null,
       status:
         legacy.activitySummary?.status === "active" ||
         legacy.activitySummary?.status === "idle"
           ? legacy.activitySummary.status
-          : normalizedCommits.length > 0
+          : normalizedCommits.length > 0 ||
+              Number(legacy.activitySummary?.totalPullRequests ?? 0) > 0
             ? "active"
             : "idle",
     },
@@ -399,25 +484,60 @@ function normalizeDashboardPayload(
   };
 }
 
+function pullRequestSummaryLine(
+  summary: ProjectGitHubPreview["activitySummary"],
+) {
+  const segments = [
+    `${summary.openPullRequests} open`,
+    summary.draftPullRequests > 0 ? `${summary.draftPullRequests} draft` : null,
+    `${summary.mergedPullRequests} merged`,
+    `${summary.closedPullRequests} closed`,
+  ].filter(Boolean);
+
+  return segments.join(" · ");
+}
+
+function lastActivityLabel(summary: ProjectGitHubPreview["activitySummary"]) {
+  if (
+    summary.lastActivityType === "pull_request" &&
+    summary.lastActivityPullRequestNumber
+  ) {
+    const status = summary.lastActivityPullRequestStatus?.toLowerCase();
+    return `PR #${summary.lastActivityPullRequestNumber}${status ? ` ${status}` : ""}`;
+  }
+
+  if (summary.lastActivityType === "commit") {
+    return "Commit pushed";
+  }
+
+  return null;
+}
+
 export function CommitActivitySection({
   isLoading,
   error,
   data,
+  hasLinkedRepository: explicitHasLinkedRepository,
   onRetry,
   loadActivityPage,
   loadContributorsPage,
+  loadPullRequestsPage,
+  activeRepositoryId,
+  activeRepositoryName,
+  activeRepositoryLastSyncedAt,
   onNavigateToOverview,
   emptyStateDescription,
 }: CommitActivitySectionProps) {
   const [openModal, setOpenModal] = useState<
     "activity" | "contributors" | null
   >(null);
+  const [pullRequestListRequest, setPullRequestListRequest] = useState(0);
 
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <section className="grid gap-3 sm:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, index) => (
+        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
             <div
               key={`summary-loading-${index}`}
               className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm"
@@ -455,13 +575,10 @@ export function CommitActivitySection({
     );
   }
 
-  if (!data) {
-    return null;
-  }
-
-  const normalized = normalizeDashboardPayload(data);
+  const normalized = data ? normalizeDashboardPayload(data) : null;
   const hasLinkedRepository =
-    normalized.repositoryLinked && normalized.repositories.length > 0;
+    explicitHasLinkedRepository ??
+    Boolean(normalized?.repositoryLinked && normalized.repositories.length > 0);
 
   if (!hasLinkedRepository) {
     return (
@@ -493,13 +610,40 @@ export function CommitActivitySection({
     );
   }
 
+  if (!normalized) {
+    return (
+      <section className="rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+        <h3 className="text-base font-semibold text-slate-800">
+          Repository connected
+        </h3>
+        <p className="mt-2 text-sm text-slate-500">
+          GitHub activity will appear here as soon as the repository dashboard
+          finishes loading or the current synchronization completes.
+        </p>
+        <button
+          type="button"
+          className={buttonStyles({
+            variant: "secondary",
+            size: "sm",
+            className: "mt-4",
+          })}
+          onClick={onRetry}
+        >
+          Reload activity
+        </button>
+      </section>
+    );
+  }
+
   const topContributors = normalized.contributorsPreview.slice(0, 4);
-  const recentCommits = normalized.recentCommitsPreview.slice(0, 6);
+  const recentCommits = normalized.recentCommitsPreview
+    .filter(isDevelopmentActivity)
+    .slice(0, 5);
 
   return (
     <div className="space-y-6">
       <section className="space-y-4">
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <div className="relative overflow-hidden rounded-3xl border border-slate-100 bg-white p-5 shadow-sm transition-all hover:shadow-md">
             <div className="absolute -right-2 -top-2 h-16 w-16 rounded-full bg-indigo-50/50" />
             <div className="relative">
@@ -514,6 +658,33 @@ export function CommitActivitySection({
               </p>
             </div>
           </div>
+
+          <button
+            type="button"
+            onClick={() => setPullRequestListRequest((value) => value + 1)}
+            disabled={
+              !hasLinkedRepository ||
+              normalized.activitySummary.totalPullRequests === 0
+            }
+            className="relative overflow-hidden rounded-3xl border border-slate-100 bg-white p-5 text-left shadow-sm transition-all hover:border-violet-200 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300 focus-visible:ring-offset-2 disabled:cursor-default disabled:opacity-70"
+            aria-label="View all pull requests"
+          >
+            <div className="absolute -right-2 -top-2 h-16 w-16 rounded-full bg-violet-50/60" />
+            <div className="relative">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-violet-50 text-violet-600">
+                <GitPullRequest className="h-5 w-5" />
+              </div>
+              <p className="mt-4 text-xs font-bold uppercase tracking-[0.15em] text-slate-400">
+                Pull requests
+              </p>
+              <p className="mt-1 text-3xl font-black text-slate-800">
+                {normalized.activitySummary.totalPullRequests}
+              </p>
+              <p className="mt-1 line-clamp-2 text-[10px] font-semibold leading-4 text-slate-400">
+                {pullRequestSummaryLine(normalized.activitySummary)}
+              </p>
+            </div>
+          </button>
 
           <div className="relative overflow-hidden rounded-3xl border border-slate-100 bg-white p-5 shadow-sm transition-all hover:shadow-md">
             <div className="absolute -right-2 -top-2 h-16 w-16 rounded-full bg-amber-50/50" />
@@ -531,6 +702,11 @@ export function CommitActivitySection({
                       date={normalized.activitySummary.lastActivityAt}
                       className="text-lg font-black text-slate-800"
                     />
+                    {lastActivityLabel(normalized.activitySummary) ? (
+                      <span className="mt-0.5 truncate text-[10px] font-bold text-amber-700">
+                        {lastActivityLabel(normalized.activitySummary)}
+                      </span>
+                    ) : null}
                     <span className="text-[10px] font-medium text-slate-400">
                       {formatDateTime(
                         normalized.activitySummary.lastActivityAt,
@@ -551,7 +727,7 @@ export function CommitActivitySection({
                 <Activity className="h-5 w-5" />
               </div>
               <p className="mt-4 text-xs font-bold uppercase tracking-[0.15em] text-slate-400">
-                Sync Status
+                Sync status
               </p>
               <div className="mt-1 flex items-center gap-2">
                 <p className="text-3xl font-black text-slate-800">
@@ -632,6 +808,14 @@ export function CommitActivitySection({
           </div>
         )}
       </section>
+
+      <GithubPullRequestsSection
+        repositoryId={activeRepositoryId ?? null}
+        repositoryName={activeRepositoryName}
+        refreshKey={activeRepositoryLastSyncedAt}
+        openListRequest={pullRequestListRequest}
+        fetchPage={loadPullRequestsPage}
+      />
 
       <section className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
         <div className="flex items-center justify-between gap-3">

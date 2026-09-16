@@ -1,4 +1,5 @@
 type ApiClient = typeof import("@/services/apiClient").apiClient;
+import { toVersionedApiPath } from "@/app/config/apiVersion";
 import {
   appendQuery,
   clearRecord,
@@ -15,6 +16,8 @@ import type {
   ProjectGitHubContributor,
   ProjectGitHubPreview,
   ProjectGitHubRecentCommit,
+  ProjectGitHubPullRequest,
+  ProjectGitHubPullRequestPageOptions,
 } from "@/features/projects/types";
 import type {
   JiraHealth,
@@ -35,6 +38,8 @@ type RoleBasePath = "/api/student" | "/api/supervisor";
 
 type ProjectGitHubActivity = ProjectGitHubPreview;
 
+const PROJECT_GITHUB_DASHBOARD_TTL_MS = 60_000;
+
 type JiraCache = {
   health?: JiraHealth;
   sprintProgress?: JiraSprintProgress;
@@ -51,12 +56,20 @@ export function createRoleProjectApi({
   apiClient,
   roleBasePath,
 }: CreateRoleProjectApiOptions) {
+  // Student GitHub evidence is project-scoped read-only data, not a student
+  // management API. Supervisors keep their compatibility endpoint while
+  // students read through the shared authenticated project contract.
+  const githubProjectBasePath =
+    roleBasePath === "/api/student"
+      ? toVersionedApiPath("/api/projects")
+      : `${roleBasePath}/projects`;
   const cachedProjectGitHubByKey: Partial<
-    Record<string, ProjectGitHubActivity>
+    Record<string, { data: ProjectGitHubActivity; fetchedAt: number }>
   > = {};
   const inFlightProjectGitHubRequestsByKey: Partial<
     Record<string, Promise<ProjectGitHubActivity>>
   > = {};
+  let projectGitHubCacheGeneration = 0;
   const cachedJiraByProjectId: Partial<Record<string, JiraCache>> = {};
   const cachedMeetingChannelsByProjectId: Partial<
     Record<string, MeetingChannel[]>
@@ -72,6 +85,7 @@ export function createRoleProjectApi({
   > = {};
 
   function clearCache(): void {
+    projectGitHubCacheGeneration += 1;
     clearRecord(cachedProjectGitHubByKey);
     clearRecord(inFlightProjectGitHubRequestsByKey);
     clearRecord(cachedJiraByProjectId);
@@ -108,11 +122,16 @@ export function createRoleProjectApi({
   ): Promise<ProjectGitHubActivity> {
     const key = `${projectId}:${linkedRepositoryId ?? ""}`;
 
-    if (!forceRefresh && cachedProjectGitHubByKey[key]) {
-      return cachedProjectGitHubByKey[key];
+    const cached = cachedProjectGitHubByKey[key];
+    if (
+      !forceRefresh &&
+      cached &&
+      Date.now() - cached.fetchedAt < PROJECT_GITHUB_DASHBOARD_TTL_MS
+    ) {
+      return cached.data;
     }
 
-    if (!forceRefresh && inFlightProjectGitHubRequestsByKey[key]) {
+    if (inFlightProjectGitHubRequestsByKey[key]) {
       return inFlightProjectGitHubRequestsByKey[
         key
       ] as Promise<ProjectGitHubActivity>;
@@ -123,17 +142,25 @@ export function createRoleProjectApi({
       params.set("linkedRepositoryId", linkedRepositoryId);
     }
     const suffix = params.toString() ? `?${params.toString()}` : "";
+    const cacheGeneration = projectGitHubCacheGeneration;
     const request = apiClient.get<ProjectGitHubActivity>(
-      `${roleBasePath}/projects/${projectId}/github${suffix}`,
+      `${githubProjectBasePath}/${projectId}/github${suffix}`,
     );
     inFlightProjectGitHubRequestsByKey[key] = request;
 
     try {
       const dashboard = await request;
-      cachedProjectGitHubByKey[key] = dashboard;
+      if (cacheGeneration === projectGitHubCacheGeneration) {
+        cachedProjectGitHubByKey[key] = {
+          data: dashboard,
+          fetchedAt: Date.now(),
+        };
+      }
       return dashboard;
     } finally {
-      delete inFlightProjectGitHubRequestsByKey[key];
+      if (inFlightProjectGitHubRequestsByKey[key] === request) {
+        delete inFlightProjectGitHubRequestsByKey[key];
+      }
     }
   }
 
@@ -150,7 +177,7 @@ export function createRoleProjectApi({
       const payload = await apiClient.get<unknown>(
         appendQuery(
           buildPagedUrl(
-            `${roleBasePath}/projects/${projectId}/github/activity`,
+            `${githubProjectBasePath}/${projectId}/github/activity`,
             page,
           ),
           params,
@@ -190,7 +217,7 @@ export function createRoleProjectApi({
       const payload = await apiClient.get<unknown>(
         appendQuery(
           buildPagedUrl(
-            `${roleBasePath}/projects/${projectId}/github/contributors`,
+            `${githubProjectBasePath}/${projectId}/github/contributors`,
             page,
           ),
           params,
@@ -212,6 +239,50 @@ export function createRoleProjectApi({
         page,
       );
     }
+  }
+
+  async function getProjectGitHubPullRequestsPage(
+    projectId: string,
+    page: number,
+    linkedRepositoryId: string | null | undefined,
+    options: ProjectGitHubPullRequestPageOptions = {},
+  ): Promise<PaginatedListResult<ProjectGitHubPullRequest>> {
+    if (!linkedRepositoryId) {
+      return {
+        items: [],
+        hasMore: false,
+        page,
+        size: options.size ?? 10,
+        total: 0,
+      };
+    }
+
+    const params = new URLSearchParams();
+    const status = options.status ?? "all";
+    if (status !== "all") {
+      params.set("status", status);
+    }
+    const search = options.search?.trim();
+    if (search) {
+      params.set("search", search);
+    }
+
+    const payload = await apiClient.get<unknown>(
+      appendQuery(
+        buildPagedUrl(
+          `${githubProjectBasePath}/${projectId}/github/repositories/${linkedRepositoryId}/pull-requests`,
+          page,
+          options.size ?? 10,
+        ),
+        params,
+      ),
+    );
+
+    return normalizePaginatedPayload<ProjectGitHubPullRequest>(
+      payload,
+      page,
+      options.size ?? 10,
+    );
   }
 
   async function getJiraHealth(projectId: string): Promise<JiraHealth> {
@@ -486,6 +557,7 @@ export function createRoleProjectApi({
     getProjectGitHubDashboard,
     getProjectGitHubActivityPage,
     getProjectGitHubContributorsPage,
+    getProjectGitHubPullRequestsPage,
     getJiraHealth,
     getJiraSprintProgress,
     getJiraWorkload,

@@ -2,7 +2,6 @@ import { buttonStyles } from "@/components/ui/Button";
 import {
   ExternalLink,
   Github,
-  Link2,
   ShieldCheck,
   Info,
   Check,
@@ -12,10 +11,13 @@ import {
   ArrowRight,
   Crown,
 } from "lucide-react";
-import type { GitHubRepositoryOption } from "../../types";
+import type {
+  GitHubAccessRequestSummary,
+  GitHubRepositoryOption,
+} from "../../types";
 
 export type RepositoryLinkMethod =
-  "PUBLIC_URL" | "INSTALLATION_DIRECT" | "INSTALLATION_REQUESTED";
+  "INSTALLATION_DIRECT" | "INSTALLATION_REQUESTED";
 
 type RepositoryLinkModalContentProps = {
   step: "method" | "repository-selection";
@@ -25,16 +27,17 @@ type RepositoryLinkModalContentProps = {
   selectedMethod: RepositoryLinkMethod | null;
   onSelectMethod: (method: RepositoryLinkMethod) => void;
   onBackToMethods: () => void;
-  publicRepositoryUrl: string;
-  publicCustomName: string;
-  onChangePublicRepositoryUrl: (value: string) => void;
-  onChangePublicCustomName: (value: string) => void;
-  onSubmitPublicRepository: () => void;
-  isSubmittingPublicRepository: boolean;
   onStartOwnerInstall: () => void;
   isStartingOwnerInstall: boolean;
+  accessRequestOwnerLogin: string;
+  onAccessRequestOwnerLoginChange: (value: string) => void;
   onCreateAccessRequest: () => void;
   isCreatingAccessRequest: boolean;
+  accessRequests: GitHubAccessRequestSummary[];
+  isLoadingAccessRequests: boolean;
+  revokingAccessRequestId: string | null;
+  onReloadAccessRequests: () => void;
+  onRevokeAccessRequest: (requestId: string) => void;
   generatedAccessRequestUrl: string | null;
   generatedAccessRequestExpiresAt: string | null;
   onCopyAccessRequestUrl: () => void;
@@ -78,16 +81,17 @@ export function RepositoryLinkModalContent({
   selectedMethod,
   onSelectMethod,
   onBackToMethods,
-  publicRepositoryUrl,
-  publicCustomName,
-  onChangePublicRepositoryUrl,
-  onChangePublicCustomName,
-  onSubmitPublicRepository,
-  isSubmittingPublicRepository,
   onStartOwnerInstall,
   isStartingOwnerInstall,
+  accessRequestOwnerLogin,
+  onAccessRequestOwnerLoginChange,
   onCreateAccessRequest,
   isCreatingAccessRequest,
+  accessRequests,
+  isLoadingAccessRequests,
+  revokingAccessRequestId,
+  onReloadAccessRequests,
+  onRevokeAccessRequest,
   generatedAccessRequestUrl,
   generatedAccessRequestExpiresAt,
   onCopyAccessRequestUrl,
@@ -120,17 +124,49 @@ export function RepositoryLinkModalContent({
 
     return (
       <div className="space-y-4">
-        <div className="overflow-hidden rounded-3xl border border-indigo-100 bg-indigo-50/10 p-4 shadow-sm">
+        <div
+          className={`overflow-hidden rounded-3xl border p-4 shadow-sm ${
+            repositorySelectionEntryMode === "callback-requested"
+              ? "border-emerald-200 bg-emerald-50"
+              : "border-indigo-100 bg-indigo-50/10"
+          }`}
+        >
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
-              <Search className="h-4.5 w-4.5" />
+            <div
+              className={`flex h-9 w-9 items-center justify-center rounded-xl ${
+                repositorySelectionEntryMode === "callback-requested"
+                  ? "bg-emerald-100 text-emerald-700"
+                  : "bg-indigo-100 text-indigo-600"
+              }`}
+            >
+              {repositorySelectionEntryMode === "callback-requested" ? (
+                <ShieldCheck className="h-4.5 w-4.5" />
+              ) : (
+                <Search className="h-4.5 w-4.5" />
+              )}
             </div>
             <div>
-              <p className="text-sm font-black text-slate-800">
-                Select Repositories
+              <p
+                className={`text-sm font-black ${
+                  repositorySelectionEntryMode === "callback-requested"
+                    ? "text-emerald-950"
+                    : "text-slate-800"
+                }`}
+              >
+                {repositorySelectionEntryMode === "callback-requested"
+                  ? "GitHub access granted — choose repositories"
+                  : "Select Repositories"}
               </p>
-              <p className="text-[10px] font-bold text-indigo-500/70">
-                {sourceDescription}
+              <p
+                className={`text-[10px] font-bold ${
+                  repositorySelectionEntryMode === "callback-requested"
+                    ? "text-emerald-700"
+                    : "text-indigo-500/70"
+                }`}
+              >
+                {repositorySelectionEntryMode === "callback-requested"
+                  ? `${availableRepositories.length} repositories are available. Select up to ${maxSelectableCount} to link, then choose the primary repository.`
+                  : sourceDescription}
               </p>
             </div>
           </div>
@@ -172,7 +208,9 @@ export function RepositoryLinkModalContent({
           <div className="rounded-3xl border border-slate-100 bg-slate-50/50 p-12 text-center text-slate-400 shadow-sm">
             <Github className="mx-auto h-10 w-10 opacity-20" />
             <p className="mt-4 text-sm font-bold">
-              No repositories available here.
+              {repositorySelectionEntryMode === "callback-direct"
+                ? "No repositories are available to this GitHub installation."
+                : "No repositories available here."}
             </p>
           </div>
         ) : (
@@ -387,7 +425,7 @@ export function RepositoryLinkModalContent({
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {[
           {
             id: "INSTALLATION_DIRECT",
@@ -396,14 +434,6 @@ export function RepositoryLinkModalContent({
             title: "Connect GitHub",
             subtitle: "RECOMMENDED",
             description: "Link from your account or organizations.",
-          },
-          {
-            id: "PUBLIC_URL",
-            icon: Link2,
-            color: "amber",
-            title: "Public URL",
-            subtitle: "NO AUTH",
-            description: "Quickly link any public repo via URL.",
           },
           {
             id: "INSTALLATION_REQUESTED",
@@ -465,67 +495,6 @@ export function RepositoryLinkModalContent({
       </div>
 
       <div className="mt-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        {selectedMethod === "PUBLIC_URL" && (
-          <div className="overflow-hidden rounded-3xl border border-amber-100 bg-amber-50/20 p-6 shadow-sm">
-            <h5 className="flex items-center gap-2 text-[10px] font-black text-amber-900 uppercase tracking-widest">
-              <Link2 className="h-3.5 w-3.5" />
-              Public URL Details
-            </h5>
-            <div className="mt-4 flex flex-col gap-3">
-              <div className="space-y-1.5">
-                <label className="ml-1 text-[9px] font-black uppercase tracking-widest text-amber-700/60">
-                  Repository URL
-                </label>
-                <input
-                  value={publicRepositoryUrl}
-                  onChange={(event) =>
-                    onChangePublicRepositoryUrl(event.target.value)
-                  }
-                  placeholder="https://github.com/owner/repo"
-                  disabled={isSubmittingPublicRepository}
-                  className="h-10 w-full rounded-2xl border border-amber-100 bg-white px-4 text-sm font-bold text-slate-800 outline-none transition-all focus:border-amber-400 focus:ring-4 focus:ring-amber-50"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="ml-1 text-[9px] font-black uppercase tracking-widest text-amber-700/60">
-                  Display Name (Optional)
-                </label>
-                <input
-                  value={publicCustomName}
-                  onChange={(event) =>
-                    onChangePublicCustomName(event.target.value)
-                  }
-                  placeholder="e.g. My Awesome Project"
-                  disabled={isSubmittingPublicRepository}
-                  className="h-10 w-full rounded-2xl border border-amber-100 bg-white px-4 text-sm font-bold text-slate-800 outline-none transition-all focus:border-amber-400 focus:ring-4 focus:ring-amber-50"
-                />
-              </div>
-            </div>
-            <div className="mt-6 flex justify-end">
-              <button
-                type="button"
-                className={buttonStyles({
-                  variant: "primary",
-                  size: "sm",
-                  className:
-                    "rounded-xl px-8 bg-amber-600 hover:bg-amber-700 shadow-lg shadow-amber-100 text-[10px] font-black uppercase tracking-wider",
-                })}
-                onClick={onSubmitPublicRepository}
-                disabled={
-                  isSubmittingPublicRepository || !publicRepositoryUrl.trim()
-                }
-              >
-                {isSubmittingPublicRepository ? (
-                  <RefreshCw className="mr-2 h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Check className="mr-2 h-3.5 w-3.5" />
-                )}
-                Link Repository
-              </button>
-            </div>
-          </div>
-        )}
-
         {selectedMethod === "INSTALLATION_DIRECT" && (
           <div className="overflow-hidden rounded-3xl border border-indigo-100 bg-indigo-50/20 p-6 shadow-sm">
             <h5 className="flex items-center gap-2 text-[10px] font-black text-indigo-900 uppercase tracking-widest">
@@ -560,80 +529,190 @@ export function RepositoryLinkModalContent({
         )}
 
         {selectedMethod === "INSTALLATION_REQUESTED" && (
-          <div className="overflow-hidden rounded-3xl border border-slate-100 bg-slate-50 p-6 shadow-sm">
-            <h5 className="flex items-center gap-2 text-[10px] font-black text-slate-800 uppercase tracking-widest">
-              <ShieldCheck className="h-3.5 w-3.5 text-slate-500" />
-              Access Request
-            </h5>
-            <p className="mt-3 text-xs font-bold text-slate-500/70 leading-relaxed">
-              Generate a secure link for the project owner to approve access
-              automatically.
-            </p>
-
-            <div className="mt-6 flex justify-end">
-              {!generatedAccessRequestUrl && (
-                <button
-                  type="button"
-                  className={buttonStyles({
-                    variant: "primary",
-                    size: "sm",
-                    className:
-                      "rounded-xl px-8 shadow-lg shadow-slate-200 text-[10px] font-black uppercase tracking-wider bg-slate-800 hover:bg-slate-900",
-                  })}
-                  onClick={onCreateAccessRequest}
-                  disabled={isCreatingAccessRequest}
-                >
-                  {isCreatingAccessRequest ? (
-                    <RefreshCw className="mr-2 h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <ArrowRight className="mr-2 h-3.5 w-3.5" />
-                  )}
-                  Generate Request
-                </button>
-              )}
+          <div className="space-y-4 overflow-hidden rounded-3xl border border-slate-100 bg-slate-50 p-6 shadow-sm">
+            <div>
+              <h5 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-800">
+                <ShieldCheck className="h-3.5 w-3.5 text-slate-500" /> Access
+                Request
+              </h5>
+              <p className="mt-3 text-xs font-bold leading-relaxed text-slate-500/80">
+                Enter the GitHub user or organization that must authorize the
+                ResearchTrack GitHub App. The recipient follows the same GitHub
+                App flow as direct access; only the authorization initiator is
+                different.
+              </p>
             </div>
 
-            {generatedAccessRequestUrl && (
-              <div className="mt-5 animate-in zoom-in-95 duration-300">
-                <div className="rounded-2xl bg-white p-5 shadow-inner ring-1 ring-slate-100">
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                      Share Link
-                    </p>
-                    {generatedAccessRequestExpiresAt && (
-                      <span className="text-[9px] font-black text-rose-500 bg-rose-50 px-2 py-0.5 rounded-lg">
-                        EXP:{" "}
-                        {new Date(
-                          generatedAccessRequestExpiresAt,
-                        ).toLocaleDateString()}
-                      </span>
+            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <label
+                className="text-[10px] font-black uppercase tracking-wider text-slate-500"
+                htmlFor="github-access-owner"
+              >
+                GitHub owner / organization
+              </label>
+              <input
+                id="github-access-owner"
+                value={accessRequestOwnerLogin}
+                onChange={(event) =>
+                  onAccessRequestOwnerLoginChange(event.target.value)
+                }
+                placeholder="e.g. research-team-org"
+                disabled={
+                  isCreatingAccessRequest || Boolean(generatedAccessRequestUrl)
+                }
+                className="mt-2 h-10 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 disabled:bg-slate-50"
+              />
+              {!generatedAccessRequestUrl ? (
+                <div className="mt-4 flex justify-end">
+                  <button
+                    type="button"
+                    className={buttonStyles({
+                      variant: "primary",
+                      size: "sm",
+                      className:
+                        "rounded-xl px-6 text-[10px] font-black uppercase tracking-wider",
+                    })}
+                    onClick={onCreateAccessRequest}
+                    disabled={
+                      isCreatingAccessRequest || !accessRequestOwnerLogin.trim()
+                    }
+                  >
+                    {isCreatingAccessRequest ? (
+                      <RefreshCw className="mr-2 h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <ArrowRight className="mr-2 h-3.5 w-3.5" />
                     )}
-                  </div>
-                  <div className="mt-2.5 flex items-center gap-3 rounded-xl bg-slate-50 p-3 font-mono text-[10px] text-slate-600 break-all select-all">
-                    {generatedAccessRequestUrl}
-                  </div>
-                  <div className="mt-5 flex justify-end">
-                    <button
-                      type="button"
-                      className={buttonStyles({
-                        variant: "primary",
-                        size: "sm",
-                        className:
-                          "rounded-xl px-8 shadow-lg shadow-indigo-100 text-[10px] font-black uppercase tracking-wider",
-                      })}
-                      onClick={onCopyAccessRequestUrl}
-                    >
-                      {isAccessRequestLinkCopied ? (
-                        <Check className="mr-2 h-3.5 w-3.5" />
-                      ) : (
-                        <Copy className="mr-2 h-3.5 w-3.5" />
-                      )}
-                      {isAccessRequestLinkCopied ? "Copied" : "Copy Link"}
-                    </button>
-                  </div>
+                    Generate secure request
+                  </button>
+                </div>
+              ) : null}
+            </div>
+
+            {generatedAccessRequestUrl ? (
+              <div className="rounded-2xl bg-white p-5 ring-1 ring-slate-100">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                    Share this one-time request link
+                  </p>
+                  {generatedAccessRequestExpiresAt ? (
+                    <span className="rounded-lg bg-rose-50 px-2 py-0.5 text-[9px] font-black text-rose-500">
+                      Expires{" "}
+                      {new Date(
+                        generatedAccessRequestExpiresAt,
+                      ).toLocaleString()}
+                    </span>
+                  ) : null}
+                </div>
+                <div className="mt-2.5 break-all rounded-xl bg-slate-50 p-3 font-mono text-[10px] text-slate-600">
+                  {generatedAccessRequestUrl}
+                </div>
+                <div className="mt-4 flex justify-end">
+                  <button
+                    type="button"
+                    className={buttonStyles({
+                      variant: "primary",
+                      size: "sm",
+                      className:
+                        "rounded-xl px-6 text-[10px] font-black uppercase tracking-wider",
+                    })}
+                    onClick={onCopyAccessRequestUrl}
+                  >
+                    {isAccessRequestLinkCopied ? (
+                      <Check className="mr-2 h-3.5 w-3.5" />
+                    ) : (
+                      <Copy className="mr-2 h-3.5 w-3.5" />
+                    )}
+                    {isAccessRequestLinkCopied ? "Copied" : "Copy link"}
+                  </button>
                 </div>
               </div>
-            )}
+            ) : null}
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                    Recent requests
+                  </p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    Pending requests can be copied again or revoked. Expired and
+                    completed requests remain visible for audit.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={onReloadAccessRequests}
+                  disabled={isLoadingAccessRequests}
+                  className="rounded-lg border border-slate-200 p-2 text-slate-500 disabled:opacity-50"
+                  title="Refresh requests"
+                >
+                  <RefreshCw
+                    className={`h-4 w-4 ${isLoadingAccessRequests ? "animate-spin" : ""}`}
+                  />
+                </button>
+              </div>
+              <div className="mt-3 space-y-2">
+                {isLoadingAccessRequests ? (
+                  <p className="text-xs text-slate-500">Loading requests…</p>
+                ) : accessRequests.length === 0 ? (
+                  <p className="text-xs text-slate-500">
+                    No access requests yet.
+                  </p>
+                ) : (
+                  accessRequests.map((request) => (
+                    <div
+                      key={request.id}
+                      className="rounded-xl border border-slate-100 bg-slate-50 p-3"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <p className="text-xs font-bold text-slate-800">
+                            {request.ownerLogin}
+                          </p>
+                          <p className="mt-0.5 text-[10px] text-slate-500">
+                            {request.status} · expires{" "}
+                            {new Date(request.expiresAt).toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {request.status === "PENDING" &&
+                          request.requestUrl ? (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                void navigator.clipboard.writeText(
+                                  request.requestUrl!,
+                                )
+                              }
+                              className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[10px] font-bold text-slate-600"
+                            >
+                              Copy
+                            </button>
+                          ) : null}
+                          {request.status === "PENDING" ? (
+                            <button
+                              type="button"
+                              onClick={() => onRevokeAccessRequest(request.id)}
+                              disabled={revokingAccessRequestId === request.id}
+                              className="rounded-lg border border-rose-200 bg-white px-2.5 py-1.5 text-[10px] font-bold text-rose-600 disabled:opacity-50"
+                            >
+                              {revokingAccessRequestId === request.id
+                                ? "Revoking…"
+                                : "Revoke"}
+                            </button>
+                          ) : null}
+                        </div>
+                      </div>
+                      {request.errorCode ? (
+                        <p className="mt-2 text-[10px] font-semibold text-rose-600">
+                          {request.errorCode.replace(/_/g, " ")}
+                        </p>
+                      ) : null}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>

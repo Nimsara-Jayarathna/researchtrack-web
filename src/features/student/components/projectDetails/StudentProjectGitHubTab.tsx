@@ -6,27 +6,28 @@ import {
   Github,
 } from "lucide-react";
 import { CommitActivitySection } from "@/features/projects/components/CommitActivitySection";
+import { ErrorState } from "@/components/feedback/ErrorState";
+import type { ApiError } from "@/types";
 import { LastSyncedBadge } from "@/components/ui/LastSyncedBadge";
 import { SyncStatusBadge } from "@/components/ui/SyncStatusBadge";
 import { studentApi } from "../../api/studentApi";
-import type { ProjectGitHubActivity } from "../../types";
 import type { ProjectGitHubRepositories } from "@/features/shared/types/github.types";
 import { useStudentProjectGitHubDashboard } from "../../hooks/projectDetails/useStudentProjectGitHubDashboard";
 
 type StudentProjectGitHubTabProps = {
   projectId: string | undefined;
-  projectGithubView: ProjectGitHubActivity | null;
   githubRepositories: ProjectGitHubRepositories | null | undefined;
   isPageLoading: boolean;
-  onRetryReloadProject: () => void;
+  repositoriesError?: ApiError | null;
+  onRetryRepositories?: () => void;
 };
 
 export function StudentProjectGitHubTab({
   projectId,
-  projectGithubView,
   githubRepositories,
   isPageLoading,
-  onRetryReloadProject,
+  repositoriesError = null,
+  onRetryRepositories,
 }: StudentProjectGitHubTabProps) {
   const {
     enabledRepositories,
@@ -36,18 +37,27 @@ export function StudentProjectGitHubTab({
     activeRepository,
     activeRepositorySyncStatus,
     githubView,
+    githubViewError,
     isGitHubViewLoading,
+    retryGitHubView,
     selectRepository,
     loadActivityPage,
     loadContributorsPage,
+    loadPullRequestsPage,
   } = useStudentProjectGitHubDashboard({
     projectId,
-    projectGithubView,
     githubRepositories,
     fetchDashboard: studentApi.getProjectGitHubDashboard,
     fetchActivityPage: studentApi.getProjectGitHubActivityPage,
     fetchContributorsPage: studentApi.getProjectGitHubContributorsPage,
+    fetchPullRequestsPage: studentApi.getProjectGitHubPullRequestsPage,
   });
+
+  if (repositoriesError && !githubRepositories) {
+    return (
+      <ErrorState error={repositoriesError} onRetry={onRetryRepositories} />
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -188,11 +198,18 @@ export function StudentProjectGitHubTab({
 
       <CommitActivitySection
         isLoading={isPageLoading || isGitHubViewLoading}
-        error={null}
+        error={githubViewError}
         data={githubView}
-        onRetry={onRetryReloadProject}
+        hasLinkedRepository={enabledRepositories.length > 0}
+        onRetry={() => void retryGitHubView()}
         loadActivityPage={loadActivityPage}
         loadContributorsPage={loadContributorsPage}
+        loadPullRequestsPage={loadPullRequestsPage}
+        activeRepositoryId={activeRepository?.id ?? null}
+        activeRepositoryName={
+          activeRepository?.customName?.trim() || activeRepository?.name || null
+        }
+        activeRepositoryLastSyncedAt={activeRepository?.lastSyncedAt ?? null}
         emptyStateDescription="Please wait for your supervisor to link a GitHub repository to this project. Repository management is restricted to supervisors."
       />
     </div>

@@ -43,7 +43,6 @@ const project: SupervisorProjectDetail = {
   milestoneDate: null,
   progressPercent: 0,
   lastActivityAt: null,
-  repositoryUrl: null,
   github: createEmptyProjectGitHubPreview(),
   githubRepositories: null,
   jira: null,

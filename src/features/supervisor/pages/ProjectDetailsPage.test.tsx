@@ -100,7 +100,15 @@ describe("ProjectDetailsPage", () => {
       primaryRepositoryUrl: null,
       activitySummary: {
         totalCommits: 0,
+        totalPullRequests: 0,
+        openPullRequests: 0,
+        draftPullRequests: 0,
+        mergedPullRequests: 0,
+        closedPullRequests: 0,
         lastActivityAt: null,
+        lastActivityType: null,
+        lastActivityPullRequestNumber: null,
+        lastActivityPullRequestStatus: null,
         status: "idle",
       },
       contributorsPreview: [],
@@ -117,7 +125,6 @@ describe("ProjectDetailsPage", () => {
       milestoneDate: null,
       progressPercent: 0,
       lastActivityAt: null,
-      repositoryUrl: null,
       github: githubView,
       githubRepositories: null,
       jira: null,
@@ -163,6 +170,7 @@ describe("ProjectDetailsPage", () => {
         projectId: "project-1",
         maxLinkedRepositories: 3,
         maxEnabledRepositories: 2,
+        hasUnacknowledgedAccess: false,
         accessSources: [],
         repositories: [
           {
@@ -182,6 +190,7 @@ describe("ProjectDetailsPage", () => {
             linkedAt: "2026-04-01T00:00:00Z",
             lastSyncedAt: null,
             syncStatus: "SUCCESS",
+            accessStatus: "AVAILABLE",
           },
           {
             id: "link-2",
@@ -200,6 +209,7 @@ describe("ProjectDetailsPage", () => {
             linkedAt: "2026-04-01T00:00:00Z",
             lastSyncedAt: null,
             syncStatus: "SUCCESS",
+            accessStatus: "AVAILABLE",
           },
         ],
       },

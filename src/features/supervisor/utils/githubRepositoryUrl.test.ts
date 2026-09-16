@@ -32,15 +32,19 @@ describe("normalizeGitHubRepositoryUrl", () => {
     ).toBe("https://github.com/Nimsara-Jayarathna/ResearchTrack-Frontend");
   });
 
-  it("rejects invalid formats", () => {
-    expect(
-      normalizeGitHubRepositoryUrl("https://github.com/Nimsara-Jayarathna"),
-    ).toBeNull();
-    expect(
-      normalizeGitHubRepositoryUrl(
-        "https://gitlab.com/Nimsara-Jayarathna/ResearchTrack-Frontend",
-      ),
-    ).toBeNull();
-    expect(normalizeGitHubRepositoryUrl("not-a-url")).toBeNull();
+  it.each([
+    ["empty", ""],
+    ["random string", "not a url"],
+    ["unsupported host", "https://gitlab.com/owner/repository"],
+    ["owner only", "https://github.com/owner"],
+    ["issues route", "https://github.com/owner/repository/issues"],
+    ["tree route", "https://github.com/owner/repository/tree/main"],
+    ["credentials", "https://user:password@github.com/owner/repository"],
+    ["malformed URL", "https://github.com/%/repository"],
+    ["custom port", "https://github.com:444/owner/repository"],
+    ["query", "https://github.com/owner/repository?tab=readme"],
+    ["fragment", "https://github.com/owner/repository#readme"],
+  ])("rejects %s", (_caseName, value) => {
+    expect(normalizeGitHubRepositoryUrl(value)).toBeNull();
   });
 });

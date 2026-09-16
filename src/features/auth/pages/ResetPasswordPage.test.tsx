@@ -5,13 +5,17 @@ import { vi } from "vitest";
 import { ApiException } from "@/services/apiClient";
 import { ResetPasswordPage } from "./ResetPasswordPage";
 
-const { validateResetTokenMock, resetPasswordMock, logoutMock, navigateMock } =
-  vi.hoisted(() => ({
-    validateResetTokenMock: vi.fn(),
-    resetPasswordMock: vi.fn(),
-    logoutMock: vi.fn(),
-    navigateMock: vi.fn(),
-  }));
+const {
+  validateResetTokenMock,
+  resetPasswordMock,
+  navigateMock,
+  clearAuthenticationStateMock,
+} = vi.hoisted(() => ({
+  validateResetTokenMock: vi.fn(),
+  resetPasswordMock: vi.fn(),
+  navigateMock: vi.fn(),
+  clearAuthenticationStateMock: vi.fn(),
+}));
 
 vi.mock("../hooks/useRegisterConfig", () => ({
   useRegisterConfig: () => ({
@@ -36,8 +40,11 @@ vi.mock("../api/authApi", () => ({
   authApi: {
     validateResetToken: validateResetTokenMock,
     resetPassword: resetPasswordMock,
-    logout: logoutMock,
   },
+}));
+
+vi.mock("@/services/sessionState", () => ({
+  clearAuthenticationState: clearAuthenticationStateMock,
 }));
 
 vi.mock("@/features/landing", () => ({
@@ -69,7 +76,6 @@ describe("ResetPasswordPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     validateResetTokenMock.mockResolvedValue({ valid: true });
-    logoutMock.mockResolvedValue(undefined);
   });
 
   it("shows backend detail message in submit error modal with retry action", async () => {
@@ -145,6 +151,7 @@ describe("ResetPasswordPage", () => {
     await user.click(screen.getByRole("button", { name: "Update password" }));
 
     expect(await screen.findByText("Password updated")).toBeInTheDocument();
+    expect(clearAuthenticationStateMock).toHaveBeenCalledTimes(1);
 
     await user.click(screen.getByRole("button", { name: "Sign in" }));
     expect(navigateMock).toHaveBeenCalledWith("/login");

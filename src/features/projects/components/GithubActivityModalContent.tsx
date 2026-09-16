@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { buttonStyles } from "@/components/ui/Button";
 import { TimeAgo } from "@/components/ui/TimeAgo";
+import { isDevelopmentActivity } from "../utils/developmentActivity";
 import { isApiException } from "@/services/apiClient";
 import type { ProjectGitHubRecentCommit } from "../types";
 import type { PaginatedListResult } from "../types";
@@ -170,8 +171,9 @@ export function GithubActivityModalContent({
 
       try {
         const result = await fetchPage(targetPage);
+        const visibleItems = result.items.filter(isDevelopmentActivity);
         setItems((current: ProjectGitHubRecentCommit[]) =>
-          append ? [...current, ...result.items] : result.items,
+          append ? [...current, ...visibleItems] : visibleItems,
         );
         setPage(result.page);
         setHasMore(result.hasMore);
@@ -234,14 +236,13 @@ export function GithubActivityModalContent({
     );
   }
 
-  if (items.length === 0) {
-    return (
-      <p className="text-sm text-muted-foreground">No GitHub activity found.</p>
-    );
-  }
-
   return (
     <div className="space-y-3">
+      {items.length === 0 && (
+        <p className="text-sm text-muted-foreground">
+          No GitHub activity found.
+        </p>
+      )}
       {items.map((commit, index) => {
         const type = getCommitType(commit.message);
         const shortSha = commit.sha ? commit.sha.slice(0, 7) : null;

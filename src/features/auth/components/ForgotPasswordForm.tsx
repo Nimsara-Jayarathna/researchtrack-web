@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { useEffect, useMemo, useState } from "react";
-import type { RegisterConfig } from "../types";
+import { useEffect, useState } from "react";
 import {
   getForgotPasswordValidationState,
   validateForgotPasswordForm,
@@ -12,7 +11,6 @@ export type ForgotPasswordFormProps = {
   isLoading: boolean;
   onClearError: () => void;
   startCooldownKey: number;
-  config: RegisterConfig;
 };
 
 const COOLDOWN_SECONDS = 60;
@@ -22,7 +20,6 @@ export function ForgotPasswordForm({
   isLoading,
   onClearError,
   startCooldownKey,
-  config,
 }: ForgotPasswordFormProps) {
   const [email, setEmail] = useState("");
   const [cooldown, setCooldown] = useState(0);
@@ -44,34 +41,20 @@ export function ForgotPasswordForm({
     return () => window.clearInterval(intervalId);
   }, [cooldown]);
 
-  const validationState = useMemo(
-    () => getForgotPasswordValidationState(email, config),
-    [email, config],
-  );
-  const isValid = useMemo(
-    () => Object.keys(validateForgotPasswordForm(email, config)).length === 0,
-    [email, config],
-  );
+  const validationState = getForgotPasswordValidationState(email);
+  const isValid = Object.keys(validateForgotPasswordForm(email)).length === 0;
   const isDisabled = isLoading || cooldown > 0 || !isValid;
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     onClearError();
 
-    const errors = validateForgotPasswordForm(email, config);
+    const errors = validateForgotPasswordForm(email);
     if (Object.keys(errors).length > 0) {
       return;
     }
     await onSubmit(email);
   }
-
-  const allowedDomains = [config.studentDomain, config.supervisorDomain].filter(
-    (domain): domain is string => Boolean(domain),
-  );
-  const domainWarning =
-    allowedDomains.length > 0
-      ? `Allowed domains: ${allowedDomains.join(" · ")}.`
-      : "Your email domain is not permitted.";
 
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
@@ -95,18 +78,6 @@ export function ForgotPasswordForm({
 
       {validationState.hasAt && validationState.hasInvalidFormat && (
         <p className="text-xs text-red-600">Enter a valid email address.</p>
-      )}
-
-      {validationState.hasDomainViolation && (
-        <p className="rounded-md border border-red-200 bg-red-50/85 px-3 py-2 text-xs leading-5 text-red-700">
-          {domainWarning}
-        </p>
-      )}
-
-      {validationState.hasPrefixViolation && (
-        <p className="rounded-md border border-red-200 bg-red-50/85 px-3 py-2 text-xs leading-5 text-red-700">
-          Invalid IT number format. Use ITXXXXXXXX.
-        </p>
       )}
 
       <Button

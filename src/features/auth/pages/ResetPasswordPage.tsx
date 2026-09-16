@@ -1,10 +1,7 @@
 import { Button } from "@/components/ui/Button";
 import { RequestStateModal } from "@/components/ui/RequestStateModal";
 import { isApiException } from "@/services/apiClient";
-import {
-  beginSessionTransition,
-  resetSessionState,
-} from "@/services/sessionState";
+import { clearAuthenticationState } from "@/services/sessionState";
 import type { ApiError } from "@/types";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -15,6 +12,7 @@ import { AuthPageShell } from "../components/shell/AuthPageShell";
 import { AuthDialogCard } from "../components/shell/AuthDialogCard";
 import { toRequestStateModalView } from "../utils/requestStateModalView";
 import { useRegisterConfig } from "../hooks/useRegisterConfig";
+import { useDocumentTitle } from "@/utils/useDocumentTitle";
 
 type ValidationStatus = "loading" | "valid" | "invalid" | "error";
 type SubmitStatus = "idle" | "loading" | "success" | "error";
@@ -35,17 +33,7 @@ export function ResetPasswordPage() {
     fallbackMessage: "Unable to load password requirements.",
   });
 
-  useEffect(() => {
-    document.title = "Reset your password - ResearchTrack";
-  }, []);
-
-  useEffect(() => {
-    // Reset-password flow must run as a guest flow.
-    // Clear local auth state immediately, then ask backend to revoke cookies.
-    beginSessionTransition("logout");
-    resetSessionState();
-    void authApi.logout().catch(() => undefined);
-  }, []);
+  useDocumentTitle("Reset your password - ResearchTrack");
 
   const validateResetLink = useCallback(async () => {
     setValidationError(null);
@@ -84,6 +72,9 @@ export function ResetPasswordPage() {
     setSubmitStatus("loading");
     try {
       await authApi.resetPassword({ token, newPassword });
+      // The backend revokes all refresh sessions and clears auth cookies.
+      // Mirror that state locally without aborting public reset-flow requests.
+      clearAuthenticationState();
       setSubmitStatus("success");
     } catch (error) {
       if (isApiException(error)) {

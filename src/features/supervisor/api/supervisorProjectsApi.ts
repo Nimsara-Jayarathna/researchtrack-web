@@ -12,13 +12,11 @@ import type {
   CreateSupervisorProjectResponse,
   SupervisorProjectDetail,
   SupervisorProjectSummary,
-  UpdateRepositoryRequest,
   UpdateSupervisorProjectLeaderRequest,
   UpdateSupervisorProjectMilestoneRequest,
   UpdateSupervisorProjectRequest,
 } from "../types";
 
-import { normalizeGitHubRepositoryUrl } from "../utils/githubRepositoryUrl";
 import { invalidateSupervisorDashboardCache } from "../cache/supervisorDashboardCache";
 
 type ApiClient = typeof import("@/services/apiClient").apiClient;
@@ -64,8 +62,6 @@ function toSupervisorDetail(
     milestoneDate: project.milestoneDate,
     progressPercent: project.progressPercent,
     lastActivityAt: project.lastActivityAt,
-
-    repositoryUrl: null,
 
     github: createEmptyProjectGitHubPreview(),
 
@@ -245,36 +241,6 @@ export function createSupervisorProjectsApi({
        * Refresh the project to update the cache.
        */
       return refreshProject(projectId);
-    },
-
-    // ============================================================
-    // FUTURE: UPDATE REPOSITORY
-    // ============================================================
-
-    async updateRepository(
-      projectId: string,
-      repositoryUrl: string | null,
-    ): Promise<SupervisorProjectDetail> {
-      /*
-       * The current ProjectsController.cs does not expose
-       * a repository endpoint.
-       */
-      const normalizedRepositoryUrl =
-        typeof repositoryUrl === "string"
-          ? normalizeGitHubRepositoryUrl(repositoryUrl)
-          : null;
-
-      const body: UpdateRepositoryRequest = {
-        repositoryUrl: normalizedRepositoryUrl,
-      };
-
-      void projectId;
-      void body;
-
-      throw new Error(
-        "updateRepository is not implemented by the current " +
-          "ProjectService backend.",
-      );
     },
 
     // ============================================================

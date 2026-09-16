@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { normalizeSyncStatus } from "@/lib/syncStatus";
 import type { CanonicalSyncStatus } from "@/lib/syncStatus";
+import type { ApiError } from "@/types";
 import type {
   PaginatedListResult,
   ProjectGitHubContributor,
   ProjectGitHubRecentCommit,
+  ProjectGitHubPullRequest,
+  ProjectGitHubPullRequestPageOptions,
 } from "@/features/projects/types";
 import type { ProjectRepositoryLink } from "@/features/shared/types/github.types";
 import { supervisorApi } from "../../api/supervisorApi";
@@ -35,10 +38,8 @@ type RefreshModalControls = {
 type UseSupervisorProjectGitHubDashboardParams = {
   projectId: string | undefined;
   isActive: boolean;
-  projectGithubView: ProjectGitHubActivity | null;
   githubRepositories: ProjectGitHubRepositories | null | undefined;
   reloadRepositories: () => Promise<ProjectGitHubRepositories | null>;
-  reloadProject: () => Promise<void>;
   refreshModal: RefreshModalControls;
 };
 
@@ -48,11 +49,13 @@ type UseSupervisorProjectGitHubDashboardResult = {
   activeRepository: ProjectRepositoryLink | null;
   activeRepositorySyncStatus: CanonicalSyncStatus;
   githubView: ProjectGitHubActivity | null;
+  githubViewError: ApiError | null;
   isGitHubViewLoading: boolean;
   isRefreshingGitHub: boolean;
   isRepoSelectorOpen: boolean;
   setIsRepoSelectorOpen: (open: boolean) => void;
   refreshGitHub: () => Promise<void>;
+  retryGitHubView: () => Promise<void>;
   selectRepository: (linkedRepositoryId: string) => Promise<void>;
   loadActivityPage: (
     page: number,
@@ -60,37 +63,61 @@ type UseSupervisorProjectGitHubDashboardResult = {
   loadContributorsPage: (
     page: number,
   ) => Promise<PaginatedListResult<ProjectGitHubContributor>>;
+  loadPullRequestsPage: (
+    page: number,
+    options?: ProjectGitHubPullRequestPageOptions,
+  ) => Promise<PaginatedListResult<ProjectGitHubPullRequest>>;
 };
+
+const SYNC_POLL_INTERVAL_MS = 3000;
+const MAX_REFRESH_POLL_ATTEMPTS = 40;
+
+function toApiError(error: unknown, projectId: string): ApiError {
+  if (isApiException(error)) {
+    return error.apiError;
+  }
+
+  return {
+    timestamp: new Date().toISOString(),
+    status: 500,
+    error: "Internal Server Error",
+    code: "INTERNAL_ERROR",
+    message: "Unable to load GitHub activity right now.",
+    path: `/api/supervisor/projects/${projectId}/github`,
+    traceId: null,
+    details: [],
+  };
+}
 
 export function useSupervisorProjectGitHubDashboard({
   projectId,
   isActive,
-  projectGithubView,
   githubRepositories,
   reloadRepositories,
-  reloadProject,
   refreshModal,
 }: UseSupervisorProjectGitHubDashboardParams): UseSupervisorProjectGitHubDashboardResult {
+  const { showLoading, showSuccess, showError } = refreshModal;
   const [isRefreshingGitHub, setIsRefreshingGitHub] = useState(false);
   const [isGitHubViewLoading, setIsGitHubViewLoading] = useState(false);
+  const [githubViewError, setGithubViewError] = useState<ApiError | null>(null);
   const [selectedRepoId, setSelectedRepoId] = useState<string | null>(null);
   const [githubView, setGithubView] = useState<ProjectGitHubActivity | null>(
-    projectGithubView,
+    null,
   );
   const [isRepoSelectorOpen, setIsRepoSelectorOpen] = useState(false);
-  const isMountedRef = useRef(true);
 
-  useEffect(() => {
-    isMountedRef.current = true;
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
+  const dashboardRequestVersionRef = useRef(0);
+  const refreshAwaitingCompletionRef = useRef(false);
+  const refreshBaselineSyncedAtRef = useRef<string | null>(null);
+  const refreshSawRunningRef = useRef(false);
+  const refreshPollAttemptsRef = useRef(0);
+  const lastTerminalSyncKeyRef = useRef<string | null>(null);
 
   const enabledRepositories = useMemo(
     () =>
       githubRepositories?.repositories?.filter(
-        (repository) => repository.enabled,
+        (repository) =>
+          repository.enabled && repository.accessStatus === "AVAILABLE",
       ) ?? [],
     [githubRepositories?.repositories],
   );
@@ -107,71 +134,232 @@ export function useSupervisorProjectGitHubDashboard({
     activeRepository?.syncStatus,
   );
 
-  useEffect(() => {
-    if (enabledRepositories.length === 0) {
-      setSelectedRepoId(null);
-      setGithubView(null);
-      setIsRepoSelectorOpen(false);
-    }
-  }, [enabledRepositories.length]);
-
-  useEffect(() => {
-    if (!projectId) return;
-    if (!isActive) return;
-    if (
-      activeRepositorySyncStatus !== "IN_PROGRESS" &&
-      activeRepositorySyncStatus !== "PENDING"
-    ) {
-      return;
-    }
-
-    const intervalId = window.setInterval(() => {
-      void reloadRepositories();
-    }, 3000);
-
-    return () => {
-      window.clearInterval(intervalId);
-    };
-  }, [activeRepositorySyncStatus, isActive, projectId, reloadRepositories]);
-
-  useEffect(() => {
-    setGithubView(projectGithubView ?? null);
-  }, [projectGithubView]);
-
-  useEffect(() => {
-    const primaryLink =
-      enabledRepositories.find((repository) => repository.primary) ??
-      enabledRepositories[0] ??
-      null;
-    setSelectedRepoId(primaryLink?.id ?? null);
-  }, [enabledRepositories]);
-
-  const selectRepository = useCallback(
-    async (linkedRepositoryId: string) => {
-      if (!projectId) {
-        setSelectedRepoId(linkedRepositoryId);
-        return;
+  const loadDashboard = useCallback(
+    async (
+      linkedRepositoryId: string,
+      options: { forceRefresh?: boolean; showLoading?: boolean } = {},
+    ) => {
+      if (!projectId || !isActive) {
+        return null;
       }
 
-      setSelectedRepoId(linkedRepositoryId);
-      setIsGitHubViewLoading(true);
+      const { forceRefresh = false, showLoading = true } = options;
+      const requestVersion = ++dashboardRequestVersionRef.current;
+
+      if (showLoading) {
+        setIsGitHubViewLoading(true);
+      }
+      setGithubViewError(null);
+
       try {
         const nextView = await supervisorApi.getProjectGitHubDashboard(
           projectId,
-          false,
+          forceRefresh,
           linkedRepositoryId,
         );
-        setGithubView(nextView);
+        if (requestVersion === dashboardRequestVersionRef.current) {
+          setGithubView(nextView);
+        }
+        return nextView;
+      } catch (error) {
+        if (requestVersion === dashboardRequestVersionRef.current) {
+          setGithubViewError(toApiError(error, projectId));
+        }
+        return null;
       } finally {
-        setIsGitHubViewLoading(false);
+        if (
+          showLoading &&
+          requestVersion === dashboardRequestVersionRef.current
+        ) {
+          setIsGitHubViewLoading(false);
+        }
       }
     },
-    [projectId],
+    [isActive, projectId],
   );
+
+  // Keep an existing user selection when repository polling returns a new
+  // array instance. Only choose the primary/first repository when the current
+  // selection is missing or no longer enabled.
+  useEffect(() => {
+    if (!isActive) return;
+
+    if (enabledRepositories.length === 0) {
+      setSelectedRepoId(null);
+      setGithubView(null);
+      setGithubViewError(null);
+      setIsRepoSelectorOpen(false);
+      dashboardRequestVersionRef.current += 1;
+      return;
+    }
+
+    setSelectedRepoId((current) => {
+      if (
+        current &&
+        enabledRepositories.some((repository) => repository.id === current)
+      ) {
+        return current;
+      }
+
+      return (
+        enabledRepositories.find((repository) => repository.primary)?.id ??
+        enabledRepositories[0]?.id ??
+        null
+      );
+    });
+  }, [enabledRepositories, isActive]);
+
+  // The dedicated GitHub dashboard endpoint is authoritative for the GitHub
+  // tab. Load it lazily once a repository is selected instead of inheriting a
+  // potentially stale snapshot from the project details response.
+  useEffect(() => {
+    if (!isActive || !selectedRepoId) return;
+    // Repository selection is a read operation. Let the shared API cache/in-flight
+    // dedupe satisfy it when possible; only explicit retry/sync-completion paths
+    // should bypass the cache with forceRefresh=true.
+    void loadDashboard(selectedRepoId);
+  }, [isActive, loadDashboard, selectedRepoId]);
+
+  // One polling owner only. It handles both background/initial syncs and a
+  // supervisor-triggered refresh. A manual refresh can briefly remain SUCCESS
+  // before the queued worker marks it PENDING, so we also compare the sync
+  // timestamp and remember whether a running state was observed.
+  useEffect(() => {
+    if (!projectId || !isActive || !selectedRepoId) return;
+
+    const statusIsRunning =
+      activeRepositorySyncStatus === "IN_PROGRESS" ||
+      activeRepositorySyncStatus === "PENDING";
+    if (!statusIsRunning && !refreshAwaitingCompletionRef.current) {
+      return;
+    }
+
+    let cancelled = false;
+    let timeoutId: number | null = null;
+
+    const scheduleNextPoll = () => {
+      timeoutId = window.setTimeout(poll, SYNC_POLL_INTERVAL_MS);
+    };
+
+    const finishWithLatestDashboard = async (
+      latestRepository: ProjectRepositoryLink | null,
+      latestStatus: CanonicalSyncStatus,
+    ) => {
+      const terminalKey = `${selectedRepoId}:${latestStatus}:${latestRepository?.lastSyncedAt ?? ""}`;
+      if (lastTerminalSyncKeyRef.current !== terminalKey) {
+        lastTerminalSyncKeyRef.current = terminalKey;
+        await loadDashboard(selectedRepoId, {
+          forceRefresh: true,
+          showLoading: false,
+        });
+      }
+    };
+
+    const poll = async () => {
+      const latestRepositories = await reloadRepositories();
+      if (cancelled) return;
+
+      const latestRepository =
+        latestRepositories?.repositories?.find(
+          (repository) => repository.id === selectedRepoId,
+        ) ?? null;
+      const latestStatus = normalizeSyncStatus(latestRepository?.syncStatus);
+      const latestIsRunning =
+        latestStatus === "PENDING" || latestStatus === "IN_PROGRESS";
+
+      if (latestIsRunning) {
+        refreshSawRunningRef.current = true;
+        refreshPollAttemptsRef.current += 1;
+        scheduleNextPoll();
+        return;
+      }
+
+      if (refreshAwaitingCompletionRef.current) {
+        refreshPollAttemptsRef.current += 1;
+        const baselineSyncedAt = refreshBaselineSyncedAtRef.current;
+        const syncTimestampAdvanced =
+          Boolean(latestRepository?.lastSyncedAt) &&
+          latestRepository?.lastSyncedAt !== baselineSyncedAt;
+        const refreshCompleted =
+          latestStatus === "FAILED" ||
+          (latestStatus === "SUCCESS" &&
+            (refreshSawRunningRef.current || syncTimestampAdvanced));
+
+        if (!refreshCompleted) {
+          if (refreshPollAttemptsRef.current < MAX_REFRESH_POLL_ATTEMPTS) {
+            scheduleNextPoll();
+            return;
+          }
+
+          refreshAwaitingCompletionRef.current = false;
+          showSuccess({
+            title: "GitHub refresh is still processing",
+            message:
+              "The refresh was accepted but has not reported completion yet. You can keep using the page; the next visit will load the latest synchronized data.",
+          });
+          return;
+        }
+
+        refreshAwaitingCompletionRef.current = false;
+        await finishWithLatestDashboard(latestRepository, latestStatus);
+
+        if (latestStatus === "SUCCESS") {
+          showSuccess({
+            title: "GitHub data refreshed",
+            message: "Latest repository activity is now up to date.",
+          });
+        } else {
+          showError({
+            title: "GitHub sync failed",
+            message:
+              "Repository synchronization failed. You can retry the refresh.",
+          });
+        }
+        return;
+      }
+
+      // Background/initial sync reached a terminal state. Refresh the dashboard
+      // once so newly persisted commits and contributors become visible.
+      await finishWithLatestDashboard(latestRepository, latestStatus);
+    };
+
+    scheduleNextPoll();
+
+    return () => {
+      cancelled = true;
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+  }, [
+    activeRepositorySyncStatus,
+    isActive,
+    loadDashboard,
+    projectId,
+    reloadRepositories,
+    selectedRepoId,
+    showError,
+    showSuccess,
+  ]);
+
+  const selectRepository = useCallback(async (linkedRepositoryId: string) => {
+    setSelectedRepoId(linkedRepositoryId);
+    setIsRepoSelectorOpen(false);
+    // The selection effect will load the dashboard. Avoid starting a second
+    // identical request here.
+  }, []);
+
+  const retryGitHubView = useCallback(async () => {
+    if (!selectedRepoId) {
+      await reloadRepositories();
+      return;
+    }
+    await loadDashboard(selectedRepoId, { forceRefresh: true });
+  }, [loadDashboard, reloadRepositories, selectedRepoId]);
 
   const loadActivityPage = useCallback(
     (page: number) => {
-      if (!projectId) {
+      if (!projectId || !selectedRepoId) {
         return Promise.resolve({ items: [], hasMore: false, page, size: 10 });
       }
       return supervisorApi.getProjectGitHubActivityPage(
@@ -185,7 +373,7 @@ export function useSupervisorProjectGitHubDashboard({
 
   const loadContributorsPage = useCallback(
     (page: number) => {
-      if (!projectId) {
+      if (!projectId || !selectedRepoId) {
         return Promise.resolve({ items: [], hasMore: false, page, size: 10 });
       }
       return supervisorApi.getProjectGitHubContributorsPage(
@@ -197,92 +385,76 @@ export function useSupervisorProjectGitHubDashboard({
     [projectId, selectedRepoId],
   );
 
+  const loadPullRequestsPage = useCallback(
+    (page: number, options: ProjectGitHubPullRequestPageOptions = {}) => {
+      if (!projectId || !selectedRepoId) {
+        return Promise.resolve({
+          items: [],
+          hasMore: false,
+          page,
+          size: options.size ?? 10,
+          total: 0,
+        });
+      }
+      return supervisorApi.getProjectGitHubPullRequestsPage(
+        projectId,
+        page,
+        selectedRepoId,
+        options,
+      );
+    },
+    [projectId, selectedRepoId],
+  );
+
   const refreshGitHub = useCallback(async () => {
-    if (!projectId) {
+    if (!projectId || !selectedRepoId) {
       return;
     }
 
     setIsRefreshingGitHub(true);
-    refreshModal.showLoading({
-      title: "Refreshing GitHub data",
-      message: "Syncing latest repository metadata, commits, and contributors.",
+    showLoading({
+      title: "Starting GitHub refresh",
+      message: "Queueing synchronization for the active repository.",
       retryAction: () => void refreshGitHub(),
     });
 
     try {
-      await supervisorApi.refreshProjectGitHub(projectId);
-      await Promise.all([reloadProject(), reloadRepositories()]);
+      refreshBaselineSyncedAtRef.current =
+        activeRepository?.lastSyncedAt ?? null;
+      refreshSawRunningRef.current = false;
+      refreshPollAttemptsRef.current = 0;
+      refreshAwaitingCompletionRef.current = true;
+      lastTerminalSyncKeyRef.current = null;
 
-      const delay = (ms: number) =>
-        new Promise<void>((resolve) => setTimeout(resolve, ms));
-      const shouldPollStatus = Boolean(selectedRepoId);
-      if (shouldPollStatus && selectedRepoId) {
-        const maxAttempts = 30;
-        let finalStatus: CanonicalSyncStatus = "UNKNOWN";
-        for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-          const latestRepos = await reloadRepositories();
-          const active =
-            latestRepos?.repositories?.find(
-              (repo) => repo.id === selectedRepoId,
-            ) ?? null;
-          finalStatus = normalizeSyncStatus(active?.syncStatus);
-          if (finalStatus !== "IN_PROGRESS" && finalStatus !== "PENDING") {
-            break;
-          }
-          await delay(2000);
-        }
+      await supervisorApi.refreshGitHubRepository(projectId, selectedRepoId);
+      await reloadRepositories();
 
-        const refreshedView = await supervisorApi.getProjectGitHubDashboard(
-          projectId,
-          true,
-          selectedRepoId,
-        );
-        if (isMountedRef.current) {
-          setGithubView(refreshedView);
-        }
-
-        if (finalStatus === "SUCCESS") {
-          refreshModal.showSuccess({
-            title: "GitHub data refreshed",
-            message: "Latest GitHub data was synced and loaded successfully.",
-          });
-        } else if (finalStatus === "FAILED") {
-          refreshModal.showError({
-            title: "GitHub sync failed",
-            message: "GitHub sync failed. Try refreshing again in a moment.",
-          });
-        } else {
-          refreshModal.showSuccess({
-            title: "GitHub refresh started",
-            message:
-              "Repository sync is running and this page will update automatically.",
-          });
-        }
-        return;
-      }
-
-      refreshModal.showSuccess({
+      showSuccess({
         title: "GitHub refresh started",
         message:
-          "Repository sync is running and this page will update automatically.",
+          "The active repository is syncing. This page will update automatically when synchronization finishes.",
       });
     } catch (error) {
+      refreshAwaitingCompletionRef.current = false;
       const message = isApiException(error)
         ? error.apiError.message
         : "Unable to refresh GitHub data right now. Please try again.";
-      refreshModal.showError({
+      showError({
         title: "GitHub refresh failed",
         message,
+        retryAction: () => void refreshGitHub(),
       });
     } finally {
       setIsRefreshingGitHub(false);
     }
   }, [
+    activeRepository?.lastSyncedAt,
     projectId,
-    refreshModal,
-    reloadProject,
     reloadRepositories,
     selectedRepoId,
+    showError,
+    showLoading,
+    showSuccess,
   ]);
 
   return {
@@ -291,13 +463,16 @@ export function useSupervisorProjectGitHubDashboard({
     activeRepository,
     activeRepositorySyncStatus,
     githubView,
+    githubViewError,
     isGitHubViewLoading,
     isRefreshingGitHub,
     isRepoSelectorOpen,
     setIsRepoSelectorOpen,
     refreshGitHub,
+    retryGitHubView,
     selectRepository,
     loadActivityPage,
     loadContributorsPage,
+    loadPullRequestsPage,
   };
 }

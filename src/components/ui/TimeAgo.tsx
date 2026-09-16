@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { parseApiDate } from "@/lib/dateTime";
 
 type TimeAgoProps = {
   date: string | number | Date;
@@ -7,8 +8,9 @@ type TimeAgoProps = {
 };
 
 export function TimeAgo({ date, className, addSuffix = true }: TimeAgoProps) {
+  const parsed = typeof date === "number" ? new Date(date) : parseApiDate(date);
   const relativeTime = useMemo(() => {
-    const d = new Date(date);
+    const d = typeof date === "number" ? new Date(date) : parseApiDate(date);
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - d.getTime()) / 1000);
 
@@ -45,8 +47,10 @@ export function TimeAgo({ date, className, addSuffix = true }: TimeAgoProps) {
     return `${diffInYears}y${addSuffix ? " ago" : ""}`;
   }, [date, addSuffix]);
 
+  if (Number.isNaN(parsed.getTime())) return null;
+
   return (
-    <time dateTime={new Date(date).toISOString()} className={className}>
+    <time dateTime={parsed.toISOString()} className={className}>
       {relativeTime}
     </time>
   );

@@ -57,7 +57,9 @@ export function ProjectDetailsPage() {
       loadedProject,
     });
 
-  const projectRepositoriesState = useProjectRepositories(projectId);
+  const projectRepositoriesState = useProjectRepositories(projectId, {
+    enabled: activeTab === "github" || activeTab === "integrations",
+  });
 
   const githubSetupRedirect = useSupervisorProjectGitHubSetupRedirect({
     projectId,
@@ -69,10 +71,8 @@ export function ProjectDetailsPage() {
   const githubDashboard = useSupervisorProjectGitHubDashboard({
     projectId,
     isActive: activeTab === "github",
-    projectGithubView: project?.github ?? null,
     githubRepositories: projectRepositoriesState.data,
     reloadRepositories: projectRepositoriesState.reload,
-    reloadProject: reload,
     refreshModal: {
       showLoading: refreshRequestModal.showLoading,
       showSuccess: refreshRequestModal.showSuccess,
@@ -317,6 +317,8 @@ export function ProjectDetailsPage() {
       {activeTab === "github" ? (
         <SupervisorProjectGitHubTab
           isPageLoading={isLoading}
+          isRepositoriesLoading={projectRepositoriesState.isLoading}
+          repositoriesError={projectRepositoriesState.error}
           isGitHubViewLoading={githubDashboard.isGitHubViewLoading}
           isRefreshingGitHub={githubDashboard.isRefreshingGitHub}
           enabledRepositories={githubDashboard.enabledRepositories}
@@ -328,15 +330,19 @@ export function ProjectDetailsPage() {
           isRepoSelectorOpen={githubDashboard.isRepoSelectorOpen}
           setIsRepoSelectorOpen={githubDashboard.setIsRepoSelectorOpen}
           githubView={githubDashboard.githubView}
+          githubViewError={githubDashboard.githubViewError}
           onSelectRepository={(linkedRepositoryId) => {
             void githubDashboard.selectRepository(linkedRepositoryId);
           }}
           onRefreshGitHub={() => {
             void githubDashboard.refreshGitHub();
           }}
-          onRetryReloadProject={retryLoad}
+          onRetryGitHubDashboard={() => {
+            void githubDashboard.retryGitHubView();
+          }}
           loadActivityPage={githubDashboard.loadActivityPage}
           loadContributorsPage={githubDashboard.loadContributorsPage}
+          loadPullRequestsPage={githubDashboard.loadPullRequestsPage}
           onNavigateToOverview={() => setActiveTab("integrations")}
         />
       ) : null}
@@ -346,10 +352,7 @@ export function ProjectDetailsPage() {
       {activeTab === "integrations" ? (
         <IntegrationsTabSection
           project={project}
-          onProjectUpdate={(updatedProject) => {
-            actions.handleProjectUpdate(updatedProject);
-            void projectRepositoriesState.reload();
-          }}
+          repositoriesState={projectRepositoriesState}
           onConnectJira={jiraFlow.handleConnectJira}
           onDisconnectJira={jiraFlow.handleDisconnectJira}
           isConnectingJira={jiraFlow.isConnectingJira}

@@ -118,6 +118,7 @@ For the full branch and release policy, see `docs/devops/branching-strategy.md`.
 - Student and supervisor routes share the same top-bar shell (`AppShell` + `TopBar`) and the same shared button system.
 - Student project list/detail and supervisor dashboard/list/detail/create flows are backend-connected.
 - Supervisor GitHub flow supports backend-managed setup start, installation-level access authorization, explicit repository selection, and repository link/remove management.
+- The owner-granted GitHub access contract covers a project member requesting authorization for one exact repository through a secure, expiring link completed by a repository owner/admin. A pending request never represents an active connection; see [`docs/features/owner-granted-github-access.md`](docs/features/owner-granted-github-access.md).
 - Supervisor Jira flow supports workspace connection via Atlassian OAuth and health analytics display (see [Jira Integration](#jira-integration) below).
 - Some advanced workflow panels (for example meetings/files/action-items as full modules) remain out of scope or partially mock-derived until dedicated APIs are added.
 - Route guards support a UI-only cross-role preview mode in local development. This is not a security boundary and must be enforced by the backend.
@@ -165,6 +166,7 @@ The Jira feature is supervisor-only. It consists of two main parts:
 
 - Overview index: `docs/README.md`
 - Feature guides: `docs/features/*.md`
+- Owner-granted GitHub repository access: [`docs/features/owner-granted-github-access.md`](docs/features/owner-granted-github-access.md)
 - Branch/fix docs: `docs/branches/*.md` (including SCRUM-80, SCRUM-81, SCRUM-97 major-fixes)
 - Shared UI notes: `docs/ui/*.md`
 

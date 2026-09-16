@@ -12,16 +12,21 @@ import { buttonStyles } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import { CommitActivitySection } from "@/features/projects/components/CommitActivitySection";
 import type { CanonicalSyncStatus } from "@/lib/syncStatus";
+import type { ApiError } from "@/types";
 import type { ProjectGitHubActivity } from "../../types";
 import type { ProjectRepositoryLink } from "@/features/shared/types/github.types";
 import type {
   PaginatedListResult,
   ProjectGitHubContributor,
   ProjectGitHubRecentCommit,
+  ProjectGitHubPullRequest,
+  ProjectGitHubPullRequestPageOptions,
 } from "@/features/projects/types";
 
 type SupervisorProjectGitHubTabProps = {
   isPageLoading: boolean;
+  isRepositoriesLoading: boolean;
+  repositoriesError: ApiError | null;
   isGitHubViewLoading: boolean;
   isRefreshingGitHub: boolean;
   enabledRepositories: ProjectRepositoryLink[];
@@ -31,20 +36,27 @@ type SupervisorProjectGitHubTabProps = {
   isRepoSelectorOpen: boolean;
   setIsRepoSelectorOpen: (open: boolean) => void;
   githubView: ProjectGitHubActivity | null;
+  githubViewError: ApiError | null;
   onSelectRepository: (linkedRepositoryId: string) => void;
   onRefreshGitHub: () => void;
-  onRetryReloadProject: () => void;
+  onRetryGitHubDashboard: () => void;
   loadActivityPage: (
     page: number,
   ) => Promise<PaginatedListResult<ProjectGitHubRecentCommit>>;
   loadContributorsPage: (
     page: number,
   ) => Promise<PaginatedListResult<ProjectGitHubContributor>>;
+  loadPullRequestsPage: (
+    page: number,
+    options?: ProjectGitHubPullRequestPageOptions,
+  ) => Promise<PaginatedListResult<ProjectGitHubPullRequest>>;
   onNavigateToOverview: () => void;
 };
 
 export function SupervisorProjectGitHubTab({
   isPageLoading,
+  isRepositoriesLoading,
+  repositoriesError,
   isGitHubViewLoading,
   isRefreshingGitHub,
   enabledRepositories,
@@ -54,11 +66,13 @@ export function SupervisorProjectGitHubTab({
   isRepoSelectorOpen,
   setIsRepoSelectorOpen,
   githubView,
+  githubViewError,
   onSelectRepository,
   onRefreshGitHub,
-  onRetryReloadProject,
+  onRetryGitHubDashboard,
   loadActivityPage,
   loadContributorsPage,
+  loadPullRequestsPage,
   onNavigateToOverview,
 }: SupervisorProjectGitHubTabProps) {
   return (
@@ -134,10 +148,20 @@ export function SupervisorProjectGitHubTab({
                   className: "w-9 px-0",
                 })}
                 onClick={onRefreshGitHub}
-                disabled={isRefreshingGitHub}
+                disabled={
+                  isRefreshingGitHub ||
+                  activeRepositorySyncStatus === "PENDING" ||
+                  activeRepositorySyncStatus === "IN_PROGRESS"
+                }
               >
                 <RefreshCw
-                  className={`h-3.5 w-3.5 ${isRefreshingGitHub ? "animate-spin" : ""}`}
+                  className={`h-3.5 w-3.5 ${
+                    isRefreshingGitHub ||
+                    activeRepositorySyncStatus === "PENDING" ||
+                    activeRepositorySyncStatus === "IN_PROGRESS"
+                      ? "animate-spin"
+                      : ""
+                  }`}
                 />
               </button>
 
@@ -238,12 +262,26 @@ export function SupervisorProjectGitHubTab({
       ) : null}
 
       <CommitActivitySection
-        isLoading={isPageLoading || isGitHubViewLoading}
-        error={null}
+        isLoading={
+          isPageLoading ||
+          isGitHubViewLoading ||
+          (isRepositoriesLoading && enabledRepositories.length === 0)
+        }
+        error={
+          githubViewError ??
+          (enabledRepositories.length === 0 ? repositoriesError : null)
+        }
         data={githubView}
-        onRetry={onRetryReloadProject}
+        hasLinkedRepository={enabledRepositories.length > 0}
+        onRetry={onRetryGitHubDashboard}
         loadActivityPage={loadActivityPage}
         loadContributorsPage={loadContributorsPage}
+        loadPullRequestsPage={loadPullRequestsPage}
+        activeRepositoryId={activeRepository?.id ?? null}
+        activeRepositoryName={
+          activeRepository?.customName?.trim() || activeRepository?.name || null
+        }
+        activeRepositoryLastSyncedAt={activeRepository?.lastSyncedAt ?? null}
         onNavigateToOverview={onNavigateToOverview}
       />
     </div>

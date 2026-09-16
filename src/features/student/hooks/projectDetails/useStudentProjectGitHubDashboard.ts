@@ -1,16 +1,23 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toVersionedApiPath } from "@/app/config/apiVersion";
 import { normalizeSyncStatus } from "@/lib/syncStatus";
 import type { CanonicalSyncStatus } from "@/lib/syncStatus";
+import type { ApiError } from "@/types";
+import { isApiException } from "@/services/apiClient";
 import type {
   PaginatedListResult,
   ProjectGitHubContributor,
   ProjectGitHubRecentCommit,
+  ProjectGitHubPullRequest,
+  ProjectGitHubPullRequestPageOptions,
 } from "@/features/projects/types";
 import type {
   ProjectGitHubRepositories,
   ProjectRepositoryLink,
 } from "@/features/shared/types/github.types";
 import type { ProjectGitHubActivity } from "../../types";
+
+const PROJECTS_BASE_PATH = toVersionedApiPath("/api/projects");
 
 type FetchProjectGitHubDashboard = (
   projectId: string,
@@ -30,13 +37,20 @@ type FetchContributorsPage = (
   linkedRepositoryId?: string | null,
 ) => Promise<PaginatedListResult<ProjectGitHubContributor>>;
 
+type FetchPullRequestsPage = (
+  projectId: string,
+  page: number,
+  linkedRepositoryId: string | null | undefined,
+  options?: ProjectGitHubPullRequestPageOptions,
+) => Promise<PaginatedListResult<ProjectGitHubPullRequest>>;
+
 type UseStudentProjectGitHubDashboardParams = {
   projectId: string | undefined;
-  projectGithubView: ProjectGitHubActivity | null;
   githubRepositories: ProjectGitHubRepositories | null | undefined;
   fetchDashboard: FetchProjectGitHubDashboard;
   fetchActivityPage: FetchActivityPage;
   fetchContributorsPage: FetchContributorsPage;
+  fetchPullRequestsPage: FetchPullRequestsPage;
 };
 
 type UseStudentProjectGitHubDashboardResult = {
@@ -47,7 +61,9 @@ type UseStudentProjectGitHubDashboardResult = {
   activeRepository: ProjectRepositoryLink | null;
   activeRepositorySyncStatus: CanonicalSyncStatus;
   githubView: ProjectGitHubActivity | null;
+  githubViewError: ApiError | null;
   isGitHubViewLoading: boolean;
+  retryGitHubView: () => Promise<void>;
   selectRepository: (linkedRepositoryId: string) => Promise<void>;
   loadActivityPage: (
     page: number,
@@ -55,27 +71,51 @@ type UseStudentProjectGitHubDashboardResult = {
   loadContributorsPage: (
     page: number,
   ) => Promise<PaginatedListResult<ProjectGitHubContributor>>;
+  loadPullRequestsPage: (
+    page: number,
+    options?: ProjectGitHubPullRequestPageOptions,
+  ) => Promise<PaginatedListResult<ProjectGitHubPullRequest>>;
 };
+
+function toApiError(error: unknown, projectId: string): ApiError {
+  if (isApiException(error)) {
+    return error.apiError;
+  }
+
+  return {
+    timestamp: new Date().toISOString(),
+    status: 500,
+    error: "Internal Server Error",
+    code: "INTERNAL_ERROR",
+    message: "Unable to load GitHub activity right now.",
+    path: `${PROJECTS_BASE_PATH}/${projectId}/github`,
+    traceId: null,
+    details: [],
+  };
+}
 
 export function useStudentProjectGitHubDashboard({
   projectId,
-  projectGithubView,
   githubRepositories,
   fetchDashboard,
   fetchActivityPage,
   fetchContributorsPage,
+  fetchPullRequestsPage,
 }: UseStudentProjectGitHubDashboardParams): UseStudentProjectGitHubDashboardResult {
   const [isRepoSelectorOpen, setRepoSelectorOpen] = useState(false);
   const [selectedRepoId, setSelectedRepoId] = useState<string | null>(null);
   const [githubView, setGithubView] = useState<ProjectGitHubActivity | null>(
-    projectGithubView,
+    null,
   );
+  const [githubViewError, setGithubViewError] = useState<ApiError | null>(null);
   const [isGitHubViewLoading, setIsGitHubViewLoading] = useState(false);
+  const dashboardRequestVersionRef = useRef(0);
 
   const enabledRepositories = useMemo(
     () =>
       githubRepositories?.repositories?.filter(
-        (repository) => repository.enabled,
+        (repository) =>
+          repository.enabled && repository.accessStatus === "AVAILABLE",
       ) ?? [],
     [githubRepositories?.repositories],
   );
@@ -92,44 +132,83 @@ export function useStudentProjectGitHubDashboard({
     activeRepository?.syncStatus,
   );
 
-  useEffect(() => {
-    setGithubView(projectGithubView ?? null);
-  }, [projectGithubView]);
+  const loadDashboard = useCallback(
+    async (linkedRepositoryId: string, forceRefresh = false) => {
+      if (!projectId) return null;
 
-  useEffect(() => {
-    const primaryLink =
-      enabledRepositories.find((repository) => repository.primary) ??
-      enabledRepositories[0] ??
-      null;
-    setSelectedRepoId(primaryLink?.id ?? null);
-  }, [enabledRepositories]);
-
-  const selectRepository = useCallback(
-    async (linkedRepositoryId: string) => {
-      if (!projectId) {
-        setSelectedRepoId(linkedRepositoryId);
-        return;
-      }
-
-      setSelectedRepoId(linkedRepositoryId);
+      const requestVersion = ++dashboardRequestVersionRef.current;
       setIsGitHubViewLoading(true);
+      setGithubViewError(null);
       try {
         const nextView = await fetchDashboard(
           projectId,
-          false,
+          forceRefresh,
           linkedRepositoryId,
         );
-        setGithubView(nextView);
+        if (requestVersion === dashboardRequestVersionRef.current) {
+          setGithubView(nextView);
+        }
+        return nextView;
+      } catch (error) {
+        if (requestVersion === dashboardRequestVersionRef.current) {
+          setGithubViewError(toApiError(error, projectId));
+        }
+        return null;
       } finally {
-        setIsGitHubViewLoading(false);
+        if (requestVersion === dashboardRequestVersionRef.current) {
+          setIsGitHubViewLoading(false);
+        }
       }
     },
-    [projectId, fetchDashboard],
+    [fetchDashboard, projectId],
   );
+
+  useEffect(() => {
+    if (enabledRepositories.length === 0) {
+      dashboardRequestVersionRef.current += 1;
+      setSelectedRepoId(null);
+      setGithubView(null);
+      setGithubViewError(null);
+      setRepoSelectorOpen(false);
+      return;
+    }
+
+    setSelectedRepoId((current) => {
+      if (
+        current &&
+        enabledRepositories.some((repository) => repository.id === current)
+      ) {
+        return current;
+      }
+
+      return (
+        enabledRepositories.find((repository) => repository.primary)?.id ??
+        enabledRepositories[0]?.id ??
+        null
+      );
+    });
+  }, [enabledRepositories]);
+
+  useEffect(() => {
+    if (!selectedRepoId) return;
+    // Switching repositories should use the dashboard cache/in-flight dedupe.
+    // Explicit retries are the paths that intentionally force a fresh request.
+    void loadDashboard(selectedRepoId);
+  }, [loadDashboard, selectedRepoId]);
+
+  const selectRepository = useCallback(async (linkedRepositoryId: string) => {
+    setSelectedRepoId(linkedRepositoryId);
+    setRepoSelectorOpen(false);
+  }, []);
+
+  const retryGitHubView = useCallback(async () => {
+    if (!selectedRepoId) return;
+    await loadDashboard(selectedRepoId, true);
+  }, [loadDashboard, selectedRepoId]);
 
   const loadActivityPage = useCallback(
     (page: number) => {
-      if (!projectId) {
+      if (!projectId || !selectedRepoId) {
         return Promise.resolve({ items: [], hasMore: false, page, size: 10 });
       }
 
@@ -140,13 +219,30 @@ export function useStudentProjectGitHubDashboard({
 
   const loadContributorsPage = useCallback(
     (page: number) => {
-      if (!projectId) {
+      if (!projectId || !selectedRepoId) {
         return Promise.resolve({ items: [], hasMore: false, page, size: 10 });
       }
 
       return fetchContributorsPage(projectId, page, selectedRepoId);
     },
     [projectId, fetchContributorsPage, selectedRepoId],
+  );
+
+  const loadPullRequestsPage = useCallback(
+    (page: number, options: ProjectGitHubPullRequestPageOptions = {}) => {
+      if (!projectId || !selectedRepoId) {
+        return Promise.resolve({
+          items: [],
+          hasMore: false,
+          page,
+          size: options.size ?? 10,
+          total: 0,
+        });
+      }
+
+      return fetchPullRequestsPage(projectId, page, selectedRepoId, options);
+    },
+    [fetchPullRequestsPage, projectId, selectedRepoId],
   );
 
   return {
@@ -157,9 +253,12 @@ export function useStudentProjectGitHubDashboard({
     activeRepository,
     activeRepositorySyncStatus,
     githubView,
+    githubViewError,
     isGitHubViewLoading,
+    retryGitHubView,
     selectRepository,
     loadActivityPage,
     loadContributorsPage,
+    loadPullRequestsPage,
   };
 }

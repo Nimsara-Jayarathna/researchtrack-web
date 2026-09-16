@@ -1,22 +1,41 @@
+import {
+  clearAvailableGitHubRepositoriesInFlight,
+  clearProjectGitHubRepositoriesInFlight,
+  getAvailableGitHubRepositoriesCacheSnapshot,
+  getAvailableGitHubRepositoriesInFlight,
+  getGitHubIntegrationCacheGeneration,
+  getProjectGitHubRepositoriesCacheSnapshot,
+  getProjectGitHubRepositoriesInFlight,
+  invalidateAllAvailableGitHubRepositoriesCache,
+  invalidateAvailableGitHubRepositoriesCache,
+  invalidateProjectGitHubRepositoriesCache,
+  setAvailableGitHubRepositoriesCache,
+  setAvailableGitHubRepositoriesInFlight,
+  setProjectGitHubRepositoriesCache,
+  setProjectGitHubRepositoriesInFlight,
+  updateProjectGitHubRepositoriesCache,
+} from "../cache/githubIntegrationCache";
 import type { createRoleProjectApi } from "@/features/shared/api/createRoleProjectApi";
 import type {
   GitHubAccessRequestCreateV2,
+  GitHubAccessRequestSummary,
   GitHubAvailableRepositories,
   GitHubInstallStart,
   GitHubAccessUpdatedAcknowledge,
   GitHubAccessUpdatedSummary,
   LinkGitHubRepositoriesPayload,
-  GitHubRepositoryAccessRequestContinue,
-  GitHubRepositoryAccessRequestCreate,
-  GitHubRepositoryAccessRequestValidation,
   GitHubInstallationRepositoriesPage,
   ProjectGitHubRepositories,
   ProjectGitHubRepositoryListing,
   LinkProjectGitHubRepositoryRequest,
   ProjectGitHubRepositoryLink,
   SupervisorProjectDetail,
+  GitHubEvidencePage,
+  GitHubCommitEvidence,
+  GitHubContributorEvidence,
+  GitHubPullRequestEvidence,
+  GitHubSyncRunEvidence,
 } from "../types";
-import { normalizeGitHubRepositoryUrl } from "../utils/githubRepositoryUrl";
 
 type RoleProjectApi = Omit<
   ReturnType<typeof createRoleProjectApi>,
@@ -51,130 +70,247 @@ export function createSupervisorGitHubApi({
       projectId?: string;
       requestToken?: string;
     }): Promise<GitHubInstallStart> {
+      if (body.projectId) {
+        invalidateProjectGitHubRepositoriesCache(body.projectId);
+      }
+      invalidateAllAvailableGitHubRepositoriesCache();
       return apiClient.post<GitHubInstallStart>(
         "/api/github/access-source/install/start",
         body,
       );
     },
 
-    createPublicGitHubAccessSource(
-      projectId: string,
-      repositoryUrl: string,
-    ): Promise<GitHubAvailableRepositories> {
-      const normalizedRepositoryUrl =
-        normalizeGitHubRepositoryUrl(repositoryUrl);
-      if (!normalizedRepositoryUrl) {
-        throw new Error("Invalid GitHub repository URL.");
-      }
-      return apiClient.post<GitHubAvailableRepositories>(
-        "/api/github/access-source/public",
-        {
-          projectId,
-          repositoryUrl: normalizedRepositoryUrl,
-        },
-      );
-    },
-
     createGitHubAccessSourceRequest(
       projectId: string,
+      ownerLogin: string,
     ): Promise<GitHubAccessRequestCreateV2> {
       return apiClient.post<GitHubAccessRequestCreateV2>(
         "/api/github/access-source/request",
-        {
-          projectId,
-        },
+        { projectId, ownerLogin },
+      );
+    },
+
+    listGitHubAccessSourceRequests(
+      projectId: string,
+    ): Promise<GitHubAccessRequestSummary[]> {
+      const params = new URLSearchParams({ projectId });
+      return apiClient.get<GitHubAccessRequestSummary[]>(
+        `/api/github/access-source/requests?${params.toString()}`,
+      );
+    },
+
+    revokeGitHubAccessSourceRequest(
+      projectId: string,
+      requestId: string,
+    ): Promise<{ projectId: string; requestId: string; status: string }> {
+      const params = new URLSearchParams({ projectId });
+      return apiClient.del<{
+        projectId: string;
+        requestId: string;
+        status: string;
+      }>(
+        `/api/github/access-source/requests/${requestId}?${params.toString()}`,
       );
     },
 
     getAvailableGitHubRepositories(
       sourceId: string,
+      options: { forceRefresh?: boolean } = {},
     ): Promise<GitHubAvailableRepositories> {
+      const cached = getAvailableGitHubRepositoriesCacheSnapshot(sourceId);
+      if (!options.forceRefresh && cached?.isFresh) {
+        return Promise.resolve(cached.data);
+      }
+
+      const inFlight = getAvailableGitHubRepositoriesInFlight(sourceId);
+      if (inFlight) return inFlight;
+
       const params = new URLSearchParams({ sourceId });
-      return apiClient.get<GitHubAvailableRepositories>(
-        `/api/github/repositories/available?${params.toString()}`,
+      const cacheGeneration = getGitHubIntegrationCacheGeneration();
+      const baseRequest = apiClient
+        .get<GitHubAvailableRepositories>(
+          `/api/github/repositories/available?${params.toString()}`,
+        )
+        .then((data) => {
+          setAvailableGitHubRepositoriesCache(
+            data,
+            Date.now(),
+            cacheGeneration,
+          );
+          return data;
+        });
+      const request = baseRequest.finally(() =>
+        clearAvailableGitHubRepositoriesInFlight(sourceId, request),
       );
+      setAvailableGitHubRepositoriesInFlight(sourceId, request);
+      return request;
     },
 
     async linkGitHubRepositories(
       payload: LinkGitHubRepositoriesPayload,
     ): Promise<ProjectGitHubRepositories> {
+      const cacheGeneration = getGitHubIntegrationCacheGeneration();
       const data = await apiClient.post<ProjectGitHubRepositories>(
         "/api/github/repositories/link",
         payload,
       );
       invalidateProjectCaches(data.projectId);
+      setProjectGitHubRepositoriesCache(data, Date.now(), cacheGeneration);
       return data;
     },
 
     getProjectGitHubRepositories(
       projectId: string,
+      options: { forceRefresh?: boolean } = {},
     ): Promise<ProjectGitHubRepositories> {
-      return apiClient.get<ProjectGitHubRepositories>(
-        `/api/projects/${projectId}/github-repositories`,
+      const cached = getProjectGitHubRepositoriesCacheSnapshot(projectId);
+      if (!options.forceRefresh && cached?.isFresh) {
+        return Promise.resolve(cached.data);
+      }
+
+      const inFlight = getProjectGitHubRepositoriesInFlight(projectId);
+      if (inFlight) return inFlight;
+
+      const cacheGeneration = getGitHubIntegrationCacheGeneration();
+      const baseRequest = apiClient
+        .get<ProjectGitHubRepositories>(
+          `/api/projects/${projectId}/github-repositories`,
+        )
+        .then((data) => {
+          setProjectGitHubRepositoriesCache(data, Date.now(), cacheGeneration);
+          return data;
+        });
+      const request = baseRequest.finally(() =>
+        clearProjectGitHubRepositoriesInFlight(projectId, request),
       );
+      setProjectGitHubRepositoriesInFlight(projectId, request);
+      return request;
     },
 
     async unlinkGitHubRepository(
       linkedRepositoryId: string,
     ): Promise<ProjectGitHubRepositories> {
+      const cacheGeneration = getGitHubIntegrationCacheGeneration();
       const data = await apiClient.del<ProjectGitHubRepositories>(
         `/api/github/repositories/${linkedRepositoryId}`,
       );
       invalidateProjectCaches(data.projectId);
+      setProjectGitHubRepositoriesCache(data, Date.now(), cacheGeneration);
       return data;
     },
 
     async enableGitHubRepository(
       linkedRepositoryId: string,
     ): Promise<ProjectGitHubRepositories> {
+      const cacheGeneration = getGitHubIntegrationCacheGeneration();
       const data = await apiClient.post<ProjectGitHubRepositories>(
         `/api/github/repositories/${linkedRepositoryId}/enable`,
         {},
       );
       invalidateProjectCaches(data.projectId);
+      setProjectGitHubRepositoriesCache(data, Date.now(), cacheGeneration);
       return data;
     },
 
     async disableGitHubRepository(
       linkedRepositoryId: string,
     ): Promise<ProjectGitHubRepositories> {
+      const cacheGeneration = getGitHubIntegrationCacheGeneration();
       const data = await apiClient.post<ProjectGitHubRepositories>(
         `/api/github/repositories/${linkedRepositoryId}/disable`,
         {},
       );
       invalidateProjectCaches(data.projectId);
+      setProjectGitHubRepositoriesCache(data, Date.now(), cacheGeneration);
       return data;
     },
 
     async disconnectGitHubAccessSource(
       sourceId: string,
     ): Promise<ProjectGitHubRepositories> {
+      const cacheGeneration = getGitHubIntegrationCacheGeneration();
       const data = await apiClient.del<ProjectGitHubRepositories>(
         `/api/github/access-source/${sourceId}`,
       );
       invalidateProjectCaches(data.projectId);
+      invalidateAvailableGitHubRepositoriesCache(sourceId, cacheGeneration);
+      setProjectGitHubRepositoriesCache(data, Date.now(), cacheGeneration);
       return data;
     },
 
     async refreshGitHubRepository(
+      projectId: string,
       linkedRepositoryId: string,
-    ): Promise<ProjectGitHubRepositories> {
-      const data = await apiClient.post<ProjectGitHubRepositories>(
-        `/api/github/repositories/${linkedRepositoryId}/refresh`,
+    ): Promise<void> {
+      await apiClient.post<void>(
+        `/api/supervisor/projects/${projectId}/github/repositories/${linkedRepositoryId}/sync`,
         {},
       );
-      invalidateProjectCaches(data.projectId);
-      return data;
+      updateProjectGitHubRepositoriesCache(projectId, (current) => ({
+        ...current,
+        repositories: current.repositories.map((repository) =>
+          repository.id === linkedRepositoryId
+            ? { ...repository, syncStatus: "PENDING" }
+            : repository,
+        ),
+      }));
+      roleProjectApi.invalidateProjectGitHubCaches(projectId);
+    },
+
+    getGitHubRepositoryCommits(
+      projectId: string,
+      linkedRepositoryId: string,
+      page = 1,
+      size = 50,
+    ): Promise<GitHubEvidencePage<GitHubCommitEvidence>> {
+      return apiClient.get<GitHubEvidencePage<GitHubCommitEvidence>>(
+        `/api/supervisor/projects/${projectId}/github/repositories/${linkedRepositoryId}/commits?page=${page}&size=${size}`,
+      );
+    },
+
+    getGitHubRepositoryContributors(
+      projectId: string,
+      linkedRepositoryId: string,
+      page = 1,
+      size = 50,
+    ): Promise<GitHubEvidencePage<GitHubContributorEvidence>> {
+      return apiClient.get<GitHubEvidencePage<GitHubContributorEvidence>>(
+        `/api/supervisor/projects/${projectId}/github/repositories/${linkedRepositoryId}/contributors?page=${page}&size=${size}`,
+      );
+    },
+
+    getGitHubRepositoryPullRequests(
+      projectId: string,
+      linkedRepositoryId: string,
+      page = 1,
+      size = 50,
+    ): Promise<GitHubEvidencePage<GitHubPullRequestEvidence>> {
+      return apiClient.get<GitHubEvidencePage<GitHubPullRequestEvidence>>(
+        `/api/supervisor/projects/${projectId}/github/repositories/${linkedRepositoryId}/pull-requests?page=${page}&size=${size}`,
+      );
+    },
+
+    getGitHubRepositorySyncRuns(
+      projectId: string,
+      linkedRepositoryId: string,
+      page = 1,
+      size = 25,
+    ): Promise<GitHubEvidencePage<GitHubSyncRunEvidence>> {
+      return apiClient.get<GitHubEvidencePage<GitHubSyncRunEvidence>>(
+        `/api/supervisor/projects/${projectId}/github/repositories/${linkedRepositoryId}/sync-runs?page=${page}&size=${size}`,
+      );
     },
 
     async selectPrimaryGitHubRepository(
       linkedRepositoryId: string,
     ): Promise<ProjectGitHubRepositories> {
+      const cacheGeneration = getGitHubIntegrationCacheGeneration();
       const data = await apiClient.post<ProjectGitHubRepositories>(
         `/api/github/repositories/${linkedRepositoryId}/select`,
         {},
       );
       invalidateProjectCaches(data.projectId);
+      setProjectGitHubRepositoriesCache(data, Date.now(), cacheGeneration);
       return data;
     },
 
@@ -182,11 +318,13 @@ export function createSupervisorGitHubApi({
       linkedRepositoryId: string,
       customName: string | null,
     ): Promise<ProjectGitHubRepositories> {
+      const cacheGeneration = getGitHubIntegrationCacheGeneration();
       const data = await apiClient.post<ProjectGitHubRepositories>(
         `/api/github/repositories/${linkedRepositoryId}/display-name`,
         { customName },
       );
       invalidateProjectCaches(data.projectId);
+      setProjectGitHubRepositoriesCache(data, Date.now(), cacheGeneration);
       return data;
     },
 
@@ -215,89 +353,26 @@ export function createSupervisorGitHubApi({
       );
     },
 
-    createGitHubRepositoryAccessRequest(
-      projectId: string,
-    ): Promise<GitHubRepositoryAccessRequestCreate> {
-      return apiClient.post<GitHubRepositoryAccessRequestCreate>(
-        `/api/supervisor/projects/${projectId}/github/access-requests`,
-        {},
-      );
-    },
-
-    validateGitHubRepositoryAccessRequest(
-      projectId: string,
-      token: string,
-    ): Promise<GitHubRepositoryAccessRequestValidation> {
-      const params = new URLSearchParams({ token });
-      return apiClient.get<GitHubRepositoryAccessRequestValidation>(
-        `/api/supervisor/projects/${projectId}/github/access-requests/validate?${params.toString()}`,
-      );
-    },
-
-    validatePublicGitHubRepositoryAccessRequest(
-      token: string,
-    ): Promise<GitHubRepositoryAccessRequestValidation> {
-      const params = new URLSearchParams({ token });
-      return apiClient.get<GitHubRepositoryAccessRequestValidation>(
-        `/api/github/access-requests/validate?${params.toString()}`,
-      );
-    },
-
-    continueGitHubRepositoryAccessRequest(
-      projectId: string,
-      token: string,
-    ): Promise<GitHubRepositoryAccessRequestContinue> {
-      const params = new URLSearchParams({ token });
-      return apiClient.post<GitHubRepositoryAccessRequestContinue>(
-        `/api/supervisor/projects/${projectId}/github/access-requests/continue?${params.toString()}`,
-        {},
-      );
-    },
-
-    continuePublicGitHubRepositoryAccessRequest(
-      token: string,
-    ): Promise<GitHubRepositoryAccessRequestContinue> {
-      const params = new URLSearchParams({ token });
-      return apiClient.post<GitHubRepositoryAccessRequestContinue>(
-        `/api/github/access-requests/continue?${params.toString()}`,
-        {},
-      );
-    },
-
-    getPublicGitHubAccessUpdatedSummary(
-      token: string,
-    ): Promise<GitHubAccessUpdatedSummary> {
-      const params = new URLSearchParams({ token });
-      return apiClient.get<GitHubAccessUpdatedSummary>(
-        `/api/github/access-updated/summary?${params.toString()}`,
-      );
-    },
-
-    acknowledgePublicGitHubAccessUpdated(
-      token: string,
-    ): Promise<GitHubAccessUpdatedAcknowledge> {
-      const params = new URLSearchParams({ token });
-      return apiClient.post<GitHubAccessUpdatedAcknowledge>(
-        `/api/github/access-updated/acknowledge?${params.toString()}`,
-        {},
-      );
-    },
-
     getProjectGitHubAccessUpdatedSummary(
       projectId: string,
     ): Promise<GitHubAccessUpdatedSummary> {
       return apiClient.get<GitHubAccessUpdatedSummary>(
-        `/api/supervisor/projects/${projectId}/access-updated/summary`,
+        `/api/supervisor/projects/${projectId}/github/access-updated/summary`,
       );
     },
 
-    acknowledgeProjectGitHubAccessUpdated(
+    async acknowledgeProjectGitHubAccessUpdated(
       projectId: string,
     ): Promise<GitHubAccessUpdatedAcknowledge> {
-      return apiClient.post<GitHubAccessUpdatedAcknowledge>(
-        `/api/supervisor/projects/${projectId}/access-updated/acknowledge`,
+      const result = await apiClient.post<GitHubAccessUpdatedAcknowledge>(
+        `/api/supervisor/projects/${projectId}/github/access-updated/acknowledge`,
         {},
       );
+      updateProjectGitHubRepositoriesCache(projectId, (current) => ({
+        ...current,
+        hasUnacknowledgedAccess: false,
+      }));
+      return result;
     },
 
     async linkProjectGitHubRepository(
@@ -310,6 +385,7 @@ export function createSupervisorGitHubApi({
       );
       delete cachedProjectsById[projectId];
       roleProjectApi.invalidateProjectGitHubCaches(projectId);
+      invalidateProjectGitHubRepositoriesCache(projectId);
       return linked;
     },
 
@@ -322,6 +398,8 @@ export function createSupervisorGitHubApi({
       );
       cachedProjectsById[projectId] = updated;
       roleProjectApi.invalidateProjectGitHubCaches(projectId);
+      invalidateProjectGitHubRepositoriesCache(projectId);
+      invalidateAllAvailableGitHubRepositoriesCache();
       return updated;
     },
   };

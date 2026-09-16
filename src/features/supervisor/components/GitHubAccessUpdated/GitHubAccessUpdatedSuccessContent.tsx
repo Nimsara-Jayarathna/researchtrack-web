@@ -3,11 +3,13 @@ import type { GitHubAccessUpdatedSummary } from "../../types";
 type GitHubAccessUpdatedSuccessContentProps = {
   summary: GitHubAccessUpdatedSummary;
   scopeLabel: string | null;
+  isExternalRecipient?: boolean;
 };
 
 export function GitHubAccessUpdatedSuccessContent({
   summary,
   scopeLabel,
+  isExternalRecipient = false,
 }: GitHubAccessUpdatedSuccessContentProps) {
   return (
     <div className="space-y-3 text-left">
@@ -22,6 +24,14 @@ export function GitHubAccessUpdatedSuccessContent({
           <p className="mt-2 text-xs text-muted-foreground">{scopeLabel}</p>
         ) : null}
       </div>
+
+      {isExternalRecipient ? (
+        <div className="rounded-xl border border-sky-200 bg-sky-50/70 p-3 text-sm text-sky-900">
+          GitHub App authorization is complete. You can close this page. The
+          ResearchTrack supervisor will choose which authorized repositories to
+          link to the project.
+        </div>
+      ) : null}
 
       <div className="rounded-xl border border-slate-200 bg-white/80 p-3">
         <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">

@@ -17,7 +17,6 @@ function projectWithStatus(
     milestoneDate: null,
     progressPercent: 20,
     lastActivityAt: null,
-    repositoryUrl: null,
     github: createEmptyProjectGitHubPreview(),
     githubRepositories: null,
     jira: null,

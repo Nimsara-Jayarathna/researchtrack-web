@@ -1,6 +1,11 @@
-export type GitHubAccessType =
-  "PUBLIC_URL" | "INSTALLATION_DIRECT" | "INSTALLATION_REQUESTED";
+export type GitHubAccessType = "INSTALLATION_DIRECT" | "INSTALLATION_REQUESTED";
 export type GitHubOwnerType = "USER" | "ORG";
+export type GitHubConnectionStatus = "CONNECTED" | "SUSPENDED" | "REMOVED";
+export type GitHubRepositoryAccessStatus =
+  | "AVAILABLE"
+  | "REPOSITORY_ACCESS_REVOKED"
+  | "INSTALLATION_SUSPENDED"
+  | "INSTALLATION_REMOVED";
 export type GitHubSyncStatus =
   "IN_PROGRESS" | "PENDING" | "SUCCESS" | "FAILED" | "DISABLED";
 
@@ -11,6 +16,7 @@ export type GitHubAccessSource = {
   ownerLogin: string;
   ownerType: GitHubOwnerType;
   accessType: GitHubAccessType;
+  connectionStatus: GitHubConnectionStatus;
   active: boolean;
   createdAt: string;
 };
@@ -58,12 +64,14 @@ export type ProjectRepositoryLink = {
   linkedAt: string;
   lastSyncedAt: string | null;
   syncStatus: GitHubSyncStatus | null;
+  accessStatus: GitHubRepositoryAccessStatus;
 };
 
 export type ProjectGitHubRepositories = {
   projectId: string;
   maxLinkedRepositories: number;
   maxEnabledRepositories: number;
+  hasUnacknowledgedAccess: boolean;
   accessSources: GitHubAccessSource[];
   repositories: ProjectRepositoryLink[];
 };

@@ -4,10 +4,11 @@ import { LastSyncedBadge } from "@/components/ui/LastSyncedBadge";
 import { normalizeSyncStatus } from "@/lib/syncStatus";
 import { RepositorySection } from "./RepositorySection";
 import type { SupervisorProjectDetail } from "../../types";
+import type { UseProjectRepositoriesState } from "../../hooks/useProjectRepositories";
 
 type IntegrationsTabSectionProps = {
   project: SupervisorProjectDetail;
-  onProjectUpdate: (updatedProject: SupervisorProjectDetail) => void;
+  repositoriesState: UseProjectRepositoriesState;
   onConnectJira: () => Promise<void>;
   onDisconnectJira: () => Promise<void>;
   isConnectingJira: boolean;
@@ -20,7 +21,7 @@ type IntegrationsTabSectionProps = {
 
 export function IntegrationsTabSection({
   project,
-  onProjectUpdate,
+  repositoriesState,
   onConnectJira,
   onDisconnectJira,
   isConnectingJira,
@@ -36,7 +37,7 @@ export function IntegrationsTabSection({
     <div className="space-y-6">
       <RepositorySection
         project={project}
-        onUpdate={onProjectUpdate}
+        repositoriesState={repositoriesState}
         pendingSourceId={pendingGitHubSourceId}
         pendingFlowType={pendingGitHubFlowType}
         onPendingSourceHandled={onPendingGitHubSourceHandled}

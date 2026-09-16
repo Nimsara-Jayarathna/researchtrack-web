@@ -43,12 +43,14 @@ export function StudentProjectGitHubTab({
     selectRepository,
     loadActivityPage,
     loadContributorsPage,
+    loadPullRequestsPage,
   } = useStudentProjectGitHubDashboard({
     projectId,
     githubRepositories,
     fetchDashboard: studentApi.getProjectGitHubDashboard,
     fetchActivityPage: studentApi.getProjectGitHubActivityPage,
     fetchContributorsPage: studentApi.getProjectGitHubContributorsPage,
+    fetchPullRequestsPage: studentApi.getProjectGitHubPullRequestsPage,
   });
 
   if (repositoriesError && !githubRepositories) {
@@ -202,6 +204,12 @@ export function StudentProjectGitHubTab({
         onRetry={() => void retryGitHubView()}
         loadActivityPage={loadActivityPage}
         loadContributorsPage={loadContributorsPage}
+        loadPullRequestsPage={loadPullRequestsPage}
+        activeRepositoryId={activeRepository?.id ?? null}
+        activeRepositoryName={
+          activeRepository?.customName?.trim() || activeRepository?.name || null
+        }
+        activeRepositoryLastSyncedAt={activeRepository?.lastSyncedAt ?? null}
         emptyStateDescription="Please wait for your supervisor to link a GitHub repository to this project. Repository management is restricted to supervisors."
       />
     </div>

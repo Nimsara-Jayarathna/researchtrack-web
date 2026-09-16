@@ -84,4 +84,29 @@ describe("role project GitHub dashboard cache", () => {
     await api.getProjectGitHubDashboard("project-1", false, "link-1");
     expect(apiClient.get).toHaveBeenCalledTimes(2);
   });
+
+  it("loads paginated pull requests through the role-aware GitHub evidence route", async () => {
+    const { api, apiClient } = createApi();
+    apiClient.get.mockResolvedValue({
+      items: [],
+      page: 2,
+      size: 8,
+      totalCount: 13,
+      hasNext: false,
+    });
+
+    const result = await api.getProjectGitHubPullRequestsPage(
+      "project-1",
+      2,
+      "link-1",
+      { size: 8, status: "merged", search: "student" },
+    );
+
+    expect(apiClient.get).toHaveBeenCalledWith(
+      "/api/supervisor/projects/project-1/github/repositories/link-1/pull-requests?page=2&size=8&status=merged&search=student",
+    );
+    expect(result.total).toBe(13);
+    expect(result.hasMore).toBe(false);
+  });
+
 });

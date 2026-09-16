@@ -16,6 +16,8 @@ import type {
   ProjectGitHubContributor,
   ProjectGitHubPreview,
   ProjectGitHubRecentCommit,
+  ProjectGitHubPullRequest,
+  ProjectGitHubPullRequestPageOptions,
 } from "@/features/projects/types";
 import type {
   JiraHealth,
@@ -237,6 +239,50 @@ export function createRoleProjectApi({
         page,
       );
     }
+  }
+
+  async function getProjectGitHubPullRequestsPage(
+    projectId: string,
+    page: number,
+    linkedRepositoryId: string | null | undefined,
+    options: ProjectGitHubPullRequestPageOptions = {},
+  ): Promise<PaginatedListResult<ProjectGitHubPullRequest>> {
+    if (!linkedRepositoryId) {
+      return {
+        items: [],
+        hasMore: false,
+        page,
+        size: options.size ?? 10,
+        total: 0,
+      };
+    }
+
+    const params = new URLSearchParams();
+    const status = options.status ?? "all";
+    if (status !== "all") {
+      params.set("status", status);
+    }
+    const search = options.search?.trim();
+    if (search) {
+      params.set("search", search);
+    }
+
+    const payload = await apiClient.get<unknown>(
+      appendQuery(
+        buildPagedUrl(
+          `${githubProjectBasePath}/${projectId}/github/repositories/${linkedRepositoryId}/pull-requests`,
+          page,
+          options.size ?? 10,
+        ),
+        params,
+      ),
+    );
+
+    return normalizePaginatedPayload<ProjectGitHubPullRequest>(
+      payload,
+      page,
+      options.size ?? 10,
+    );
   }
 
   async function getJiraHealth(projectId: string): Promise<JiraHealth> {
@@ -511,6 +557,7 @@ export function createRoleProjectApi({
     getProjectGitHubDashboard,
     getProjectGitHubActivityPage,
     getProjectGitHubContributorsPage,
+    getProjectGitHubPullRequestsPage,
     getJiraHealth,
     getJiraSprintProgress,
     getJiraWorkload,

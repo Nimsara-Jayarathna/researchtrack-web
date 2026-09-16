@@ -108,5 +108,4 @@ describe("role project GitHub dashboard cache", () => {
     expect(result.total).toBe(13);
     expect(result.hasMore).toBe(false);
   });
-
 });

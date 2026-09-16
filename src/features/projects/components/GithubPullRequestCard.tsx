@@ -109,7 +109,10 @@ export function GithubPullRequestCard({
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-50 pt-3 text-[11px] text-slate-400">
         <span className="inline-flex items-center gap-1.5">
           <span>{lifecycle.label}</span>
-          <TimeAgo date={lifecycle.value} className="font-semibold text-slate-500" />
+          <TimeAgo
+            date={lifecycle.value}
+            className="font-semibold text-slate-500"
+          />
         </span>
         {hasMetrics ? (
           <span className="inline-flex items-center gap-2 font-medium">

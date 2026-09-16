@@ -37,7 +37,6 @@ type FetchContributorsPage = (
   linkedRepositoryId?: string | null,
 ) => Promise<PaginatedListResult<ProjectGitHubContributor>>;
 
-
 type FetchPullRequestsPage = (
   projectId: string,
   page: number,

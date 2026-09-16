@@ -18,12 +18,7 @@ export type ProjectGitHubActivitySummary = {
   lastActivityAt: string | null;
   lastActivityType: "commit" | "pull_request" | null;
   lastActivityPullRequestNumber: number | null;
-  lastActivityPullRequestStatus:
-    | "OPEN"
-    | "DRAFT"
-    | "MERGED"
-    | "CLOSED"
-    | null;
+  lastActivityPullRequestStatus: "OPEN" | "DRAFT" | "MERGED" | "CLOSED" | null;
   status: "active" | "idle";
 };
 
@@ -64,7 +59,6 @@ export type ProjectGitHubPreview = {
   hasUnacknowledgedAccess?: boolean;
 };
 
-
 export type ProjectGitHubPullRequest = {
   gitHubPullRequestId: number;
   number: number;
@@ -92,11 +86,7 @@ export type ProjectGitHubPullRequest = {
 };
 
 export type ProjectGitHubPullRequestStatus =
-  | "all"
-  | "open"
-  | "draft"
-  | "merged"
-  | "closed";
+  "all" | "open" | "draft" | "merged" | "closed";
 
 export type ProjectGitHubPullRequestPageOptions = {
   size?: number;

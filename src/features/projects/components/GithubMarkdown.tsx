@@ -10,7 +10,11 @@ function safeHref(value: string): string | null {
 
   try {
     const parsed = new URL(href);
-    if (parsed.protocol === "http:" || parsed.protocol === "https:" || parsed.protocol === "mailto:") {
+    if (
+      parsed.protocol === "http:" ||
+      parsed.protocol === "https:" ||
+      parsed.protocol === "mailto:"
+    ) {
       return href;
     }
   } catch {
@@ -101,10 +105,7 @@ function isTableDivider(line: string) {
     .split("|")
     .map((cell) => cell.trim());
 
-  return (
-    cells.length > 0 &&
-    cells.every((cell) => /^:?-{3,}:?$/.test(cell))
-  );
+  return cells.length > 0 && cells.every((cell) => /^:?-{3,}:?$/.test(cell));
 }
 
 function tableCells(line: string) {
@@ -153,7 +154,10 @@ export function GithubMarkdown({ markdown }: GithubMarkdownProps) {
       if (index < lines.length) index += 1;
 
       blocks.push(
-        <div key={`code-${keyIndex++}`} className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-950">
+        <div
+          key={`code-${keyIndex++}`}
+          className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-950"
+        >
           {language ? (
             <div className="border-b border-slate-800 px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
               {language}
@@ -179,9 +183,7 @@ export function GithubMarkdown({ markdown }: GithubMarkdownProps) {
           <div className={classes}>
             {renderInline(heading[2].trim(), `heading-${keyIndex}`)}
           </div>
-          {level <= 2 ? (
-            <div className="mt-2 h-px bg-slate-100" />
-          ) : null}
+          {level <= 2 ? <div className="mt-2 h-px bg-slate-100" /> : null}
         </div>,
       );
       index += 1;
@@ -198,18 +200,28 @@ export function GithubMarkdown({ markdown }: GithubMarkdownProps) {
       const headers = tableCells(line);
       index += 2;
       const rows: string[][] = [];
-      while (index < lines.length && lines[index].includes("|") && lines[index].trim()) {
+      while (
+        index < lines.length &&
+        lines[index].includes("|") &&
+        lines[index].trim()
+      ) {
         rows.push(tableCells(lines[index]));
         index += 1;
       }
 
       blocks.push(
-        <div key={`table-${keyIndex++}`} className="overflow-x-auto rounded-xl border border-slate-200">
+        <div
+          key={`table-${keyIndex++}`}
+          className="overflow-x-auto rounded-xl border border-slate-200"
+        >
           <table className="min-w-full divide-y divide-slate-200 text-left text-xs">
             <thead className="bg-slate-50">
               <tr>
                 {headers.map((cell, cellIndex) => (
-                  <th key={cellIndex} className="px-3 py-2 font-bold text-slate-700">
+                  <th
+                    key={cellIndex}
+                    className="px-3 py-2 font-bold text-slate-700"
+                  >
                     {renderInline(cell, `th-${keyIndex}-${cellIndex}`)}
                   </th>
                 ))}
@@ -219,8 +231,14 @@ export function GithubMarkdown({ markdown }: GithubMarkdownProps) {
               {rows.map((row, rowIndex) => (
                 <tr key={rowIndex}>
                   {headers.map((_, cellIndex) => (
-                    <td key={cellIndex} className="px-3 py-2 align-top text-slate-600">
-                      {renderInline(row[cellIndex] ?? "", `td-${keyIndex}-${rowIndex}-${cellIndex}`)}
+                    <td
+                      key={cellIndex}
+                      className="px-3 py-2 align-top text-slate-600"
+                    >
+                      {renderInline(
+                        row[cellIndex] ?? "",
+                        `td-${keyIndex}-${rowIndex}-${cellIndex}`,
+                      )}
                     </td>
                   ))}
                 </tr>
@@ -267,7 +285,10 @@ export function GithubMarkdown({ markdown }: GithubMarkdownProps) {
       }
 
       blocks.push(
-        <ul key={`ul-${keyIndex++}`} className="space-y-1.5 pl-5 text-sm leading-6 text-slate-600">
+        <ul
+          key={`ul-${keyIndex++}`}
+          className="space-y-1.5 pl-5 text-sm leading-6 text-slate-600"
+        >
           {items.map((item, itemIndex) => (
             <li
               key={itemIndex}
@@ -294,7 +315,10 @@ export function GithubMarkdown({ markdown }: GithubMarkdownProps) {
       }
 
       blocks.push(
-        <ol key={`ol-${keyIndex++}`} className="list-decimal space-y-1.5 pl-6 text-sm leading-6 text-slate-600">
+        <ol
+          key={`ol-${keyIndex++}`}
+          className="list-decimal space-y-1.5 pl-6 text-sm leading-6 text-slate-600"
+        >
           {items.map((item, itemIndex) => (
             <li key={itemIndex} className="pl-1">
               {renderInline(item, `oli-${keyIndex}-${itemIndex}`)}

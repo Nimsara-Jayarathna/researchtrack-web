@@ -434,15 +434,9 @@ function normalizeDashboardPayload(
       totalCommits: Number(
         legacy.activitySummary?.totalCommits ?? normalizedCommits.length,
       ),
-      totalPullRequests: Number(
-        legacy.activitySummary?.totalPullRequests ?? 0,
-      ),
-      openPullRequests: Number(
-        legacy.activitySummary?.openPullRequests ?? 0,
-      ),
-      draftPullRequests: Number(
-        legacy.activitySummary?.draftPullRequests ?? 0,
-      ),
+      totalPullRequests: Number(legacy.activitySummary?.totalPullRequests ?? 0),
+      openPullRequests: Number(legacy.activitySummary?.openPullRequests ?? 0),
+      draftPullRequests: Number(legacy.activitySummary?.draftPullRequests ?? 0),
       mergedPullRequests: Number(
         legacy.activitySummary?.mergedPullRequests ?? 0,
       ),
@@ -490,7 +484,9 @@ function normalizeDashboardPayload(
   };
 }
 
-function pullRequestSummaryLine(summary: ProjectGitHubPreview["activitySummary"]) {
+function pullRequestSummaryLine(
+  summary: ProjectGitHubPreview["activitySummary"],
+) {
   const segments = [
     `${summary.openPullRequests} open`,
     summary.draftPullRequests > 0 ? `${summary.draftPullRequests} draft` : null,

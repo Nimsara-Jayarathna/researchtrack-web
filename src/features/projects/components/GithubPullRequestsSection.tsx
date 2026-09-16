@@ -135,7 +135,9 @@ export function GithubPullRequestsSection({
             disabled={!repositoryId || isLoading || preview.length === 0}
           >
             View all
-            {total > PREVIEW_SIZE ? <span className="normal-case tracking-normal">({total})</span> : null}
+            {total > PREVIEW_SIZE ? (
+              <span className="normal-case tracking-normal">({total})</span>
+            ) : null}
             <ChevronRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
           </button>
         </div>
@@ -151,7 +153,11 @@ export function GithubPullRequestsSection({
             <p className="text-sm text-rose-700">{errorMessage}</p>
             <button
               type="button"
-              className={buttonStyles({ variant: "secondary", size: "sm", className: "mt-3" })}
+              className={buttonStyles({
+                variant: "secondary",
+                size: "sm",
+                className: "mt-3",
+              })}
               onClick={() => void loadPreview()}
             >
               Retry
@@ -173,7 +179,8 @@ export function GithubPullRequestsSection({
               No pull requests recorded for this repository yet.
             </p>
             <p className="mt-1 text-xs text-slate-400">
-              Pull request evidence will appear after the next successful GitHub synchronization.
+              Pull request evidence will appear after the next successful GitHub
+              synchronization.
             </p>
           </div>
         )}
@@ -193,7 +200,11 @@ export function GithubPullRequestsSection({
 
       <GithubDetailsModal
         isOpen={selectedPullRequest !== null}
-        title={selectedPullRequest ? `Pull Request #${selectedPullRequest.number}` : "Pull Request"}
+        title={
+          selectedPullRequest
+            ? `Pull Request #${selectedPullRequest.number}`
+            : "Pull Request"
+        }
         onClose={() => setSelectedPullRequest(null)}
       >
         {selectedPullRequest ? (

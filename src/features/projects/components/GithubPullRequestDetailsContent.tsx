@@ -80,7 +80,9 @@ function TimelineMetric({
       <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
         {label}
       </p>
-      <p className="mt-1 text-sm font-bold text-slate-700">{formatDate(value)}</p>
+      <p className="mt-1 text-sm font-bold text-slate-700">
+        {formatDate(value)}
+      </p>
     </div>
   );
 }
@@ -102,7 +104,10 @@ function IdentityCard({
         <Icon className="h-3.5 w-3.5" />
         {label}
       </div>
-      <p className="mt-1.5 truncate text-sm font-black" title={username ? `@${username}` : "Not recorded"}>
+      <p
+        className="mt-1.5 truncate text-sm font-black"
+        title={username ? `@${username}` : "Not recorded"}
+      >
         {username ? `@${username}` : "Not recorded"}
       </p>
     </div>
@@ -132,7 +137,9 @@ export function GithubPullRequestDetailsContent({
           <PullRequestStatusBadge pullRequest={pullRequest} />
         </div>
 
-        <div className={`mt-5 grid gap-3 ${pullRequest.isMerged ? "md:grid-cols-2" : ""}`}>
+        <div
+          className={`mt-5 grid gap-3 ${pullRequest.isMerged ? "md:grid-cols-2" : ""}`}
+        >
           <IdentityCard
             label="Opened by"
             username={pullRequest.authorLogin}
@@ -235,7 +242,9 @@ export function GithubPullRequestDetailsContent({
           Technical details
         </p>
         <div className="mt-2">
-          <p className="text-[10px] font-semibold text-slate-400">GitHub PR ID</p>
+          <p className="text-[10px] font-semibold text-slate-400">
+            GitHub PR ID
+          </p>
           <p className="mt-0.5 break-all font-mono text-xs font-semibold text-slate-600">
             {pullRequest.gitHubPullRequestId}
           </p>

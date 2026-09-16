@@ -60,7 +60,11 @@ export function GithubPullRequestsModalContent({
   const requestVersionRef = useRef(0);
 
   const load = useCallback(
-    async (targetPage: number, targetStatus: ProjectGitHubPullRequestStatus, targetSearch: string) => {
+    async (
+      targetPage: number,
+      targetStatus: ProjectGitHubPullRequestStatus,
+      targetSearch: string,
+    ) => {
       const requestVersion = ++requestVersionRef.current;
       setIsLoading(true);
       setErrorMessage(null);
@@ -108,12 +112,18 @@ export function GithubPullRequestsModalContent({
   }, [searchInput]);
 
   const totalPages =
-    typeof total === "number" ? Math.max(1, Math.ceil(total / PAGE_SIZE)) : null;
+    typeof total === "number"
+      ? Math.max(1, Math.ceil(total / PAGE_SIZE))
+      : null;
 
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Pull request status">
+        <div
+          className="flex flex-wrap gap-2"
+          role="group"
+          aria-label="Pull request status"
+        >
           {statusOptions.map((option) => (
             <button
               key={option.value}
@@ -153,7 +163,11 @@ export function GithubPullRequestsModalContent({
           <p className="text-sm text-rose-700">{errorMessage}</p>
           <button
             type="button"
-            className={buttonStyles({ variant: "secondary", size: "sm", className: "mt-3" })}
+            className={buttonStyles({
+              variant: "secondary",
+              size: "sm",
+              className: "mt-3",
+            })}
             onClick={() => void load(page, status, search)}
           >
             Retry
@@ -161,7 +175,9 @@ export function GithubPullRequestsModalContent({
         </div>
       ) : items.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-200 p-10 text-center">
-          <p className="text-sm font-semibold text-slate-600">No pull requests found.</p>
+          <p className="text-sm font-semibold text-slate-600">
+            No pull requests found.
+          </p>
           <p className="mt-1 text-xs text-slate-400">
             Try another status or search term.
           </p>

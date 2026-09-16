@@ -6,7 +6,9 @@ import {
   getSafeGitHubUrl,
 } from "./githubPullRequests";
 
-function pr(overrides: Partial<ProjectGitHubPullRequest> = {}): ProjectGitHubPullRequest {
+function pr(
+  overrides: Partial<ProjectGitHubPullRequest> = {},
+): ProjectGitHubPullRequest {
   return {
     gitHubPullRequestId: 1,
     number: 14,
@@ -50,15 +52,19 @@ describe("GitHub pull request presentation", () => {
   it("uses merged/closed timestamps for lifecycle evidence", () => {
     expect(
       getPullRequestLifecycleDate(
-        pr({ isMerged: true, state: "CLOSED", mergedAt: "2026-09-16T11:00:00Z" }),
+        pr({
+          isMerged: true,
+          state: "CLOSED",
+          mergedAt: "2026-09-16T11:00:00Z",
+        }),
       ),
     ).toEqual({ label: "Merged", value: "2026-09-16T11:00:00Z" });
   });
 
   it("only accepts HTTPS github.com detail links", () => {
-    expect(getSafeGitHubUrl("https://github.com/example/repo/pull/14")).toContain(
-      "github.com/example/repo/pull/14",
-    );
+    expect(
+      getSafeGitHubUrl("https://github.com/example/repo/pull/14"),
+    ).toContain("github.com/example/repo/pull/14");
     expect(getSafeGitHubUrl("javascript:alert(1)")).toBeNull();
     expect(getSafeGitHubUrl("https://example.com/phish")).toBeNull();
   });

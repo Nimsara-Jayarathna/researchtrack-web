@@ -6,6 +6,8 @@ import {
   Github,
 } from "lucide-react";
 import { CommitActivitySection } from "@/features/projects/components/CommitActivitySection";
+import { ErrorState } from "@/components/feedback/ErrorState";
+import type { ApiError } from "@/types";
 import { LastSyncedBadge } from "@/components/ui/LastSyncedBadge";
 import { SyncStatusBadge } from "@/components/ui/SyncStatusBadge";
 import { studentApi } from "../../api/studentApi";
@@ -16,12 +18,16 @@ type StudentProjectGitHubTabProps = {
   projectId: string | undefined;
   githubRepositories: ProjectGitHubRepositories | null | undefined;
   isPageLoading: boolean;
+  repositoriesError?: ApiError | null;
+  onRetryRepositories?: () => void;
 };
 
 export function StudentProjectGitHubTab({
   projectId,
   githubRepositories,
   isPageLoading,
+  repositoriesError = null,
+  onRetryRepositories,
 }: StudentProjectGitHubTabProps) {
   const {
     enabledRepositories,
@@ -44,6 +50,12 @@ export function StudentProjectGitHubTab({
     fetchActivityPage: studentApi.getProjectGitHubActivityPage,
     fetchContributorsPage: studentApi.getProjectGitHubContributorsPage,
   });
+
+  if (repositoriesError && !githubRepositories) {
+    return (
+      <ErrorState error={repositoriesError} onRetry={onRetryRepositories} />
+    );
+  }
 
   return (
     <div className="space-y-4">

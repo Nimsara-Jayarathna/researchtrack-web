@@ -48,6 +48,8 @@ function toStudentDetail(project: ProjectResourceDetail): StudentProjectDetail {
     lastActivityAt: project.lastActivityAt,
     progressPercent: project.progressPercent,
     github: createEmptyProjectGitHubPreview(),
+    // Loaded independently on the overview/GitHub tabs so a GitHub-service
+    // outage does not block the core student project details page.
     githubRepositories: null,
     jira: null,
     leader: project.leader,

@@ -1,4 +1,5 @@
 type ApiClient = typeof import("@/services/apiClient").apiClient;
+import { toVersionedApiPath } from "@/app/config/apiVersion";
 import {
   appendQuery,
   clearRecord,
@@ -53,6 +54,13 @@ export function createRoleProjectApi({
   apiClient,
   roleBasePath,
 }: CreateRoleProjectApiOptions) {
+  // Student GitHub evidence is project-scoped read-only data, not a student
+  // management API. Supervisors keep their compatibility endpoint while
+  // students read through the shared authenticated project contract.
+  const githubProjectBasePath =
+    roleBasePath === "/api/student"
+      ? toVersionedApiPath("/api/projects")
+      : `${roleBasePath}/projects`;
   const cachedProjectGitHubByKey: Partial<
     Record<string, { data: ProjectGitHubActivity; fetchedAt: number }>
   > = {};
@@ -134,7 +142,7 @@ export function createRoleProjectApi({
     const suffix = params.toString() ? `?${params.toString()}` : "";
     const cacheGeneration = projectGitHubCacheGeneration;
     const request = apiClient.get<ProjectGitHubActivity>(
-      `${roleBasePath}/projects/${projectId}/github${suffix}`,
+      `${githubProjectBasePath}/${projectId}/github${suffix}`,
     );
     inFlightProjectGitHubRequestsByKey[key] = request;
 
@@ -167,7 +175,7 @@ export function createRoleProjectApi({
       const payload = await apiClient.get<unknown>(
         appendQuery(
           buildPagedUrl(
-            `${roleBasePath}/projects/${projectId}/github/activity`,
+            `${githubProjectBasePath}/${projectId}/github/activity`,
             page,
           ),
           params,
@@ -207,7 +215,7 @@ export function createRoleProjectApi({
       const payload = await apiClient.get<unknown>(
         appendQuery(
           buildPagedUrl(
-            `${roleBasePath}/projects/${projectId}/github/contributors`,
+            `${githubProjectBasePath}/${projectId}/github/contributors`,
             page,
           ),
           params,

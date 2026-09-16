@@ -14,6 +14,7 @@ import { StudentProjectJiraTab } from "../components/projectDetails/StudentProje
 import { StudentProjectMilestonesTab } from "../components/projectDetails/StudentProjectMilestonesTab";
 import { StudentProjectTeamTab } from "../components/projectDetails/StudentProjectTeamTab";
 import { useStudentProject } from "../hooks/useStudentProject";
+import { useStudentProjectRepositories } from "../hooks/projectDetails/useStudentProjectRepositories";
 import { useStudentProjectDetailsBlockingError } from "../hooks/projectDetails/useStudentProjectDetailsBlockingError";
 import { useStudentProjectDetailsTabs } from "../hooks/projectDetails/useStudentProjectDetailsTabs";
 import { studentApi } from "../api/studentApi";
@@ -34,6 +35,26 @@ export function StudentProjectDetailsPage() {
     setSearchParams,
   );
   const { project, isLoading, error, reload } = useStudentProject(projectId);
+  const projectRepositoriesState = useStudentProjectRepositories(
+    projectId,
+    project?.githubRepositories,
+    {
+      enabled:
+        Boolean(project) &&
+        (activeTab === "github" || activeTab === "overview"),
+    },
+  );
+  const projectWithRepositories = useMemo(
+    () =>
+      project
+        ? {
+            ...project,
+            githubRepositories:
+              projectRepositoriesState.data ?? project.githubRepositories,
+          }
+        : null,
+    [project, projectRepositoriesState.data],
+  );
   const jira = project?.jira ?? null;
   const retryLoad = useCallback(() => {
     void reload();
@@ -120,7 +141,7 @@ export function StudentProjectDetailsPage() {
 
       {activeTab === "overview" ? (
         <ProjectOverviewContent
-          project={project}
+          project={projectWithRepositories ?? project}
           role="student"
           meetingAnalytics={meetingAnalytics}
         />
@@ -147,8 +168,12 @@ export function StudentProjectDetailsPage() {
       {activeTab === "github" ? (
         <StudentProjectGitHubTab
           projectId={projectId}
-          githubRepositories={project.githubRepositories}
-          isPageLoading={isLoading}
+          githubRepositories={
+            projectRepositoriesState.data ?? project.githubRepositories
+          }
+          isPageLoading={isLoading || projectRepositoriesState.isLoading}
+          repositoriesError={projectRepositoriesState.error}
+          onRetryRepositories={() => void projectRepositoriesState.reload()}
         />
       ) : null}
 

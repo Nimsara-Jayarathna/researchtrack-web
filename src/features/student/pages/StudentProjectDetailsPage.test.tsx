@@ -9,11 +9,13 @@ const {
   showBlockingErrorMock,
   clearBlockingErrorMock,
   getProjectGitHubDashboardMock,
+  getProjectGitHubRepositoriesMock,
 } = vi.hoisted(() => ({
   useStudentProjectMock: vi.fn(),
   showBlockingErrorMock: vi.fn(),
   clearBlockingErrorMock: vi.fn(),
   getProjectGitHubDashboardMock: vi.fn(),
+  getProjectGitHubRepositoriesMock: vi.fn(),
 }));
 
 vi.mock("../hooks/useStudentProject", () => ({
@@ -63,6 +65,7 @@ vi.mock("../api/studentApi", () => ({
     getProjectMeetingChannels: vi.fn(),
     getProjectMeetingRecords: vi.fn(),
     getProjectGitHubDashboard: getProjectGitHubDashboardMock,
+    getProjectGitHubRepositories: getProjectGitHubRepositoriesMock,
     getProjectGitHubActivityPage: vi.fn(),
     getProjectGitHubContributorsPage: vi.fn(),
     getJiraHealth: vi.fn(),
@@ -134,6 +137,14 @@ describe("StudentProjectDetailsPage", () => {
     });
 
     getProjectGitHubDashboardMock.mockResolvedValue(githubView);
+    getProjectGitHubRepositoriesMock.mockResolvedValue({
+      projectId: "project-1",
+      maxLinkedRepositories: 3,
+      maxEnabledRepositories: 2,
+      hasUnacknowledgedAccess: false,
+      accessSources: [],
+      repositories: [],
+    });
   });
 
   it("renders milestones tab when ?tab=milestones", async () => {
@@ -175,6 +186,90 @@ describe("StudentProjectDetailsPage", () => {
       expect.any(Function),
     );
     expect(container).toBeEmptyDOMElement();
+  });
+
+  it("loads linked repositories for students when project details do not embed GitHub repository data", async () => {
+    const githubView = {
+      repositoryLinked: true,
+      repositories: [],
+      primaryRepositoryUrl: "https://example.com/repo-one",
+      activitySummary: {
+        totalCommits: 3,
+        lastActivityAt: "2026-09-16T05:00:00Z",
+        status: "active",
+      },
+      contributorsPreview: [],
+      recentCommitsPreview: [],
+    };
+
+    useStudentProjectMock.mockReturnValue({
+      project: {
+        id: "project-1",
+        title: "My project",
+        summary: "Summary",
+        status: "ACTIVE",
+        batch: null,
+        semester: null,
+        milestoneDate: null,
+        lastActivityAt: null,
+        progressPercent: 0,
+        github: githubView,
+        githubRepositories: null,
+        jira: null,
+        leader: null,
+        members: [],
+        milestones: [],
+        files: null,
+      },
+      isLoading: false,
+      error: null,
+      reload: vi.fn(),
+    });
+
+    getProjectGitHubRepositoriesMock.mockResolvedValue({
+      projectId: "project-1",
+      maxLinkedRepositories: 3,
+      maxEnabledRepositories: 2,
+      hasUnacknowledgedAccess: false,
+      accessSources: [],
+      repositories: [
+        {
+          id: "link-1",
+          sourceId: null,
+          accessType: null,
+          githubRepositoryId: null,
+          githubRepoId: 1,
+          fullName: "org/repo-one",
+          name: "Repo One",
+          customName: null,
+          ownerLogin: "org",
+          defaultBranch: "main",
+          url: "https://example.com/repo-one",
+          primary: true,
+          enabled: true,
+          linkedAt: "2026-09-01T00:00:00Z",
+          lastSyncedAt: "2026-09-16T05:00:00Z",
+          syncStatus: "SUCCESS",
+          accessStatus: "AVAILABLE",
+        },
+      ],
+    });
+    getProjectGitHubDashboardMock.mockResolvedValue(githubView);
+
+    renderPage("/student/projects/project-1?tab=github");
+
+    await waitFor(() => {
+      expect(getProjectGitHubRepositoriesMock).toHaveBeenCalledWith(
+        "project-1",
+      );
+      expect(getProjectGitHubDashboardMock).toHaveBeenCalledWith(
+        "project-1",
+        false,
+        "link-1",
+      );
+    });
+
+    expect(await screen.findByText("Repo One")).toBeInTheDocument();
   });
 
   it("fetches dashboard when switching GitHub repositories", async () => {

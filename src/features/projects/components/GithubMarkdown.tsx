@@ -274,7 +274,7 @@ export function GithubMarkdown({ markdown }: GithubMarkdownProps) {
     if (/^\s*[-*+]\s+/.test(line)) {
       const items: Array<{ text: string; checked: boolean | null }> = [];
       while (index < lines.length && /^\s*[-*+]\s+/.test(lines[index])) {
-        let item = lines[index].replace(/^\s*[-*+]\s+/, "");
+        const item = lines[index].replace(/^\s*[-*+]\s+/, "");
         const task = item.match(/^\[([ xX])\]\s+(.*)$/);
         if (task) {
           items.push({ text: task[2], checked: task[1].toLowerCase() === "x" });

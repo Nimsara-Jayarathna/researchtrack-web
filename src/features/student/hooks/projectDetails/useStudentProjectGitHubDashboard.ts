@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toVersionedApiPath } from "@/app/config/apiVersion";
 import { normalizeSyncStatus } from "@/lib/syncStatus";
 import type { CanonicalSyncStatus } from "@/lib/syncStatus";
 import type { ApiError } from "@/types";
@@ -13,6 +14,8 @@ import type {
   ProjectRepositoryLink,
 } from "@/features/shared/types/github.types";
 import type { ProjectGitHubActivity } from "../../types";
+
+const PROJECTS_BASE_PATH = toVersionedApiPath("/api/projects");
 
 type FetchProjectGitHubDashboard = (
   projectId: string,
@@ -71,7 +74,7 @@ function toApiError(error: unknown, projectId: string): ApiError {
     error: "Internal Server Error",
     code: "INTERNAL_ERROR",
     message: "Unable to load GitHub activity right now.",
-    path: `/api/student/projects/${projectId}/github`,
+    path: `${PROJECTS_BASE_PATH}/${projectId}/github`,
     traceId: null,
     details: [],
   };

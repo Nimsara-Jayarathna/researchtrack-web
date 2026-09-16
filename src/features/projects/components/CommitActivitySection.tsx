@@ -23,10 +23,13 @@ import type {
   ProjectGitHubContributor,
   ProjectGitHubPreview,
   ProjectGitHubRecentCommit,
+  ProjectGitHubPullRequest,
+  ProjectGitHubPullRequestPageOptions,
 } from "../types";
 import { GithubDetailsModal } from "./GithubDetailsModal";
 import { GithubActivityModalContent } from "./GithubActivityModalContent";
 import { GithubContributorsModalContent } from "./GithubContributorsModalContent";
+import { GithubPullRequestsSection } from "./GithubPullRequestsSection";
 import {
   getGeneratedAvatarUrl,
   getGitHubAvatarUrl,
@@ -44,6 +47,13 @@ type CommitActivitySectionProps = {
   loadContributorsPage: (
     page: number,
   ) => Promise<PaginatedListResult<ProjectGitHubContributor>>;
+  loadPullRequestsPage: (
+    page: number,
+    options?: ProjectGitHubPullRequestPageOptions,
+  ) => Promise<PaginatedListResult<ProjectGitHubPullRequest>>;
+  activeRepositoryId?: string | null;
+  activeRepositoryName?: string | null;
+  activeRepositoryLastSyncedAt?: string | null;
   onNavigateToOverview?: () => void;
   emptyStateDescription?: string;
 };
@@ -415,6 +425,10 @@ export function CommitActivitySection({
   onRetry,
   loadActivityPage,
   loadContributorsPage,
+  loadPullRequestsPage,
+  activeRepositoryId,
+  activeRepositoryName,
+  activeRepositoryLastSyncedAt,
   onNavigateToOverview,
   emptyStateDescription,
 }: CommitActivitySectionProps) {
@@ -527,7 +541,7 @@ export function CommitActivitySection({
   const topContributors = normalized.contributorsPreview.slice(0, 4);
   const recentCommits = normalized.recentCommitsPreview
     .filter(isDevelopmentActivity)
-    .slice(0, 6);
+    .slice(0, 5);
 
   return (
     <div className="space-y-6">
@@ -665,6 +679,13 @@ export function CommitActivitySection({
           </div>
         )}
       </section>
+
+      <GithubPullRequestsSection
+        repositoryId={activeRepositoryId ?? null}
+        repositoryName={activeRepositoryName}
+        refreshKey={activeRepositoryLastSyncedAt}
+        fetchPage={loadPullRequestsPage}
+      />
 
       <section className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
         <div className="flex items-center justify-between gap-3">

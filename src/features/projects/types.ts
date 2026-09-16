@@ -51,6 +51,44 @@ export type ProjectGitHubPreview = {
   hasUnacknowledgedAccess?: boolean;
 };
 
+
+export type ProjectGitHubPullRequest = {
+  gitHubPullRequestId: number;
+  number: number;
+  title: string;
+  body: string | null;
+  state: string;
+  isDraft: boolean;
+  isMerged: boolean;
+  authorLogin: string | null;
+  sourceBranch: string;
+  targetBranch: string;
+  createdAt: string;
+  updatedAt: string;
+  closedAt: string | null;
+  mergedAt: string | null;
+  htmlUrl: string;
+  additions: number | null;
+  deletions: number | null;
+  changedFiles: number | null;
+  commitsCount: number | null;
+  commentsCount: number | null;
+  reviewCommentsCount: number | null;
+};
+
+export type ProjectGitHubPullRequestStatus =
+  | "all"
+  | "open"
+  | "draft"
+  | "merged"
+  | "closed";
+
+export type ProjectGitHubPullRequestPageOptions = {
+  size?: number;
+  status?: ProjectGitHubPullRequestStatus;
+  search?: string;
+};
+
 export type PaginatedListResult<T> = {
   items: T[];
   hasMore: boolean;

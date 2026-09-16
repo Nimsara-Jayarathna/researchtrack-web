@@ -1,5 +1,4 @@
 import {
-  ArrowRight,
   CircleDot,
   GitMerge,
   GitPullRequest,
@@ -13,6 +12,7 @@ import {
   getPullRequestLifecycleDate,
   type PullRequestDisplayStatus,
 } from "../utils/githubPullRequests";
+import { GithubBranchRoute } from "./GithubBranchRoute";
 
 const statusPresentation: Record<
   PullRequestDisplayStatus,
@@ -89,26 +89,21 @@ export function GithubPullRequestCard({
                 </span>
                 {pullRequest.title || "Untitled pull request"}
               </p>
+              <p className="mt-1 text-[11px] font-semibold text-slate-500">
+                Opened by @{pullRequest.authorLogin || "unknown"}
+              </p>
             </div>
           </div>
         </div>
         <PullRequestStatusBadge pullRequest={pullRequest} />
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
-        <span className="font-semibold text-slate-600">
-          @{pullRequest.authorLogin || "unknown"}
-        </span>
-        <span className="text-slate-300">•</span>
-        <span className="inline-flex min-w-0 items-center gap-1.5 font-mono text-[11px]">
-          <span className="max-w-[14rem] truncate" title={pullRequest.sourceBranch}>
-            {pullRequest.sourceBranch || "unknown"}
-          </span>
-          <ArrowRight className="h-3 w-3 shrink-0 text-slate-300" />
-          <span className="max-w-[12rem] truncate" title={pullRequest.targetBranch}>
-            {pullRequest.targetBranch || "unknown"}
-          </span>
-        </span>
+      <div className="mt-3">
+        <GithubBranchRoute
+          sourceBranch={pullRequest.sourceBranch}
+          targetBranch={pullRequest.targetBranch}
+          variant="card"
+        />
       </div>
 
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-50 pt-3 text-[11px] text-slate-400">

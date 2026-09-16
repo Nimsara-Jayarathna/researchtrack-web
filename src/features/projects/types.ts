@@ -10,7 +10,20 @@ export type ProjectGitHubRepositoryPreview = {
 
 export type ProjectGitHubActivitySummary = {
   totalCommits: number;
+  totalPullRequests: number;
+  openPullRequests: number;
+  draftPullRequests: number;
+  mergedPullRequests: number;
+  closedPullRequests: number;
   lastActivityAt: string | null;
+  lastActivityType: "commit" | "pull_request" | null;
+  lastActivityPullRequestNumber: number | null;
+  lastActivityPullRequestStatus:
+    | "OPEN"
+    | "DRAFT"
+    | "MERGED"
+    | "CLOSED"
+    | null;
   status: "active" | "idle";
 };
 
@@ -61,6 +74,8 @@ export type ProjectGitHubPullRequest = {
   isDraft: boolean;
   isMerged: boolean;
   authorLogin: string | null;
+  mergedByGitHubId: number | null;
+  mergedByLogin: string | null;
   sourceBranch: string;
   targetBranch: string;
   createdAt: string;

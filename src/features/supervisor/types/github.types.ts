@@ -166,6 +166,8 @@ export type GitHubPullRequestEvidence = {
   isDraft: boolean;
   isMerged: boolean;
   authorLogin: string | null;
+  mergedByGitHubId: number | null;
+  mergedByLogin: string | null;
   sourceBranch: string;
   targetBranch: string;
   createdAt: string;

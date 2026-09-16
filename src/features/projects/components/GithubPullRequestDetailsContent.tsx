@@ -1,11 +1,14 @@
 import {
-  ArrowRight,
   CalendarClock,
   ExternalLink,
   FileDiff,
+  Files,
   GitCommit,
+  GitMerge,
   GitPullRequest,
   MessageSquare,
+  Plus,
+  Minus,
   UserRound,
 } from "lucide-react";
 import { buttonStyles } from "@/components/ui/Button";
@@ -13,6 +16,8 @@ import { parseApiDate } from "@/lib/dateTime";
 import type { ProjectGitHubPullRequest } from "../types";
 import { getSafeGitHubUrl } from "../utils/githubPullRequests";
 import { PullRequestStatusBadge } from "./GithubPullRequestCard";
+import { GithubBranchRoute } from "./GithubBranchRoute";
+import { GithubMarkdown } from "./GithubMarkdown";
 
 const dateTimeFormatter = new Intl.DateTimeFormat("en", {
   month: "short",
@@ -23,20 +28,83 @@ const dateTimeFormatter = new Intl.DateTimeFormat("en", {
 });
 
 function formatDate(value: string | null) {
-  if (!value) return "Not recorded";
+  if (!value) return "—";
   const date = parseApiDate(value);
-  return Number.isNaN(date.getTime())
-    ? "Not recorded"
-    : dateTimeFormatter.format(date);
+  return Number.isNaN(date.getTime()) ? "—" : dateTimeFormatter.format(date);
 }
 
-function Metric({ label, value }: { label: string; value: string | number }) {
+type Tone = "green" | "rose" | "blue" | "violet" | "amber" | "slate";
+
+const toneClasses: Record<Tone, string> = {
+  green: "border-emerald-100 bg-emerald-50/60 text-emerald-700",
+  rose: "border-rose-100 bg-rose-50/60 text-rose-700",
+  blue: "border-sky-100 bg-sky-50/60 text-sky-700",
+  violet: "border-violet-100 bg-violet-50/60 text-violet-700",
+  amber: "border-amber-100 bg-amber-50/60 text-amber-700",
+  slate: "border-slate-100 bg-slate-50/70 text-slate-700",
+};
+
+function EvidenceMetric({
+  label,
+  value,
+  tone,
+  icon: Icon,
+}: {
+  label: string;
+  value: string | number;
+  tone: Tone;
+  icon: typeof Plus;
+}) {
   return (
-    <div className="rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3">
+    <div className={`rounded-2xl border px-4 py-3 ${toneClasses[tone]}`}>
+      <div className="flex items-center gap-2">
+        <Icon className="h-4 w-4 opacity-70" />
+        <p className="text-[10px] font-black uppercase tracking-[0.14em] opacity-70">
+          {label}
+        </p>
+      </div>
+      <p className="mt-2 text-xl font-black">{value}</p>
+    </div>
+  );
+}
+
+function TimelineMetric({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | null;
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm">
       <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
         {label}
       </p>
-      <p className="mt-1 text-sm font-bold text-slate-700">{value}</p>
+      <p className="mt-1 text-sm font-bold text-slate-700">{formatDate(value)}</p>
+    </div>
+  );
+}
+
+function IdentityCard({
+  label,
+  username,
+  icon: Icon,
+  tone = "slate",
+}: {
+  label: string;
+  username: string | null;
+  icon: typeof UserRound;
+  tone?: Tone;
+}) {
+  return (
+    <div className={`rounded-2xl border p-4 ${toneClasses[tone]}`}>
+      <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] opacity-70">
+        <Icon className="h-3.5 w-3.5" />
+        {label}
+      </div>
+      <p className="mt-1.5 truncate text-sm font-black" title={username ? `@${username}` : "Not recorded"}>
+        {username ? `@${username}` : "Not recorded"}
+      </p>
     </div>
   );
 }
@@ -49,12 +117,12 @@ export function GithubPullRequestDetailsContent({
   const githubUrl = getSafeGitHubUrl(pullRequest.htmlUrl);
 
   return (
-    <div className="space-y-6">
-      <section className="rounded-3xl border border-slate-100 bg-slate-50/40 p-5">
+    <div className="space-y-6 pb-1">
+      <section className="overflow-hidden rounded-3xl border border-violet-100 bg-gradient-to-br from-violet-50/80 via-white to-indigo-50/50 p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
-              <GitPullRequest className="h-4 w-4 text-violet-500" />
+            <div className="flex items-center gap-2 text-xs font-semibold text-violet-500">
+              <GitPullRequest className="h-4 w-4" />
               Pull request #{pullRequest.number}
             </div>
             <h4 className="mt-2 text-xl font-black leading-7 text-slate-900">
@@ -64,31 +132,32 @@ export function GithubPullRequestDetailsContent({
           <PullRequestStatusBadge pullRequest={pullRequest} />
         </div>
 
-        <div className="mt-5 grid gap-3 md:grid-cols-2">
-          <div className="rounded-2xl border border-white bg-white p-4 shadow-sm">
-            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
-              <UserRound className="h-3.5 w-3.5" />
-              Opened by
-            </div>
-            <p className="mt-1.5 text-sm font-bold text-slate-800">
-              @{pullRequest.authorLogin || "unknown"}
-            </p>
+        <div className={`mt-5 grid gap-3 ${pullRequest.isMerged ? "md:grid-cols-2" : ""}`}>
+          <IdentityCard
+            label="Opened by"
+            username={pullRequest.authorLogin}
+            icon={UserRound}
+          />
+          {pullRequest.isMerged ? (
+            <IdentityCard
+              label="Merged by"
+              username={pullRequest.mergedByLogin}
+              icon={GitMerge}
+              tone="violet"
+            />
+          ) : null}
+        </div>
+
+        <div className="mt-3 rounded-2xl border border-white/80 bg-white/80 p-4 shadow-sm">
+          <div className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
+            <GitPullRequest className="h-3.5 w-3.5" />
+            Branch route
           </div>
-          <div className="rounded-2xl border border-white bg-white p-4 shadow-sm">
-            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
-              <GitPullRequest className="h-3.5 w-3.5" />
-              Branch route
-            </div>
-            <div className="mt-1.5 flex min-w-0 items-center gap-2 font-mono text-xs font-semibold text-slate-700">
-              <span className="truncate" title={pullRequest.sourceBranch}>
-                {pullRequest.sourceBranch || "unknown"}
-              </span>
-              <ArrowRight className="h-3.5 w-3.5 shrink-0 text-slate-300" />
-              <span className="truncate" title={pullRequest.targetBranch}>
-                {pullRequest.targetBranch || "unknown"}
-              </span>
-            </div>
-          </div>
+          <GithubBranchRoute
+            sourceBranch={pullRequest.sourceBranch}
+            targetBranch={pullRequest.targetBranch}
+            variant="detail"
+          />
         </div>
       </section>
 
@@ -97,34 +166,45 @@ export function GithubPullRequestDetailsContent({
           <FileDiff className="h-4 w-4 text-slate-400" />
           <h5 className="text-sm font-bold text-slate-800">Change evidence</h5>
         </div>
+
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Metric label="Additions" value={pullRequest.additions ?? "—"} />
-          <Metric label="Deletions" value={pullRequest.deletions ?? "—"} />
-          <Metric label="Changed files" value={pullRequest.changedFiles ?? "—"} />
-          <Metric label="Commits" value={pullRequest.commitsCount ?? "—"} />
+          <EvidenceMetric
+            label="Additions"
+            value={pullRequest.additions ?? "—"}
+            tone="green"
+            icon={Plus}
+          />
+          <EvidenceMetric
+            label="Deletions"
+            value={pullRequest.deletions ?? "—"}
+            tone="rose"
+            icon={Minus}
+          />
+          <EvidenceMetric
+            label="Changed files"
+            value={pullRequest.changedFiles ?? "—"}
+            tone="blue"
+            icon={Files}
+          />
+          <EvidenceMetric
+            label="Commits"
+            value={pullRequest.commitsCount ?? "—"}
+            tone="violet"
+            icon={GitCommit}
+          />
         </div>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <div className="rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3">
-            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
-              <MessageSquare className="h-3.5 w-3.5" />
-              Conversation
-            </div>
-            <p className="mt-1 text-sm font-bold text-slate-700">
-              {pullRequest.commentsCount ?? 0} comments
-              {pullRequest.reviewCommentsCount !== null
-                ? ` · ${pullRequest.reviewCommentsCount} review comments`
-                : ""}
-            </p>
+
+        <div className="mt-3 rounded-2xl border border-amber-100 bg-amber-50/60 px-4 py-3 text-amber-700">
+          <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] opacity-70">
+            <MessageSquare className="h-3.5 w-3.5" />
+            Conversation
           </div>
-          <div className="rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3">
-            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
-              <GitCommit className="h-3.5 w-3.5" />
-              GitHub PR ID
-            </div>
-            <p className="mt-1 break-all font-mono text-xs font-semibold text-slate-700">
-              {pullRequest.gitHubPullRequestId}
-            </p>
-          </div>
+          <p className="mt-1 text-sm font-bold">
+            {pullRequest.commentsCount ?? 0} comments
+            {pullRequest.reviewCommentsCount !== null
+              ? ` · ${pullRequest.reviewCommentsCount} review comments`
+              : ""}
+          </p>
         </div>
       </section>
 
@@ -134,32 +214,44 @@ export function GithubPullRequestDetailsContent({
           <h5 className="text-sm font-bold text-slate-800">Timeline</h5>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Metric label="Created" value={formatDate(pullRequest.createdAt)} />
-          <Metric label="Updated" value={formatDate(pullRequest.updatedAt)} />
-          <Metric label="Closed" value={formatDate(pullRequest.closedAt)} />
-          <Metric label="Merged" value={formatDate(pullRequest.mergedAt)} />
+          <TimelineMetric label="Created" value={pullRequest.createdAt} />
+          <TimelineMetric label="Updated" value={pullRequest.updatedAt} />
+          <TimelineMetric label="Closed" value={pullRequest.closedAt} />
+          <TimelineMetric label="Merged" value={pullRequest.mergedAt} />
         </div>
       </section>
 
       {pullRequest.body?.trim() ? (
         <section>
           <h5 className="text-sm font-bold text-slate-800">Description</h5>
-          <div className="mt-3 max-h-60 overflow-y-auto whitespace-pre-wrap break-words rounded-2xl border border-slate-100 bg-slate-50/70 p-4 text-sm leading-6 text-slate-600">
-            {pullRequest.body.trim()}
+          <div className="mt-3 rounded-2xl border border-slate-100 bg-slate-50/60 p-5">
+            <GithubMarkdown markdown={pullRequest.body.trim()} />
           </div>
         </section>
       ) : null}
 
-      <div className="flex justify-end border-t border-slate-100 pt-4">
+      <section className="rounded-2xl border border-slate-100 bg-slate-50/50 px-4 py-3">
+        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
+          Technical details
+        </p>
+        <div className="mt-2">
+          <p className="text-[10px] font-semibold text-slate-400">GitHub PR ID</p>
+          <p className="mt-0.5 break-all font-mono text-xs font-semibold text-slate-600">
+            {pullRequest.gitHubPullRequestId}
+          </p>
+        </div>
+      </section>
+
+      <div className="sticky bottom-0 z-10 -mx-1 flex justify-end border-t border-slate-100 bg-white/95 px-1 py-3 backdrop-blur">
         {githubUrl ? (
           <a
             href={githubUrl}
             target="_blank"
-            rel="noreferrer"
+            rel="noreferrer noopener"
             className={buttonStyles({
               variant: "secondary",
               size: "sm",
-              className: "gap-2 rounded-xl",
+              className: "gap-2 rounded-xl shadow-sm",
             })}
           >
             View on GitHub

@@ -16,6 +16,8 @@ function pr(overrides: Partial<ProjectGitHubPullRequest> = {}): ProjectGitHubPul
     isDraft: false,
     isMerged: false,
     authorLogin: "dev",
+    mergedByGitHubId: null,
+    mergedByLogin: null,
     sourceBranch: "feature/test",
     targetBranch: "develop",
     createdAt: "2026-09-15T10:00:00Z",

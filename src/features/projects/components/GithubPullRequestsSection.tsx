@@ -23,6 +23,7 @@ type GithubPullRequestsSectionProps = {
   repositoryId: string | null;
   repositoryName?: string | null;
   refreshKey?: string | null;
+  openListRequest?: number;
   fetchPage: FetchPullRequestsPage;
 };
 
@@ -40,6 +41,7 @@ export function GithubPullRequestsSection({
   repositoryId,
   repositoryName,
   refreshKey,
+  openListRequest = 0,
   fetchPage,
 }: GithubPullRequestsSectionProps) {
   const [preview, setPreview] = useState<ProjectGitHubPullRequest[]>([]);
@@ -50,6 +52,7 @@ export function GithubPullRequestsSection({
   const [selectedPullRequest, setSelectedPullRequest] =
     useState<ProjectGitHubPullRequest | null>(null);
   const requestVersionRef = useRef(0);
+  const lastHandledOpenRequestRef = useRef(openListRequest);
 
   const loadPreview = useCallback(async () => {
     if (!repositoryId) {
@@ -88,6 +91,18 @@ export function GithubPullRequestsSection({
     setSelectedPullRequest(null);
     void loadPreview();
   }, [loadPreview, repositoryId, refreshKey]);
+
+  useEffect(() => {
+    if (openListRequest === lastHandledOpenRequestRef.current) {
+      return;
+    }
+
+    lastHandledOpenRequestRef.current = openListRequest;
+    if (repositoryId) {
+      setSelectedPullRequest(null);
+      setIsListOpen(true);
+    }
+  }, [openListRequest, repositoryId]);
 
   function openDetails(pullRequest: ProjectGitHubPullRequest) {
     setIsListOpen(false);

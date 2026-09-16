@@ -342,6 +342,7 @@ export function ProjectDetailsPage() {
           }}
           loadActivityPage={githubDashboard.loadActivityPage}
           loadContributorsPage={githubDashboard.loadContributorsPage}
+          loadPullRequestsPage={githubDashboard.loadPullRequestsPage}
           onNavigateToOverview={() => setActiveTab("integrations")}
         />
       ) : null}

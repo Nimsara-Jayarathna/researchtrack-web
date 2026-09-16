@@ -8,6 +8,8 @@ import type {
   PaginatedListResult,
   ProjectGitHubContributor,
   ProjectGitHubRecentCommit,
+  ProjectGitHubPullRequest,
+  ProjectGitHubPullRequestPageOptions,
 } from "@/features/projects/types";
 import type {
   ProjectGitHubRepositories,
@@ -35,12 +37,20 @@ type FetchContributorsPage = (
   linkedRepositoryId?: string | null,
 ) => Promise<PaginatedListResult<ProjectGitHubContributor>>;
 
+type FetchPullRequestsPage = (
+  projectId: string,
+  page: number,
+  linkedRepositoryId: string | null | undefined,
+  options?: ProjectGitHubPullRequestPageOptions,
+) => Promise<PaginatedListResult<ProjectGitHubPullRequest>>;
+
 type UseStudentProjectGitHubDashboardParams = {
   projectId: string | undefined;
   githubRepositories: ProjectGitHubRepositories | null | undefined;
   fetchDashboard: FetchProjectGitHubDashboard;
   fetchActivityPage: FetchActivityPage;
   fetchContributorsPage: FetchContributorsPage;
+  fetchPullRequestsPage: FetchPullRequestsPage;
 };
 
 type UseStudentProjectGitHubDashboardResult = {
@@ -61,6 +71,10 @@ type UseStudentProjectGitHubDashboardResult = {
   loadContributorsPage: (
     page: number,
   ) => Promise<PaginatedListResult<ProjectGitHubContributor>>;
+  loadPullRequestsPage: (
+    page: number,
+    options?: ProjectGitHubPullRequestPageOptions,
+  ) => Promise<PaginatedListResult<ProjectGitHubPullRequest>>;
 };
 
 function toApiError(error: unknown, projectId: string): ApiError {
@@ -86,6 +100,7 @@ export function useStudentProjectGitHubDashboard({
   fetchDashboard,
   fetchActivityPage,
   fetchContributorsPage,
+  fetchPullRequestsPage,
 }: UseStudentProjectGitHubDashboardParams): UseStudentProjectGitHubDashboardResult {
   const [isRepoSelectorOpen, setRepoSelectorOpen] = useState(false);
   const [selectedRepoId, setSelectedRepoId] = useState<string | null>(null);
@@ -213,6 +228,23 @@ export function useStudentProjectGitHubDashboard({
     [projectId, fetchContributorsPage, selectedRepoId],
   );
 
+  const loadPullRequestsPage = useCallback(
+    (page: number, options: ProjectGitHubPullRequestPageOptions = {}) => {
+      if (!projectId || !selectedRepoId) {
+        return Promise.resolve({
+          items: [],
+          hasMore: false,
+          page,
+          size: options.size ?? 10,
+          total: 0,
+        });
+      }
+
+      return fetchPullRequestsPage(projectId, page, selectedRepoId, options);
+    },
+    [fetchPullRequestsPage, projectId, selectedRepoId],
+  );
+
   return {
     enabledRepositories,
     selectedRepoId,
@@ -227,5 +259,6 @@ export function useStudentProjectGitHubDashboard({
     selectRepository,
     loadActivityPage,
     loadContributorsPage,
+    loadPullRequestsPage,
   };
 }

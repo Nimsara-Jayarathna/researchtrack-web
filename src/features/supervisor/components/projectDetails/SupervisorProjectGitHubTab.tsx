@@ -19,6 +19,8 @@ import type {
   PaginatedListResult,
   ProjectGitHubContributor,
   ProjectGitHubRecentCommit,
+  ProjectGitHubPullRequest,
+  ProjectGitHubPullRequestPageOptions,
 } from "@/features/projects/types";
 
 type SupervisorProjectGitHubTabProps = {
@@ -44,6 +46,10 @@ type SupervisorProjectGitHubTabProps = {
   loadContributorsPage: (
     page: number,
   ) => Promise<PaginatedListResult<ProjectGitHubContributor>>;
+  loadPullRequestsPage: (
+    page: number,
+    options?: ProjectGitHubPullRequestPageOptions,
+  ) => Promise<PaginatedListResult<ProjectGitHubPullRequest>>;
   onNavigateToOverview: () => void;
 };
 
@@ -66,6 +72,7 @@ export function SupervisorProjectGitHubTab({
   onRetryGitHubDashboard,
   loadActivityPage,
   loadContributorsPage,
+  loadPullRequestsPage,
   onNavigateToOverview,
 }: SupervisorProjectGitHubTabProps) {
   return (
@@ -269,6 +276,12 @@ export function SupervisorProjectGitHubTab({
         onRetry={onRetryGitHubDashboard}
         loadActivityPage={loadActivityPage}
         loadContributorsPage={loadContributorsPage}
+        loadPullRequestsPage={loadPullRequestsPage}
+        activeRepositoryId={activeRepository?.id ?? null}
+        activeRepositoryName={
+          activeRepository?.customName?.trim() || activeRepository?.name || null
+        }
+        activeRepositoryLastSyncedAt={activeRepository?.lastSyncedAt ?? null}
         onNavigateToOverview={onNavigateToOverview}
       />
     </div>

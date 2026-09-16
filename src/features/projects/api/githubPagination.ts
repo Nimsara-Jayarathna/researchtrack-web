@@ -83,11 +83,20 @@ export function normalizePaginatedPayload<T>(
         ? page < totalPages
         : hasNextPage || normalizedItems.length >= effectiveSize);
 
+    const total =
+      typeof payload.totalCount === "number" &&
+      Number.isFinite(payload.totalCount)
+        ? payload.totalCount
+        : typeof payload.total === "number" && Number.isFinite(payload.total)
+          ? payload.total
+          : undefined;
+
     return {
       items: normalizedItems,
       hasMore,
       page,
       size: effectiveSize,
+      total,
     };
   }
 

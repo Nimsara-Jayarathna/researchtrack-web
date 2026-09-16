@@ -6,6 +6,8 @@ import type {
   PaginatedListResult,
   ProjectGitHubContributor,
   ProjectGitHubRecentCommit,
+  ProjectGitHubPullRequest,
+  ProjectGitHubPullRequestPageOptions,
 } from "@/features/projects/types";
 import type { ProjectRepositoryLink } from "@/features/shared/types/github.types";
 import { supervisorApi } from "../../api/supervisorApi";
@@ -61,6 +63,10 @@ type UseSupervisorProjectGitHubDashboardResult = {
   loadContributorsPage: (
     page: number,
   ) => Promise<PaginatedListResult<ProjectGitHubContributor>>;
+  loadPullRequestsPage: (
+    page: number,
+    options?: ProjectGitHubPullRequestPageOptions,
+  ) => Promise<PaginatedListResult<ProjectGitHubPullRequest>>;
 };
 
 const SYNC_POLL_INTERVAL_MS = 3000;
@@ -379,6 +385,27 @@ export function useSupervisorProjectGitHubDashboard({
     [projectId, selectedRepoId],
   );
 
+  const loadPullRequestsPage = useCallback(
+    (page: number, options: ProjectGitHubPullRequestPageOptions = {}) => {
+      if (!projectId || !selectedRepoId) {
+        return Promise.resolve({
+          items: [],
+          hasMore: false,
+          page,
+          size: options.size ?? 10,
+          total: 0,
+        });
+      }
+      return supervisorApi.getProjectGitHubPullRequestsPage(
+        projectId,
+        page,
+        selectedRepoId,
+        options,
+      );
+    },
+    [projectId, selectedRepoId],
+  );
+
   const refreshGitHub = useCallback(async () => {
     if (!projectId || !selectedRepoId) {
       return;
@@ -446,5 +473,6 @@ export function useSupervisorProjectGitHubDashboard({
     selectRepository,
     loadActivityPage,
     loadContributorsPage,
+    loadPullRequestsPage,
   };
 }

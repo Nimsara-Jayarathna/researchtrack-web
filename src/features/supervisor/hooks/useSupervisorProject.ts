@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { isApiException } from "@/services/apiClient";
 import type { ApiError } from "@/types";
 import { supervisorApi } from "../api/supervisorApi";
@@ -10,124 +10,89 @@ type SupervisorProjectState = {
   error: ApiError | null;
 };
 
+function unexpectedLoadError(): ApiError {
+  return {
+    code: "INTERNAL_ERROR",
+    message: "Unable to load the project right now.",
+    details: [],
+    timestamp: new Date().toISOString(),
+    status: 0,
+    error: "Unexpected Error",
+    path: "",
+    traceId: null,
+  };
+}
+
 export function useSupervisorProject(projectId: string | undefined) {
   const [state, setState] = useState<SupervisorProjectState>({
     project: null,
     isLoading: Boolean(projectId),
     error: null,
   });
+  const requestVersion = useRef(0);
 
-  async function loadProject(forceRefresh = false) {
-    if (!projectId) {
-      setState({
-        project: null,
-        isLoading: false,
-        error: null,
-      });
-      return;
-    }
+  const loadProject = useCallback(
+    async (forceRefresh = false) => {
+      const version = ++requestVersion.current;
 
-    setState((current) => ({ ...current, isLoading: true, error: null }));
+      if (!projectId) {
+        setState({ project: null, isLoading: false, error: null });
+        return;
+      }
 
-    try {
-      const [baseProject, jiraConnection] = await Promise.all([
-        supervisorApi.getProjectById(projectId, forceRefresh),
-        supervisorApi.getJiraConnection(projectId),
-      ]);
-      const project = { ...baseProject, jira: jiraConnection ? {
-        connected: true,
-        workspaceName: jiraConnection.workspaceName,
-        workspaceUrl: jiraConnection.workspaceUrl,
-        lastSyncedAt: jiraConnection.lastSyncedAt,
-        syncStatus: jiraConnection.syncStatus,
-      } : null };
-      setState({
-        project,
-        isLoading: false,
-        error: null,
-      });
-    } catch (error) {
-      setState({
-        project: null,
-        isLoading: false,
-        error: isApiException(error)
-          ? error.apiError
-          : {
-              code: "INTERNAL_ERROR",
-              message: "Unable to load the project right now.",
-              details: [],
-              timestamp: new Date().toISOString(),
-              status: 0,
-              error: "Unexpected Error",
-              path: "",
-              traceId: null,
-            },
-      });
-    }
-  }
+      setState((current) => ({ ...current, isLoading: true, error: null }));
 
-  useEffect(() => {
-    if (!projectId) {
-      setState({
-        project: null,
-        isLoading: false,
-        error: null,
-      });
-      return;
-    }
+      try {
+        // The project is essential. Jira is optional integration state, so a
+        // temporary Jira failure must not make the whole project page fail.
+        const baseProject = await supervisorApi.getProjectById(
+          projectId,
+          forceRefresh,
+        );
 
-    let isCancelled = false;
-    setState((current) => ({ ...current, isLoading: true, error: null }));
-
-    void Promise.all([
-      supervisorApi.getProjectById(projectId),
-      supervisorApi.getJiraConnection(projectId),
-    ])
-      .then(([baseProject, jiraConnection]) => {
-        const project = { ...baseProject, jira: jiraConnection ? {
-          connected: true,
-          workspaceName: jiraConnection.workspaceName,
-          workspaceUrl: jiraConnection.workspaceUrl,
-          lastSyncedAt: jiraConnection.lastSyncedAt,
-          syncStatus: jiraConnection.syncStatus,
-        } : null };
-        if (isCancelled) {
-          return;
+        let jira: SupervisorProjectDetail["jira"] = null;
+        try {
+          const connection = await supervisorApi.getJiraConnection(projectId);
+          if (connection) {
+            jira = {
+              connected: true,
+              workspaceName: connection.workspaceName,
+              workspaceUrl: connection.workspaceUrl,
+              lastSyncedAt: connection.lastSyncedAt,
+              syncStatus: connection.syncStatus,
+            };
+          }
+        } catch {
+          // Keep the base project usable. Jira-specific actions can retry their
+          // own requests and surface integration errors independently.
         }
 
+        if (version !== requestVersion.current) return;
+
         setState({
-          project,
+          project: { ...baseProject, jira },
           isLoading: false,
           error: null,
         });
-      })
-      .catch((error) => {
-        if (isCancelled) {
-          return;
-        }
+      } catch (error) {
+        if (version !== requestVersion.current) return;
 
         setState({
           project: null,
           isLoading: false,
-          error: isApiException(error)
-            ? error.apiError
-            : {
-                code: "INTERNAL_ERROR",
-                message: "Unable to load the project right now.",
-                details: [],
-                timestamp: new Date().toISOString(),
-                status: 0,
-                error: "Unexpected Error",
-                path: "",
-                traceId: null,
-              },
+          error: isApiException(error) ? error.apiError : unexpectedLoadError(),
         });
-      });
+      }
+    },
+    [projectId],
+  );
 
+  useEffect(() => {
+    void loadProject();
     return () => {
-      isCancelled = true;
+      ++requestVersion.current;
     };
-  }, [projectId]);
+  }, [loadProject]);
 
   return {
     project: state.project,

@@ -2,7 +2,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { SetURLSearchParams } from "react-router-dom";
 import { supervisorApi } from "../../api/supervisorApi";
 import { isApiException } from "@/services/apiClient";
-import type { JiraBoardOption, JiraProjectOption, JiraWorkspaceOption } from "../../types";
+import type {
+  JiraBoardOption,
+  JiraProjectOption,
+  JiraWorkspaceOption,
+} from "../../types";
 
 const JIRA_COMPLETION_PROCESSING_TTL_MS = 5 * 60 * 1000;
 const JIRA_RESULT_KEY_PREFIX = "jira-oauth:";
@@ -312,42 +316,96 @@ export function useSupervisorProjectJiraFlow({
     if (!projectId || !jiraWorkspaceSelection.selectionToken) return;
     if (jiraWorkspaceSelection.phase === "workspace") {
       if (!jiraWorkspaceSelection.selectedCloudId) {
-        refreshModal.showError({ title: "Jira connection failed", message: "Select a Jira workspace to continue." });
+        refreshModal.showError({
+          title: "Jira connection failed",
+          message: "Select a Jira workspace to continue.",
+        });
         return;
       }
-      refreshModal.showLoading({ title: "Connecting Jira", message: "Loading accessible Jira projects." });
+      refreshModal.showLoading({
+        title: "Connecting Jira",
+        message: "Loading accessible Jira projects.",
+      });
       try {
-        const result = await supervisorApi.completeJiraOAuth({ selectionToken: jiraWorkspaceSelection.selectionToken, selectedCloudId: jiraWorkspaceSelection.selectedCloudId });
+        const result = await supervisorApi.completeJiraOAuth({
+          selectionToken: jiraWorkspaceSelection.selectionToken,
+          selectedCloudId: jiraWorkspaceSelection.selectedCloudId,
+        });
         refreshModal.hide();
-        setJiraWorkspaceSelection((current) => ({ ...current, phase: "project", workspaceOptions: [], projectOptions: result.projectOptions, selectedProjectId: result.projectOptions[0]?.id ?? null, boardOptions: [], selectedBoardId: null }));
+        setJiraWorkspaceSelection((current) => ({
+          ...current,
+          phase: "project",
+          workspaceOptions: [],
+          projectOptions: result.projectOptions,
+          selectedProjectId: result.projectOptions[0]?.id ?? null,
+          boardOptions: [],
+          selectedBoardId: null,
+        }));
       } catch (error) {
-        refreshModal.showError({ title: "Jira connection failed", message: isApiException(error) ? error.apiError.message : "Jira workspace selection was not completed." });
+        refreshModal.showError({
+          title: "Jira connection failed",
+          message: isApiException(error)
+            ? error.apiError.message
+            : "Jira workspace selection was not completed.",
+        });
       }
       return;
     }
     if (!jiraWorkspaceSelection.selectedProjectId) {
-      refreshModal.showError({ title: "Jira connection failed", message: "Select a Jira project to continue." });
+      refreshModal.showError({
+        title: "Jira connection failed",
+        message: "Select a Jira project to continue.",
+      });
       return;
     }
     try {
       if (jiraWorkspaceSelection.boardOptions.length === 0) {
-        refreshModal.showLoading({ title: "Loading Jira boards", message: "Finding boards for the selected Jira project." });
-        const result = await supervisorApi.getJiraBoards(projectId, jiraWorkspaceSelection.selectionToken, jiraWorkspaceSelection.selectedProjectId);
+        refreshModal.showLoading({
+          title: "Loading Jira boards",
+          message: "Finding boards for the selected Jira project.",
+        });
+        const result = await supervisorApi.getJiraBoards(
+          projectId,
+          jiraWorkspaceSelection.selectionToken,
+          jiraWorkspaceSelection.selectedProjectId,
+        );
         refreshModal.hide();
         if (result.boards.length > 0) {
-          setJiraWorkspaceSelection((current) => ({ ...current, boardOptions: result.boards, selectedBoardId: result.boards[0]?.id ?? null }));
+          setJiraWorkspaceSelection((current) => ({
+            ...current,
+            boardOptions: result.boards,
+            selectedBoardId: result.boards[0]?.id ?? null,
+          }));
           return;
         }
       }
-      refreshModal.showLoading({ title: "Linking Jira project", message: "Saving the Jira project and board association." });
-      const connection = await supervisorApi.linkJiraProject(projectId, { selectionToken: jiraWorkspaceSelection.selectionToken, jiraProjectId: jiraWorkspaceSelection.selectedProjectId, jiraBoardId: jiraWorkspaceSelection.selectedBoardId });
-      if (jiraWorkspaceSelection.doneKey) sessionStorage.setItem(jiraWorkspaceSelection.doneKey, "true");
-      if (jiraWorkspaceSelection.processKey) sessionStorage.removeItem(jiraWorkspaceSelection.processKey);
+      refreshModal.showLoading({
+        title: "Linking Jira project",
+        message: "Saving the Jira project and board association.",
+      });
+      const connection = await supervisorApi.linkJiraProject(projectId, {
+        selectionToken: jiraWorkspaceSelection.selectionToken,
+        jiraProjectId: jiraWorkspaceSelection.selectedProjectId,
+        jiraBoardId: jiraWorkspaceSelection.selectedBoardId,
+      });
+      if (jiraWorkspaceSelection.doneKey)
+        sessionStorage.setItem(jiraWorkspaceSelection.doneKey, "true");
+      if (jiraWorkspaceSelection.processKey)
+        sessionStorage.removeItem(jiraWorkspaceSelection.processKey);
       setJiraWorkspaceSelection((current) => ({ ...current, isOpen: false }));
-      refreshModal.showSuccess({ title: "Jira connected", message: `${connection.jiraProjectName} (${connection.jiraProjectKey}) was linked successfully.`, redirectToJiraOnClose: true });
+      refreshModal.showSuccess({
+        title: "Jira connected",
+        message: `${connection.jiraProjectName} (${connection.jiraProjectKey}) was linked successfully.`,
+        redirectToJiraOnClose: true,
+      });
       await reloadProject();
     } catch (error) {
-      refreshModal.showError({ title: "Jira connection failed", message: isApiException(error) ? error.apiError.message : "The Jira project could not be linked." });
+      refreshModal.showError({
+        title: "Jira connection failed",
+        message: isApiException(error)
+          ? error.apiError.message
+          : "The Jira project could not be linked.",
+      });
     }
   }, [jiraWorkspaceSelection, projectId, refreshModal, reloadProject]);
 

@@ -30,10 +30,17 @@ export function useSupervisorProject(projectId: string | undefined) {
     setState((current) => ({ ...current, isLoading: true, error: null }));
 
     try {
-      const project = await supervisorApi.getProjectById(
-        projectId,
-        forceRefresh,
-      );
+      const [baseProject, jiraConnection] = await Promise.all([
+        supervisorApi.getProjectById(projectId, forceRefresh),
+        supervisorApi.getJiraConnection(projectId),
+      ]);
+      const project = { ...baseProject, jira: jiraConnection ? {
+        connected: true,
+        workspaceName: jiraConnection.workspaceName,
+        workspaceUrl: jiraConnection.workspaceUrl,
+        lastSyncedAt: jiraConnection.lastSyncedAt,
+        syncStatus: jiraConnection.syncStatus,
+      } : null };
       setState({
         project,
         isLoading: false,
@@ -72,9 +79,18 @@ export function useSupervisorProject(projectId: string | undefined) {
     let isCancelled = false;
     setState((current) => ({ ...current, isLoading: true, error: null }));
 
-    void supervisorApi
-      .getProjectById(projectId)
-      .then((project) => {
+    void Promise.all([
+      supervisorApi.getProjectById(projectId),
+      supervisorApi.getJiraConnection(projectId),
+    ])
+      .then(([baseProject, jiraConnection]) => {
+        const project = { ...baseProject, jira: jiraConnection ? {
+          connected: true,
+          workspaceName: jiraConnection.workspaceName,
+          workspaceUrl: jiraConnection.workspaceUrl,
+          lastSyncedAt: jiraConnection.lastSyncedAt,
+          syncStatus: jiraConnection.syncStatus,
+        } : null };
         if (isCancelled) {
           return;
         }

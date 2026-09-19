@@ -194,66 +194,34 @@ export function ProjectDetailsPage() {
       <RequestStateModal
         isOpen={jiraFlow.jiraWorkspaceSelection.isOpen}
         status="warning"
-        title="Select Jira workspace"
-        message="Multiple Jira workspaces are available for this account. Choose one to connect this project."
+        title={jiraFlow.jiraWorkspaceSelection.phase === "workspace" ? "Select Jira workspace" : "Select Jira project and board"}
+        message={jiraFlow.jiraWorkspaceSelection.phase === "workspace" ? "Multiple Jira workspaces are available. Choose the workspace that contains this research project." : "Choose the Jira project and, when available, the Scrum or Kanban board to link to ResearchTrack."}
         onClose={jiraFlow.cancelJiraWorkspaceSelection}
         autoCloseOnSuccess={false}
-        content={
+        content={jiraFlow.jiraWorkspaceSelection.phase === "workspace" ? (
           <div className="max-h-60 space-y-2 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-3 text-left">
             {jiraFlow.jiraWorkspaceSelection.workspaceOptions.map((option) => (
-              <label
-                key={option.cloudId}
-                className="flex cursor-pointer items-start gap-2 rounded-xl border border-slate-200 p-2 hover:bg-slate-50"
-              >
-                <input
-                  type="radio"
-                  name="jira-workspace-option"
-                  className="mt-1"
-                  checked={
-                    jiraFlow.jiraWorkspaceSelection.selectedCloudId ===
-                    option.cloudId
-                  }
-                  onChange={() =>
-                    jiraFlow.setJiraWorkspaceSelection((current) => ({
-                      ...current,
-                      selectedCloudId: option.cloudId,
-                    }))
-                  }
-                />
-                <span className="min-w-0">
-                  <span className="block truncate text-sm font-semibold text-slate-900">
-                    {option.workspaceName}
-                  </span>
-                  {option.workspaceUrl ? (
-                    <span className="block truncate text-xs text-slate-600">
-                      {option.workspaceUrl}
-                    </span>
-                  ) : null}
-                </span>
+              <label key={option.cloudId} className="flex cursor-pointer items-start gap-2 rounded-xl border border-slate-200 p-2 hover:bg-slate-50">
+                <input type="radio" name="jira-workspace-option" className="mt-1" checked={jiraFlow.jiraWorkspaceSelection.selectedCloudId === option.cloudId} onChange={() => jiraFlow.setJiraWorkspaceSelection((current) => ({ ...current, selectedCloudId: option.cloudId }))} />
+                <span className="min-w-0"><span className="block truncate text-sm font-semibold text-slate-900">{option.workspaceName}</span>{option.workspaceUrl ? <span className="block truncate text-xs text-slate-600">{option.workspaceUrl}</span> : null}</span>
               </label>
             ))}
           </div>
-        }
-        footer={
-          <div className="flex flex-wrap justify-center gap-3">
-            <Button
-              type="button"
-              variant="secondary"
-              size="md"
-              onClick={jiraFlow.cancelJiraWorkspaceSelection}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              variant="primary"
-              size="md"
-              onClick={() => void jiraFlow.confirmJiraWorkspaceSelection()}
-            >
-              Connect selected workspace
-            </Button>
+        ) : (
+          <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 text-left">
+            <label className="block text-sm font-semibold text-slate-800">Jira project
+              <select className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2" value={jiraFlow.jiraWorkspaceSelection.selectedProjectId ?? ""} onChange={(event) => jiraFlow.setJiraWorkspaceSelection((current) => ({ ...current, selectedProjectId: event.target.value || null, boardOptions: [], selectedBoardId: null }))}>
+                {jiraFlow.jiraWorkspaceSelection.projectOptions.map((option) => <option key={option.id} value={option.id}>{option.name} ({option.key})</option>)}
+              </select>
+            </label>
+            {jiraFlow.jiraWorkspaceSelection.boardOptions.length > 0 ? <label className="block text-sm font-semibold text-slate-800">Jira board
+              <select className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2" value={jiraFlow.jiraWorkspaceSelection.selectedBoardId ?? ""} onChange={(event) => jiraFlow.setJiraWorkspaceSelection((current) => ({ ...current, selectedBoardId: event.target.value ? Number(event.target.value) : null }))}>
+                {jiraFlow.jiraWorkspaceSelection.boardOptions.map((option) => <option key={option.id} value={option.id}>{option.name} ({option.type})</option>)}
+              </select>
+            </label> : <p className="text-xs text-slate-600">Continue to load boards for the selected Jira project. Projects without a board can still be linked.</p>}
           </div>
-        }
+        )}
+        footer={<div className="flex flex-wrap justify-center gap-3"><Button type="button" variant="secondary" size="md" onClick={jiraFlow.cancelJiraWorkspaceSelection}>Cancel</Button><Button type="button" variant="primary" size="md" onClick={() => void jiraFlow.confirmJiraWorkspaceSelection()}>{jiraFlow.jiraWorkspaceSelection.phase === "workspace" ? "Continue" : jiraFlow.jiraWorkspaceSelection.boardOptions.length > 0 ? "Link Jira project" : "Continue"}</Button></div>}
       />
 
       <ProjectHeroCard

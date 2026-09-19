@@ -87,12 +87,14 @@ export function useSupervisorProject(projectId: string | undefined) {
     [projectId],
   );
 
+  const invalidatePendingRequests = useCallback(() => {
+    ++requestVersion.current;
+  }, []);
+
   useEffect(() => {
     void loadProject();
-    return () => {
-      ++requestVersion.current;
-    };
-  }, [loadProject]);
+    return invalidatePendingRequests;
+  }, [invalidatePendingRequests, loadProject]);
 
   return {
     project: state.project,

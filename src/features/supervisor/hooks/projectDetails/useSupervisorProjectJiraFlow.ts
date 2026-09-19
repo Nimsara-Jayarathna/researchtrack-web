@@ -298,20 +298,6 @@ export function useSupervisorProjectJiraFlow({
     return () => window.removeEventListener("pageshow", handlePageShow);
   }, [searchParams]);
 
-  const hydrateJiraAfterConnect = useCallback(
-    async (connectedProjectId: string | null | undefined) => {
-      if (!connectedProjectId) {
-        return;
-      }
-      try {
-        await supervisorApi.refreshProjectJira(connectedProjectId);
-      } catch {
-        // Keep connect success UX even if immediate refresh fails; Jira tab retry still works.
-      }
-    },
-    [],
-  );
-
   const confirmJiraWorkspaceSelection = useCallback(async () => {
     if (!projectId || !jiraWorkspaceSelection.selectionToken) return;
     if (jiraWorkspaceSelection.phase === "workspace") {

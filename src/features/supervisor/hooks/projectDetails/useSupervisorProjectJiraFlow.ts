@@ -2,7 +2,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { SetURLSearchParams } from "react-router-dom";
 import { supervisorApi } from "../../api/supervisorApi";
 import { isApiException } from "@/services/apiClient";
-import type { JiraWorkspaceOption } from "../../types";
+import type {
+  JiraBoardOption,
+  JiraProjectOption,
+  JiraWorkspaceOption,
+} from "../../types";
 
 const JIRA_COMPLETION_PROCESSING_TTL_MS = 5 * 60 * 1000;
 const JIRA_RESULT_KEY_PREFIX = "jira-oauth:";
@@ -102,6 +106,11 @@ type JiraWorkspaceSelectionState = {
   selectionToken: string | null;
   selectedCloudId: string | null;
   workspaceOptions: JiraWorkspaceOption[];
+  projectOptions: JiraProjectOption[];
+  boardOptions: JiraBoardOption[];
+  selectedProjectId: string | null;
+  selectedBoardId: number | null;
+  phase: "workspace" | "project";
   processKey: string | null;
   doneKey: string | null;
 };
@@ -133,6 +142,11 @@ export function useSupervisorProjectJiraFlow({
       selectionToken: null,
       selectedCloudId: null,
       workspaceOptions: [],
+      projectOptions: [],
+      boardOptions: [],
+      selectedProjectId: null,
+      selectedBoardId: null,
+      phase: "workspace",
       processKey: null,
       doneKey: null,
     });
@@ -214,6 +228,28 @@ export function useSupervisorProjectJiraFlow({
             selectionToken: result.selectionToken,
             selectedCloudId: result.workspaceOptions[0]?.cloudId ?? null,
             workspaceOptions: result.workspaceOptions,
+            projectOptions: [],
+            boardOptions: [],
+            selectedProjectId: null,
+            selectedBoardId: null,
+            phase: "workspace",
+            processKey,
+            doneKey,
+          });
+          return;
+        }
+        if (result.requiresProjectSelection) {
+          refreshModal.hide();
+          setJiraWorkspaceSelection({
+            isOpen: true,
+            selectionToken: result.selectionToken,
+            selectedCloudId: null,
+            workspaceOptions: [],
+            projectOptions: result.projectOptions,
+            boardOptions: [],
+            selectedProjectId: result.projectOptions[0]?.id ?? null,
+            selectedBoardId: null,
+            phase: "project",
             processKey,
             doneKey,
           });
@@ -262,84 +298,102 @@ export function useSupervisorProjectJiraFlow({
     return () => window.removeEventListener("pageshow", handlePageShow);
   }, [searchParams]);
 
-  const hydrateJiraAfterConnect = useCallback(
-    async (connectedProjectId: string | null | undefined) => {
-      if (!connectedProjectId) {
+  const confirmJiraWorkspaceSelection = useCallback(async () => {
+    if (!projectId || !jiraWorkspaceSelection.selectionToken) return;
+    if (jiraWorkspaceSelection.phase === "workspace") {
+      if (!jiraWorkspaceSelection.selectedCloudId) {
+        refreshModal.showError({
+          title: "Jira connection failed",
+          message: "Select a Jira workspace to continue.",
+        });
         return;
       }
+      refreshModal.showLoading({
+        title: "Connecting Jira",
+        message: "Loading accessible Jira projects.",
+      });
       try {
-        await supervisorApi.refreshProjectJira(connectedProjectId);
-      } catch {
-        // Keep connect success UX even if immediate refresh fails; Jira tab retry still works.
+        const result = await supervisorApi.completeJiraOAuth({
+          selectionToken: jiraWorkspaceSelection.selectionToken,
+          selectedCloudId: jiraWorkspaceSelection.selectedCloudId,
+        });
+        refreshModal.hide();
+        setJiraWorkspaceSelection((current) => ({
+          ...current,
+          phase: "project",
+          workspaceOptions: [],
+          projectOptions: result.projectOptions,
+          selectedProjectId: result.projectOptions[0]?.id ?? null,
+          boardOptions: [],
+          selectedBoardId: null,
+        }));
+      } catch (error) {
+        refreshModal.showError({
+          title: "Jira connection failed",
+          message: isApiException(error)
+            ? error.apiError.message
+            : "Jira workspace selection was not completed.",
+        });
       }
-    },
-    [],
-  );
-
-  const confirmJiraWorkspaceSelection = useCallback(async () => {
-    if (
-      !jiraWorkspaceSelection.selectionToken ||
-      !jiraWorkspaceSelection.selectedCloudId
-    ) {
+      return;
+    }
+    if (!jiraWorkspaceSelection.selectedProjectId) {
       refreshModal.showError({
         title: "Jira connection failed",
-        message: "Select a Jira workspace to continue.",
+        message: "Select a Jira project to continue.",
       });
       return;
     }
-
-    refreshModal.showLoading({
-      title: "Connecting Jira",
-      message: "Finalizing Jira workspace selection.",
-    });
-
     try {
-      const result = await supervisorApi.completeJiraOAuth({
+      if (jiraWorkspaceSelection.boardOptions.length === 0) {
+        refreshModal.showLoading({
+          title: "Loading Jira boards",
+          message: "Finding boards for the selected Jira project.",
+        });
+        const result = await supervisorApi.getJiraBoards(
+          projectId,
+          jiraWorkspaceSelection.selectionToken,
+          jiraWorkspaceSelection.selectedProjectId,
+        );
+        refreshModal.hide();
+        if (result.boards.length > 0) {
+          setJiraWorkspaceSelection((current) => ({
+            ...current,
+            boardOptions: result.boards,
+            selectedBoardId: result.boards[0]?.id ?? null,
+          }));
+          return;
+        }
+      }
+      refreshModal.showLoading({
+        title: "Linking Jira project",
+        message: "Saving the Jira project and board association.",
+      });
+      const connection = await supervisorApi.linkJiraProject(projectId, {
         selectionToken: jiraWorkspaceSelection.selectionToken,
-        selectedCloudId: jiraWorkspaceSelection.selectedCloudId,
+        jiraProjectId: jiraWorkspaceSelection.selectedProjectId,
+        jiraBoardId: jiraWorkspaceSelection.selectedBoardId,
       });
-      if (jiraWorkspaceSelection.doneKey) {
+      if (jiraWorkspaceSelection.doneKey)
         sessionStorage.setItem(jiraWorkspaceSelection.doneKey, "true");
-      }
-      if (jiraWorkspaceSelection.processKey) {
+      if (jiraWorkspaceSelection.processKey)
         sessionStorage.removeItem(jiraWorkspaceSelection.processKey);
-      }
-      setJiraWorkspaceSelection({
-        isOpen: false,
-        selectionToken: null,
-        selectedCloudId: null,
-        workspaceOptions: [],
-        processKey: null,
-        doneKey: null,
-      });
-      await hydrateJiraAfterConnect(result.projectId || projectId);
+      setJiraWorkspaceSelection((current) => ({ ...current, isOpen: false }));
       refreshModal.showSuccess({
         title: "Jira connected",
-        message: result.workspaceName
-          ? `Jira workspace "${result.workspaceName}" was connected successfully.`
-          : "Jira workspace connected successfully.",
+        message: `${connection.jiraProjectName} (${connection.jiraProjectKey}) was linked successfully.`,
         redirectToJiraOnClose: true,
       });
       await reloadProject();
     } catch (error) {
-      const message = isApiException(error)
-        ? error.apiError.message
-        : "Jira workspace selection was not completed. Please try again.";
       refreshModal.showError({
         title: "Jira connection failed",
-        message,
+        message: isApiException(error)
+          ? error.apiError.message
+          : "The Jira project could not be linked.",
       });
     }
-  }, [
-    hydrateJiraAfterConnect,
-    jiraWorkspaceSelection.doneKey,
-    jiraWorkspaceSelection.processKey,
-    jiraWorkspaceSelection.selectedCloudId,
-    jiraWorkspaceSelection.selectionToken,
-    projectId,
-    refreshModal,
-    reloadProject,
-  ]);
+  }, [jiraWorkspaceSelection, projectId, refreshModal, reloadProject]);
 
   const cancelJiraWorkspaceSelection = useCallback(() => {
     if (jiraWorkspaceSelection.processKey) {
@@ -350,6 +404,11 @@ export function useSupervisorProjectJiraFlow({
       selectionToken: null,
       selectedCloudId: null,
       workspaceOptions: [],
+      projectOptions: [],
+      boardOptions: [],
+      selectedProjectId: null,
+      selectedBoardId: null,
+      phase: "workspace",
       processKey: null,
       doneKey: null,
     });

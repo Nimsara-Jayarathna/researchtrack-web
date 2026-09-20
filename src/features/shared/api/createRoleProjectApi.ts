@@ -317,16 +317,11 @@ export function createRoleProjectApi({
   }
 
   async function getJiraWorkload(projectId: string): Promise<JiraWorkload> {
-    const hit = cachedJiraByProjectId[projectId]?.workload;
-    if (hit) return hit;
-    const data = await apiClient.get<JiraWorkload>(
-      `${roleBasePath}/projects/${projectId}/jira/workload`,
+    // Workload is derived from the synchronized Jira issue mirror. Read it fresh
+    // so a completed supervisor refresh is immediately visible to both roles.
+    return apiClient.get<JiraWorkload>(
+      `/api/v1/projects/${projectId}/jira/workload`,
     );
-    cachedJiraByProjectId[projectId] = {
-      ...cachedJiraByProjectId[projectId],
-      workload: data,
-    };
-    return data;
   }
 
   async function getProjectJiraHierarchy(

@@ -50,12 +50,27 @@ export type JiraSprintProgress = {
   sync: JiraSyncState;
 };
 
+export type JiraWorkloadIssue = {
+  issueKey: string;
+  summary: string;
+  status: string;
+  statusCategory: string | null;
+  completed: boolean;
+};
+
 export type JiraWorkloadMemberRow = {
   accountId: string;
   displayName: string;
+  total: number;
+  active: number;
+  toDo: number;
+  inProgress: number;
+  done: number;
+  activeStoryPoints: number | null;
+  issues: JiraWorkloadIssue[];
+  // Legacy presentation fields retained while older supervisor components are phased out.
   assigned: number;
   completed: number;
-  inProgress: number;
   overdue: number;
   openIssues: number;
   storyPointsAssigned: number | null;
@@ -67,6 +82,16 @@ export type JiraWorkloadMemberRow = {
 
 export type JiraWorkload = {
   members: JiraWorkloadMemberRow[];
+  unassigned: { total: number; active: number; done: number };
+  summary: {
+    totalIssues: number;
+    activeIssues: number;
+    doneIssues: number;
+    assignedActiveIssues: number;
+    unassignedActiveIssues: number;
+  };
+  sync: JiraSyncState;
+  // Legacy fields retained for old components that are no longer mounted.
   unassignedCount: number;
   dueDateAvailable: boolean;
   imbalanceDetected: boolean;

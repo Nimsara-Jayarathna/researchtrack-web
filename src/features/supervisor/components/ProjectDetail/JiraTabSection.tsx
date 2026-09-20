@@ -10,6 +10,7 @@ export function JiraTabSection({ project }: JiraTabSectionProps) {
           projectId={project.id}
           issueFetcher={supervisorApi.getJiraIssues}
           sprintFetcher={supervisorApi.getJiraSprintProgress}
+          workloadFetcher={supervisorApi.getJiraWorkload}
           refresher={supervisorApi.refreshProjectJira}
         />
       ) : (

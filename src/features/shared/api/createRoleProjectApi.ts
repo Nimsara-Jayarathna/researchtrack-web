@@ -22,6 +22,7 @@ import type {
 import type {
   JiraHealth,
   JiraHierarchy,
+  JiraIssueList,
   JiraSprintProgress,
   JiraWorkload,
 } from "@/features/shared/types/jira.types";
@@ -285,11 +286,16 @@ export function createRoleProjectApi({
     );
   }
 
+
+  async function getJiraIssues(projectId: string): Promise<JiraIssueList> {
+    return apiClient.get<JiraIssueList>(`/api/v1/projects/${projectId}/jira/issues`);
+  }
+
   async function getJiraHealth(projectId: string): Promise<JiraHealth> {
     const hit = cachedJiraByProjectId[projectId]?.health;
     if (hit) return hit;
     const data = await apiClient.get<JiraHealth>(
-      `${roleBasePath}/projects/${projectId}/jira/health`,
+      `/api/v1/projects/${projectId}/jira/health`,
     );
     cachedJiraByProjectId[projectId] = {
       ...cachedJiraByProjectId[projectId],
@@ -558,6 +564,7 @@ export function createRoleProjectApi({
     getProjectGitHubActivityPage,
     getProjectGitHubContributorsPage,
     getProjectGitHubPullRequestsPage,
+    getJiraIssues,
     getJiraHealth,
     getJiraSprintProgress,
     getJiraWorkload,

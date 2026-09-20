@@ -88,3 +88,9 @@ export type JiraHierarchy = {
   roots: JiraHierarchyNode[];
   orphans: JiraHierarchyNode[];
 };
+
+
+export type JiraIssue = { issueKey:string; summary:string; issueType:string; status:string; statusCategory:string|null; priority:string|null; assigneeDisplayName:string|null; storyPoints:number|null; parentIssueKey:string|null; dueDate:string|null; updatedAt:string|null };
+export type JiraIssueSummary = { total:number; toDo:number; inProgress:number; done:number };
+export type JiraSyncState = { status:string; lastSyncedAt:string|null; lastSyncError:string|null };
+export type JiraIssueList = { items:JiraIssue[]; summary:JiraIssueSummary; sync:JiraSyncState };

@@ -45,13 +45,11 @@ describe("JiraSprintProgressSection", () => {
   });
 
   it("shows a no-active-sprint state without treating it as an error", async () => {
-    const fetcher = vi
-      .fn()
-      .mockResolvedValue({
-        ...ACTIVE,
-        hasActiveSprint: false,
-        activeSprint: null,
-      });
+    const fetcher = vi.fn().mockResolvedValue({
+      ...ACTIVE,
+      hasActiveSprint: false,
+      activeSprint: null,
+    });
     render(
       <JiraSprintProgressSection projectId="project-1" fetcher={fetcher} />,
     );

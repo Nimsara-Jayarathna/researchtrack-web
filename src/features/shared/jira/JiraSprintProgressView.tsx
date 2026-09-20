@@ -58,13 +58,31 @@ export function JiraSprintProgressView({ projectId, fetcher }: Props) {
     );
   if (!data) return null;
 
-  const neverSynced = !data.sync.lastSyncedAt && data.sync.status !== "SYNCED";
+  const syncFailed = data.sync.status === "FAILED" || data.sync.status === "INVALID_AUTH";
+  const neverSynced = !data.sync.lastSyncedAt && !syncFailed && data.sync.status !== "SYNCED";
   if (neverSynced)
     return (
       <EmptyState
         title="Sprint data has not been synchronized yet"
         description="The current sprint will appear after Jira data is synchronized for this project."
       />
+    );
+  if (syncFailed && !data.hasActiveSprint)
+    return (
+      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6">
+        <div className="flex gap-3">
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
+          <div>
+            <h3 className="font-semibold text-amber-950">Current sprint could not be refreshed</h3>
+            <p className="mt-1 text-sm text-amber-800">
+              {data.sync.lastSyncError ?? "The latest Jira synchronization did not complete."}
+            </p>
+            <p className="mt-2 text-sm text-amber-800">
+              Issue and workload views can continue using any previously stored ResearchTrack snapshot.
+            </p>
+          </div>
+        </div>
+      </div>
     );
   if (!data.hasActiveSprint || !data.activeSprint)
     return (

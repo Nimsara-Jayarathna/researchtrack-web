@@ -73,7 +73,8 @@ export function JiraIssueProgressView({
     );
   if (!data) return null;
 
-  const neverSynced = !data.sync.lastSyncedAt && data.sync.status !== "SYNCED";
+  const hasLocalSnapshot = data.items.length > 0;
+  const neverSynced = !hasLocalSnapshot && !data.sync.lastSyncedAt && data.sync.status !== "SYNCED";
   return (
     <section className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">

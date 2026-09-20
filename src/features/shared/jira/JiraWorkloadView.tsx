@@ -56,7 +56,8 @@ export function JiraWorkloadView({ projectId, fetcher }: Props) {
     );
   if (!data) return null;
 
-  const neverSynced = !data.sync.lastSyncedAt && data.sync.status !== "SYNCED";
+  const hasLocalSnapshot = data.summary.totalIssues > 0;
+  const neverSynced = !hasLocalSnapshot && !data.sync.lastSyncedAt && data.sync.status !== "SYNCED";
   const hasAssigneeData = data.members.length > 0;
 
   return (

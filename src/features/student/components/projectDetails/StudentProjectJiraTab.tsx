@@ -22,6 +22,7 @@ export function StudentProjectJiraTab({
       projectId={projectId}
       issueFetcher={studentApi.getJiraIssues}
       sprintFetcher={studentApi.getJiraSprintProgress}
+      workloadFetcher={studentApi.getJiraWorkload}
     />
   );
 }

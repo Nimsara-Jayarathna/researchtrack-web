@@ -2,23 +2,27 @@ import { useState } from "react";
 import type {
   JiraIssueList,
   JiraSprintProgress,
+  JiraWorkload,
 } from "@/features/shared/types/jira.types";
 import { JiraIssueProgressView } from "./JiraIssueProgressView";
 import { JiraSprintProgressView } from "./JiraSprintProgressView";
+import { JiraWorkloadView } from "./JiraWorkloadView";
 
 type Props = {
   projectId: string;
   issueFetcher: (projectId: string) => Promise<JiraIssueList>;
   sprintFetcher: (projectId: string) => Promise<JiraSprintProgress>;
+  workloadFetcher: (projectId: string) => Promise<JiraWorkload>;
   refresher?: (projectId: string) => Promise<unknown>;
 };
 
-type Tab = "issues" | "sprint";
+type Tab = "issues" | "sprint" | "workload";
 
 export function JiraProjectDataView({
   projectId,
   issueFetcher,
   sprintFetcher,
+  workloadFetcher,
   refresher,
 }: Props) {
   const [tab, setTab] = useState<Tab>("issues");
@@ -32,6 +36,7 @@ export function JiraProjectDataView({
           [
             ["issues", "Issues & tasks"],
             ["sprint", "Current sprint"],
+            ["workload", "Workload"],
           ] as const
         ).map(([value, label]) => (
           <button
@@ -50,8 +55,10 @@ export function JiraProjectDataView({
           fetcher={issueFetcher}
           refresher={refresher}
         />
-      ) : (
+      ) : tab === "sprint" ? (
         <JiraSprintProgressView projectId={projectId} fetcher={sprintFetcher} />
+      ) : (
+        <JiraWorkloadView projectId={projectId} fetcher={workloadFetcher} />
       )}
     </section>
   );

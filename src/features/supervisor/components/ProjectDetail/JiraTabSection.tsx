@@ -1,4 +1,4 @@
-import { JiraIssueProgressView } from "@/features/shared/jira/JiraIssueProgressView";
+import { JiraProjectDataView } from "@/features/shared/jira/JiraProjectDataView";
 import { supervisorApi } from "../../api/supervisorApi";
 import type { SupervisorProjectDetail } from "../../types";
 type JiraTabSectionProps = { project: SupervisorProjectDetail };
@@ -6,9 +6,10 @@ export function JiraTabSection({ project }: JiraTabSectionProps) {
   return (
     <section>
       {project.jira?.connected ? (
-        <JiraIssueProgressView
+        <JiraProjectDataView
           projectId={project.id}
-          fetcher={supervisorApi.getJiraIssues}
+          issueFetcher={supervisorApi.getJiraIssues}
+          sprintFetcher={supervisorApi.getJiraSprintProgress}
           refresher={supervisorApi.refreshProjectJira}
         />
       ) : (

@@ -49,10 +49,8 @@ export type {
   JiraHierarchy,
   JiraHierarchyNode,
   JiraSprintProgress,
-  JiraSprintSummary,
   JiraStatusBreakdown,
   JiraTypeDistributionItem,
-  JiraVelocityWeek,
   JiraWorkload,
   JiraWorkloadMemberRow,
 } from "@/features/shared/types/jira.types";

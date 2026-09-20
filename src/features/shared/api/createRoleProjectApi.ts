@@ -308,16 +308,12 @@ export function createRoleProjectApi({
   async function getJiraSprintProgress(
     projectId: string,
   ): Promise<JiraSprintProgress> {
-    const hit = cachedJiraByProjectId[projectId]?.sprintProgress;
-    if (hit) return hit;
-    const data = await apiClient.get<JiraSprintProgress>(
-      `${roleBasePath}/projects/${projectId}/jira/sprint-progress`,
+    // Sprint progress is a small derived local-data view. Read it fresh whenever
+    // the section is opened so a completed Jira synchronization is reflected
+    // immediately instead of being hidden behind a stale client cache.
+    return apiClient.get<JiraSprintProgress>(
+      `/api/v1/projects/${projectId}/jira/sprint-progress`,
     );
-    cachedJiraByProjectId[projectId] = {
-      ...cachedJiraByProjectId[projectId],
-      sprintProgress: data,
-    };
-    return data;
   }
 
   async function getJiraWorkload(projectId: string): Promise<JiraWorkload> {

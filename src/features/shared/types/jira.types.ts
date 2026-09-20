@@ -118,6 +118,7 @@ export type JiraIssue = {
   issueKey: string;
   summary: string;
   issueType: string;
+  isSubtask: boolean;
   status: string;
   statusCategory: string | null;
   priority: string | null;

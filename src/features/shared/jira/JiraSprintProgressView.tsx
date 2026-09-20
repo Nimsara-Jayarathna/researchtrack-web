@@ -7,6 +7,8 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { EmptyState } from "@/components/feedback/EmptyState";
+import { BlockingState } from "@/components/ui/BlockingState";
+import { JiraSyncMeta } from "./JiraSyncMeta";
 import type { JiraSprintProgress } from "@/features/shared/types/jira.types";
 
 type Props = {
@@ -45,11 +47,7 @@ export function JiraSprintProgressView({ projectId, fetcher }: Props) {
   }, [load]);
 
   if (loading && !data)
-    return (
-      <div className="rounded-2xl border border-slate-200 bg-white p-8 text-sm text-slate-500">
-        Loading current sprint progress…
-      </div>
-    );
+    return <BlockingState isActive message="Loading current sprint progress…" className="min-h-40" />;
   if (error && !data)
     return (
       <div className="rounded-2xl border border-rose-200 bg-white p-8 text-sm text-rose-700">
@@ -86,10 +84,13 @@ export function JiraSprintProgressView({ projectId, fetcher }: Props) {
     );
   if (!data.hasActiveSprint || !data.activeSprint)
     return (
-      <EmptyState
-        title="No active Jira sprint"
-        description="The linked Jira board has no active sprint in the latest synchronized ResearchTrack snapshot."
-      />
+      <div className="space-y-4">
+        <div className="flex justify-center"><JiraSyncMeta sync={data.sync} /></div>
+        <EmptyState
+          title="No active Jira sprint"
+          description="The linked Jira Scrum board has no active sprint in the latest synchronized ResearchTrack snapshot. Refresh Jira after confirming the selected board if Jira shows an active sprint."
+        />
+      </div>
     );
 
   const sprint = data.activeSprint;
@@ -113,6 +114,7 @@ export function JiraSprintProgressView({ projectId, fetcher }: Props) {
           <p className="mt-1 text-sm text-slate-500">
             Latest locally synchronized Jira sprint progress
           </p>
+          <div className="mt-2"><JiraSyncMeta sync={data.sync} /></div>
         </div>
         <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold capitalize text-emerald-700">
           {sprint.sprintState}

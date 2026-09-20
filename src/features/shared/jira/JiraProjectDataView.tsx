@@ -28,8 +28,9 @@ export function JiraProjectDataView({
   const [tab, setTab] = useState<Tab>("issues");
   return (
     <section className="space-y-5">
+      <div className="flex justify-center">
       <div
-        className="inline-flex rounded-xl border border-slate-200 bg-slate-50 p-1"
+        className="inline-flex rounded-xl border border-slate-200 bg-slate-50 p-1 shadow-sm"
         aria-label="Jira project views"
       >
         {(
@@ -48,6 +49,7 @@ export function JiraProjectDataView({
             {label}
           </button>
         ))}
+      </div>
       </div>
       {tab === "issues" ? (
         <JiraIssueProgressView

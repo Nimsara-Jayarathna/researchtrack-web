@@ -1,6 +1,8 @@
 import { ChevronDown, ChevronUp, Users } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { EmptyState } from "@/components/feedback/EmptyState";
+import { BlockingState } from "@/components/ui/BlockingState";
+import { JiraSyncMeta } from "./JiraSyncMeta";
 import type { JiraWorkload } from "@/features/shared/types/jira.types";
 
 type Props = {
@@ -42,12 +44,7 @@ export function JiraWorkloadView({ projectId, fetcher }: Props) {
     void load();
   }, [load]);
 
-  if (loading && !data)
-    return (
-      <div className="rounded-3xl border border-slate-200 bg-white p-8 text-slate-500">
-        Loading Jira workload…
-      </div>
-    );
+  if (loading && !data) return <BlockingState isActive message="Loading Jira workload…" className="min-h-40" />;
   if (error && !data)
     return (
       <div className="rounded-3xl border border-rose-200 bg-white p-8 text-rose-700">
@@ -66,10 +63,8 @@ export function JiraWorkloadView({ projectId, fetcher }: Props) {
         <h3 className="text-lg font-semibold text-slate-900">Jira workload</h3>
         <p className="text-sm text-slate-500">
           Current work distribution from the stored ResearchTrack Jira snapshot
-          {data.sync.lastSyncedAt
-            ? ` · synced ${new Date(data.sync.lastSyncedAt).toLocaleString()}`
-            : ""}
         </p>
+        <div className="mt-2"><JiraSyncMeta sync={data.sync} /></div>
       </div>
 
       {data.sync.status === "FAILED" && data.sync.lastSyncError ? (
@@ -88,7 +83,7 @@ export function JiraWorkloadView({ projectId, fetcher }: Props) {
         ].map(([label, value]) => (
           <div
             key={String(label)}
-            className="rounded-2xl border border-slate-200 bg-white p-4"
+            className="rounded-2xl border border-slate-200 bg-white p-4 text-center"
           >
             <div className="text-sm text-slate-500">{label}</div>
             <div className="mt-1 text-2xl font-semibold text-slate-900">

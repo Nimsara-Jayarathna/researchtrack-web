@@ -20,34 +20,34 @@ export type JiraHealth = {
   lastSyncedAt: string | null;
 };
 
-export type JiraSprintSummary = {
-  sprintId: number | null;
-  sprintName: string | null;
-  sprintState: string | null;
-  startDate: string | null;
-  endDate: string | null;
-  sprintStartIssueCount: number | null;
-  completionPercent: number;
-  issuesDone: number;
-  issuesTotal: number;
-  sprintPointsDone: number;
-  sprintPointsTotal: number;
-  sprintPointsAvailable: boolean;
+export type JiraSprintStatusBreakdown = {
+  toDo: number;
+  inProgress: number;
+  done: number;
 };
 
-export type JiraVelocityWeek = {
-  weekStart: string;
-  created: number;
-  resolved: number;
-  averageCycleDays: number | null;
+export type JiraCurrentSprint = {
+  sprintId: number;
+  sprintName: string;
+  sprintState: string;
+  goal: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  completeDate: string | null;
+  statusBreakdown: JiraSprintStatusBreakdown;
+  issuesTotal: number;
+  issuesDone: number;
+  issuesRemaining: number;
+  completionPercent: number;
+  sprintPointsAvailable: boolean;
+  sprintPointsTotal: number;
+  sprintPointsDone: number;
 };
 
 export type JiraSprintProgress = {
-  activeSprint: JiraSprintSummary | null;
-  recentSprints: JiraSprintSummary[];
-  velocityWeeks: JiraVelocityWeek[];
-  backlogGrowing: boolean;
-  sprintDataAvailable: boolean;
+  hasActiveSprint: boolean;
+  activeSprint: JiraCurrentSprint | null;
+  sync: JiraSyncState;
 };
 
 export type JiraWorkloadMemberRow = {

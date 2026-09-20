@@ -286,9 +286,10 @@ export function createRoleProjectApi({
     );
   }
 
-
   async function getJiraIssues(projectId: string): Promise<JiraIssueList> {
-    return apiClient.get<JiraIssueList>(`/api/v1/projects/${projectId}/jira/issues`);
+    return apiClient.get<JiraIssueList>(
+      `/api/v1/projects/${projectId}/jira/issues`,
+    );
   }
 
   async function getJiraHealth(projectId: string): Promise<JiraHealth> {

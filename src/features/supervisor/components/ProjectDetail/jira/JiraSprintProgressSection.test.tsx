@@ -22,12 +22,21 @@ const ACTIVE: JiraSprintProgress = {
     sprintPointsTotal: 34,
     sprintPointsDone: 16,
   },
-  sync: { status: "SYNCED", lastSyncedAt: "2026-09-20T08:00:00Z", lastSyncError: null },
+  sync: {
+    status: "SYNCED",
+    lastSyncedAt: "2026-09-20T08:00:00Z",
+    lastSyncError: null,
+  },
 };
 
 describe("JiraSprintProgressSection", () => {
   it("renders current synchronized sprint progress", async () => {
-    render(<JiraSprintProgressSection projectId="project-1" fetcher={vi.fn().mockResolvedValue(ACTIVE)} />);
+    render(
+      <JiraSprintProgressSection
+        projectId="project-1"
+        fetcher={vi.fn().mockResolvedValue(ACTIVE)}
+      />,
+    );
     expect(await screen.findByText("Sprint 12")).toBeInTheDocument();
     expect(screen.getByText("47%")).toBeInTheDocument();
     expect(screen.getByText("5")).toBeInTheDocument();
@@ -36,8 +45,18 @@ describe("JiraSprintProgressSection", () => {
   });
 
   it("shows a no-active-sprint state without treating it as an error", async () => {
-    const fetcher = vi.fn().mockResolvedValue({ ...ACTIVE, hasActiveSprint: false, activeSprint: null });
-    render(<JiraSprintProgressSection projectId="project-1" fetcher={fetcher} />);
-    expect(await screen.findByText("No active Jira sprint")).toBeInTheDocument();
+    const fetcher = vi
+      .fn()
+      .mockResolvedValue({
+        ...ACTIVE,
+        hasActiveSprint: false,
+        activeSprint: null,
+      });
+    render(
+      <JiraSprintProgressSection projectId="project-1" fetcher={fetcher} />,
+    );
+    expect(
+      await screen.findByText("No active Jira sprint"),
+    ).toBeInTheDocument();
   });
 });

@@ -27,29 +27,29 @@ export function JiraProjectDataView({
 }: Props) {
   const [tab, setTab] = useState<Tab>("issues");
   return (
-    <section className="space-y-3">
+    <section className="space-y-2">
       <div className="flex justify-center">
-        <div
-          className="inline-flex rounded-xl border border-slate-200 bg-slate-50 p-1 shadow-sm"
-          aria-label="Jira project views"
-        >
-          {(
-            [
-              ["issues", "Issues & tasks"],
-              ["sprint", "Current sprint"],
-              ["workload", "Workload"],
-            ] as const
-          ).map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setTab(value)}
-              className={`rounded-lg px-4 py-2 text-sm font-medium transition ${tab === value ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800"}`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+      <div
+        className="inline-flex rounded-xl border border-slate-200 bg-slate-50 p-1 shadow-sm"
+        aria-label="Jira project views"
+      >
+        {(
+          [
+            ["issues", "Issues & tasks"],
+            ["sprint", "Current sprint"],
+            ["workload", "Workload"],
+          ] as const
+        ).map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => setTab(value)}
+            className={`rounded-lg px-4 py-2 text-sm font-medium transition ${tab === value ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800"}`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
       </div>
       {tab === "issues" ? (
         <JiraIssueProgressView

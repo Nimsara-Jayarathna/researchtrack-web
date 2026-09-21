@@ -125,7 +125,9 @@ export type JiraIssue = {
   assigneeDisplayName: string | null;
   storyPoints: number | null;
   parentIssueKey: string | null;
+  descriptionJson: string | null;
   dueDate: string | null;
+  createdAt: string | null;
   updatedAt: string | null;
 };
 export type JiraIssueSummary = {

@@ -174,9 +174,7 @@ export function FilesTabSection({
           </>
         }
       >
-        {isLoading ? (
-          <FileListSkeleton />
-        ) : null}
+        {isLoading ? <FileListSkeleton /> : null}
 
         {error ? (
           <ErrorState error={error} onRetry={() => void load()} />

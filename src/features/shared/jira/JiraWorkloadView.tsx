@@ -54,7 +54,10 @@ export function JiraWorkloadView({ projectId, fetcher }: Props) {
   if (!data) return null;
 
   const hasLocalSnapshot = data.summary.totalIssues > 0;
-  const neverSynced = !hasLocalSnapshot && !data.sync.lastSyncedAt && data.sync.status !== "SYNCED";
+  const neverSynced =
+    !hasLocalSnapshot &&
+    !data.sync.lastSyncedAt &&
+    data.sync.status !== "SYNCED";
   const hasAssigneeData = data.members.length > 0;
 
   return (
@@ -67,10 +70,26 @@ export function JiraWorkloadView({ projectId, fetcher }: Props) {
       ) : null}
 
       <div className="grid gap-3 sm:grid-cols-4">
-        <JiraMetricCard label="Active work" value={data.summary.activeIssues} tone="active" />
-        <JiraMetricCard label="Assigned active" value={data.summary.assignedActiveIssues} tone="todo" />
-        <JiraMetricCard label="Unassigned active" value={data.summary.unassignedActiveIssues} tone="warning" />
-        <JiraMetricCard label="Completed" value={data.summary.doneIssues} tone="done" />
+        <JiraMetricCard
+          label="Active work"
+          value={data.summary.activeIssues}
+          tone="active"
+        />
+        <JiraMetricCard
+          label="Assigned active"
+          value={data.summary.assignedActiveIssues}
+          tone="todo"
+        />
+        <JiraMetricCard
+          label="Unassigned active"
+          value={data.summary.unassignedActiveIssues}
+          tone="warning"
+        />
+        <JiraMetricCard
+          label="Completed"
+          value={data.summary.doneIssues}
+          tone="done"
+        />
       </div>
 
       {neverSynced ? (
@@ -129,7 +148,10 @@ export function JiraWorkloadView({ projectId, fetcher }: Props) {
                         <div className="flex flex-wrap items-center justify-between gap-4">
                           <div className="min-w-[180px]">
                             <div className="font-semibold text-slate-900">
-                              <JiraContributorIdentity accountId={member.accountId} displayName={member.displayName} />
+                              <JiraContributorIdentity
+                                accountId={member.accountId}
+                                displayName={member.displayName}
+                              />
                             </div>
                             <div className="text-xs text-slate-500">
                               {member.active} active · {member.done} completed

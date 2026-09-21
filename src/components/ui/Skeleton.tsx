@@ -55,9 +55,17 @@ export function SkeletonTable({ rows = 5 }: { rows?: number }) {
 
 export function SkeletonCards({ count = 4 }: { count?: number }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" role="status" aria-label="Loading content" aria-busy="true">
+    <div
+      className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+      role="status"
+      aria-label="Loading content"
+      aria-busy="true"
+    >
       {Array.from({ length: count }).map((_, index) => (
-        <div key={index} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div
+          key={index}
+          className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+        >
           <Skeleton className="h-3 w-24" />
           <Skeleton className="mt-4 h-7 w-16" />
           <Skeleton className="mt-3 h-3 w-2/3" />
@@ -69,9 +77,16 @@ export function SkeletonCards({ count = 4 }: { count?: number }) {
 
 export function SkeletonCard({ lines = 3 }: { lines?: number }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm" role="status" aria-label="Loading content" aria-busy="true">
+    <div
+      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+      role="status"
+      aria-label="Loading content"
+      aria-busy="true"
+    >
       <Skeleton className="h-4 w-32" />
-      <div className="mt-4"><SkeletonText lines={lines} /></div>
+      <div className="mt-4">
+        <SkeletonText lines={lines} />
+      </div>
     </div>
   );
 }

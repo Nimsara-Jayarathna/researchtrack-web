@@ -9,6 +9,7 @@ import { MeetingRecordDetailsModal } from "./MeetingRecordDetailsModal";
 import { useStudentMeetingRecordsState } from "../hooks/useStudentMeetingRecordsState";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { IconActionButton } from "@/components/ui/IconActionButton";
+import { MeetingSectionSkeleton } from "./MeetingSectionSkeleton";
 
 type StudentMeetingRecordsSectionProps = {
   projectId: string;
@@ -52,9 +53,7 @@ export function StudentMeetingRecordsSection({
         }
       >
         {state.isLoading ? (
-          <div className="rounded-2xl border border-slate-100 bg-slate-50 p-8 text-center text-sm text-slate-500">
-            Loading records...
-          </div>
+          <MeetingSectionSkeleton />
         ) : null}
 
         {state.error ? (

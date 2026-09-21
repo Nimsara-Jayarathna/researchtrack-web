@@ -14,6 +14,7 @@ import type {
 import type { ApiError } from "@/types";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { IconActionButton } from "@/components/ui/IconActionButton";
+import { FileListSkeleton } from "@/features/projectfiles/components/FileListSkeleton";
 
 type StudentFilesTabSectionProps = {
   projectId: string;
@@ -128,9 +129,7 @@ export function StudentFilesTabSection({
         }
       >
         {isLoading ? (
-          <div className="rounded-2xl border border-slate-100 bg-slate-50 p-8 text-center text-sm text-slate-500">
-            Loading files...
-          </div>
+          <FileListSkeleton />
         ) : null}
 
         {error ? (

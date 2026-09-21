@@ -1,8 +1,7 @@
 import { AlertTriangle, CalendarDays, ChevronDown, ChevronRight, CheckCircle2, CircleDot, Clock3, Target } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { EmptyState } from "@/components/feedback/EmptyState";
-import { BlockingState } from "@/components/ui/BlockingState";
-import { JiraSyncMeta } from "./JiraSyncMeta";
+import { Skeleton, SkeletonCard } from "@/components/ui/Skeleton";
 import { JiraMetricCard, type MetricTone } from "./JiraVisuals";
 import type { JiraCurrentSprint, JiraSprintProgress } from "@/features/shared/types/jira.types";
 
@@ -48,14 +47,13 @@ export function JiraSprintProgressView({ projectId, fetcher }: Props) {
   const load=useCallback(async()=>{setLoading(true);setError(null);try{const next=await fetcher(projectId);setData(next);setExpanded(new Set(next.sprints.filter(x=>x.sprintState.toLowerCase()==="active").map(x=>x.sprintId)));}catch{setError("Unable to load synchronized Jira sprints.");}finally{setLoading(false);}},[fetcher,projectId]);
   useEffect(()=>{void load();},[load]);
   const sprints=useMemo(()=>sortSprints((data?.sprints??[]).filter(x=>filter==="all"||x.sprintState.toLowerCase()===filter)),[data?.sprints,filter]);
-  if(loading&&!data)return <BlockingState isActive message="Loading synchronized Jira sprints…" className="min-h-40"/>;
+  if(loading&&!data)return <section className="space-y-4" aria-label="Loading Jira sprints"><div className="flex gap-2"><Skeleton className="h-8 w-24 rounded-full"/><Skeleton className="h-8 w-24 rounded-full"/><Skeleton className="h-8 w-24 rounded-full"/></div><SkeletonCard lines={3}/><SkeletonCard lines={3}/></section>;
   if(error&&!data)return <div className="rounded-2xl border border-rose-200 bg-white p-8 text-sm text-rose-700">{error}</div>;
   if(!data)return null;
   const syncFailed=data.sync.status==="FAILED"||data.sync.status==="INVALID_AUTH"; const neverSynced=!data.sync.lastSyncedAt&&!syncFailed&&data.sync.status!=="SYNCED";
   if(neverSynced)return <EmptyState title="Sprint data has not been synchronized yet" description="Sprints will appear after Jira data is synchronized for this project."/>;
   const filters:[Filter,string,number][]=[["all","All",data.summary.total],["active","Active",data.summary.active],["future","Planned",data.summary.future],["closed","Completed",data.summary.closed]];
   return <section id="jira-sprints" className="space-y-4">
-    <div className="flex flex-wrap items-end justify-between gap-3 border-t border-slate-200 pt-4"><div><h2 className="text-lg font-semibold text-slate-900">Jira sprints</h2><p className="mt-1 text-sm text-slate-500">All sprints synchronized from the selected Jira Scrum board</p><div className="mt-2"><JiraSyncMeta sync={data.sync}/></div></div></div>
     {syncFailed?<div className="flex gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0"/><span>Latest Jira synchronization failed. Showing the last complete sprint snapshot. {data.sync.lastSyncError}</span></div>:null}
     <div className="flex flex-wrap gap-2">{filters.map(([value,label,count])=><button key={value} type="button" onClick={()=>setFilter(value)} className={`rounded-full border px-3 py-1.5 text-sm font-medium transition ${filter===value?"border-slate-900 bg-slate-900 text-white":"border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>{label} <span className="ml-1 opacity-70">{count}</span></button>)}</div>
     {data.sprints.length===0?<EmptyState title="No Jira sprints synchronized" description="The selected Jira board has no available sprints in the latest ResearchTrack snapshot."/>:sprints.length===0?<EmptyState title="No sprints in this filter" description="Choose another sprint state to view the synchronized sprint history."/>:<div className="space-y-3">{sprints.map(s=><SprintCard key={s.sprintId} sprint={s} open={expanded.has(s.sprintId)} onToggle={()=>setExpanded(current=>{const next=new Set(current);next.has(s.sprintId)?next.delete(s.sprintId):next.add(s.sprintId);return next;})}/>)}</div>}

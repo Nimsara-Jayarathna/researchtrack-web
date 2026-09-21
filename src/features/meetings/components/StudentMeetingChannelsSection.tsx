@@ -7,6 +7,7 @@ import { MeetingChannelsTable } from "./MeetingChannelsTable";
 import { useStudentMeetingChannelsState } from "../hooks/useStudentMeetingChannelsState";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { IconActionButton } from "@/components/ui/IconActionButton";
+import { MeetingSectionSkeleton } from "./MeetingSectionSkeleton";
 
 type StudentMeetingChannelsSectionProps = {
   projectId: string;
@@ -49,9 +50,7 @@ export function StudentMeetingChannelsSection({
         }
       >
         {state.isLoading ? (
-          <div className="rounded-2xl border border-slate-100 bg-slate-50 p-8 text-center text-sm text-slate-500">
-            Loading channels...
-          </div>
+          <MeetingSectionSkeleton />
         ) : null}
 
         {state.error ? (

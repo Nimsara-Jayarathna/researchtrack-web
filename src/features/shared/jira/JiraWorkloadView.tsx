@@ -1,8 +1,7 @@
 import { ChevronDown, ChevronUp, Users } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { EmptyState } from "@/components/feedback/EmptyState";
-import { BlockingState } from "@/components/ui/BlockingState";
-import { JiraSyncMeta } from "./JiraSyncMeta";
+import { JiraWorkloadSkeleton } from "@/features/supervisor/components/ProjectDetail/jira/workload/JiraWorkloadSkeleton";
 import { JiraContributorIdentity, JiraMetricCard } from "./JiraVisuals";
 import type { JiraWorkload } from "@/features/shared/types/jira.types";
 
@@ -45,7 +44,7 @@ export function JiraWorkloadView({ projectId, fetcher }: Props) {
     void load();
   }, [load]);
 
-  if (loading && !data) return <BlockingState isActive message="Loading Jira workload…" className="min-h-40" />;
+  if (loading && !data) return <JiraWorkloadSkeleton />;
   if (error && !data)
     return (
       <div className="rounded-3xl border border-rose-200 bg-white p-8 text-rose-700">
@@ -60,14 +59,6 @@ export function JiraWorkloadView({ projectId, fetcher }: Props) {
 
   return (
     <section className="space-y-4">
-      <div>
-        <h3 className="text-lg font-semibold text-slate-900">Jira workload</h3>
-        <p className="text-sm text-slate-500">
-          Current work distribution from the stored ResearchTrack Jira snapshot
-        </p>
-        <div className="mt-2"><JiraSyncMeta sync={data.sync} /></div>
-      </div>
-
       {data.sync.status === "FAILED" && data.sync.lastSyncError ? (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
           Latest Jira synchronization failed. Showing the last stored workload

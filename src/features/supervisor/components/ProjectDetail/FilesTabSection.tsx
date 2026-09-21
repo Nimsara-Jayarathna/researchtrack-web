@@ -14,6 +14,7 @@ import type {
 } from "@/features/projectfiles/types";
 import { Button } from "@/components/ui/Button";
 import { IconActionButton } from "@/components/ui/IconActionButton";
+import { FileListSkeleton } from "@/features/projectfiles/components/FileListSkeleton";
 import { SectionCard } from "@/components/ui/SectionCard";
 
 type FilesTabSectionProps = {
@@ -174,9 +175,7 @@ export function FilesTabSection({
         }
       >
         {isLoading ? (
-          <div className="rounded-2xl border border-slate-100 bg-slate-50 p-8 text-center text-sm text-slate-500">
-            Loading files...
-          </div>
+          <FileListSkeleton />
         ) : null}
 
         {error ? (

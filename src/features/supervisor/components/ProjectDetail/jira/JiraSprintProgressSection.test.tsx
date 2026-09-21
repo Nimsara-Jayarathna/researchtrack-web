@@ -41,7 +41,7 @@ describe("JiraSprintProgressSection", () => {
       />,
     );
     expect(await screen.findByText("Sprint 12")).toBeInTheDocument();
-    expect(screen.getByText("47%")).toBeInTheDocument();
+    expect(screen.getAllByText("47%")).toHaveLength(2);
     expect(screen.getByText("5")).toBeInTheDocument();
     expect(screen.getByText("3")).toBeInTheDocument();
     expect(screen.getByText("7")).toBeInTheDocument();

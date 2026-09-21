@@ -47,6 +47,8 @@ export type JiraCurrentSprint = {
 export type JiraSprintProgress = {
   hasActiveSprint: boolean;
   activeSprint: JiraCurrentSprint | null;
+  sprints: JiraCurrentSprint[];
+  summary: { total: number; active: number; future: number; closed: number };
   sync: JiraSyncState;
 };
 
@@ -117,15 +119,16 @@ export type JiraHierarchy = {
 export type JiraIssue = {
   issueKey: string;
   summary: string;
+  descriptionJson: string | null;
   issueType: string;
   isSubtask: boolean;
   status: string;
   statusCategory: string | null;
   priority: string | null;
+  assigneeAccountId: string | null;
   assigneeDisplayName: string | null;
   storyPoints: number | null;
   parentIssueKey: string | null;
-  descriptionJson: string | null;
   dueDate: string | null;
   createdAt: string | null;
   updatedAt: string | null;

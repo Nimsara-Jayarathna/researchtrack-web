@@ -36,7 +36,7 @@ export function JiraProjectDataView({
         {(
           [
             ["issues", "Issues & tasks"],
-            ["sprint", "Current sprint"],
+            ["sprint", "Sprints"],
             ["workload", "Workload"],
           ] as const
         ).map(([value, label]) => (

@@ -357,14 +357,10 @@ export function useSupervisorProjectJiraFlow({
         );
         refreshModal.hide();
         if (result.boards.length > 0) {
-          const preferredBoard =
-            result.boards.find(
-              (board) => board.type.toLowerCase() === "scrum",
-            ) ?? result.boards[0];
           setJiraWorkspaceSelection((current) => ({
             ...current,
             boardOptions: result.boards,
-            selectedBoardId: preferredBoard?.id ?? null,
+            selectedBoardId: result.boards[0]?.id ?? null,
           }));
           return;
         }

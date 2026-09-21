@@ -10,8 +10,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { BlockingState } from "@/components/ui/BlockingState";
 import { JiraSyncMeta } from "./JiraSyncMeta";
-import { JiraContributorIdentity, JiraMetricCard } from "./JiraVisuals";
 import { JiraIssueDetailsModal } from "./JiraIssueDetailsModal";
+import { JiraContributorIdentity, JiraMetricCard } from "./JiraVisuals";
 import type { JiraIssue, JiraIssueList } from "@/features/shared/types/jira.types";
 
 type Props = {
@@ -200,18 +200,18 @@ export function JiraIssueProgressView({ projectId, fetcher, refresher }: Props) 
                   const issue = node.issue; const hasChildren = node.children.length > 0; const isOpen = normalizedQuery.length > 0 || expanded.has(issue.issueKey);
                   const toggle = () => { if (!hasChildren) return; setExpanded((current) => { const next = new Set(current); next.has(issue.issueKey) ? next.delete(issue.issueKey) : next.add(issue.issueKey); return next; }); };
                   const hierarchySurface = issue.issueType.toLowerCase() === "epic" ? "bg-violet-50/70 hover:bg-violet-100/60 border-l-4 border-l-violet-300" : depth === 1 ? "bg-slate-50/80 hover:bg-slate-100/80 border-l-4 border-l-sky-200" : "bg-white hover:bg-slate-50/80 border-l-4 border-l-transparent";
-                  return <tr key={issue.issueKey} onClick={toggle} className={`group border-b border-slate-100 last:border-0 transition-colors ${hasChildren ? "cursor-pointer" : ""} ${matched ? "bg-amber-50/70" : hierarchySurface}`}>
-                    <td className="px-4 py-3 align-top font-semibold"><button type="button" onClick={(event) => { event.stopPropagation(); setSelectedIssue(issue); }} className="font-semibold text-blue-700 hover:text-blue-900 hover:underline">{issue.issueKey}</button></td>
+                  return <tr key={issue.issueKey} className={`group border-b border-slate-100 last:border-0 transition-colors ${matched ? "bg-amber-50/70" : hierarchySurface}`}>
+                    <td className="px-4 py-3 align-top font-semibold"><button type="button" onClick={() => setSelectedIssue(issue)} className="text-left text-slate-800 underline-offset-2 hover:text-blue-700 hover:underline">{issue.issueKey}</button></td>
                     <td className="px-4 py-3 align-top">
                       <div className="relative flex min-h-10 items-start" style={{ paddingLeft: `${Math.min(depth, 6) * 28}px` }}>
                         {depth > 0 ? <span className="absolute top-0 h-5 w-4 rounded-bl-lg border-b border-l border-slate-200" style={{ left: `${Math.min(depth, 6) * 28 - 18}px` }} aria-hidden="true" /> : null}
                         <button type="button" disabled={!hasChildren} onClick={(event) => { event.stopPropagation(); toggle(); }} className={`mr-2 mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-md transition ${hasChildren ? "text-slate-500 hover:bg-white/80 hover:text-slate-900" : "cursor-default text-slate-300"}`} aria-label={hasChildren ? `${isOpen ? "Collapse" : "Expand"} ${issue.issueKey}` : undefined}>{hasChildren ? (isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />) : <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />}</button>
-                        <div className="min-w-0"><button type="button" onClick={(event) => { event.stopPropagation(); setSelectedIssue(issue); }} className="text-left font-medium leading-5 text-slate-900 hover:text-blue-700 hover:underline">{issue.summary}</button><div className="mt-1 flex flex-wrap items-center gap-1.5"><span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset ${typeTone(issue.issueType)}`}>{issue.issueType}</span>{issue.storyPoints != null ? <span className="text-xs text-slate-500">{issue.storyPoints} pts</span> : null}{hasChildren ? <span className="text-xs text-slate-400">· {node.children.length} direct {node.children.length === 1 ? "child" : "children"}</span> : null}{tree.orphans.has(issue.issueKey) ? <span className="text-xs text-amber-600">· parent {issue.parentIssueKey} not in snapshot</span> : null}</div></div>
+                        <div className="min-w-0"><button type="button" onClick={() => setSelectedIssue(issue)} className="text-left font-medium leading-5 text-slate-900 underline-offset-2 hover:text-blue-700 hover:underline">{issue.summary}</button><div className="mt-1 flex flex-wrap items-center gap-1.5"><span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset ${typeTone(issue.issueType)}`}>{issue.issueType}</span>{issue.storyPoints != null ? <span className="text-xs text-slate-500">{issue.storyPoints} pts</span> : null}{hasChildren ? <span className="text-xs text-slate-400">· {node.children.length} direct {node.children.length === 1 ? "child" : "children"}</span> : null}{tree.orphans.has(issue.issueKey) ? <span className="text-xs text-amber-600">· parent {issue.parentIssueKey} not in snapshot</span> : null}</div></div>
                       </div>
                     </td>
                     <td className="px-4 py-3 align-top"><span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${statusClass(issue.statusCategory)}`}>{issue.status}</span></td>
                     <td className="px-4 py-3 align-top text-slate-600">{issue.priority ?? "—"}</td>
-                    <td className="px-4 py-3 align-top text-slate-600"><JiraContributorIdentity accountId={issue.assigneeDisplayName ?? issue.issueKey} displayName={issue.assigneeDisplayName} /></td>
+                    <td className="px-4 py-3 align-top text-slate-600"><JiraContributorIdentity accountId={issue.assigneeAccountId ?? issue.issueKey} displayName={issue.assigneeDisplayName} /></td>
                   </tr>;
                 })}
                 {rows.length === 0 ? <tr><td colSpan={5} className="px-6 py-12 text-center"><div className="font-medium text-slate-800">No matching Jira issues</div><div className="mt-1 text-sm text-slate-500">Try another key, title, status, priority, or assignee.</div></td></tr> : null}
@@ -220,7 +220,7 @@ export function JiraIssueProgressView({ projectId, fetcher, refresher }: Props) 
           </div>
         </div>
       )}
-      <JiraIssueDetailsModal issue={selectedIssue} onClose={() => setSelectedIssue(null)} />
+      {selectedIssue ? <JiraIssueDetailsModal issue={selectedIssue} onClose={() => setSelectedIssue(null)} /> : null}
     </section>
   );
 }

@@ -9,6 +9,7 @@ import { useCallback, useEffect, useState } from "react";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { BlockingState } from "@/components/ui/BlockingState";
 import { JiraSyncMeta } from "./JiraSyncMeta";
+import { JiraMetricCard, type MetricTone } from "./JiraVisuals";
 import type { JiraSprintProgress } from "@/features/shared/types/jira.types";
 
 type Props = {
@@ -47,7 +48,13 @@ export function JiraSprintProgressView({ projectId, fetcher }: Props) {
   }, [load]);
 
   if (loading && !data)
-    return <BlockingState isActive message="Loading current sprint progress…" className="min-h-40" />;
+    return (
+      <BlockingState
+        isActive
+        message="Loading current sprint progress…"
+        className="min-h-40"
+      />
+    );
   if (error && !data)
     return (
       <div className="rounded-2xl border border-rose-200 bg-white p-8 text-sm text-rose-700">
@@ -56,8 +63,10 @@ export function JiraSprintProgressView({ projectId, fetcher }: Props) {
     );
   if (!data) return null;
 
-  const syncFailed = data.sync.status === "FAILED" || data.sync.status === "INVALID_AUTH";
-  const neverSynced = !data.sync.lastSyncedAt && !syncFailed && data.sync.status !== "SYNCED";
+  const syncFailed =
+    data.sync.status === "FAILED" || data.sync.status === "INVALID_AUTH";
+  const neverSynced =
+    !data.sync.lastSyncedAt && !syncFailed && data.sync.status !== "SYNCED";
   if (neverSynced)
     return (
       <EmptyState
@@ -71,12 +80,16 @@ export function JiraSprintProgressView({ projectId, fetcher }: Props) {
         <div className="flex gap-3">
           <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
           <div>
-            <h3 className="font-semibold text-amber-950">Current sprint could not be refreshed</h3>
+            <h3 className="font-semibold text-amber-950">
+              Current sprint could not be refreshed
+            </h3>
             <p className="mt-1 text-sm text-amber-800">
-              {data.sync.lastSyncError ?? "The latest Jira synchronization did not complete."}
+              {data.sync.lastSyncError ??
+                "The latest Jira synchronization did not complete."}
             </p>
             <p className="mt-2 text-sm text-amber-800">
-              Issue and workload views can continue using any previously stored ResearchTrack snapshot.
+              Issue and workload views can continue using any previously stored
+              ResearchTrack snapshot.
             </p>
           </div>
         </div>
@@ -85,7 +98,9 @@ export function JiraSprintProgressView({ projectId, fetcher }: Props) {
   if (!data.hasActiveSprint || !data.activeSprint)
     return (
       <div className="space-y-4">
-        <div className="flex justify-center"><JiraSyncMeta sync={data.sync} /></div>
+        <div className="flex justify-center">
+          <JiraSyncMeta sync={data.sync} />
+        </div>
         <EmptyState
           title="No active Jira sprint"
           description="The linked Jira Scrum board has no active sprint in the latest synchronized ResearchTrack snapshot. Refresh Jira after confirming the selected board if Jira shows an active sprint."
@@ -95,10 +110,20 @@ export function JiraSprintProgressView({ projectId, fetcher }: Props) {
 
   const sprint = data.activeSprint;
   const breakdown = sprint.statusBreakdown;
-  const metrics = [
-    { label: "To do", value: breakdown.toDo, icon: CircleDot },
-    { label: "In progress", value: breakdown.inProgress, icon: Clock3 },
-    { label: "Done", value: breakdown.done, icon: CheckCircle2 },
+  const metrics: {
+    label: string;
+    value: number;
+    icon: typeof CircleDot;
+    tone: MetricTone;
+  }[] = [
+    { label: "To do", value: breakdown.toDo, icon: CircleDot, tone: "todo" },
+    {
+      label: "In progress",
+      value: breakdown.inProgress,
+      icon: Clock3,
+      tone: "active",
+    },
+    { label: "Done", value: breakdown.done, icon: CheckCircle2, tone: "done" },
   ];
 
   return (
@@ -114,7 +139,9 @@ export function JiraSprintProgressView({ projectId, fetcher }: Props) {
           <p className="mt-1 text-sm text-slate-500">
             Latest locally synchronized Jira sprint progress
           </p>
-          <div className="mt-2"><JiraSyncMeta sync={data.sync} /></div>
+          <div className="mt-2">
+            <JiraSyncMeta sync={data.sync} />
+          </div>
         </div>
         <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold capitalize text-emerald-700">
           {sprint.sprintState}
@@ -162,19 +189,14 @@ export function JiraSprintProgressView({ projectId, fetcher }: Props) {
             />
           </div>
           <div className="mt-5 grid gap-2 sm:grid-cols-3">
-            {metrics.map(({ label, value, icon: Icon }) => (
-              <div
+            {metrics.map(({ label, value, icon: Icon, tone }) => (
+              <JiraMetricCard
                 key={label}
-                className="rounded-xl border border-slate-100 bg-slate-50 p-3"
-              >
-                <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
-                  <Icon className="h-4 w-4" />
-                  {label}
-                </div>
-                <div className="mt-2 text-2xl font-semibold text-slate-900">
-                  {value}
-                </div>
-              </div>
+                label={label}
+                value={value}
+                tone={tone}
+                icon={<Icon className="h-4 w-4" />}
+              />
             ))}
           </div>
         </article>
@@ -206,14 +228,6 @@ export function JiraSprintProgressView({ projectId, fetcher }: Props) {
                 </div>
               </div>
             ) : null}
-            <div>
-              <div className="text-xs text-slate-400">Snapshot</div>
-              <div className="mt-1 font-medium text-slate-700">
-                {data.sync.lastSyncedAt
-                  ? new Date(data.sync.lastSyncedAt).toLocaleString()
-                  : "Not synchronized"}
-              </div>
-            </div>
           </div>
         </article>
       </div>

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { BlockingState } from "@/components/ui/BlockingState";
 import { JiraSyncMeta } from "./JiraSyncMeta";
+import { JiraContributorIdentity, JiraMetricCard } from "./JiraVisuals";
 import type { JiraWorkload } from "@/features/shared/types/jira.types";
 
 type Props = {
@@ -44,7 +45,14 @@ export function JiraWorkloadView({ projectId, fetcher }: Props) {
     void load();
   }, [load]);
 
-  if (loading && !data) return <BlockingState isActive message="Loading Jira workload…" className="min-h-40" />;
+  if (loading && !data)
+    return (
+      <BlockingState
+        isActive
+        message="Loading Jira workload…"
+        className="min-h-40"
+      />
+    );
   if (error && !data)
     return (
       <div className="rounded-3xl border border-rose-200 bg-white p-8 text-rose-700">
@@ -54,7 +62,10 @@ export function JiraWorkloadView({ projectId, fetcher }: Props) {
   if (!data) return null;
 
   const hasLocalSnapshot = data.summary.totalIssues > 0;
-  const neverSynced = !hasLocalSnapshot && !data.sync.lastSyncedAt && data.sync.status !== "SYNCED";
+  const neverSynced =
+    !hasLocalSnapshot &&
+    !data.sync.lastSyncedAt &&
+    data.sync.status !== "SYNCED";
   const hasAssigneeData = data.members.length > 0;
 
   return (
@@ -64,7 +75,9 @@ export function JiraWorkloadView({ projectId, fetcher }: Props) {
         <p className="text-sm text-slate-500">
           Current work distribution from the stored ResearchTrack Jira snapshot
         </p>
-        <div className="mt-2"><JiraSyncMeta sync={data.sync} /></div>
+        <div className="mt-2">
+          <JiraSyncMeta sync={data.sync} />
+        </div>
       </div>
 
       {data.sync.status === "FAILED" && data.sync.lastSyncError ? (
@@ -75,22 +88,26 @@ export function JiraWorkloadView({ projectId, fetcher }: Props) {
       ) : null}
 
       <div className="grid gap-3 sm:grid-cols-4">
-        {[
-          ["Active work", data.summary.activeIssues],
-          ["Assigned active", data.summary.assignedActiveIssues],
-          ["Unassigned active", data.summary.unassignedActiveIssues],
-          ["Completed", data.summary.doneIssues],
-        ].map(([label, value]) => (
-          <div
-            key={String(label)}
-            className="rounded-2xl border border-slate-200 bg-white p-4 text-center"
-          >
-            <div className="text-sm text-slate-500">{label}</div>
-            <div className="mt-1 text-2xl font-semibold text-slate-900">
-              {value}
-            </div>
-          </div>
-        ))}
+        <JiraMetricCard
+          label="Active work"
+          value={data.summary.activeIssues}
+          tone="active"
+        />
+        <JiraMetricCard
+          label="Assigned active"
+          value={data.summary.assignedActiveIssues}
+          tone="todo"
+        />
+        <JiraMetricCard
+          label="Unassigned active"
+          value={data.summary.unassignedActiveIssues}
+          tone="warning"
+        />
+        <JiraMetricCard
+          label="Completed"
+          value={data.summary.doneIssues}
+          tone="done"
+        />
       </div>
 
       {neverSynced ? (
@@ -149,7 +166,10 @@ export function JiraWorkloadView({ projectId, fetcher }: Props) {
                         <div className="flex flex-wrap items-center justify-between gap-4">
                           <div className="min-w-[180px]">
                             <div className="font-semibold text-slate-900">
-                              {member.displayName}
+                              <JiraContributorIdentity
+                                accountId={member.accountId}
+                                displayName={member.displayName}
+                              />
                             </div>
                             <div className="text-xs text-slate-500">
                               {member.active} active · {member.done} completed

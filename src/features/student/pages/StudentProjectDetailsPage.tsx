@@ -1,6 +1,5 @@
 import { useCallback, useMemo } from "react";
 import { ProjectOverviewContent } from "@/features/projects/components/ProjectOverviewContent";
-import { useMeetingAnalytics } from "@/features/projects/hooks/useMeetingAnalytics";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { ErrorState } from "@/components/feedback/ErrorState";
 import { buttonStyles } from "@/components/ui/Button";
@@ -17,7 +16,6 @@ import { useStudentProject } from "../hooks/useStudentProject";
 import { useStudentProjectRepositories } from "../hooks/projectDetails/useStudentProjectRepositories";
 import { useStudentProjectDetailsBlockingError } from "../hooks/projectDetails/useStudentProjectDetailsBlockingError";
 import { useStudentProjectDetailsTabs } from "../hooks/projectDetails/useStudentProjectDetailsTabs";
-import { studentApi } from "../api/studentApi";
 import { isBlockingError } from "@/utils/errorSeverity";
 import { StudentFilesTabSection } from "../components/StudentFilesTabSection";
 import { StudentMeetingsTabSection } from "../components/StudentMeetingsTabSection";
@@ -38,11 +36,7 @@ export function StudentProjectDetailsPage() {
   const projectRepositoriesState = useStudentProjectRepositories(
     projectId,
     project?.githubRepositories,
-    {
-      enabled:
-        Boolean(project) &&
-        (activeTab === "github" || activeTab === "overview"),
-    },
+    { enabled: Boolean(project) && activeTab === "github" },
   );
   const projectWithRepositories = useMemo(
     () =>
@@ -59,15 +53,6 @@ export function StudentProjectDetailsPage() {
   const retryLoad = useCallback(() => {
     void reload();
   }, [reload]);
-  const meetingFetchers = useMemo(
-    () => ({
-      getMeetingChannels: studentApi.getProjectMeetingChannels,
-      getMeetingRecords: studentApi.getProjectMeetingRecords,
-    }),
-    [],
-  );
-  const meetingAnalytics = useMeetingAnalytics(project?.id, meetingFetchers);
-
   useStudentProjectDetailsBlockingError({ error, onRetry: retryLoad });
 
   if (isLoading) {
@@ -143,7 +128,6 @@ export function StudentProjectDetailsPage() {
         <ProjectOverviewContent
           project={projectWithRepositories ?? project}
           role="student"
-          meetingAnalytics={meetingAnalytics}
         />
       ) : null}
 

@@ -22,12 +22,15 @@ const ACTIVE: JiraSprintProgress = {
     sprintPointsTotal: 34,
     sprintPointsDone: 16,
   },
+  sprints: [],
+  summary: { total: 1, active: 1, future: 0, closed: 0 },
   sync: {
     status: "SYNCED",
     lastSyncedAt: "2026-09-20T08:00:00Z",
     lastSyncError: null,
   },
 };
+ACTIVE.sprints = ACTIVE.activeSprint ? [ACTIVE.activeSprint] : [];
 
 describe("JiraSprintProgressSection", () => {
   it("renders current synchronized sprint progress", async () => {
@@ -38,7 +41,7 @@ describe("JiraSprintProgressSection", () => {
       />,
     );
     expect(await screen.findByText("Sprint 12")).toBeInTheDocument();
-    expect(screen.getByText("47%")).toBeInTheDocument();
+    expect(screen.getAllByText("47%")).toHaveLength(2);
     expect(screen.getByText("5")).toBeInTheDocument();
     expect(screen.getByText("3")).toBeInTheDocument();
     expect(screen.getByText("7")).toBeInTheDocument();
@@ -49,12 +52,14 @@ describe("JiraSprintProgressSection", () => {
       ...ACTIVE,
       hasActiveSprint: false,
       activeSprint: null,
+      sprints: [],
+      summary: { total: 0, active: 0, future: 0, closed: 0 },
     });
     render(
       <JiraSprintProgressSection projectId="project-1" fetcher={fetcher} />,
     );
     expect(
-      await screen.findByText("No active Jira sprint"),
+      await screen.findByText("No Jira sprints synchronized"),
     ).toBeInTheDocument();
   });
 });

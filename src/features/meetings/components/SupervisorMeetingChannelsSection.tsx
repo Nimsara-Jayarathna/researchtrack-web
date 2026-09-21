@@ -8,6 +8,7 @@ import { MeetingChannelsTable } from "./MeetingChannelsTable";
 import { useSupervisorMeetingChannelsState } from "../hooks/useSupervisorMeetingChannelsState";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { IconActionButton } from "@/components/ui/IconActionButton";
+import { MeetingSectionSkeleton } from "./MeetingSectionSkeleton";
 
 type SupervisorMeetingChannelsSectionProps = {
   projectId: string;
@@ -49,11 +50,7 @@ export function SupervisorMeetingChannelsSection({
           </>
         }
       >
-        {state.isLoading ? (
-          <div className="rounded-2xl border border-slate-100 bg-slate-50 p-8 text-center text-sm text-slate-500">
-            Loading channels...
-          </div>
-        ) : null}
+        {state.isLoading ? <MeetingSectionSkeleton /> : null}
 
         {state.error ? (
           <ErrorState error={state.error} onRetry={() => void state.load()} />

@@ -115,7 +115,9 @@ export function IntegrationsTabSection({
               <div className="flex min-w-0 items-center gap-2 sm:col-span-4">
                 <span className="truncate">
                   Integration:{" "}
-                  <span className="font-medium text-slate-700">Atlassian OAuth</span>
+                  <span className="font-medium text-slate-700">
+                    Atlassian OAuth
+                  </span>
                 </span>
                 {jira.webhookStatus ? (
                   <span
@@ -130,7 +132,9 @@ export function IntegrationsTabSection({
                         : "Live webhook updates are degraded; periodic reconciliation keeps Jira data synchronized."
                     }
                   >
-                    {jira.webhookStatus === "ACTIVE" ? "Live updates" : "Reconciliation"}
+                    {jira.webhookStatus === "ACTIVE"
+                      ? "Live updates"
+                      : "Reconciliation"}
                   </span>
                 ) : null}
               </div>

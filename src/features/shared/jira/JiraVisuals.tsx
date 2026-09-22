@@ -80,9 +80,8 @@ export function JiraContributorIdentity({
   const assigned = !!displayName;
   const tone = assigned
     ? contributorPalette[
-        hashJiraIdentity(
-          (accountId?.trim() || name).toLocaleLowerCase(),
-        ) % contributorPalette.length
+        hashJiraIdentity((accountId?.trim() || name).toLocaleLowerCase()) %
+          contributorPalette.length
       ]
     : "bg-slate-100 text-slate-500 ring-slate-200";
   return (

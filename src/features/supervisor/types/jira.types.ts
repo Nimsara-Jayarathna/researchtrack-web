@@ -43,6 +43,9 @@ export type JiraConnection = {
   syncStatus: string;
   lastSyncedAt: string | null;
   connectedAt: string;
+  webhookStatus?: string;
+  lastWebhookAt?: string | null;
+  lastReconciledAt?: string | null;
 };
 export type {
   JiraHealth,

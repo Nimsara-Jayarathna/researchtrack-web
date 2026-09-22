@@ -53,13 +53,13 @@ const contributorPalette = [
   "bg-cyan-100 text-cyan-800 ring-cyan-200",
   "bg-fuchsia-100 text-fuchsia-700 ring-fuchsia-200",
 ];
-function hashIdentity(value: string) {
+export function hashJiraIdentity(value: string) {
   let h = 0;
   for (let i = 0; i < value.length; i++)
     h = ((h << 5) - h + value.charCodeAt(i)) | 0;
   return Math.abs(h);
 }
-function initials(name: string) {
+export function jiraInitials(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   return (
     parts.length > 1
@@ -80,7 +80,8 @@ export function JiraContributorIdentity({
   const assigned = !!displayName;
   const tone = assigned
     ? contributorPalette[
-        hashIdentity(accountId || name) % contributorPalette.length
+        hashJiraIdentity((accountId?.trim() || name).toLocaleLowerCase()) %
+          contributorPalette.length
       ]
     : "bg-slate-100 text-slate-500 ring-slate-200";
   return (
@@ -88,7 +89,7 @@ export function JiraContributorIdentity({
       <span
         className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ring-1 ${tone}`}
       >
-        {assigned ? initials(name) : "—"}
+        {assigned ? jiraInitials(name) : "—"}
       </span>
       {!compact ? (
         <span className="truncate text-sm text-slate-700">{name}</span>

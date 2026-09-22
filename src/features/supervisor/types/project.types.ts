@@ -79,6 +79,9 @@ export type SupervisorProjectDetail = {
     jiraProjectName?: string | null;
     jiraBoardId?: number | null;
     jiraBoardName?: string | null;
+    webhookStatus?: string;
+    lastWebhookAt?: string | null;
+    lastReconciledAt?: string | null;
   } | null;
   leader: SupervisorProjectLeader | null;
   members: SupervisorProjectDetailMember[];

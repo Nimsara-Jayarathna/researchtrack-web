@@ -60,6 +60,9 @@ export function useSupervisorProject(projectId: string | undefined) {
               workspaceUrl: connection.workspaceUrl,
               lastSyncedAt: connection.lastSyncedAt,
               syncStatus: connection.syncStatus,
+              webhookStatus: connection.webhookStatus,
+              lastWebhookAt: connection.lastWebhookAt,
+              lastReconciledAt: connection.lastReconciledAt,
             };
           }
         } catch {

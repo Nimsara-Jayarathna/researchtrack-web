@@ -194,7 +194,7 @@ export function JiraIssueDetailsModal({
             </div>
             <div className="mt-2">
               <JiraContributorIdentity
-                accountId={issue.assigneeAccountId ?? issue.issueKey}
+                accountId={issue.assigneeAccountId ?? issue.assigneeDisplayName}
                 displayName={issue.assigneeDisplayName}
               />
             </div>

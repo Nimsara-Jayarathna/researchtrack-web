@@ -414,7 +414,7 @@ export function JiraIssueProgressView({ projectId, fetcher }: Props) {
                       </td>
                       <td className="px-4 py-3 align-top text-slate-600">
                         <JiraContributorIdentity
-                          accountId={issue.assigneeAccountId ?? issue.issueKey}
+                          accountId={issue.assigneeAccountId ?? issue.assigneeDisplayName}
                           displayName={issue.assigneeDisplayName}
                         />
                       </td>

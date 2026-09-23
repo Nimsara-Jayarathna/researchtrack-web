@@ -19,12 +19,14 @@ import type {
   ProjectGitHubPullRequest,
   ProjectGitHubPullRequestPageOptions,
 } from "@/features/projects/types";
+import type { GitHubSyncState } from "@/features/shared/types/github.types";
 import type {
   JiraHealth,
   JiraHierarchy,
   JiraIssueList,
   JiraSprintProgress,
   JiraWorkload,
+  JiraProjectSyncState,
 } from "@/features/shared/types/jira.types";
 import type {
   MeetingChannel,
@@ -339,6 +341,23 @@ export function createRoleProjectApi({
     return data;
   }
 
+
+  async function getProjectGitHubSyncState(
+    projectId: string,
+  ): Promise<GitHubSyncState> {
+    return apiClient.get<GitHubSyncState>(
+      `${toVersionedApiPath("/api/projects")}/${projectId}/github/sync-state`,
+    );
+  }
+
+  async function getProjectJiraSyncState(
+    projectId: string,
+  ): Promise<JiraProjectSyncState> {
+    return apiClient.get<JiraProjectSyncState>(
+      `/api/v1/projects/${projectId}/jira/sync-state`,
+    );
+  }
+
   async function getProjectMeetingChannels(
     projectId: string,
     forceRefresh = false,
@@ -553,6 +572,7 @@ export function createRoleProjectApi({
     invalidateProjectGitHubCaches,
     primeJiraHealth,
     getProjectGitHubDashboard,
+    getProjectGitHubSyncState,
     getProjectGitHubActivityPage,
     getProjectGitHubContributorsPage,
     getProjectGitHubPullRequestsPage,
@@ -561,6 +581,7 @@ export function createRoleProjectApi({
     getJiraSprintProgress,
     getJiraWorkload,
     getProjectJiraHierarchy,
+    getProjectJiraSyncState,
     getProjectMeetingChannels,
     createProjectMeetingChannel,
     updateProjectMeetingChannel,

@@ -858,6 +858,7 @@ export function CommitActivitySection({
       >
         <GithubContributorsModalContent
           isOpen={openModal === "contributors"}
+          refreshKey={activeRepositoryLastSyncedAt}
           fetchPage={loadContributorsPage}
         />
       </GithubDetailsModal>
@@ -869,6 +870,7 @@ export function CommitActivitySection({
       >
         <GithubActivityModalContent
           isOpen={openModal === "activity"}
+          refreshKey={activeRepositoryLastSyncedAt}
           fetchPage={loadActivityPage}
         />
       </GithubDetailsModal>

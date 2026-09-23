@@ -75,3 +75,17 @@ export type ProjectGitHubRepositories = {
   accessSources: GitHubAccessSource[];
   repositories: ProjectRepositoryLink[];
 };
+
+export type GitHubRepositorySyncState = {
+  linkedRepositoryId: string;
+  syncRevision: number;
+  syncStatus: string;
+  lastSyncedAt: string | null;
+  enabled: boolean;
+  primary: boolean;
+};
+
+export type GitHubSyncState = {
+  projectId: string;
+  repositories: GitHubRepositorySyncState[];
+};

@@ -17,6 +17,7 @@ import type {
 
 type Props = {
   projectId: string;
+  refreshKey?: number;
   fetcher: (projectId: string) => Promise<JiraIssueList>;
 };
 
@@ -108,7 +109,7 @@ function collectExpandable(nodes: TreeNode[], result = new Set<string>()) {
   return result;
 }
 
-export function JiraIssueProgressView({ projectId, fetcher }: Props) {
+export function JiraIssueProgressView({ projectId, fetcher, refreshKey = 0 }: Props) {
   const [data, setData] = useState<JiraIssueList | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -131,7 +132,7 @@ export function JiraIssueProgressView({ projectId, fetcher }: Props) {
 
   useEffect(() => {
     void load();
-  }, [load]);
+  }, [load, refreshKey]);
 
   const tree = useMemo(() => buildTree(data?.items ?? []), [data?.items]);
   const expandable = useMemo(() => collectExpandable(tree.roots), [tree.roots]);

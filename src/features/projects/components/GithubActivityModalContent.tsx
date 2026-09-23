@@ -134,6 +134,7 @@ function CommitTypeIcon({
 
 type GithubActivityModalContentProps = {
   isOpen: boolean;
+  refreshKey?: string | number | null;
   fetchPage: (
     page: number,
   ) => Promise<PaginatedListResult<ProjectGitHubRecentCommit>>;
@@ -151,6 +152,7 @@ function ActivityItemSkeleton() {
 
 export function GithubActivityModalContent({
   isOpen,
+  refreshKey,
   fetchPage,
 }: GithubActivityModalContentProps) {
   const [items, setItems] = useState<ProjectGitHubRecentCommit[]>([]);
@@ -202,7 +204,7 @@ export function GithubActivityModalContent({
     setPage(1);
     setHasMore(false);
     void loadPage(1, false);
-  }, [isOpen, loadPage]);
+  }, [isOpen, loadPage, refreshKey]);
 
   async function handleLoadMore() {
     if (!hasMore || isLoadingMore || isInitialLoading) {

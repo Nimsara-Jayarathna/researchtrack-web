@@ -11,6 +11,7 @@ import {
 
 type GithubContributorsModalContentProps = {
   isOpen: boolean;
+  refreshKey?: string | number | null;
   fetchPage: (
     page: number,
   ) => Promise<PaginatedListResult<ProjectGitHubContributor>>;
@@ -30,6 +31,7 @@ function ContributorItemSkeleton() {
 
 export function GithubContributorsModalContent({
   isOpen,
+  refreshKey,
   fetchPage,
 }: GithubContributorsModalContentProps) {
   const [items, setItems] = useState<ProjectGitHubContributor[]>([]);
@@ -80,7 +82,7 @@ export function GithubContributorsModalContent({
     setPage(1);
     setHasMore(false);
     void loadPage(1, false);
-  }, [isOpen, loadPage]);
+  }, [isOpen, loadPage, refreshKey]);
 
   async function handleLoadMore() {
     if (!hasMore || isLoadingMore || isInitialLoading) {

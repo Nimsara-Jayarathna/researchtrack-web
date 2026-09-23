@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { normalizeSyncStatus } from "@/lib/syncStatus";
+import { usePageAwarePolling } from "@/hooks/usePageAwarePolling";
 import type { CanonicalSyncStatus } from "@/lib/syncStatus";
 import type { ApiError } from "@/types";
 import type {
@@ -112,6 +113,7 @@ export function useSupervisorProjectGitHubDashboard({
   const refreshSawRunningRef = useRef(false);
   const refreshPollAttemptsRef = useRef(0);
   const lastTerminalSyncKeyRef = useRef<string | null>(null);
+  const passiveRevisionRef = useRef<number | null>(null);
 
   const enabledRepositories = useMemo(
     () =>
@@ -237,8 +239,13 @@ export function useSupervisorProjectGitHubDashboard({
     let cancelled = false;
     let timeoutId: number | null = null;
 
+    const canPoll = () =>
+      document.visibilityState === "visible" && navigator.onLine !== false;
+
     const scheduleNextPoll = () => {
-      timeoutId = window.setTimeout(poll, SYNC_POLL_INTERVAL_MS);
+      if (!cancelled && canPoll()) {
+        timeoutId = window.setTimeout(poll, SYNC_POLL_INTERVAL_MS);
+      }
     };
 
     const finishWithLatestDashboard = async (
@@ -323,13 +330,32 @@ export function useSupervisorProjectGitHubDashboard({
       await finishWithLatestDashboard(latestRepository, latestStatus);
     };
 
+    const resumePolling = () => {
+      if (!cancelled && canPoll()) {
+        if (timeoutId !== null) window.clearTimeout(timeoutId);
+        void poll();
+      }
+    };
+    const pausePolling = () => {
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+    };
+    const onVisibilityChange = () =>
+      document.visibilityState === "visible" ? resumePolling() : pausePolling();
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("online", resumePolling);
+    window.addEventListener("offline", pausePolling);
     scheduleNextPoll();
 
     return () => {
       cancelled = true;
-      if (timeoutId !== null) {
-        window.clearTimeout(timeoutId);
-      }
+      pausePolling();
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("online", resumePolling);
+      window.removeEventListener("offline", pausePolling);
     };
   }, [
     activeRepositorySyncStatus,
@@ -341,6 +367,51 @@ export function useSupervisorProjectGitHubDashboard({
     showError,
     showSuccess,
   ]);
+
+  const passiveFreshnessCheck = useCallback(async () => {
+    if (!projectId || !selectedRepoId) return;
+    const state = await supervisorApi.getProjectGitHubSyncState(projectId);
+    const selected = state.repositories.find(
+      (repository) => repository.linkedRepositoryId === selectedRepoId,
+    );
+    if (!selected) return;
+
+    const previous = passiveRevisionRef.current;
+    passiveRevisionRef.current = selected.syncRevision;
+    const serverStatus = normalizeSyncStatus(selected.syncStatus);
+    const statusChanged = serverStatus !== activeRepositorySyncStatus;
+    const revisionChanged =
+      previous !== null && previous !== selected.syncRevision;
+    if (statusChanged || revisionChanged) {
+      await reloadRepositories();
+    }
+    if (revisionChanged) {
+      await loadDashboard(selectedRepoId, {
+        forceRefresh: true,
+        showLoading: false,
+      });
+    }
+  }, [
+    activeRepositorySyncStatus,
+    loadDashboard,
+    projectId,
+    reloadRepositories,
+    selectedRepoId,
+  ]);
+
+  useEffect(() => {
+    passiveRevisionRef.current = null;
+  }, [selectedRepoId]);
+
+  usePageAwarePolling({
+    enabled:
+      Boolean(projectId && isActive && selectedRepoId) &&
+      activeRepositorySyncStatus !== "PENDING" &&
+      activeRepositorySyncStatus !== "IN_PROGRESS" &&
+      !refreshAwaitingCompletionRef.current,
+    intervalMs: 30_000,
+    run: passiveFreshnessCheck,
+  });
 
   const selectRepository = useCallback(async (linkedRepositoryId: string) => {
     setSelectedRepoId(linkedRepositoryId);

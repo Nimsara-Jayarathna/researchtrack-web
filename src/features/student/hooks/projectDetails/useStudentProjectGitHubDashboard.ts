@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toVersionedApiPath } from "@/app/config/apiVersion";
 import { normalizeSyncStatus } from "@/lib/syncStatus";
+import { usePageAwarePolling } from "@/hooks/usePageAwarePolling";
+import { studentApi } from "../../api/studentApi";
 import type { CanonicalSyncStatus } from "@/lib/syncStatus";
 import type { ApiError } from "@/types";
 import { isApiException } from "@/services/apiClient";
@@ -51,6 +53,7 @@ type UseStudentProjectGitHubDashboardParams = {
   fetchActivityPage: FetchActivityPage;
   fetchContributorsPage: FetchContributorsPage;
   fetchPullRequestsPage: FetchPullRequestsPage;
+  reloadRepositories: () => Promise<ProjectGitHubRepositories | null>;
 };
 
 type UseStudentProjectGitHubDashboardResult = {
@@ -101,6 +104,7 @@ export function useStudentProjectGitHubDashboard({
   fetchActivityPage,
   fetchContributorsPage,
   fetchPullRequestsPage,
+  reloadRepositories,
 }: UseStudentProjectGitHubDashboardParams): UseStudentProjectGitHubDashboardResult {
   const [isRepoSelectorOpen, setRepoSelectorOpen] = useState(false);
   const [selectedRepoId, setSelectedRepoId] = useState<string | null>(null);
@@ -110,6 +114,7 @@ export function useStudentProjectGitHubDashboard({
   const [githubViewError, setGithubViewError] = useState<ApiError | null>(null);
   const [isGitHubViewLoading, setIsGitHubViewLoading] = useState(false);
   const dashboardRequestVersionRef = useRef(0);
+  const syncRevisionRef = useRef<number | null>(null);
 
   const enabledRepositories = useMemo(
     () =>
@@ -195,6 +200,47 @@ export function useStudentProjectGitHubDashboard({
     // Explicit retries are the paths that intentionally force a fresh request.
     void loadDashboard(selectedRepoId);
   }, [loadDashboard, selectedRepoId]);
+
+  const passiveFreshnessCheck = useCallback(async () => {
+    if (!projectId || !selectedRepoId) return;
+    const state = await studentApi.getProjectGitHubSyncState(projectId);
+    const selected = state.repositories.find(
+      (repository) => repository.linkedRepositoryId === selectedRepoId,
+    );
+    if (!selected) return;
+    const previous = syncRevisionRef.current;
+    syncRevisionRef.current = selected.syncRevision;
+    const serverStatus = normalizeSyncStatus(selected.syncStatus);
+    const statusChanged = serverStatus !== activeRepositorySyncStatus;
+    const revisionChanged =
+      previous !== null && previous !== selected.syncRevision;
+    if (statusChanged || revisionChanged) {
+      await reloadRepositories();
+    }
+    if (revisionChanged) {
+      await loadDashboard(selectedRepoId, true);
+    }
+  }, [
+    activeRepositorySyncStatus,
+    loadDashboard,
+    projectId,
+    reloadRepositories,
+    selectedRepoId,
+  ]);
+
+  useEffect(() => {
+    syncRevisionRef.current = null;
+  }, [selectedRepoId]);
+
+  usePageAwarePolling({
+    enabled: Boolean(projectId && selectedRepoId),
+    intervalMs:
+      activeRepositorySyncStatus === "PENDING" ||
+      activeRepositorySyncStatus === "IN_PROGRESS"
+        ? 3_000
+        : 30_000,
+    run: passiveFreshnessCheck,
+  });
 
   const selectRepository = useCallback(async (linkedRepositoryId: string) => {
     setSelectedRepoId(linkedRepositoryId);

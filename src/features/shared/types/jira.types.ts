@@ -149,3 +149,14 @@ export type JiraIssueList = {
   summary: JiraIssueSummary;
   sync: JiraSyncState;
 };
+
+export type JiraProjectSyncState = {
+  connected: boolean;
+  syncRevision: number;
+  syncStatus: string | null;
+  lastSyncedAt: string | null;
+  lastSyncError: string | null;
+  webhookStatus: string | null;
+  lastWebhookAt: string | null;
+  lastReconciledAt: string | null;
+};

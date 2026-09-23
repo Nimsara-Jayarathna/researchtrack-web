@@ -7,6 +7,7 @@ import type { JiraWorkload } from "@/features/shared/types/jira.types";
 
 type Props = {
   projectId: string;
+  refreshKey?: number;
   fetcher: (projectId: string) => Promise<JiraWorkload>;
 };
 
@@ -22,7 +23,7 @@ function statusClass(category: string | null) {
   return "bg-slate-100 text-slate-700";
 }
 
-export function JiraWorkloadView({ projectId, fetcher }: Props) {
+export function JiraWorkloadView({ projectId, fetcher, refreshKey = 0 }: Props) {
   const [data, setData] = useState<JiraWorkload | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +43,7 @@ export function JiraWorkloadView({ projectId, fetcher }: Props) {
 
   useEffect(() => {
     void load();
-  }, [load]);
+  }, [load, refreshKey]);
 
   if (loading && !data) return <JiraWorkloadSkeleton />;
   if (error && !data)

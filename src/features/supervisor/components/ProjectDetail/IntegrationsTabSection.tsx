@@ -1,8 +1,12 @@
-import { ExternalLink, KanbanSquare, Link2 } from "lucide-react";
+import { ExternalLink, KanbanSquare, Link2, RefreshCw } from "lucide-react";
+import { useCallback, useRef, useState } from "react";
 import { buttonStyles } from "@/components/ui/Button";
 import { LastSyncedBadge } from "@/components/ui/LastSyncedBadge";
 import { normalizeSyncStatus } from "@/lib/syncStatus";
 import { RepositorySection } from "./RepositorySection";
+import { usePageAwarePolling } from "@/hooks/usePageAwarePolling";
+import { supervisorApi } from "../../api/supervisorApi";
+import type { JiraProjectSyncState } from "@/features/shared/types/jira.types";
 import type { SupervisorProjectDetail } from "../../types";
 import type { UseProjectRepositoriesState } from "../../hooks/useProjectRepositories";
 
@@ -31,10 +35,97 @@ export function IntegrationsTabSection({
   onPendingGitHubSourceHandled,
 }: IntegrationsTabSectionProps) {
   const jira = project.jira;
-  const jiraSyncing = normalizeSyncStatus(jira?.syncStatus) === "IN_PROGRESS";
+  const [jiraSyncState, setJiraSyncState] = useState<JiraProjectSyncState | null>(null);
+  const githubStateSignatureRef = useRef<string | null>(null);
+
+  const pollIntegrationState = useCallback(async () => {
+    const [githubState, nextJiraState] = await Promise.all([
+      supervisorApi.getProjectGitHubSyncState(project.id),
+      supervisorApi.getProjectJiraSyncState(project.id),
+    ]);
+
+    const signature = githubState.repositories
+      .map((repository) =>
+        `${repository.linkedRepositoryId}:${repository.syncRevision}:${repository.syncStatus}:${repository.enabled}`,
+      )
+      .join("|");
+    const previousSignature = githubStateSignatureRef.current;
+    githubStateSignatureRef.current = signature;
+    if (previousSignature !== null && previousSignature !== signature) {
+      await repositoriesState.reload();
+    }
+    setJiraSyncState(nextJiraState);
+  }, [project.id, repositoriesState.reload]);
+
+  usePageAwarePolling({
+    enabled: true,
+    intervalMs:
+      (repositoriesState.data?.repositories ?? []).some((repository) => {
+        const status = normalizeSyncStatus(repository.syncStatus);
+        return status === "PENDING" || status === "IN_PROGRESS";
+      }) || normalizeSyncStatus(jiraSyncState?.syncStatus ?? jira?.syncStatus) === "IN_PROGRESS"
+        ? 3_000
+        : 30_000,
+    run: pollIntegrationState,
+  });
+
+  const effectiveJiraStatus = jiraSyncState?.syncStatus ?? jira?.syncStatus;
+  const jiraSyncing = normalizeSyncStatus(effectiveJiraStatus) === "IN_PROGRESS";
+  const effectiveJiraLastSyncedAt =
+    jiraSyncState?.lastSyncedAt ?? jira?.lastSyncedAt ?? null;
+  const effectiveWebhookStatus =
+    jiraSyncState?.webhookStatus ?? jira?.webhookStatus ?? null;
+  const repositories = repositoriesState.data?.repositories ?? [];
+  const syncingRepositoryCount = repositories.filter((repository) => {
+    const status = normalizeSyncStatus(repository.syncStatus);
+    return status === "PENDING" || status === "IN_PROGRESS";
+  }).length;
+  const latestGitHubSync = repositories
+    .map((repository) => repository.lastSyncedAt)
+    .filter((value): value is string => Boolean(value))
+    .sort()
+    .at(-1) ?? null;
 
   return (
     <div className="space-y-6">
+      <section className="rounded-3xl border border-border bg-white p-5 shadow-sm">
+        <div className="flex items-center gap-2">
+          <RefreshCw className="h-4 w-4 text-slate-500" />
+          <h2 className="text-sm font-semibold text-slate-900">Integration synchronization</h2>
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <span className="font-medium text-slate-800">GitHub</span>
+              <span className="text-xs text-slate-500">
+                {repositories.length} repositor{repositories.length === 1 ? "y" : "ies"}
+              </span>
+            </div>
+            <div className="mt-2 text-xs text-slate-500">
+              {syncingRepositoryCount > 0
+                ? `${syncingRepositoryCount} synchronizing`
+                : "Repository snapshots synchronized independently"}
+            </div>
+            <div className="mt-2"><LastSyncedBadge lastSyncedAt={latestGitHubSync} /></div>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <span className="font-medium text-slate-800">Jira</span>
+              <span className="text-xs text-slate-500">
+                {jira?.connected ? (jiraSyncing ? "Synchronizing" : "Connected") : "Not connected"}
+              </span>
+            </div>
+            <div className="mt-2 text-xs text-slate-500">
+              {effectiveWebhookStatus === "ACTIVE"
+                ? "Webhook live updates with reconciliation"
+                : jira?.connected
+                  ? "Periodic reconciliation available"
+                  : "Connect Jira to synchronize project work"}
+            </div>
+            <div className="mt-2"><LastSyncedBadge lastSyncedAt={effectiveJiraLastSyncedAt} /></div>
+          </div>
+        </div>
+      </section>
       <RepositorySection
         project={project}
         repositoriesState={repositoriesState}
@@ -119,27 +210,27 @@ export function IntegrationsTabSection({
                     Atlassian OAuth
                   </span>
                 </span>
-                {jira.webhookStatus ? (
+                {effectiveWebhookStatus ? (
                   <span
                     className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                      jira.webhookStatus === "ACTIVE"
+                      effectiveWebhookStatus === "ACTIVE"
                         ? "bg-emerald-100 text-emerald-700"
                         : "bg-amber-100 text-amber-700"
                     }`}
                     title={
-                      jira.webhookStatus === "ACTIVE"
+                      effectiveWebhookStatus === "ACTIVE"
                         ? "Jira webhook live updates are active; periodic reconciliation remains enabled."
                         : "Live webhook updates are degraded; periodic reconciliation keeps Jira data synchronized."
                     }
                   >
-                    {jira.webhookStatus === "ACTIVE"
+                    {effectiveWebhookStatus === "ACTIVE"
                       ? "Live updates"
                       : "Reconciliation"}
                   </span>
                 ) : null}
               </div>
               <div className="flex min-w-0 items-center gap-1.5 sm:col-span-3 sm:justify-end">
-                <LastSyncedBadge lastSyncedAt={jira.lastSyncedAt} />
+                <LastSyncedBadge lastSyncedAt={effectiveJiraLastSyncedAt} />
               </div>
             </div>
           </article>

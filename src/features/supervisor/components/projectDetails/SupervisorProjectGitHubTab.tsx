@@ -281,7 +281,7 @@ export function SupervisorProjectGitHubTab({
         activeRepositoryName={
           activeRepository?.customName?.trim() || activeRepository?.name || null
         }
-        activeRepositoryLastSyncedAt={activeRepository?.lastSyncedAt ?? null}
+        activeRepositorySyncRevision={activeRepository?.syncRevision ?? null}
         onNavigateToOverview={onNavigateToOverview}
       />
     </div>

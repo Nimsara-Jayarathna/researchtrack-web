@@ -19,11 +19,14 @@ import type {
   ProjectGitHubPullRequest,
   ProjectGitHubPullRequestPageOptions,
 } from "@/features/projects/types";
+import type { GitHubSyncState } from "@/features/shared/types/github.types";
 import type {
   JiraHealth,
   JiraHierarchy,
+  JiraIssueList,
   JiraSprintProgress,
   JiraWorkload,
+  JiraProjectSyncState,
 } from "@/features/shared/types/jira.types";
 import type {
   MeetingChannel,
@@ -285,11 +288,17 @@ export function createRoleProjectApi({
     );
   }
 
+  async function getJiraIssues(projectId: string): Promise<JiraIssueList> {
+    return apiClient.get<JiraIssueList>(
+      `/api/v1/projects/${projectId}/jira/issues`,
+    );
+  }
+
   async function getJiraHealth(projectId: string): Promise<JiraHealth> {
     const hit = cachedJiraByProjectId[projectId]?.health;
     if (hit) return hit;
     const data = await apiClient.get<JiraHealth>(
-      `${roleBasePath}/projects/${projectId}/jira/health`,
+      `/api/v1/projects/${projectId}/jira/health`,
     );
     cachedJiraByProjectId[projectId] = {
       ...cachedJiraByProjectId[projectId],
@@ -301,29 +310,20 @@ export function createRoleProjectApi({
   async function getJiraSprintProgress(
     projectId: string,
   ): Promise<JiraSprintProgress> {
-    const hit = cachedJiraByProjectId[projectId]?.sprintProgress;
-    if (hit) return hit;
-    const data = await apiClient.get<JiraSprintProgress>(
-      `${roleBasePath}/projects/${projectId}/jira/sprint-progress`,
+    // Sprint progress is a small derived local-data view. Read it fresh whenever
+    // the section is opened so a completed Jira synchronization is reflected
+    // immediately instead of being hidden behind a stale client cache.
+    return apiClient.get<JiraSprintProgress>(
+      `/api/v1/projects/${projectId}/jira/sprint-progress`,
     );
-    cachedJiraByProjectId[projectId] = {
-      ...cachedJiraByProjectId[projectId],
-      sprintProgress: data,
-    };
-    return data;
   }
 
   async function getJiraWorkload(projectId: string): Promise<JiraWorkload> {
-    const hit = cachedJiraByProjectId[projectId]?.workload;
-    if (hit) return hit;
-    const data = await apiClient.get<JiraWorkload>(
-      `${roleBasePath}/projects/${projectId}/jira/workload`,
+    // Workload is derived from the synchronized Jira issue mirror. Read it fresh
+    // so a completed supervisor refresh is immediately visible to both roles.
+    return apiClient.get<JiraWorkload>(
+      `/api/v1/projects/${projectId}/jira/workload`,
     );
-    cachedJiraByProjectId[projectId] = {
-      ...cachedJiraByProjectId[projectId],
-      workload: data,
-    };
-    return data;
   }
 
   async function getProjectJiraHierarchy(
@@ -339,6 +339,22 @@ export function createRoleProjectApi({
       hierarchy: data,
     };
     return data;
+  }
+
+  async function getProjectGitHubSyncState(
+    projectId: string,
+  ): Promise<GitHubSyncState> {
+    return apiClient.get<GitHubSyncState>(
+      `${toVersionedApiPath("/api/projects")}/${projectId}/github/sync-state`,
+    );
+  }
+
+  async function getProjectJiraSyncState(
+    projectId: string,
+  ): Promise<JiraProjectSyncState> {
+    return apiClient.get<JiraProjectSyncState>(
+      `/api/v1/projects/${projectId}/jira/sync-state`,
+    );
   }
 
   async function getProjectMeetingChannels(
@@ -555,13 +571,16 @@ export function createRoleProjectApi({
     invalidateProjectGitHubCaches,
     primeJiraHealth,
     getProjectGitHubDashboard,
+    getProjectGitHubSyncState,
     getProjectGitHubActivityPage,
     getProjectGitHubContributorsPage,
     getProjectGitHubPullRequestsPage,
+    getJiraIssues,
     getJiraHealth,
     getJiraSprintProgress,
     getJiraWorkload,
     getProjectJiraHierarchy,
+    getProjectJiraSyncState,
     getProjectMeetingChannels,
     createProjectMeetingChannel,
     updateProjectMeetingChannel,

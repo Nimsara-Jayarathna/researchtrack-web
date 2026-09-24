@@ -20,42 +20,59 @@ export type JiraHealth = {
   lastSyncedAt: string | null;
 };
 
-export type JiraSprintSummary = {
-  sprintId: number | null;
-  sprintName: string | null;
-  sprintState: string | null;
-  startDate: string | null;
-  endDate: string | null;
-  sprintStartIssueCount: number | null;
-  completionPercent: number;
-  issuesDone: number;
-  issuesTotal: number;
-  sprintPointsDone: number;
-  sprintPointsTotal: number;
-  sprintPointsAvailable: boolean;
+export type JiraSprintStatusBreakdown = {
+  toDo: number;
+  inProgress: number;
+  done: number;
 };
 
-export type JiraVelocityWeek = {
-  weekStart: string;
-  created: number;
-  resolved: number;
-  averageCycleDays: number | null;
+export type JiraCurrentSprint = {
+  sprintId: number;
+  sprintName: string;
+  sprintState: string;
+  goal: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  completeDate: string | null;
+  statusBreakdown: JiraSprintStatusBreakdown;
+  issuesTotal: number;
+  issuesDone: number;
+  issuesRemaining: number;
+  completionPercent: number;
+  sprintPointsAvailable: boolean;
+  sprintPointsTotal: number;
+  sprintPointsDone: number;
 };
 
 export type JiraSprintProgress = {
-  activeSprint: JiraSprintSummary | null;
-  recentSprints: JiraSprintSummary[];
-  velocityWeeks: JiraVelocityWeek[];
-  backlogGrowing: boolean;
-  sprintDataAvailable: boolean;
+  hasActiveSprint: boolean;
+  activeSprint: JiraCurrentSprint | null;
+  sprints: JiraCurrentSprint[];
+  summary: { total: number; active: number; future: number; closed: number };
+  sync: JiraSyncState;
+};
+
+export type JiraWorkloadIssue = {
+  issueKey: string;
+  summary: string;
+  status: string;
+  statusCategory: string | null;
+  completed: boolean;
 };
 
 export type JiraWorkloadMemberRow = {
   accountId: string;
   displayName: string;
+  total: number;
+  active: number;
+  toDo: number;
+  inProgress: number;
+  done: number;
+  activeStoryPoints: number | null;
+  issues: JiraWorkloadIssue[];
+  // Legacy presentation fields retained while older supervisor components are phased out.
   assigned: number;
   completed: number;
-  inProgress: number;
   overdue: number;
   openIssues: number;
   storyPointsAssigned: number | null;
@@ -67,6 +84,16 @@ export type JiraWorkloadMemberRow = {
 
 export type JiraWorkload = {
   members: JiraWorkloadMemberRow[];
+  unassigned: { total: number; active: number; done: number };
+  summary: {
+    totalIssues: number;
+    activeIssues: number;
+    doneIssues: number;
+    assignedActiveIssues: number;
+    unassignedActiveIssues: number;
+  };
+  sync: JiraSyncState;
+  // Legacy fields retained for old components that are no longer mounted.
   unassignedCount: number;
   dueDateAvailable: boolean;
   imbalanceDetected: boolean;
@@ -87,4 +114,49 @@ export type JiraHierarchyNode = {
 export type JiraHierarchy = {
   roots: JiraHierarchyNode[];
   orphans: JiraHierarchyNode[];
+};
+
+export type JiraIssue = {
+  issueKey: string;
+  summary: string;
+  descriptionJson: string | null;
+  issueType: string;
+  isSubtask: boolean;
+  status: string;
+  statusCategory: string | null;
+  priority: string | null;
+  assigneeAccountId: string | null;
+  assigneeDisplayName: string | null;
+  storyPoints: number | null;
+  parentIssueKey: string | null;
+  dueDate: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+};
+export type JiraIssueSummary = {
+  total: number;
+  toDo: number;
+  inProgress: number;
+  done: number;
+};
+export type JiraSyncState = {
+  status: string;
+  lastSyncedAt: string | null;
+  lastSyncError: string | null;
+};
+export type JiraIssueList = {
+  items: JiraIssue[];
+  summary: JiraIssueSummary;
+  sync: JiraSyncState;
+};
+
+export type JiraProjectSyncState = {
+  connected: boolean;
+  syncRevision: number;
+  syncStatus: string | null;
+  lastSyncedAt: string | null;
+  lastSyncError: string | null;
+  webhookStatus: string | null;
+  lastWebhookAt: string | null;
+  lastReconciledAt: string | null;
 };

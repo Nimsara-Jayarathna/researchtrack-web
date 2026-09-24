@@ -124,8 +124,8 @@ export type GitHubEvidencePage<T> = {
   items: T[];
   page: number;
   size: number;
-  totalCount: number;
-  hasNext: boolean;
+  total: number;
+  hasMore: boolean;
 };
 
 export type GitHubCommitEvidence = {

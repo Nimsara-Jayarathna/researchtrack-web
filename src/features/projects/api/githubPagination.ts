@@ -29,83 +29,43 @@ export function normalizePaginatedPayload<T>(
   page: number,
   size?: number,
 ): PaginatedListResult<T> {
-  const requestedSize = Number.isFinite(size) && size && size > 0 ? size : null;
+  const requestedSize = Number.isFinite(size) && size && size > 0 ? size : 10;
 
   if (Array.isArray(payload)) {
-    const effectiveSize =
-      requestedSize ?? (payload.length > 0 ? payload.length : 10);
     return {
       items: payload as T[],
-      hasMore: payload.length >= effectiveSize,
+      hasMore: payload.length >= requestedSize,
       page,
-      size: effectiveSize,
+      size: requestedSize,
+      total: payload.length,
     };
   }
 
-  if (isRecord(payload)) {
-    const items = asArray<T>(payload.items)
-      .concat(asArray<T>(payload.content))
-      .concat(asArray<T>(payload.results))
-      .concat(asArray<T>(payload.data));
-
-    const normalizedItems = items.length > 0 ? items : [];
-
-    const hasMoreFromFlag =
-      typeof payload.hasMore === "boolean" ? payload.hasMore : null;
-    const totalPages =
-      typeof payload.totalPages === "number" &&
-      Number.isFinite(payload.totalPages)
-        ? payload.totalPages
-        : null;
-    const hasNextPage =
-      typeof payload.hasNext === "boolean"
-        ? payload.hasNext
-        : typeof payload.nextPage === "number" &&
-          Number.isFinite(payload.nextPage);
-    const payloadSize =
-      typeof payload.size === "number" &&
-      Number.isFinite(payload.size) &&
-      payload.size > 0
-        ? payload.size
-        : typeof payload.pageSize === "number" &&
-            Number.isFinite(payload.pageSize) &&
-            payload.pageSize > 0
-          ? payload.pageSize
-          : null;
-    const effectiveSize =
-      payloadSize ??
-      requestedSize ??
-      (normalizedItems.length > 0 ? normalizedItems.length : 10);
-
-    const hasMore =
-      hasMoreFromFlag ??
-      (totalPages !== null
-        ? page < totalPages
-        : hasNextPage || normalizedItems.length >= effectiveSize);
-
-    const total =
-      typeof payload.totalCount === "number" &&
-      Number.isFinite(payload.totalCount)
-        ? payload.totalCount
-        : typeof payload.total === "number" && Number.isFinite(payload.total)
-          ? payload.total
-          : undefined;
-
-    return {
-      items: normalizedItems,
-      hasMore,
-      page,
-      size: effectiveSize,
-      total,
-    };
+  if (!isRecord(payload)) {
+    return { items: [], hasMore: false, page, size: requestedSize, total: 0 };
   }
 
-  return {
-    items: [],
-    hasMore: false,
-    page,
-    size: requestedSize ?? 10,
-  };
+  const items = asArray<T>(payload.items);
+  const responsePage =
+    typeof payload.page === "number" && Number.isFinite(payload.page)
+      ? payload.page
+      : page;
+  const responseSize =
+    typeof payload.size === "number" &&
+    Number.isFinite(payload.size) &&
+    payload.size > 0
+      ? payload.size
+      : requestedSize;
+  const total =
+    typeof payload.total === "number" && Number.isFinite(payload.total)
+      ? payload.total
+      : items.length;
+  const hasMore =
+    typeof payload.hasMore === "boolean"
+      ? payload.hasMore
+      : responsePage * responseSize < total;
+
+  return { items, hasMore, page: responsePage, size: responseSize, total };
 }
 
 export function fallbackSlicePage<T>(

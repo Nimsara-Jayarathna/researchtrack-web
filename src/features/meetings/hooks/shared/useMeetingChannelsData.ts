@@ -62,6 +62,7 @@ export function useMeetingChannelsData({
   const [hasLoaded, setHasLoaded] = useState(false);
   const [error, setError] = useState<ApiError | null>(null);
   const loadInFlightRef = useRef(false);
+  const autoLoadAttemptedRef = useRef(false);
 
   const load = useCallback(
     async (options?: {
@@ -166,15 +167,17 @@ export function useMeetingChannelsData({
     setHasLoaded(false);
     setError(null);
     loadInFlightRef.current = false;
+    autoLoadAttemptedRef.current = false;
   }, [projectId]);
 
   const canLoad = useMemo(
-    () => enabled && !hasLoaded && !isLoading,
+    () => enabled && !autoLoadAttemptedRef.current && !hasLoaded && !isLoading,
     [enabled, hasLoaded, isLoading],
   );
 
   useEffect(() => {
     if (canLoad) {
+      autoLoadAttemptedRef.current = true;
       void load();
     }
   }, [canLoad, load]);

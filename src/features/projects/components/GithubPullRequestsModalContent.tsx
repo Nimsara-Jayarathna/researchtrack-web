@@ -29,6 +29,7 @@ type FetchPullRequestsPage = (
 
 type GithubPullRequestsModalContentProps = {
   isOpen: boolean;
+  refreshKey?: string | number | null;
   fetchPage: FetchPullRequestsPage;
   onSelectPullRequest: (pullRequest: ProjectGitHubPullRequest) => void;
 };
@@ -45,6 +46,7 @@ function PullRequestSkeleton() {
 
 export function GithubPullRequestsModalContent({
   isOpen,
+  refreshKey,
   fetchPage,
   onSelectPullRequest,
 }: GithubPullRequestsModalContentProps) {
@@ -58,6 +60,7 @@ export function GithubPullRequestsModalContent({
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const requestVersionRef = useRef(0);
+  const lastRefreshKeyRef = useRef(refreshKey);
 
   const load = useCallback(
     async (
@@ -98,11 +101,19 @@ export function GithubPullRequestsModalContent({
   useEffect(() => {
     if (!isOpen) {
       requestVersionRef.current += 1;
+      lastRefreshKeyRef.current = refreshKey;
       return;
     }
     setPage(1);
     void load(1, status, search);
-  }, [isOpen, load, search, status]);
+  }, [isOpen, load, refreshKey, search, status]);
+
+  useEffect(() => {
+    if (!isOpen || items.length === 0 || refreshKey == null) return;
+    if (lastRefreshKeyRef.current === refreshKey) return;
+    lastRefreshKeyRef.current = refreshKey;
+    void load(page, status, search);
+  }, [isOpen, items.length, load, page, refreshKey, search, status]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -152,7 +163,7 @@ export function GithubPullRequestsModalContent({
         </label>
       </div>
 
-      {isLoading ? (
+      {isLoading && items.length === 0 ? (
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, index) => (
             <PullRequestSkeleton key={`pr-modal-skeleton-${index}`} />

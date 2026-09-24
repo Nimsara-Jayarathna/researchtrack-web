@@ -91,8 +91,8 @@ describe("role project GitHub dashboard cache", () => {
       items: [],
       page: 2,
       size: 8,
-      totalCount: 13,
-      hasNext: false,
+      total: 13,
+      hasMore: false,
     });
 
     const result = await api.getProjectGitHubPullRequestsPage(

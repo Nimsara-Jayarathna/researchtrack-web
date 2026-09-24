@@ -114,7 +114,7 @@ type ProjectOverviewEditState = {
 type ProjectOverviewContentProps = {
   project: ProjectOverviewProject;
   role: OverviewRole;
-  meetingAnalytics: MeetingAnalyticsState;
+  meetingAnalytics?: MeetingAnalyticsState;
   edit?: ProjectOverviewEditState;
 };
 
@@ -1037,47 +1037,51 @@ export function ProjectOverviewContent({
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-3.5">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
-                    Meetings
-                  </p>
-                  <p className="mt-1 text-base font-semibold text-slate-800">
-                    {meetingAnalytics.loading
-                      ? "Loading..."
-                      : (meetingAnalytics.records ?? 0)}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    {meetingAnalytics.loading
-                      ? "Reading channels and records"
-                      : `${meetingAnalytics.channels ?? 0} channels - ${meetingAnalytics.platformTypes ?? 0} platforms`}
-                  </p>
+            {meetingAnalytics ? (
+              <>
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-3.5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
+                        Meetings
+                      </p>
+                      <p className="mt-1 text-base font-semibold text-slate-800">
+                        {meetingAnalytics.loading
+                          ? "Loading..."
+                          : (meetingAnalytics.records ?? 0)}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {meetingAnalytics.loading
+                          ? "Reading channels and records"
+                          : `${meetingAnalytics.channels ?? 0} channels - ${meetingAnalytics.platformTypes ?? 0} platforms`}
+                      </p>
+                    </div>
+                    <MessagesSquare className="h-4 w-4 text-slate-500" />
+                  </div>
                 </div>
-                <MessagesSquare className="h-4 w-4 text-slate-500" />
-              </div>
-            </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-3.5 sm:col-span-2">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
-                    Meeting workflow
-                  </p>
-                  <p className="mt-1 text-base font-semibold text-slate-800">
-                    {meetingAnalytics.loading
-                      ? "Loading..."
-                      : `${meetingAnalytics.approvedChannels ?? 0} approved channels`}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    {meetingAnalytics.loading
-                      ? "Checking meeting approvals"
-                      : `${meetingAnalytics.pendingRecords ?? 0} pending records`}
-                  </p>
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-3.5 sm:col-span-2">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
+                        Meeting workflow
+                      </p>
+                      <p className="mt-1 text-base font-semibold text-slate-800">
+                        {meetingAnalytics.loading
+                          ? "Loading..."
+                          : `${meetingAnalytics.approvedChannels ?? 0} approved channels`}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {meetingAnalytics.loading
+                          ? "Checking meeting approvals"
+                          : `${meetingAnalytics.pendingRecords ?? 0} pending records`}
+                      </p>
+                    </div>
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                  </div>
                 </div>
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-              </div>
-            </div>
+              </>
+            ) : null}
           </div>
         </div>
       </aside>

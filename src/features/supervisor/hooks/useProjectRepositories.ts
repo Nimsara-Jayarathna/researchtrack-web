@@ -56,7 +56,7 @@ export function useProjectRepositories(
       const requestVersion = ++requestVersionRef.current;
       const existing = getProjectGitHubRepositoriesCacheSnapshot(projectId);
       if (existing?.data) setData(existing.data);
-      setIsLoading(!existing?.data || forceRefresh);
+      setIsLoading(!existing?.data);
       setError(null);
 
       try {

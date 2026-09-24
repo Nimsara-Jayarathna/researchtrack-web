@@ -308,7 +308,11 @@ function SprintCard({
   );
 }
 
-export function JiraSprintProgressView({ projectId, fetcher, refreshKey = 0 }: Props) {
+export function JiraSprintProgressView({
+  projectId,
+  fetcher,
+  refreshKey = 0,
+}: Props) {
   const [data, setData] = useState<JiraSprintProgress | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

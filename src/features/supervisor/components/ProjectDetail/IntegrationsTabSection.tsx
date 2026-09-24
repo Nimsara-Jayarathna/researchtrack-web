@@ -35,7 +35,8 @@ export function IntegrationsTabSection({
   onPendingGitHubSourceHandled,
 }: IntegrationsTabSectionProps) {
   const jira = project.jira;
-  const [jiraSyncState, setJiraSyncState] = useState<JiraProjectSyncState | null>(null);
+  const [jiraSyncState, setJiraSyncState] =
+    useState<JiraProjectSyncState | null>(null);
   const githubStateSignatureRef = useRef<string | null>(null);
 
   const pollIntegrationState = useCallback(async () => {
@@ -45,8 +46,9 @@ export function IntegrationsTabSection({
     ]);
 
     const signature = githubState.repositories
-      .map((repository) =>
-        `${repository.linkedRepositoryId}:${repository.syncRevision}:${repository.syncStatus}:${repository.enabled}`,
+      .map(
+        (repository) =>
+          `${repository.linkedRepositoryId}:${repository.syncRevision}:${repository.syncStatus}:${repository.enabled}`,
       )
       .join("|");
     const previousSignature = githubStateSignatureRef.current;
@@ -63,14 +65,17 @@ export function IntegrationsTabSection({
       (repositoriesState.data?.repositories ?? []).some((repository) => {
         const status = normalizeSyncStatus(repository.syncStatus);
         return status === "PENDING" || status === "IN_PROGRESS";
-      }) || normalizeSyncStatus(jiraSyncState?.syncStatus ?? jira?.syncStatus) === "IN_PROGRESS"
+      }) ||
+      normalizeSyncStatus(jiraSyncState?.syncStatus ?? jira?.syncStatus) ===
+        "IN_PROGRESS"
         ? 3_000
         : 30_000,
     run: pollIntegrationState,
   });
 
   const effectiveJiraStatus = jiraSyncState?.syncStatus ?? jira?.syncStatus;
-  const jiraSyncing = normalizeSyncStatus(effectiveJiraStatus) === "IN_PROGRESS";
+  const jiraSyncing =
+    normalizeSyncStatus(effectiveJiraStatus) === "IN_PROGRESS";
   const effectiveJiraLastSyncedAt =
     jiraSyncState?.lastSyncedAt ?? jira?.lastSyncedAt ?? null;
   const effectiveWebhookStatus =
@@ -80,25 +85,29 @@ export function IntegrationsTabSection({
     const status = normalizeSyncStatus(repository.syncStatus);
     return status === "PENDING" || status === "IN_PROGRESS";
   }).length;
-  const latestGitHubSync = repositories
-    .map((repository) => repository.lastSyncedAt)
-    .filter((value): value is string => Boolean(value))
-    .sort()
-    .at(-1) ?? null;
+  const latestGitHubSync =
+    repositories
+      .map((repository) => repository.lastSyncedAt)
+      .filter((value): value is string => Boolean(value))
+      .sort()
+      .at(-1) ?? null;
 
   return (
     <div className="space-y-6">
       <section className="rounded-3xl border border-border bg-white p-5 shadow-sm">
         <div className="flex items-center gap-2">
           <RefreshCw className="h-4 w-4 text-slate-500" />
-          <h2 className="text-sm font-semibold text-slate-900">Integration synchronization</h2>
+          <h2 className="text-sm font-semibold text-slate-900">
+            Integration synchronization
+          </h2>
         </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
             <div className="flex items-center justify-between gap-3">
               <span className="font-medium text-slate-800">GitHub</span>
               <span className="text-xs text-slate-500">
-                {repositories.length} repositor{repositories.length === 1 ? "y" : "ies"}
+                {repositories.length} repositor
+                {repositories.length === 1 ? "y" : "ies"}
               </span>
             </div>
             <div className="mt-2 text-xs text-slate-500">
@@ -106,13 +115,19 @@ export function IntegrationsTabSection({
                 ? `${syncingRepositoryCount} synchronizing`
                 : "Repository snapshots synchronized independently"}
             </div>
-            <div className="mt-2"><LastSyncedBadge lastSyncedAt={latestGitHubSync} /></div>
+            <div className="mt-2">
+              <LastSyncedBadge lastSyncedAt={latestGitHubSync} />
+            </div>
           </div>
           <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
             <div className="flex items-center justify-between gap-3">
               <span className="font-medium text-slate-800">Jira</span>
               <span className="text-xs text-slate-500">
-                {jira?.connected ? (jiraSyncing ? "Synchronizing" : "Connected") : "Not connected"}
+                {jira?.connected
+                  ? jiraSyncing
+                    ? "Synchronizing"
+                    : "Connected"
+                  : "Not connected"}
               </span>
             </div>
             <div className="mt-2 text-xs text-slate-500">
@@ -122,7 +137,9 @@ export function IntegrationsTabSection({
                   ? "Periodic reconciliation available"
                   : "Connect Jira to synchronize project work"}
             </div>
-            <div className="mt-2"><LastSyncedBadge lastSyncedAt={effectiveJiraLastSyncedAt} /></div>
+            <div className="mt-2">
+              <LastSyncedBadge lastSyncedAt={effectiveJiraLastSyncedAt} />
+            </div>
           </div>
         </div>
       </section>

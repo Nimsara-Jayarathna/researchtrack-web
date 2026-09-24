@@ -63,6 +63,9 @@ export function JiraProjectDataView({
   syncStateFetcher,
 }: Props) {
   const [tab, setTab] = useState<Tab>("issues");
+  const [visitedTabs, setVisitedTabs] = useState<Set<Tab>>(
+    () => new Set<Tab>(["issues"]),
+  );
   const [refreshing, setRefreshing] = useState(false);
   const [refreshVersion, setRefreshVersion] = useState(0);
   const [refreshError, setRefreshError] = useState<string | null>(null);
@@ -135,7 +138,15 @@ export function JiraProjectDataView({
             <button
               key={value}
               type="button"
-              onClick={() => setTab(value)}
+              onClick={() => {
+                setTab(value);
+                setVisitedTabs((current) => {
+                  if (current.has(value)) return current;
+                  const next = new Set(current);
+                  next.add(value);
+                  return next;
+                });
+              }}
               className={`rounded-lg px-4 py-2 text-sm font-medium transition ${tab === value ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800"}`}
             >
               {label}
@@ -163,25 +174,33 @@ export function JiraProjectDataView({
           {refreshError}
         </div>
       ) : null}
-      {tab === "issues" ? (
-        <JiraIssueProgressView
-          projectId={projectId}
-          refreshKey={refreshVersion}
-          fetcher={cachedIssueFetcher}
-        />
-      ) : tab === "sprint" ? (
-        <JiraSprintProgressView
-          projectId={projectId}
-          refreshKey={refreshVersion}
-          fetcher={cachedSprintFetcher}
-        />
-      ) : (
-        <JiraWorkloadView
-          projectId={projectId}
-          refreshKey={refreshVersion}
-          fetcher={cachedWorkloadFetcher}
-        />
-      )}
+      {visitedTabs.has("issues") ? (
+        <div hidden={tab !== "issues"} aria-hidden={tab !== "issues"}>
+          <JiraIssueProgressView
+            projectId={projectId}
+            refreshKey={refreshVersion}
+            fetcher={cachedIssueFetcher}
+          />
+        </div>
+      ) : null}
+      {visitedTabs.has("sprint") ? (
+        <div hidden={tab !== "sprint"} aria-hidden={tab !== "sprint"}>
+          <JiraSprintProgressView
+            projectId={projectId}
+            refreshKey={refreshVersion}
+            fetcher={cachedSprintFetcher}
+          />
+        </div>
+      ) : null}
+      {visitedTabs.has("workload") ? (
+        <div hidden={tab !== "workload"} aria-hidden={tab !== "workload"}>
+          <JiraWorkloadView
+            projectId={projectId}
+            refreshKey={refreshVersion}
+            fetcher={cachedWorkloadFetcher}
+          />
+        </div>
+      ) : null}
     </section>
   );
 }

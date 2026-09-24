@@ -341,7 +341,6 @@ export function createRoleProjectApi({
     return data;
   }
 
-
   async function getProjectGitHubSyncState(
     projectId: string,
   ): Promise<GitHubSyncState> {

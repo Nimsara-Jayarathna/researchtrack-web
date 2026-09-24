@@ -243,6 +243,8 @@ export function useStudentProjectGitHubDashboard({
   });
 
   const selectRepository = useCallback(async (linkedRepositoryId: string) => {
+    setGithubView(null);
+    setGithubViewError(null);
     setSelectedRepoId(linkedRepositoryId);
     setRepoSelectorOpen(false);
   }, []);

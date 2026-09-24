@@ -63,6 +63,7 @@ export type ProjectRepositoryLink = {
   enabled: boolean;
   linkedAt: string;
   lastSyncedAt: string | null;
+  syncRevision?: number;
   syncStatus: GitHubSyncStatus | null;
   accessStatus: GitHubRepositoryAccessStatus;
 };

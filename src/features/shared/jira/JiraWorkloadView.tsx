@@ -23,7 +23,11 @@ function statusClass(category: string | null) {
   return "bg-slate-100 text-slate-700";
 }
 
-export function JiraWorkloadView({ projectId, fetcher, refreshKey = 0 }: Props) {
+export function JiraWorkloadView({
+  projectId,
+  fetcher,
+  refreshKey = 0,
+}: Props) {
   const [data, setData] = useState<JiraWorkload | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

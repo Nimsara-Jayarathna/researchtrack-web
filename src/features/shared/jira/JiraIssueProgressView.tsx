@@ -109,7 +109,11 @@ function collectExpandable(nodes: TreeNode[], result = new Set<string>()) {
   return result;
 }
 
-export function JiraIssueProgressView({ projectId, fetcher, refreshKey = 0 }: Props) {
+export function JiraIssueProgressView({
+  projectId,
+  fetcher,
+  refreshKey = 0,
+}: Props) {
   const [data, setData] = useState<JiraIssueList | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -138,9 +142,27 @@ export function JiraIssueProgressView({ projectId, fetcher, refreshKey = 0 }: Pr
   const expandable = useMemo(() => collectExpandable(tree.roots), [tree.roots]);
 
   useEffect(() => {
-    // A large Jira project is easier to scan from its roots. Search still reveals matching ancestry.
-    setExpanded(new Set());
-  }, [data?.items]);
+    if (!data) return;
+    const validIssueKeys = new Set(data.items.map((issue) => issue.issueKey));
+    setExpanded(
+      (current) =>
+        new Set(
+          [...current].filter((issueKey) => validIssueKeys.has(issueKey)),
+        ),
+    );
+  }, [data]);
+
+  useEffect(() => {
+    if (!data || !selectedIssue) return;
+    const updated = data.items.find(
+      (issue) => issue.issueKey === selectedIssue.issueKey,
+    );
+    if (updated) {
+      setSelectedIssue(updated);
+    } else {
+      setSelectedIssue(null);
+    }
+  }, [data, selectedIssue]);
 
   const normalizedQuery = query.trim().toLowerCase();
   const rows = useMemo(() => {

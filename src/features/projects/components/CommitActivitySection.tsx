@@ -54,7 +54,7 @@ type CommitActivitySectionProps = {
   ) => Promise<PaginatedListResult<ProjectGitHubPullRequest>>;
   activeRepositoryId?: string | null;
   activeRepositoryName?: string | null;
-  activeRepositoryLastSyncedAt?: string | null;
+  activeRepositorySyncRevision?: number | null;
   onNavigateToOverview?: () => void;
   emptyStateDescription?: string;
 };
@@ -299,6 +299,7 @@ type LegacyCommitPayload = {
   }>;
   contributorsPreview?: Array<ProjectGitHubContributor>;
   recentCommitsPreview?: ProjectGitHubRecentCommit[];
+  pullRequestsPreview?: ProjectGitHubPullRequest[];
   activitySummary?: {
     totalCommits?: number;
     totalPullRequests?: number;
@@ -387,6 +388,9 @@ function normalizeDashboardPayload(
         : [],
       recentCommitsPreview: Array.isArray(maybeDashboard.recentCommitsPreview)
         ? maybeDashboard.recentCommitsPreview
+        : [],
+      pullRequestsPreview: Array.isArray(maybeDashboard.pullRequestsPreview)
+        ? maybeDashboard.pullRequestsPreview
         : [],
     };
   }
@@ -524,7 +528,7 @@ export function CommitActivitySection({
   loadPullRequestsPage,
   activeRepositoryId,
   activeRepositoryName,
-  activeRepositoryLastSyncedAt,
+  activeRepositorySyncRevision,
   onNavigateToOverview,
   emptyStateDescription,
 }: CommitActivitySectionProps) {
@@ -812,8 +816,10 @@ export function CommitActivitySection({
       <GithubPullRequestsSection
         repositoryId={activeRepositoryId ?? null}
         repositoryName={activeRepositoryName}
-        refreshKey={activeRepositoryLastSyncedAt}
+        refreshKey={activeRepositorySyncRevision}
         openListRequest={pullRequestListRequest}
+        initialPreview={normalized.pullRequestsPreview ?? []}
+        initialTotal={normalized.activitySummary.totalPullRequests}
         fetchPage={loadPullRequestsPage}
       />
 
@@ -858,7 +864,7 @@ export function CommitActivitySection({
       >
         <GithubContributorsModalContent
           isOpen={openModal === "contributors"}
-          refreshKey={activeRepositoryLastSyncedAt}
+          refreshKey={activeRepositorySyncRevision}
           fetchPage={loadContributorsPage}
         />
       </GithubDetailsModal>
@@ -870,7 +876,7 @@ export function CommitActivitySection({
       >
         <GithubActivityModalContent
           isOpen={openModal === "activity"}
-          refreshKey={activeRepositoryLastSyncedAt}
+          refreshKey={activeRepositorySyncRevision}
           fetchPage={loadActivityPage}
         />
       </GithubDetailsModal>

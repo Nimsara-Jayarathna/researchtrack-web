@@ -212,7 +212,7 @@ export function StudentProjectGitHubTab({
         activeRepositoryName={
           activeRepository?.customName?.trim() || activeRepository?.name || null
         }
-        activeRepositoryLastSyncedAt={activeRepository?.lastSyncedAt ?? null}
+        activeRepositorySyncRevision={activeRepository?.syncRevision ?? null}
         emptyStateDescription="Please wait for your supervisor to link a GitHub repository to this project. Repository management is restricted to supervisors."
       />
     </div>

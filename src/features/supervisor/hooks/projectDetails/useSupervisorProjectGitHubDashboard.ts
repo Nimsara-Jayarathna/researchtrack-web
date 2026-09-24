@@ -414,10 +414,12 @@ export function useSupervisorProjectGitHubDashboard({
   });
 
   const selectRepository = useCallback(async (linkedRepositoryId: string) => {
+    setGithubView(null);
+    setGithubViewError(null);
     setSelectedRepoId(linkedRepositoryId);
     setIsRepoSelectorOpen(false);
-    // The selection effect will load the dashboard. Avoid starting a second
-    // identical request here.
+    // Repository changes are a real context switch, so repository-specific
+    // server state may reset. Background syncs for the same repository do not.
   }, []);
 
   const retryGitHubView = useCallback(async () => {

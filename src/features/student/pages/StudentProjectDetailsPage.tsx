@@ -36,7 +36,7 @@ export function StudentProjectDetailsPage() {
   const projectRepositoriesState = useStudentProjectRepositories(
     projectId,
     project?.githubRepositories,
-    { enabled: Boolean(project) && activeTab === "github" },
+    { enabled: Boolean(projectId) },
   );
   const projectWithRepositories = useMemo(
     () =>

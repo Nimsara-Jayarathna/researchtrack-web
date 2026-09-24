@@ -43,31 +43,29 @@ export function useSupervisorProject(projectId: string | undefined) {
       setState((current) => ({ ...current, isLoading: true, error: null }));
 
       try {
-        // The project is essential. Jira is optional integration state, so a
-        // temporary Jira failure must not make the whole project page fail.
-        const baseProject = await supervisorApi.getProjectById(
-          projectId,
-          forceRefresh,
-        );
+        // Core project data and optional integration metadata are independent,
+        // so start them together. A Jira failure must not block the project.
+        const [baseProject, jiraResult] = await Promise.all([
+          supervisorApi.getProjectById(projectId, forceRefresh),
+          supervisorApi
+            .getJiraConnection(projectId)
+            .then((connection) => ({ connection }))
+            .catch(() => ({ connection: null })),
+        ]);
 
         let jira: SupervisorProjectDetail["jira"] = null;
-        try {
-          const connection = await supervisorApi.getJiraConnection(projectId);
-          if (connection) {
-            jira = {
-              connected: true,
-              workspaceName: connection.workspaceName,
-              workspaceUrl: connection.workspaceUrl,
-              lastSyncedAt: connection.lastSyncedAt,
-              syncStatus: connection.syncStatus,
-              webhookStatus: connection.webhookStatus,
-              lastWebhookAt: connection.lastWebhookAt,
-              lastReconciledAt: connection.lastReconciledAt,
-            };
-          }
-        } catch {
-          // Keep the base project usable. Jira-specific actions can retry their
-          // own requests and surface integration errors independently.
+        const connection = jiraResult.connection;
+        if (connection) {
+          jira = {
+            connected: true,
+            workspaceName: connection.workspaceName,
+            workspaceUrl: connection.workspaceUrl,
+            lastSyncedAt: connection.lastSyncedAt,
+            syncStatus: connection.syncStatus,
+            webhookStatus: connection.webhookStatus,
+            lastWebhookAt: connection.lastWebhookAt,
+            lastReconciledAt: connection.lastReconciledAt,
+          };
         }
 
         if (version !== requestVersion.current) return;

@@ -85,7 +85,7 @@ export function GithubContributorsModalContent({
       setHasMore(false);
       void loadPage(1, false);
     }
-  }, [isOpen, items.length, loadPage]);
+  }, [isOpen, items.length, loadPage, refreshKey]);
 
   useEffect(() => {
     if (!isOpen || items.length === 0 || refreshKey == null) return;

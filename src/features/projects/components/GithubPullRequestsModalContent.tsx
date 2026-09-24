@@ -106,7 +106,7 @@ export function GithubPullRequestsModalContent({
     }
     setPage(1);
     void load(1, status, search);
-  }, [isOpen, load, search, status]);
+  }, [isOpen, load, refreshKey, search, status]);
 
   useEffect(() => {
     if (!isOpen || items.length === 0 || refreshKey == null) return;

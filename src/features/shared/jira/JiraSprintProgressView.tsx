@@ -428,9 +428,11 @@ export function JiraSprintProgressView({
               onToggle={() =>
                 setExpanded((current) => {
                   const next = new Set(current);
-                  next.has(s.sprintId)
-                    ? next.delete(s.sprintId)
-                    : next.add(s.sprintId);
+                  if (next.has(s.sprintId)) {
+                    next.delete(s.sprintId);
+                  } else {
+                    next.add(s.sprintId);
+                  }
                   return next;
                 })
               }

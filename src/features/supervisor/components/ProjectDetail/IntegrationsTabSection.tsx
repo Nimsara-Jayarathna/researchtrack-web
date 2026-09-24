@@ -38,6 +38,7 @@ export function IntegrationsTabSection({
   const [jiraSyncState, setJiraSyncState] =
     useState<JiraProjectSyncState | null>(null);
   const githubStateSignatureRef = useRef<string | null>(null);
+  const reloadRepositories = repositoriesState.reload;
 
   const pollIntegrationState = useCallback(async () => {
     const [githubState, nextJiraState] = await Promise.all([
@@ -54,10 +55,10 @@ export function IntegrationsTabSection({
     const previousSignature = githubStateSignatureRef.current;
     githubStateSignatureRef.current = signature;
     if (previousSignature !== null && previousSignature !== signature) {
-      await repositoriesState.reload();
+      await reloadRepositories();
     }
     setJiraSyncState(nextJiraState);
-  }, [project.id, repositoriesState.reload]);
+  }, [project.id, reloadRepositories]);
 
   usePageAwarePolling({
     enabled: true,
@@ -90,7 +91,7 @@ export function IntegrationsTabSection({
       .map((repository) => repository.lastSyncedAt)
       .filter((value): value is string => Boolean(value))
       .sort()
-      .at(-1) ?? null;
+      .slice(-1)[0] ?? null;
 
   return (
     <div className="space-y-6">

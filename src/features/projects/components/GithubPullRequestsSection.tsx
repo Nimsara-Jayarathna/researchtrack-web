@@ -105,7 +105,7 @@ export function GithubPullRequestsSection({
     setTotal(initialTotal);
     setErrorMessage(null);
     setIsLoading(false);
-  }, [initialPreview, initialTotal, repositoryId]);
+  }, [initialPreview, initialTotal, refreshKey, repositoryId]);
 
   useEffect(() => {
     setPreview(initialPreview.slice(0, PREVIEW_SIZE));

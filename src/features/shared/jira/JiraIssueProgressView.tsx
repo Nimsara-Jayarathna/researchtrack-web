@@ -322,9 +322,11 @@ export function JiraIssueProgressView({
                     if (!hasChildren) return;
                     setExpanded((current) => {
                       const next = new Set(current);
-                      next.has(issue.issueKey)
-                        ? next.delete(issue.issueKey)
-                        : next.add(issue.issueKey);
+                      if (next.has(issue.issueKey)) {
+                        next.delete(issue.issueKey);
+                      } else {
+                        next.add(issue.issueKey);
+                      }
                       return next;
                     });
                   };

@@ -22,8 +22,10 @@ type FetchPullRequestsPage = (
 type GithubPullRequestsSectionProps = {
   repositoryId: string | null;
   repositoryName?: string | null;
-  refreshKey?: string | null;
+  refreshKey?: string | number | null;
   openListRequest?: number;
+  initialPreview?: ProjectGitHubPullRequest[];
+  initialTotal?: number;
   fetchPage: FetchPullRequestsPage;
 };
 
@@ -42,10 +44,14 @@ export function GithubPullRequestsSection({
   repositoryName,
   refreshKey,
   openListRequest = 0,
+  initialPreview = [],
+  initialTotal = 0,
   fetchPage,
 }: GithubPullRequestsSectionProps) {
-  const [preview, setPreview] = useState<ProjectGitHubPullRequest[]>([]);
-  const [total, setTotal] = useState(0);
+  const [preview, setPreview] = useState<ProjectGitHubPullRequest[]>(
+    initialPreview.slice(0, PREVIEW_SIZE),
+  );
+  const [total, setTotal] = useState(initialTotal);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isListOpen, setIsListOpen] = useState(false);
@@ -53,6 +59,8 @@ export function GithubPullRequestsSection({
     useState<ProjectGitHubPullRequest | null>(null);
   const requestVersionRef = useRef(0);
   const lastHandledOpenRequestRef = useRef(openListRequest);
+  const previousRepositoryIdRef = useRef(repositoryId);
+  const lastSelectedRefreshKeyRef = useRef(refreshKey);
 
   const loadPreview = useCallback(async () => {
     if (!repositoryId) {
@@ -74,8 +82,6 @@ export function GithubPullRequestsSection({
       setTotal(result.total ?? result.items.length + (result.hasMore ? 1 : 0));
     } catch (error) {
       if (requestVersion !== requestVersionRef.current) return;
-      setPreview([]);
-      setTotal(0);
       setErrorMessage(
         isApiException(error)
           ? error.apiError.message
@@ -87,10 +93,61 @@ export function GithubPullRequestsSection({
   }, [fetchPage, repositoryId]);
 
   useEffect(() => {
+    const repositoryChanged = previousRepositoryIdRef.current !== repositoryId;
+    previousRepositoryIdRef.current = repositoryId;
+    if (!repositoryChanged) return;
+
+    requestVersionRef.current += 1;
     setIsListOpen(false);
     setSelectedPullRequest(null);
-    void loadPreview();
-  }, [loadPreview, repositoryId, refreshKey]);
+    lastSelectedRefreshKeyRef.current = refreshKey;
+    setPreview(initialPreview.slice(0, PREVIEW_SIZE));
+    setTotal(initialTotal);
+    setErrorMessage(null);
+    setIsLoading(false);
+  }, [initialPreview, initialTotal, refreshKey, repositoryId]);
+
+  useEffect(() => {
+    setPreview(initialPreview.slice(0, PREVIEW_SIZE));
+    setTotal(initialTotal);
+    setSelectedPullRequest((current) => {
+      if (!current) return null;
+      return (
+        initialPreview.find(
+          (item) => item.gitHubPullRequestId === current.gitHubPullRequestId,
+        ) ?? current
+      );
+    });
+  }, [initialPreview, initialTotal]);
+
+  useEffect(() => {
+    if (!repositoryId || refreshKey == null || !selectedPullRequest) return;
+    if (lastSelectedRefreshKeyRef.current === refreshKey) return;
+    lastSelectedRefreshKeyRef.current = refreshKey;
+    let cancelled = false;
+    const reconcileSelectedPullRequest = async () => {
+      try {
+        const result = await fetchPage(1, {
+          size: 1,
+          status: "all",
+          search: `#${selectedPullRequest.number}`,
+        });
+        if (cancelled) return;
+        const updated = result.items.find(
+          (item) =>
+            item.gitHubPullRequestId ===
+            selectedPullRequest.gitHubPullRequestId,
+        );
+        if (updated) setSelectedPullRequest(updated);
+      } catch {
+        // Keep the currently open PR visible if background revalidation fails.
+      }
+    };
+    void reconcileSelectedPullRequest();
+    return () => {
+      cancelled = true;
+    };
+  }, [fetchPage, refreshKey, repositoryId, selectedPullRequest]);
 
   useEffect(() => {
     if (openListRequest === lastHandledOpenRequestRef.current) {
@@ -142,7 +199,7 @@ export function GithubPullRequestsSection({
           </button>
         </div>
 
-        {isLoading ? (
+        {isLoading && preview.length === 0 ? (
           <div className="mt-6 space-y-3">
             {Array.from({ length: 3 }).map((_, index) => (
               <PreviewSkeleton key={`pr-preview-skeleton-${index}`} />
@@ -193,6 +250,7 @@ export function GithubPullRequestsSection({
       >
         <GithubPullRequestsModalContent
           isOpen={isListOpen}
+          refreshKey={refreshKey}
           fetchPage={fetchPage}
           onSelectPullRequest={openDetails}
         />

@@ -74,6 +74,14 @@ export type SupervisorProjectDetail = {
     workspaceUrl?: string | null;
     lastSyncedAt?: string | null;
     syncStatus?: string | null;
+    jiraProjectId?: string | null;
+    jiraProjectKey?: string | null;
+    jiraProjectName?: string | null;
+    jiraBoardId?: number | null;
+    jiraBoardName?: string | null;
+    webhookStatus?: string;
+    lastWebhookAt?: string | null;
+    lastReconciledAt?: string | null;
   } | null;
   leader: SupervisorProjectLeader | null;
   members: SupervisorProjectDetailMember[];

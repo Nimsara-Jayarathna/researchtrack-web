@@ -1,23 +1,22 @@
 import type { createRoleProjectApi } from "@/features/shared/api/createRoleProjectApi";
 import type {
   JiraAuthUrl,
+  JiraBoardListResult,
+  JiraConnection,
   JiraHealth,
+  JiraLinkPayload,
   JiraOAuthCompletePayload,
   JiraOAuthCompleteResult,
-  SupervisorProjectDetail,
 } from "../types";
-
 type RoleProjectApi = Omit<
   ReturnType<typeof createRoleProjectApi>,
   "clearCache"
 >;
 type ApiClient = typeof import("@/services/apiClient").apiClient;
-
 type CreateSupervisorJiraApiDeps = {
   apiClient: ApiClient;
   roleProjectApi: RoleProjectApi;
 };
-
 export function createSupervisorJiraApi({
   apiClient,
   roleProjectApi,
@@ -25,29 +24,52 @@ export function createSupervisorJiraApi({
   return {
     getProjectJiraAuthUrl(projectId: string): Promise<JiraAuthUrl> {
       return apiClient.get<JiraAuthUrl>(
-        `/api/supervisor/projects/${projectId}/jira/auth-url`,
+        `/api/v1/projects/${projectId}/jira/auth-url`,
       );
     },
-
     completeJiraOAuth(
       payload: JiraOAuthCompletePayload,
     ): Promise<JiraOAuthCompleteResult> {
       return apiClient.post<JiraOAuthCompleteResult>(
-        "/api/supervisor/jira/oauth/complete",
+        "/api/v1/jira/oauth/complete",
         payload,
       );
     },
-
-    disconnectProjectJira(projectId: string): Promise<SupervisorProjectDetail> {
-      return apiClient.post<SupervisorProjectDetail>(
-        `/api/supervisor/projects/${projectId}/jira/disconnect`,
+    getJiraConnection(projectId: string): Promise<JiraConnection | null> {
+      return apiClient.get<JiraConnection | null>(
+        `/api/v1/projects/${projectId}/jira/connection`,
+      );
+    },
+    getJiraBoards(
+      projectId: string,
+      selectionToken: string,
+      jiraProjectId: string,
+    ): Promise<JiraBoardListResult> {
+      const q = new URLSearchParams({ selectionToken, jiraProjectId });
+      return apiClient.get<JiraBoardListResult>(
+        `/api/v1/projects/${projectId}/jira/boards?${q.toString()}`,
+      );
+    },
+    linkJiraProject(
+      projectId: string,
+      payload: JiraLinkPayload,
+    ): Promise<JiraConnection> {
+      return apiClient.post<JiraConnection>(
+        `/api/v1/projects/${projectId}/jira/link`,
+        payload,
+      );
+    },
+    disconnectProjectJira(
+      projectId: string,
+    ): Promise<{ disconnected: boolean }> {
+      return apiClient.post<{ disconnected: boolean }>(
+        `/api/v1/projects/${projectId}/jira/disconnect`,
         {},
       );
     },
-
     async refreshProjectJira(projectId: string): Promise<JiraHealth> {
       const fresh = await apiClient.post<JiraHealth>(
-        `/api/supervisor/projects/${projectId}/jira/refresh`,
+        `/api/v1/projects/${projectId}/jira/refresh`,
         {},
       );
       roleProjectApi.invalidateJiraCache(projectId);

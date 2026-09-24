@@ -76,5 +76,6 @@ export function createEmptyProjectGitHubPreview(): ProjectGitHubPreview {
     },
     contributorsPreview: [],
     recentCommitsPreview: [],
+    pullRequestsPreview: [],
   };
 }

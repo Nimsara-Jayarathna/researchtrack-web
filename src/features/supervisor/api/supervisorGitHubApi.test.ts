@@ -22,7 +22,7 @@ const available: GitHubAvailableRepositories = {
       url: "https://github.com/openai/example",
     },
   ],
-  totalCount: 1,
+  total: 1,
 };
 
 const projectRepositories: ProjectGitHubRepositories = {

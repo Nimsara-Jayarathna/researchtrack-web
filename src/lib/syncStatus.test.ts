@@ -12,6 +12,7 @@ describe("syncStatus", () => {
     expect(normalizeSyncStatus("PENDING")).toBe("PENDING");
     expect(normalizeSyncStatus("DISABLED")).toBe("DISABLED");
     expect(normalizeSyncStatus("IN_PROGRESS")).toBe("IN_PROGRESS");
+    expect(normalizeSyncStatus("SYNCING")).toBe("IN_PROGRESS");
   });
 
   it("normalizes nullish and unknown statuses", () => {

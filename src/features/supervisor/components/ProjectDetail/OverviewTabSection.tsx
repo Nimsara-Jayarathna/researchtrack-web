@@ -1,7 +1,4 @@
-import { useMemo } from "react";
 import { ProjectOverviewContent } from "@/features/projects/components/ProjectOverviewContent";
-import { useMeetingAnalytics } from "@/features/projects/hooks/useMeetingAnalytics";
-import { supervisorApi } from "../../api/supervisorApi";
 import type { OverviewState } from "../../hooks/useProjectDetailsPageState";
 import { FIELD_LIMITS, LIFECYCLE_OPTIONS } from "../../projectDetails.shared";
 import type {
@@ -18,20 +15,10 @@ export function OverviewTabSection({
   project,
   overview,
 }: OverviewTabSectionProps) {
-  const meetingFetchers = useMemo(
-    () => ({
-      getMeetingChannels: supervisorApi.getProjectMeetingChannels,
-      getMeetingRecords: supervisorApi.getProjectMeetingRecords,
-    }),
-    [],
-  );
-  const meetingAnalytics = useMeetingAnalytics(project.id, meetingFetchers);
-
   return (
     <ProjectOverviewContent
       project={project}
       role="supervisor"
-      meetingAnalytics={meetingAnalytics}
       edit={{
         isEditing: overview.isEditingOverview,
         isSaving: overview.isSavingOverview,

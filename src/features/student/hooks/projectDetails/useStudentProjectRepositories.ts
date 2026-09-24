@@ -45,17 +45,19 @@ export function useStudentProjectRepositories(
   );
   const [error, setError] = useState<ApiError | null>(null);
   const requestVersionRef = useRef(0);
+  const dataRef = useRef<ProjectGitHubRepositories | null>(initialData ?? null);
 
   const runFetch = useCallback(async () => {
     if (!projectId || !enabled) return null;
 
     const requestVersion = ++requestVersionRef.current;
-    setIsLoading(true);
+    setIsLoading(dataRef.current === null);
     setError(null);
 
     try {
       const next = await studentApi.getProjectGitHubRepositories(projectId);
       if (requestVersion === requestVersionRef.current) {
+        dataRef.current = next;
         setData(next);
       }
       return next;
@@ -81,6 +83,7 @@ export function useStudentProjectRepositories(
     requestVersionRef.current += 1;
 
     if (!projectId) {
+      dataRef.current = null;
       setData(null);
       setError(null);
       setIsLoading(false);
@@ -88,12 +91,21 @@ export function useStudentProjectRepositories(
     }
 
     if (initialData?.projectId === projectId) {
+      dataRef.current = initialData;
       setData(initialData);
       setError(null);
       setIsLoading(false);
       return;
     }
 
+    if (dataRef.current?.projectId === projectId) {
+      setData(dataRef.current);
+      setError(null);
+      setIsLoading(false);
+      return;
+    }
+
+    dataRef.current = null;
     setData(null);
     setError(null);
 

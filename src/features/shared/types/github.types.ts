@@ -63,6 +63,7 @@ export type ProjectRepositoryLink = {
   enabled: boolean;
   linkedAt: string;
   lastSyncedAt: string | null;
+  syncRevision?: number;
   syncStatus: GitHubSyncStatus | null;
   accessStatus: GitHubRepositoryAccessStatus;
 };
@@ -74,4 +75,18 @@ export type ProjectGitHubRepositories = {
   hasUnacknowledgedAccess: boolean;
   accessSources: GitHubAccessSource[];
   repositories: ProjectRepositoryLink[];
+};
+
+export type GitHubRepositorySyncState = {
+  linkedRepositoryId: string;
+  syncRevision: number;
+  syncStatus: string;
+  lastSyncedAt: string | null;
+  enabled: boolean;
+  primary: boolean;
+};
+
+export type GitHubSyncState = {
+  projectId: string;
+  repositories: GitHubRepositorySyncState[];
 };

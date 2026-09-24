@@ -10,6 +10,32 @@ type StudentProjectState = {
   error: ApiError | null;
 };
 
+async function loadStudentProjectWithIntegrations(
+  projectId: string,
+  forceRefresh: boolean,
+): Promise<StudentProjectDetail> {
+  const [project, jiraResult] = await Promise.all([
+    studentApi.getProjectById(projectId, forceRefresh),
+    studentApi
+      .getProjectJiraSyncState(projectId)
+      .then((sync) => ({ sync }))
+      .catch(() => ({ sync: null })),
+  ]);
+
+  const sync = jiraResult.sync;
+  return {
+    ...project,
+    jira: sync
+      ? {
+          connected: sync.connected,
+          workspaceName: sync.connected ? "Jira" : null,
+          lastSyncedAt: sync.lastSyncedAt,
+          syncStatus: sync.syncStatus,
+        }
+      : project.jira,
+  };
+}
+
 export function useStudentProject(projectId: string | undefined) {
   const [state, setState] = useState<StudentProjectState>({
     project: null,
@@ -30,7 +56,10 @@ export function useStudentProject(projectId: string | undefined) {
     setState((current) => ({ ...current, isLoading: true, error: null }));
 
     try {
-      const project = await studentApi.getProjectById(projectId, forceRefresh);
+      const project = await loadStudentProjectWithIntegrations(
+        projectId,
+        forceRefresh,
+      );
       setState({
         project,
         isLoading: false,
@@ -69,8 +98,7 @@ export function useStudentProject(projectId: string | undefined) {
     let isCancelled = false;
     setState((current) => ({ ...current, isLoading: true, error: null }));
 
-    void studentApi
-      .getProjectById(projectId, true)
+    void loadStudentProjectWithIntegrations(projectId, true)
       .then((project) => {
         if (isCancelled) {
           return;

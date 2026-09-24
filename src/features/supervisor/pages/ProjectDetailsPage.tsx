@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { ErrorState } from "@/components/feedback/ErrorState";
 import { Button, buttonStyles } from "@/components/ui/Button";
@@ -58,8 +58,20 @@ export function ProjectDetailsPage() {
     });
 
   const projectRepositoriesState = useProjectRepositories(projectId, {
-    enabled: activeTab === "github" || activeTab === "integrations",
+    enabled: Boolean(projectId),
   });
+
+  const projectWithIntegrations = useMemo(
+    () =>
+      project
+        ? {
+            ...project,
+            githubRepositories:
+              projectRepositoriesState.data ?? project.githubRepositories,
+          }
+        : null,
+    [project, projectRepositoriesState.data],
+  );
 
   const githubSetupRedirect = useSupervisorProjectGitHubSetupRedirect({
     projectId,
@@ -371,7 +383,10 @@ export function ProjectDetailsPage() {
       />
 
       {activeTab === "overview" ? (
-        <OverviewTabSection project={project} overview={overview} />
+        <OverviewTabSection
+          project={projectWithIntegrations ?? project}
+          overview={overview}
+        />
       ) : null}
 
       {activeTab === "team" ? (

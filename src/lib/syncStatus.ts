@@ -8,7 +8,7 @@ export function normalizeSyncStatus(
     return "UNKNOWN";
   }
   const value = raw.trim().toUpperCase();
-  if (value === "IN_PROGRESS") return "IN_PROGRESS";
+  if (value === "IN_PROGRESS" || value === "SYNCING") return "IN_PROGRESS";
   if (value === "SUCCESS" || value === "SYNCED") return "SUCCESS";
   if (value === "PENDING") return "PENDING";
   if (value === "FAILED") return "FAILED";

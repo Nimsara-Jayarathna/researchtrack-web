@@ -20,6 +20,7 @@ type StudentProjectGitHubTabProps = {
   isPageLoading: boolean;
   repositoriesError?: ApiError | null;
   onRetryRepositories?: () => void;
+  reloadRepositories: () => Promise<ProjectGitHubRepositories | null>;
 };
 
 export function StudentProjectGitHubTab({
@@ -28,6 +29,7 @@ export function StudentProjectGitHubTab({
   isPageLoading,
   repositoriesError = null,
   onRetryRepositories,
+  reloadRepositories,
 }: StudentProjectGitHubTabProps) {
   const {
     enabledRepositories,
@@ -51,6 +53,7 @@ export function StudentProjectGitHubTab({
     fetchActivityPage: studentApi.getProjectGitHubActivityPage,
     fetchContributorsPage: studentApi.getProjectGitHubContributorsPage,
     fetchPullRequestsPage: studentApi.getProjectGitHubPullRequestsPage,
+    reloadRepositories,
   });
 
   if (repositoriesError && !githubRepositories) {
@@ -209,7 +212,7 @@ export function StudentProjectGitHubTab({
         activeRepositoryName={
           activeRepository?.customName?.trim() || activeRepository?.name || null
         }
-        activeRepositoryLastSyncedAt={activeRepository?.lastSyncedAt ?? null}
+        activeRepositorySyncRevision={activeRepository?.syncRevision ?? null}
         emptyStateDescription="Please wait for your supervisor to link a GitHub repository to this project. Repository management is restricted to supervisors."
       />
     </div>

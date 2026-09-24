@@ -23,6 +23,7 @@ import type {
 
 type Props = {
   projectId: string;
+  refreshKey?: number;
   fetcher: (projectId: string) => Promise<JiraSprintProgress>;
 };
 type Filter = "all" | "active" | "future" | "closed";
@@ -307,7 +308,11 @@ function SprintCard({
   );
 }
 
-export function JiraSprintProgressView({ projectId, fetcher }: Props) {
+export function JiraSprintProgressView({
+  projectId,
+  fetcher,
+  refreshKey = 0,
+}: Props) {
   const [data, setData] = useState<JiraSprintProgress | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -334,7 +339,7 @@ export function JiraSprintProgressView({ projectId, fetcher }: Props) {
   }, [fetcher, projectId]);
   useEffect(() => {
     void load();
-  }, [load]);
+  }, [load, refreshKey]);
   const sprints = useMemo(
     () =>
       sortSprints(
@@ -423,9 +428,11 @@ export function JiraSprintProgressView({ projectId, fetcher }: Props) {
               onToggle={() =>
                 setExpanded((current) => {
                   const next = new Set(current);
-                  next.has(s.sprintId)
-                    ? next.delete(s.sprintId)
-                    : next.add(s.sprintId);
+                  if (next.has(s.sprintId)) {
+                    next.delete(s.sprintId);
+                  } else {
+                    next.add(s.sprintId);
+                  }
                   return next;
                 })
               }

@@ -1,9 +1,11 @@
 import { RefreshCw } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { usePageAwarePolling } from "@/hooks/usePageAwarePolling";
 import type {
   JiraIssueList,
   JiraSprintProgress,
   JiraWorkload,
+  JiraProjectSyncState,
 } from "@/features/shared/types/jira.types";
 import { JiraIssueProgressView } from "./JiraIssueProgressView";
 import { JiraSprintProgressView } from "./JiraSprintProgressView";
@@ -15,6 +17,7 @@ type Props = {
   sprintFetcher: (projectId: string) => Promise<JiraSprintProgress>;
   workloadFetcher: (projectId: string) => Promise<JiraWorkload>;
   refresher?: (projectId: string) => Promise<unknown>;
+  syncStateFetcher: (projectId: string) => Promise<JiraProjectSyncState>;
 };
 type Tab = "issues" | "sprint" | "workload";
 type CacheEntry<T> = { data: T; cachedAt: number };
@@ -57,11 +60,16 @@ export function JiraProjectDataView({
   sprintFetcher,
   workloadFetcher,
   refresher,
+  syncStateFetcher,
 }: Props) {
   const [tab, setTab] = useState<Tab>("issues");
+  const [visitedTabs, setVisitedTabs] = useState<Set<Tab>>(
+    () => new Set<Tab>(["issues"]),
+  );
   const [refreshing, setRefreshing] = useState(false);
   const [refreshVersion, setRefreshVersion] = useState(0);
   const [refreshError, setRefreshError] = useState<string | null>(null);
+  const syncRevisionRef = useRef<number | null>(null);
   const cachedIssueFetcher = useCallback(
     (id: string) => cachedFetch("issues", id, issueCache, issueFetcher),
     [issueFetcher],
@@ -74,6 +82,23 @@ export function JiraProjectDataView({
     (id: string) => cachedFetch("workload", id, workloadCache, workloadFetcher),
     [workloadFetcher],
   );
+  const checkForUpdates = useCallback(async () => {
+    const state = await syncStateFetcher(projectId);
+    if (!state.connected) return;
+    const previous = syncRevisionRef.current;
+    syncRevisionRef.current = state.syncRevision;
+    if (previous !== null && previous !== state.syncRevision) {
+      invalidate(projectId);
+      setRefreshVersion((value) => value + 1);
+    }
+  }, [projectId, syncStateFetcher]);
+
+  usePageAwarePolling({
+    enabled: Boolean(projectId),
+    intervalMs: 30_000,
+    run: checkForUpdates,
+  });
+
   const labels = useMemo(
     () =>
       [
@@ -90,6 +115,8 @@ export function JiraProjectDataView({
     try {
       await refresher(projectId);
       invalidate(projectId);
+      const state = await syncStateFetcher(projectId);
+      syncRevisionRef.current = state.syncRevision;
       setRefreshVersion((v) => v + 1);
     } catch {
       setRefreshError(
@@ -111,7 +138,15 @@ export function JiraProjectDataView({
             <button
               key={value}
               type="button"
-              onClick={() => setTab(value)}
+              onClick={() => {
+                setTab(value);
+                setVisitedTabs((current) => {
+                  if (current.has(value)) return current;
+                  const next = new Set(current);
+                  next.add(value);
+                  return next;
+                });
+              }}
               className={`rounded-lg px-4 py-2 text-sm font-medium transition ${tab === value ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800"}`}
             >
               {label}
@@ -139,25 +174,33 @@ export function JiraProjectDataView({
           {refreshError}
         </div>
       ) : null}
-      {tab === "issues" ? (
-        <JiraIssueProgressView
-          key={`issues-${refreshVersion}`}
-          projectId={projectId}
-          fetcher={cachedIssueFetcher}
-        />
-      ) : tab === "sprint" ? (
-        <JiraSprintProgressView
-          key={`sprint-${refreshVersion}`}
-          projectId={projectId}
-          fetcher={cachedSprintFetcher}
-        />
-      ) : (
-        <JiraWorkloadView
-          key={`workload-${refreshVersion}`}
-          projectId={projectId}
-          fetcher={cachedWorkloadFetcher}
-        />
-      )}
+      {visitedTabs.has("issues") ? (
+        <div hidden={tab !== "issues"} aria-hidden={tab !== "issues"}>
+          <JiraIssueProgressView
+            projectId={projectId}
+            refreshKey={refreshVersion}
+            fetcher={cachedIssueFetcher}
+          />
+        </div>
+      ) : null}
+      {visitedTabs.has("sprint") ? (
+        <div hidden={tab !== "sprint"} aria-hidden={tab !== "sprint"}>
+          <JiraSprintProgressView
+            projectId={projectId}
+            refreshKey={refreshVersion}
+            fetcher={cachedSprintFetcher}
+          />
+        </div>
+      ) : null}
+      {visitedTabs.has("workload") ? (
+        <div hidden={tab !== "workload"} aria-hidden={tab !== "workload"}>
+          <JiraWorkloadView
+            projectId={projectId}
+            refreshKey={refreshVersion}
+            fetcher={cachedWorkloadFetcher}
+          />
+        </div>
+      ) : null}
     </section>
   );
 }

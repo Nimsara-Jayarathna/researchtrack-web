@@ -23,6 +23,7 @@ export function StudentProjectJiraTab({
       issueFetcher={studentApi.getJiraIssues}
       sprintFetcher={studentApi.getJiraSprintProgress}
       workloadFetcher={studentApi.getJiraWorkload}
+      syncStateFetcher={studentApi.getProjectJiraSyncState}
     />
   );
 }

@@ -56,6 +56,7 @@ export type ProjectGitHubPreview = {
   activitySummary: ProjectGitHubActivitySummary;
   contributorsPreview: ProjectGitHubContributor[];
   recentCommitsPreview: ProjectGitHubRecentCommit[];
+  pullRequestsPreview?: ProjectGitHubPullRequest[];
   hasUnacknowledgedAccess?: boolean;
 };
 

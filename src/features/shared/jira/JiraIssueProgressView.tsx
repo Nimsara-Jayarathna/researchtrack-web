@@ -17,6 +17,7 @@ import type {
 
 type Props = {
   projectId: string;
+  refreshKey?: number;
   fetcher: (projectId: string) => Promise<JiraIssueList>;
 };
 
@@ -108,7 +109,11 @@ function collectExpandable(nodes: TreeNode[], result = new Set<string>()) {
   return result;
 }
 
-export function JiraIssueProgressView({ projectId, fetcher }: Props) {
+export function JiraIssueProgressView({
+  projectId,
+  fetcher,
+  refreshKey = 0,
+}: Props) {
   const [data, setData] = useState<JiraIssueList | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -131,15 +136,33 @@ export function JiraIssueProgressView({ projectId, fetcher }: Props) {
 
   useEffect(() => {
     void load();
-  }, [load]);
+  }, [load, refreshKey]);
 
   const tree = useMemo(() => buildTree(data?.items ?? []), [data?.items]);
   const expandable = useMemo(() => collectExpandable(tree.roots), [tree.roots]);
 
   useEffect(() => {
-    // A large Jira project is easier to scan from its roots. Search still reveals matching ancestry.
-    setExpanded(new Set());
-  }, [data?.items]);
+    if (!data) return;
+    const validIssueKeys = new Set(data.items.map((issue) => issue.issueKey));
+    setExpanded(
+      (current) =>
+        new Set(
+          [...current].filter((issueKey) => validIssueKeys.has(issueKey)),
+        ),
+    );
+  }, [data]);
+
+  useEffect(() => {
+    if (!data || !selectedIssue) return;
+    const updated = data.items.find(
+      (issue) => issue.issueKey === selectedIssue.issueKey,
+    );
+    if (updated) {
+      setSelectedIssue(updated);
+    } else {
+      setSelectedIssue(null);
+    }
+  }, [data, selectedIssue]);
 
   const normalizedQuery = query.trim().toLowerCase();
   const rows = useMemo(() => {
@@ -299,9 +322,11 @@ export function JiraIssueProgressView({ projectId, fetcher }: Props) {
                     if (!hasChildren) return;
                     setExpanded((current) => {
                       const next = new Set(current);
-                      next.has(issue.issueKey)
-                        ? next.delete(issue.issueKey)
-                        : next.add(issue.issueKey);
+                      if (next.has(issue.issueKey)) {
+                        next.delete(issue.issueKey);
+                      } else {
+                        next.add(issue.issueKey);
+                      }
                       return next;
                     });
                   };

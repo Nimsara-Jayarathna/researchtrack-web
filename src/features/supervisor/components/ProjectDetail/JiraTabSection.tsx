@@ -12,6 +12,7 @@ export function JiraTabSection({ project }: JiraTabSectionProps) {
           sprintFetcher={supervisorApi.getJiraSprintProgress}
           workloadFetcher={supervisorApi.getJiraWorkload}
           refresher={supervisorApi.refreshProjectJira}
+          syncStateFetcher={supervisorApi.getProjectJiraSyncState}
         />
       ) : (
         <div className="rounded-3xl border border-dashed border-slate-200 bg-white p-10 text-center text-slate-500 shadow-sm">

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ChevronDown,
   GitCommit,
@@ -134,6 +134,7 @@ function CommitTypeIcon({
 
 type GithubActivityModalContentProps = {
   isOpen: boolean;
+  refreshKey?: string | number | null;
   fetchPage: (
     page: number,
   ) => Promise<PaginatedListResult<ProjectGitHubRecentCommit>>;
@@ -151,6 +152,7 @@ function ActivityItemSkeleton() {
 
 export function GithubActivityModalContent({
   isOpen,
+  refreshKey,
   fetchPage,
 }: GithubActivityModalContentProps) {
   const [items, setItems] = useState<ProjectGitHubRecentCommit[]>([]);
@@ -159,6 +161,7 @@ export function GithubActivityModalContent({
   const [isInitialLoading, setIsInitialLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const lastRefreshKeyRef = useRef(refreshKey);
 
   const loadPage = useCallback(
     async (targetPage: number, append: boolean) => {
@@ -196,13 +199,44 @@ export function GithubActivityModalContent({
 
   useEffect(() => {
     if (!isOpen) {
+      lastRefreshKeyRef.current = refreshKey;
       return;
     }
-    setItems([]);
-    setPage(1);
-    setHasMore(false);
-    void loadPage(1, false);
-  }, [isOpen, loadPage]);
+    if (items.length === 0) {
+      setPage(1);
+      setHasMore(false);
+      void loadPage(1, false);
+    }
+  }, [isOpen, items.length, loadPage, refreshKey]);
+
+  useEffect(() => {
+    if (!isOpen || items.length === 0 || refreshKey == null) return;
+    if (lastRefreshKeyRef.current === refreshKey) return;
+    lastRefreshKeyRef.current = refreshKey;
+    let cancelled = false;
+    const refreshVisiblePages = async () => {
+      const refreshed: typeof items = [];
+      let latestHasMore = false;
+      try {
+        for (let targetPage = 1; targetPage <= page; targetPage += 1) {
+          const result = await fetchPage(targetPage);
+          if (cancelled) return;
+          refreshed.push(...result.items.filter(isDevelopmentActivity));
+          latestHasMore = result.hasMore;
+        }
+        if (!cancelled) {
+          setItems(refreshed);
+          setHasMore(latestHasMore);
+        }
+      } catch {
+        // Keep the existing visible snapshot if a background revalidation fails.
+      }
+    };
+    void refreshVisiblePages();
+    return () => {
+      cancelled = true;
+    };
+  }, [fetchPage, isOpen, items.length, page, refreshKey]);
 
   async function handleLoadMore() {
     if (!hasMore || isLoadingMore || isInitialLoading) {
@@ -211,7 +245,7 @@ export function GithubActivityModalContent({
     await loadPage(page + 1, true);
   }
 
-  if (isInitialLoading) {
+  if (isInitialLoading && items.length === 0) {
     return (
       <div className="space-y-3">
         {Array.from({ length: 5 }).map((_, index) => (

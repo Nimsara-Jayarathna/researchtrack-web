@@ -36,7 +36,7 @@ export function StudentProjectDetailsPage() {
   const projectRepositoriesState = useStudentProjectRepositories(
     projectId,
     project?.githubRepositories,
-    { enabled: Boolean(project) && activeTab === "github" },
+    { enabled: Boolean(projectId) },
   );
   const projectWithRepositories = useMemo(
     () =>
@@ -158,6 +158,7 @@ export function StudentProjectDetailsPage() {
           isPageLoading={isLoading || projectRepositoriesState.isLoading}
           repositoriesError={projectRepositoriesState.error}
           onRetryRepositories={() => void projectRepositoriesState.reload()}
+          reloadRepositories={projectRepositoriesState.reload}
         />
       ) : null}
 

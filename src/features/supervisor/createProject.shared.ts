@@ -31,10 +31,27 @@ export type RequestModalState = {
 
 export const INITIAL_DRAFT: DraftState = {
   title: "",
-  batch: "2026",
-  semester: "Semester 1",
+  batch: "",
+  semester: "",
   summary: "",
 };
+
+export const SEMESTER_OPTIONS = ["Semester 1", "Semester 2"] as const;
+
+export function buildBatchYearOptions(currentYear = new Date().getFullYear()) {
+  return Array.from({ length: 5 }, (_, index) => String(currentYear + index));
+}
+
+export function isValidBatchYear(
+  batch: string,
+  currentYear = new Date().getFullYear(),
+) {
+  return buildBatchYearOptions(currentYear).includes(batch);
+}
+
+export function isValidSemester(semester: string) {
+  return SEMESTER_OPTIONS.some((option) => option === semester);
+}
 
 export const INITIAL_MILESTONE: MilestoneDraft = {
   title: "",

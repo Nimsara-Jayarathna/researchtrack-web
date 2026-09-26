@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import type { ApiError } from "@/types";
 import { buttonStyles } from "@/components/ui/Button";
+import { IntegrationEmptyState } from "@/components/ui/IntegrationEmptyState";
 import { TimeAgo } from "@/components/ui/TimeAgo";
 import { parseApiDate } from "@/lib/dateTime";
 import { isDevelopmentActivity } from "../utils/developmentActivity";
@@ -586,31 +587,29 @@ export function CommitActivitySection({
 
   if (!hasLinkedRepository) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-slate-50/50 p-12 text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-slate-100">
-          <Github className="h-8 w-8 text-slate-400" />
-        </div>
-        <h3 className="mt-6 text-lg font-bold text-slate-800">
-          No repository connected
-        </h3>
-        <p className="mt-2 max-w-xs text-sm leading-relaxed text-slate-500">
-          {emptyStateDescription ||
-            "Connect a GitHub repository to this project to start tracking commits, activity, and contributor data."}
-        </p>
-        {onNavigateToOverview && (
-          <button
-            type="button"
-            className={buttonStyles({
-              variant: "primary",
-              size: "sm",
-              className: "mt-6 rounded-xl hover:shadow-lg transition-all",
-            })}
-            onClick={onNavigateToOverview}
-          >
-            Link a Repository
-          </button>
-        )}
-      </div>
+      <IntegrationEmptyState
+        icon={<Github className="h-8 w-8" />}
+        title="No repository connected"
+        description={
+          emptyStateDescription ||
+          "Connect a GitHub repository to this project to start tracking commits, activity, and contributor data."
+        }
+        action={
+          onNavigateToOverview ? (
+            <button
+              type="button"
+              className={buttonStyles({
+                variant: "primary",
+                size: "sm",
+                className: "rounded-xl transition-all hover:shadow-lg",
+              })}
+              onClick={onNavigateToOverview}
+            >
+              Link a Repository
+            </button>
+          ) : undefined
+        }
+      />
     );
   }
 

@@ -1,5 +1,11 @@
 import { Button } from "@/components/ui/Button";
-import { FIELD_LIMITS } from "../../createProject.shared";
+import { Select } from "@/components/ui/Select";
+import { cn } from "@/lib/cn";
+import {
+  FIELD_LIMITS,
+  SEMESTER_OPTIONS,
+  buildBatchYearOptions,
+} from "../../createProject.shared";
 import type { DraftState } from "../../createProject.shared";
 
 type BasicsStepSectionProps = {
@@ -14,10 +20,29 @@ type BasicsStepSectionProps = {
 };
 
 function CharLimit({ current, max }: { current: number; max: number }) {
+  const atLimit = current >= max;
   return (
-    <span className="text-xs text-muted-foreground">
+    <span
+      className={cn(
+        "text-xs",
+        atLimit ? "font-medium text-amber-700" : "text-muted-foreground",
+      )}
+      aria-live="polite"
+    >
       {current}/{max} characters
     </span>
+  );
+}
+
+function RequiredLabel({ children }: { children: string }) {
+  return (
+    <>
+      {children}
+      <span className="ml-1 text-rose-600" aria-hidden="true">
+        *
+      </span>
+      <span className="sr-only"> (required)</span>
+    </>
   );
 }
 
@@ -28,20 +53,26 @@ export function BasicsStepSection({
   onUpdateDraft,
   onNext,
 }: BasicsStepSectionProps) {
+  const batchYearOptions = buildBatchYearOptions();
+
   return (
-    <section className="space-y-6 rounded-3xl border border-border bg-white p-6 shadow-sm">
+    <section className="mx-auto max-w-6xl space-y-6 rounded-3xl border border-border bg-white p-6 shadow-sm sm:p-7">
       <div>
         <h2 className="text-lg font-semibold text-foreground">
           Project basics
         </h2>
         <p className="mt-1 text-sm leading-7 text-muted-foreground">
-          Capture the core project details.
+          Capture the core project details. Fields marked with
+          <span className="mx-1 font-semibold text-rose-600" aria-hidden="true">
+            *
+          </span>
+          are required.
         </p>
       </div>
 
       <label className="block">
         <span className="mb-2 block text-sm font-medium text-foreground">
-          Project title
+          <RequiredLabel>Project title</RequiredLabel>
         </span>
         <input
           required
@@ -56,7 +87,7 @@ export function BasicsStepSection({
 
       <label className="block">
         <span className="mb-2 flex items-center justify-between gap-3 text-sm font-medium text-foreground">
-          <span>Summary</span>
+          <span><RequiredLabel>Summary</RequiredLabel></span>
           <CharLimit
             current={draft.summary.length}
             max={FIELD_LIMITS.summary}
@@ -68,7 +99,7 @@ export function BasicsStepSection({
           onChange={(e) => onUpdateDraft("summary", e.target.value)}
           maxLength={FIELD_LIMITS.summary}
           placeholder="Describe the project scope, purpose, and expected outcome."
-          rows={5}
+          rows={4}
           className="w-full rounded-2xl border border-border px-4 py-3 text-sm outline-none transition-colors focus:border-amber-300"
           disabled={isSubmitting}
         />
@@ -77,29 +108,53 @@ export function BasicsStepSection({
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="block">
           <span className="mb-2 block text-sm font-medium text-foreground">
-            Batch
+            <RequiredLabel>Batch</RequiredLabel>
           </span>
-          <input
+          <Select
             required
             value={draft.batch}
             onChange={(e) => onUpdateDraft("batch", e.target.value)}
-            maxLength={FIELD_LIMITS.batch}
-            className="w-full rounded-2xl border border-border px-4 py-3 text-sm outline-none transition-colors focus:border-amber-300"
             disabled={isSubmitting}
-          />
+            aria-label="Batch year"
+            className={cn(
+              "w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm outline-none transition-colors focus:border-amber-300 focus:ring-2 focus:ring-amber-100 disabled:cursor-not-allowed disabled:opacity-60",
+              !draft.batch && "text-muted-foreground",
+            )}
+          >
+            <option value="" disabled>
+              Select batch year
+            </option>
+            {batchYearOptions.map((year) => (
+              <option key={year} value={year}>
+                {year}
+              </option>
+            ))}
+          </Select>
         </label>
         <label className="block">
           <span className="mb-2 block text-sm font-medium text-foreground">
-            Semester
+            <RequiredLabel>Semester</RequiredLabel>
           </span>
-          <input
+          <Select
             required
             value={draft.semester}
             onChange={(e) => onUpdateDraft("semester", e.target.value)}
-            maxLength={FIELD_LIMITS.semester}
-            className="w-full rounded-2xl border border-border px-4 py-3 text-sm outline-none transition-colors focus:border-amber-300"
             disabled={isSubmitting}
-          />
+            aria-label="Semester"
+            className={cn(
+              "w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm outline-none transition-colors focus:border-amber-300 focus:ring-2 focus:ring-amber-100 disabled:cursor-not-allowed disabled:opacity-60",
+              !draft.semester && "text-muted-foreground",
+            )}
+          >
+            <option value="" disabled>
+              Select semester
+            </option>
+            {SEMESTER_OPTIONS.map((semester) => (
+              <option key={semester} value={semester}>
+                {semester}
+              </option>
+            ))}
+          </Select>
         </label>
       </div>
 

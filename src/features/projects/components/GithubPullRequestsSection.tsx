@@ -162,8 +162,13 @@ export function GithubPullRequestsSection({
   }, [openListRequest, repositoryId]);
 
   function openDetails(pullRequest: ProjectGitHubPullRequest) {
-    setIsListOpen(false);
     setSelectedPullRequest(pullRequest);
+    setIsListOpen(true);
+  }
+
+  function closePullRequestsModal() {
+    setIsListOpen(false);
+    setSelectedPullRequest(null);
   }
 
   return (
@@ -245,26 +250,25 @@ export function GithubPullRequestsSection({
 
       <GithubDetailsModal
         isOpen={isListOpen}
-        title="Pull Requests"
-        onClose={() => setIsListOpen(false)}
-      >
-        <GithubPullRequestsModalContent
-          isOpen={isListOpen}
-          refreshKey={refreshKey}
-          fetchPage={fetchPage}
-          onSelectPullRequest={openDetails}
-        />
-      </GithubDetailsModal>
-
-      <GithubDetailsModal
-        isOpen={selectedPullRequest !== null}
         title={
           selectedPullRequest
             ? `Pull Request #${selectedPullRequest.number}`
-            : "Pull Request"
+            : "Pull Requests"
         }
-        onClose={() => setSelectedPullRequest(null)}
+        onClose={closePullRequestsModal}
+        onBack={
+          selectedPullRequest ? () => setSelectedPullRequest(null) : undefined
+        }
+        backLabel="Pull Requests"
       >
+        <div className={selectedPullRequest ? "hidden" : "block"}>
+          <GithubPullRequestsModalContent
+            isOpen={isListOpen}
+            refreshKey={refreshKey}
+            fetchPage={fetchPage}
+            onSelectPullRequest={openDetails}
+          />
+        </div>
         {selectedPullRequest ? (
           <GithubPullRequestDetailsContent pullRequest={selectedPullRequest} />
         ) : null}

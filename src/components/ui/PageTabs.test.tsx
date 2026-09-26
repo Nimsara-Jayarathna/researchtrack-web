@@ -17,7 +17,7 @@ describe("PageTabs", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Team" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Team" }));
     expect(onChange).toHaveBeenCalledWith("team");
   });
 
@@ -34,7 +34,7 @@ describe("PageTabs", () => {
     );
 
     expect(
-      screen.getByRole("button", { name: "Very long tab label" }).className,
+      screen.getByRole("tab", { name: "Very long tab label" }).className,
     ).toContain("whitespace-nowrap");
   });
 });

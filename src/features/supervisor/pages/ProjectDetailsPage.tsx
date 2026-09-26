@@ -438,7 +438,13 @@ export function ProjectDetailsPage() {
         />
       ) : null}
 
-      {activeTab === "jira" ? <JiraTabSection project={project} /> : null}
+      {activeTab === "jira" ? (
+        <JiraTabSection
+          project={project}
+          onConnect={jiraFlow.handleConnectJira}
+          isConnecting={jiraFlow.isConnectingJira}
+        />
+      ) : null}
 
       {activeTab === "integrations" ? (
         <IntegrationsTabSection

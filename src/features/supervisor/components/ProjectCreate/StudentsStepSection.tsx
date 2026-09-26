@@ -22,6 +22,8 @@ type StudentsStepSectionProps = {
   onNext: () => void;
 };
 
+const MIN_STUDENT_SEARCH_CHARACTERS = 3;
+
 export function StudentsStepSection({
   studentQuery,
   searchState,
@@ -40,6 +42,14 @@ export function StudentsStepSection({
   onBack,
   onNext,
 }: StudentsStepSectionProps) {
+  const normalizedStudentQueryLength = studentQuery.trim().length;
+  const charactersRemaining = Math.max(
+    0,
+    MIN_STUDENT_SEARCH_CHARACTERS - normalizedStudentQueryLength,
+  );
+  const isSearchReady =
+    normalizedStudentQueryLength >= MIN_STUDENT_SEARCH_CHARACTERS;
+
   return (
     <section className="space-y-6 rounded-3xl border border-border bg-white p-6 shadow-sm">
       <div>
@@ -60,9 +70,32 @@ export function StudentsStepSection({
             value={studentQuery}
             onChange={(e) => onSetStudentQuery(e.target.value)}
             placeholder="Type at least 3 characters from the student email"
-            className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm outline-none transition-colors focus:border-amber-300"
+            className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm outline-none transition-colors focus:border-amber-300 focus:ring-4 focus:ring-amber-50"
             disabled={isSubmitting}
+            aria-describedby="student-search-hint"
           />
+          <div
+            id="student-search-hint"
+            className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs"
+          >
+            <span
+              className={
+                isSearchReady
+                  ? "font-medium text-emerald-700"
+                  : "text-muted-foreground"
+              }
+            >
+              {isSearchReady
+                ? "Search ready"
+                : `${normalizedStudentQueryLength} / ${MIN_STUDENT_SEARCH_CHARACTERS} characters required`}
+            </span>
+            {!isSearchReady && normalizedStudentQueryLength > 0 ? (
+              <span className="text-muted-foreground">
+                {charactersRemaining} more character
+                {charactersRemaining === 1 ? "" : "s"} to search
+              </span>
+            ) : null}
+          </div>
         </label>
 
         {shouldShowSearchPanel && (
@@ -97,9 +130,14 @@ export function StudentsStepSection({
               </div>
             )}
             {searchState === "empty" && (
-              <p className="px-1 py-2 text-sm text-muted-foreground">
-                No registered student found.
-              </p>
+              <div className="px-1 py-2">
+                <p className="text-sm font-medium text-foreground">
+                  No registered students found
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Try another student email address.
+                </p>
+              </div>
             )}
             {searchState === "error" && (
               <p className="px-1 py-2 text-sm text-rose-600">
@@ -113,6 +151,10 @@ export function StudentsStepSection({
           <div className="flex items-center justify-between gap-3">
             <h3 className="text-sm font-semibold text-foreground">
               Selected students
+              <span className="ml-1 text-rose-600" aria-hidden="true">
+                *
+              </span>
+              <span className="sr-only"> (required)</span>
             </h3>
             <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
               {selectedStudents.length} selected
@@ -175,9 +217,14 @@ export function StudentsStepSection({
               </label>
             </div>
           ) : (
-            <p className="mt-3 text-sm text-muted-foreground">
-              No students selected yet.
-            </p>
+            <div className="mt-3 rounded-2xl border border-dashed border-slate-200 bg-white/70 px-4 py-3">
+              <p className="text-sm text-muted-foreground">
+                No students selected yet.
+              </p>
+              <p className="mt-1 text-xs font-medium text-amber-700">
+                Select at least one student to continue.
+              </p>
+            </div>
           )}
         </div>
       </div>

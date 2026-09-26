@@ -81,7 +81,11 @@ export function IntegrationsTabSection({
     jiraSyncState?.lastSyncedAt ?? jira?.lastSyncedAt ?? null;
   const effectiveWebhookStatus =
     jiraSyncState?.webhookStatus ?? jira?.webhookStatus ?? null;
-  const repositories = repositoriesState.data?.repositories ?? [];
+  const repositoriesData = repositoriesState.data;
+  const repositories = repositoriesData?.repositories ?? [];
+  const githubAccessSourceCount = repositoriesData?.accessSources?.length ?? 0;
+  const githubHasAccess = githubAccessSourceCount > 0;
+  const githubHasLinkedRepositories = repositories.length > 0;
   const syncingRepositoryCount = repositories.filter((repository) => {
     const status = normalizeSyncStatus(repository.syncStatus);
     return status === "PENDING" || status === "IN_PROGRESS";
@@ -114,10 +118,31 @@ export function IntegrationsTabSection({
             <div className="mt-2 text-xs text-slate-500">
               {syncingRepositoryCount > 0
                 ? `${syncingRepositoryCount} synchronizing`
-                : "Repository snapshots synchronized independently"}
+                : githubHasLinkedRepositories
+                  ? "Repository snapshots synchronized independently"
+                  : githubHasAccess
+                    ? "GitHub access is connected, but no repository is linked to this project"
+                    : "Connect GitHub access and link a repository to synchronize development activity"}
             </div>
             <div className="mt-2">
-              <LastSyncedBadge lastSyncedAt={latestGitHubSync} />
+              {githubHasLinkedRepositories ? (
+                <LastSyncedBadge
+                  lastSyncedAt={latestGitHubSync}
+                  fallbackText="Repository linked"
+                />
+              ) : (
+                <span
+                  className={`inline-flex max-w-full items-center rounded-full px-2.5 py-1 text-[11px] font-medium ${
+                    githubHasAccess
+                      ? "bg-amber-50 text-amber-700"
+                      : "bg-slate-100 text-slate-600"
+                  }`}
+                >
+                  {githubHasAccess
+                    ? "Connected — no repositories linked"
+                    : "Not connected"}
+                </span>
+              )}
             </div>
           </div>
           <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
@@ -139,7 +164,16 @@ export function IntegrationsTabSection({
                   : "Connect Jira to synchronize project work"}
             </div>
             <div className="mt-2">
-              <LastSyncedBadge lastSyncedAt={effectiveJiraLastSyncedAt} />
+              {jira?.connected ? (
+                <LastSyncedBadge
+                  lastSyncedAt={effectiveJiraLastSyncedAt}
+                  fallbackText={jiraSyncing ? "Synchronizing" : "Connected"}
+                />
+              ) : (
+                <span className="inline-flex max-w-full items-center rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600">
+                  Not connected
+                </span>
+              )}
             </div>
           </div>
         </div>

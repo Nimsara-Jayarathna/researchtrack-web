@@ -331,7 +331,7 @@ export function JiraIssueProgressView({
                     });
                   };
                   const hierarchySurface =
-                    issue.issueType.toLowerCase() === "epic"
+                    depth === 0
                       ? "bg-violet-50/70 hover:bg-violet-100/60 border-l-4 border-l-violet-300"
                       : depth === 1
                         ? "bg-slate-50/80 hover:bg-slate-100/80 border-l-4 border-l-sky-200"

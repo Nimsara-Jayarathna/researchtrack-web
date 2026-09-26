@@ -31,3 +31,30 @@ The Project Basics step now requires deliberate academic-period selection instea
 - Step 1 remains disabled until title, summary, a valid batch year, and a valid semester are all selected.
 - Semester is intentionally not inferred from the current date. Academic calendars can vary, so the supervisor must explicitly choose the intended semester.
 - The year list is generated rather than hard-coded, so future years roll forward automatically without a source change.
+
+
+## Consolidated follow-up stabilization
+
+### Student assignment
+- Search requests remain suppressed until at least 3 trimmed characters are entered.
+- The UI now exposes live 0/3, 1/3, 2/3 search readiness feedback and a clear `Search ready` state.
+- Empty search results provide a useful retry hint.
+- At least one student is required before Step 2 can continue; the disabled Next action is accompanied by an explicit requirement message.
+- Duplicate students remain prevented by the existing selection state.
+
+### Jira hierarchy root rows
+- Root-row styling is now based on hierarchy depth (`depth === 0`) rather than Jira issue type.
+- Every root item therefore receives the same violet root treatment, including root items whose API type metadata differs from the expected Epic label.
+
+### Integration synchronization status
+- GitHub authentication/access and project repository linkage are represented as separate states.
+- An installed/authorized GitHub access source with zero linked repositories is no longer shown as a green `Workspace connected` success state.
+- The summary now distinguishes `Not connected`, `Connected — no repositories linked`, linked/synchronizable repositories, and active synchronization.
+- Jira no longer receives a success-style fallback badge when the project itself is not connected.
+
+### GitHub pull-request modal navigation
+- Pull Request list and Pull Request details now share one stable modal shell instead of opening independent modal layers.
+- Opening a PR preserves the list's filters, search text, pagination, and loaded state.
+- PR details provide a dedicated `Back to Pull Requests` action while the close button closes the complete modal workflow.
+- Escape returns from details to the list first; Escape on the list closes the modal.
+- The shell uses a stable responsive width/height across loading, list, and detail views, with internal scrolling and a subdued page backdrop.

@@ -1,5 +1,6 @@
 import { X } from "lucide-react";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import type { JiraIssue } from "@/features/shared/types/jira.types";
 import { JiraContributorIdentity } from "./JiraVisuals";
 
@@ -132,6 +133,8 @@ export function JiraIssueDetailsModal({
   issue: JiraIssue;
   onClose: () => void;
 }) {
+  const bodyRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
@@ -140,7 +143,34 @@ export function JiraIssueDetailsModal({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [onClose]);
 
-  return (
+  useEffect(() => {
+    bodyRef.current?.scrollTo({ top: 0, behavior: "auto" });
+  }, [issue.issueKey]);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+
+    const body = document.body;
+    const root = document.documentElement;
+    const previousBodyOverflow = body.style.overflow;
+    const previousBodyPaddingRight = body.style.paddingRight;
+    const previousRootOverflow = root.style.overflow;
+    const scrollbarWidth = window.innerWidth - root.clientWidth;
+
+    body.style.overflow = "hidden";
+    root.style.overflow = "hidden";
+    if (scrollbarWidth > 0) {
+      body.style.paddingRight = `${scrollbarWidth}px`;
+    }
+
+    return () => {
+      body.style.overflow = previousBodyOverflow;
+      body.style.paddingRight = previousBodyPaddingRight;
+      root.style.overflow = previousRootOverflow;
+    };
+  }, []);
+
+  const modal = (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/65 p-3 backdrop-blur-[2px] sm:p-6"
       role="dialog"
@@ -175,7 +205,10 @@ export function JiraIssueDetailsModal({
           </button>
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6">
+        <div
+          ref={bodyRef}
+          className="min-h-0 flex-1 overscroll-contain overflow-y-auto px-5 py-5 sm:px-6"
+        >
           <div className="grid gap-3 rounded-xl bg-slate-50 p-4 sm:grid-cols-2 lg:grid-cols-4">
             <div>
               <div className="text-xs text-slate-400">Status</div>
@@ -240,4 +273,10 @@ export function JiraIssueDetailsModal({
       </div>
     </div>
   );
+
+  if (typeof document === "undefined") {
+    return modal;
+  }
+
+  return createPortal(modal, document.body);
 }

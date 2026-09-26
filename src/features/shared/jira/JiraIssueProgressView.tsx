@@ -339,7 +339,7 @@ export function JiraIssueProgressView({
                   return (
                     <tr
                       key={issue.issueKey}
-                      className={`group border-b border-slate-100 last:border-0 transition-colors ${matched ? "bg-amber-50/70" : hierarchySurface}`}
+                      className={`group border-b border-slate-100 last:border-b-0 transition-colors ${matched ? "bg-amber-50/70" : hierarchySurface}`}
                     >
                       <td className="px-4 py-3 align-top font-semibold">
                         <button

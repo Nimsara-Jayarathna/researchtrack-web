@@ -87,7 +87,9 @@ export function BasicsStepSection({
 
       <label className="block">
         <span className="mb-2 flex items-center justify-between gap-3 text-sm font-medium text-foreground">
-          <span><RequiredLabel>Summary</RequiredLabel></span>
+          <span>
+            <RequiredLabel>Summary</RequiredLabel>
+          </span>
           <CharLimit
             current={draft.summary.length}
             max={FIELD_LIMITS.summary}

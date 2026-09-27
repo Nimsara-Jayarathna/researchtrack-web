@@ -126,6 +126,7 @@ export function LoginForm({
 
       <Button
         type="submit"
+        data-testid="login-submit"
         variant="primary"
         size="lg"
         disabled={isLoading || !isValid}

@@ -141,7 +141,12 @@ export function ProjectDetailsPage() {
   if (!project) return null;
 
   return (
-    <div className="space-y-6">
+    <div
+      className="space-y-6"
+      data-testid="project-details-root"
+      data-project-id={project.id}
+      data-project-role="supervisor"
+    >
       <RequestStateModal
         isOpen={requestModal.state.isOpen}
         status={requestModal.state.status}

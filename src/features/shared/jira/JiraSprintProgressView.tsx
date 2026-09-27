@@ -386,7 +386,11 @@ export function JiraSprintProgressView({
     ["closed", "Completed", data.summary.closed],
   ];
   return (
-    <section id="jira-sprints" className="space-y-4">
+    <section
+      id="jira-sprints"
+      className="space-y-4"
+      data-testid="jira-sprint-view"
+    >
       {syncFailed ? (
         <div className="flex gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />

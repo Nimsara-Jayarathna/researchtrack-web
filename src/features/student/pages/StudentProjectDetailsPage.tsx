@@ -96,7 +96,12 @@ export function StudentProjectDetailsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div
+      className="space-y-6"
+      data-testid="project-details-root"
+      data-project-id={project.id}
+      data-project-role="student"
+    >
       <ProjectHeroCard
         title={project.title}
         subtitle={

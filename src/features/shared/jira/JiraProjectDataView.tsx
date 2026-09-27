@@ -127,17 +127,21 @@ export function JiraProjectDataView({
     }
   };
   return (
-    <section className="space-y-3">
+    <section className="space-y-3" data-testid="jira-project-data">
       <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-between">
         <div className="hidden sm:block sm:w-[132px]" aria-hidden="true" />
         <div
           className="inline-flex rounded-xl border border-slate-200 bg-slate-50 p-1 shadow-sm"
+          role="tablist"
           aria-label="Jira project views"
         >
           {labels.map(([value, label]) => (
             <button
               key={value}
               type="button"
+              role="tab"
+              aria-selected={tab === value}
+              data-testid={`jira-view-${value}`}
               onClick={() => {
                 setTab(value);
                 setVisitedTabs((current) => {
@@ -156,6 +160,7 @@ export function JiraProjectDataView({
         {refresher ? (
           <button
             type="button"
+            data-testid="jira-refresh"
             onClick={() => void refresh()}
             disabled={refreshing}
             className="inline-flex min-w-[132px] items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-60"

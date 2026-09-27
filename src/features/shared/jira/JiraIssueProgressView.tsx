@@ -216,7 +216,7 @@ export function JiraIssueProgressView({
   const childCount = Math.max(0, data.items.length - rootCount);
 
   return (
-    <section className="space-y-3">
+    <section className="space-y-3" data-testid="jira-issues-view">
       {error ? (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
           {error}
@@ -281,6 +281,7 @@ export function JiraIssueProgressView({
                 <input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
+                  data-testid="jira-issue-search"
                   placeholder="Search key, issue, assignee…"
                   className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm text-slate-800 outline-none transition focus:border-slate-300 focus:bg-white focus:ring-2 focus:ring-slate-100"
                 />
@@ -339,11 +340,13 @@ export function JiraIssueProgressView({
                   return (
                     <tr
                       key={issue.issueKey}
+                      data-testid={`jira-issue-row-${issue.issueKey}`}
                       className={`group border-b border-slate-100 last:border-b-0 transition-colors ${matched ? "bg-amber-50/70" : hierarchySurface}`}
                     >
                       <td className="px-4 py-3 align-top font-semibold">
                         <button
                           type="button"
+                          data-testid="jira-issue-open"
                           onClick={() => setSelectedIssue(issue)}
                           className="text-left text-slate-800 underline-offset-2 hover:text-blue-700 hover:underline"
                         >
@@ -429,6 +432,7 @@ export function JiraIssueProgressView({
                       </td>
                       <td className="px-4 py-3 align-top">
                         <span
+                          data-testid={`jira-issue-status-${issue.issueKey}`}
                           className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${statusClass(issue.statusCategory)}`}
                         >
                           {issue.status}

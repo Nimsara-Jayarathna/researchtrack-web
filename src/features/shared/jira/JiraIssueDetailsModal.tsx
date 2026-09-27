@@ -174,6 +174,7 @@ export function JiraIssueDetailsModal({
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/65 p-3 backdrop-blur-[2px] sm:p-6"
       role="dialog"
+      data-testid="jira-issue-modal"
       aria-modal="true"
       aria-labelledby="jira-issue-title"
       onMouseDown={(event) => {
@@ -197,6 +198,7 @@ export function JiraIssueDetailsModal({
           </div>
           <button
             type="button"
+            data-testid="jira-issue-modal-close"
             onClick={onClose}
             className="grid h-10 w-10 shrink-0 place-items-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2"
             aria-label="Close issue details"

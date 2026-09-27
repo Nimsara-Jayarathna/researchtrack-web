@@ -66,7 +66,7 @@ export function JiraWorkloadView({
   const hasAssigneeData = data.members.length > 0;
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-4" data-testid="jira-workload-view">
       {data.sync.status === "FAILED" && data.sync.lastSyncError ? (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
           Latest Jira synchronization failed. Showing the last stored workload

@@ -46,6 +46,7 @@ export function PageTabs({
               type="button"
               onClick={() => onChange(item.value)}
               role="tab"
+              data-testid={`project-tab-${item.value}`}
               aria-selected={value === item.value}
               tabIndex={value === item.value ? 0 : -1}
               className={cn(

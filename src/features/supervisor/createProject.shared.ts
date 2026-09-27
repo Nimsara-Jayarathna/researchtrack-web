@@ -1,3 +1,10 @@
+import {
+  isValidSemester,
+  SEMESTER_OPTIONS,
+} from "@/features/projects/semester";
+
+export { isValidSemester, SEMESTER_OPTIONS };
+
 import type { ProjectStepperStep } from "./components/ProjectStepper";
 import type {
   CreateSupervisorProjectResponse,
@@ -31,10 +38,21 @@ export type RequestModalState = {
 
 export const INITIAL_DRAFT: DraftState = {
   title: "",
-  batch: "2026",
-  semester: "Semester 1",
+  batch: "",
+  semester: "",
   summary: "",
 };
+
+export function buildBatchYearOptions(currentYear = new Date().getFullYear()) {
+  return Array.from({ length: 5 }, (_, index) => String(currentYear + index));
+}
+
+export function isValidBatchYear(
+  batch: string,
+  currentYear = new Date().getFullYear(),
+) {
+  return buildBatchYearOptions(currentYear).includes(batch);
+}
 
 export const INITIAL_MILESTONE: MilestoneDraft = {
   title: "",

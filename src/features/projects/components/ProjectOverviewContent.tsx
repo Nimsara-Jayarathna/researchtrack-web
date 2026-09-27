@@ -17,6 +17,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { cn } from "@/lib/cn";
 import { parseLocalDateOnly } from "@/lib/dateOnly";
 import type { MeetingAnalyticsState } from "@/features/projects/hooks/useMeetingAnalytics";
+import { SEMESTER_OPTIONS } from "@/features/projects/semester";
 
 type StatusBadgeTone =
   "student" | "supervisor" | "success" | "warning" | "danger" | "neutral";
@@ -626,15 +627,23 @@ export function ProjectOverviewContent({
                   <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                     Semester
                   </span>
-                  <input
+                  <Select
                     required
-                    maxLength={fieldLimits.semester}
                     value={edit.form.semester}
                     onChange={(event) =>
                       edit.onChangeField("semester", event.target.value)
                     }
                     className="h-10 w-full rounded-2xl border border-border bg-white px-4 text-sm outline-none transition-colors focus:border-amber-300"
-                  />
+                  >
+                    <option value="" disabled>
+                      Select semester
+                    </option>
+                    {SEMESTER_OPTIONS.map((semester) => (
+                      <option key={semester} value={semester}>
+                        {semester}
+                      </option>
+                    ))}
+                  </Select>
                 </label>
                 <label className="space-y-1.5 sm:col-span-2">
                   <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">

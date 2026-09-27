@@ -7,7 +7,11 @@ import type {
   CreateSupervisorProjectResponse,
   SupervisorStudentSearchResult,
 } from "../types";
-import { INITIAL_DRAFT } from "../createProject.shared";
+import {
+  INITIAL_DRAFT,
+  isValidBatchYear,
+  isValidSemester,
+} from "../createProject.shared";
 import type {
   CreateProjectStepId,
   DraftState,
@@ -43,7 +47,10 @@ export function useCreateProjectPageState({
   });
 
   const step1Valid =
-    draft.title.trim().length > 0 && draft.summary.trim().length > 0;
+    draft.title.trim().length > 0 &&
+    draft.summary.trim().length > 0 &&
+    isValidBatchYear(draft.batch) &&
+    isValidSemester(draft.semester);
   const step2Valid = selectedStudents.length > 0;
   const milestonesState = useCreateProjectMilestonesState({ createdProject });
   const studentSearchState = useCreateProjectStudentSearchState({

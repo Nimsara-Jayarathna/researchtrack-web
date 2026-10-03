@@ -4,11 +4,12 @@ import { Select } from "@/components/ui/Select";
 import { cn } from "@/lib/cn";
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import { LockKeyhole, X } from "lucide-react";
 import {
   MEETING_CHANNEL_PLATFORMS,
   type MeetingChannel,
-  type MeetingChannelUpsertPayload,
+  type MeetingChannelCreatePayload,
+  type MeetingChannelFormPayload,
 } from "../types";
 
 type MeetingChannelFormModalProps = {
@@ -16,13 +17,13 @@ type MeetingChannelFormModalProps = {
   mode: "add" | "edit";
   initialChannel: MeetingChannel | null;
   onClose: () => void;
-  onSubmit: (payload: MeetingChannelUpsertPayload) => void;
+  onSubmit: (payload: MeetingChannelFormPayload) => void;
   maxNameLength?: number;
   maxLinkLength?: number;
 };
 
 function toPlatformLabel(value: string) {
-  return value.replace("_", " ");
+  return value.replace(/_/g, " ");
 }
 
 function isValidHttpLink(value: string) {
@@ -40,6 +41,14 @@ function isValidHttpLink(value: string) {
   }
 }
 
+function RequiredMark() {
+  return (
+    <span className="ml-1 text-red-500" aria-hidden="true">
+      *
+    </span>
+  );
+}
+
 export function MeetingChannelFormModal({
   isOpen,
   mode,
@@ -51,7 +60,7 @@ export function MeetingChannelFormModal({
 }: MeetingChannelFormModalProps) {
   const [isMounted, setIsMounted] = useState(false);
   const [platform, setPlatform] =
-    useState<MeetingChannelUpsertPayload["platform"]>("GOOGLE_MEET");
+    useState<MeetingChannelCreatePayload["platform"]>("GOOGLE_MEET");
   const [channelName, setChannelName] = useState("");
   const [linkOrIdentifier, setLinkOrIdentifier] = useState("");
 
@@ -87,23 +96,50 @@ export function MeetingChannelFormModal({
     setLinkOrIdentifier("");
   }, [initialChannel, isOpen, mode]);
 
-  const canSubmit = useMemo(() => {
+  const normalizedChannelName = channelName.trim();
+  const normalizedLink = linkOrIdentifier.trim();
+
+  const hasChanges = useMemo(() => {
+    if (mode !== "edit" || !initialChannel) {
+      return true;
+    }
+
     return (
-      platform.trim().length > 0 &&
-      channelName.trim().length > 0 &&
-      isValidHttpLink(linkOrIdentifier)
+      normalizedChannelName !== initialChannel.channelName.trim() ||
+      normalizedLink !== initialChannel.linkOrIdentifier.trim()
     );
-  }, [channelName, linkOrIdentifier, platform]);
+  }, [initialChannel, mode, normalizedChannelName, normalizedLink]);
+
+  const canSubmit = useMemo(() => {
+    const isValid =
+      platform.trim().length > 0 &&
+      normalizedChannelName.length > 0 &&
+      isValidHttpLink(normalizedLink);
+
+    return isValid && (mode === "add" || hasChanges);
+  }, [hasChanges, mode, normalizedChannelName, normalizedLink, platform]);
 
   if (!isOpen) {
     return null;
   }
 
   function handleSubmit() {
+    if (!canSubmit) {
+      return;
+    }
+
+    if (mode === "add") {
+      onSubmit({
+        platform,
+        channelName: normalizedChannelName,
+        linkOrIdentifier: normalizedLink,
+      });
+      return;
+    }
+
     onSubmit({
-      platform,
-      channelName: channelName.trim(),
-      linkOrIdentifier: linkOrIdentifier.trim(),
+      channelName: normalizedChannelName,
+      linkOrIdentifier: normalizedLink,
     });
   }
 
@@ -143,33 +179,58 @@ export function MeetingChannelFormModal({
           <div className="space-y-1.5">
             <label className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
               Platform
+              {mode === "add" ? <RequiredMark /> : null}
             </label>
-            <Select
-              value={platform}
-              onChange={(event) =>
-                setPlatform(
-                  event.target.value as MeetingChannelUpsertPayload["platform"],
-                )
-              }
-              className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none transition-all focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50"
-              aria-label="Select platform"
-            >
-              {MEETING_CHANNEL_PLATFORMS.map((value) => (
-                <option key={value} value={value}>
-                  {toPlatformLabel(value)}
-                </option>
-              ))}
-            </Select>
+            {mode === "add" ? (
+              <Select
+                value={platform}
+                onChange={(event) =>
+                  setPlatform(
+                    event.target
+                      .value as MeetingChannelCreatePayload["platform"],
+                  )
+                }
+                required
+                aria-required="true"
+                className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none transition-all focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50"
+                aria-label="Select platform"
+              >
+                {MEETING_CHANNEL_PLATFORMS.map((value) => (
+                  <option key={value} value={value}>
+                    {toPlatformLabel(value)}
+                  </option>
+                ))}
+              </Select>
+            ) : (
+              <>
+                <div
+                  className="flex h-11 w-full items-center justify-between rounded-2xl border border-slate-200 bg-slate-100 px-4 text-sm font-semibold text-slate-600"
+                  aria-label={`Platform: ${toPlatformLabel(platform)}. Locked after creation.`}
+                >
+                  <span>{toPlatformLabel(platform)}</span>
+                  <LockKeyhole
+                    className="h-4 w-4 text-slate-400"
+                    aria-hidden="true"
+                  />
+                </div>
+                <p className="text-[11px] font-medium text-slate-500">
+                  Platform is fixed after this channel is created.
+                </p>
+              </>
+            )}
           </div>
 
           <div className="space-y-1.5">
             <label className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
               Channel name
+              <RequiredMark />
             </label>
             <Input
               value={channelName}
               onChange={(event) => setChannelName(event.target.value)}
               maxLength={maxNameLength}
+              required
+              aria-required="true"
               placeholder="Weekly supervision call"
               className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none transition-all focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50"
             />
@@ -180,12 +241,15 @@ export function MeetingChannelFormModal({
 
           <div className="space-y-1.5">
             <label className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
-              Link or identifier
+              Meeting link
+              <RequiredMark />
             </label>
             <Input
               value={linkOrIdentifier}
               onChange={(event) => setLinkOrIdentifier(event.target.value)}
               maxLength={maxLinkLength}
+              required
+              aria-required="true"
               placeholder="https://meet.google.com/..."
               className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none transition-all focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50"
             />
@@ -210,6 +274,11 @@ export function MeetingChannelFormModal({
             variant="primary"
             onClick={handleSubmit}
             disabled={!canSubmit}
+            title={
+              mode === "edit" && !hasChanges
+                ? "Make a change before saving."
+                : undefined
+            }
           >
             {mode === "add" ? "Add channel" : "Save changes"}
           </Button>

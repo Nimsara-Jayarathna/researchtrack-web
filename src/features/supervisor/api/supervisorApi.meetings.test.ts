@@ -60,6 +60,9 @@ describe("supervisorApi meeting-channels cache", () => {
     const second = supervisorApi.getProjectMeetingChannels("p-1");
 
     expect(apiClientMock.get).toHaveBeenCalledTimes(1);
+    expect(apiClientMock.get).toHaveBeenCalledWith(
+      "/api/v1/projects/p-1/meetings/channels",
+    );
     resolveGet?.([channel()]);
 
     await expect(first).resolves.toEqual([channel()]);
@@ -108,9 +111,48 @@ describe("supervisorApi meeting-channels cache", () => {
       linkOrIdentifier: "https://example.com",
     });
 
+    expect(apiClientMock.post).toHaveBeenCalledWith(
+      "/api/v1/projects/p-1/meetings/channels",
+      {
+        platform: "ZOOM",
+        channelName: "Weekly sync",
+        linkOrIdentifier: "https://example.com",
+      },
+    );
+
     vi.mocked(apiClientMock.get).mockClear();
     const next = await supervisorApi.getProjectMeetingChannels("p-1");
     expect(apiClientMock.get).not.toHaveBeenCalled();
     expect(next.map((item) => item.id)).toEqual(["c-1", "c-2"]); // pending first
+  });
+
+  it("uses the canonical MeetingService paths for supervisor mutations", async () => {
+    const supervisorApi = await loadSupervisorApi();
+    const updated = channel({ id: "c-7", status: "APPROVED" });
+    vi.mocked(apiClientMock.patch).mockResolvedValue(updated);
+    vi.mocked(apiClientMock.del).mockResolvedValue(undefined);
+    vi.mocked(apiClientMock.post).mockResolvedValue(updated);
+
+    const payload = {
+      channelName: "Updated",
+      linkOrIdentifier: "https://example.com/updated",
+    };
+
+    await supervisorApi.updateProjectMeetingChannel("p-1", "c-7", payload);
+    expect(apiClientMock.patch).toHaveBeenCalledWith(
+      "/api/v1/projects/p-1/meetings/channels/c-7",
+      payload,
+    );
+
+    await supervisorApi.deleteProjectMeetingChannel("p-1", "c-7");
+    expect(apiClientMock.del).toHaveBeenCalledWith(
+      "/api/v1/projects/p-1/meetings/channels/c-7",
+    );
+
+    await supervisorApi.approveProjectMeetingChannel("p-1", "c-7");
+    expect(apiClientMock.post).toHaveBeenLastCalledWith(
+      "/api/v1/projects/p-1/meetings/channels/c-7/approve",
+      {},
+    );
   });
 });

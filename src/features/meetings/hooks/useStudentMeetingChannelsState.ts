@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { ApiError } from "@/types";
 import { studentApi } from "@/features/student/api/studentApi";
-import type { MeetingChannel, MeetingChannelUpsertPayload } from "../types";
+import type { MeetingChannel, MeetingChannelFormPayload } from "../types";
 import { toApiError } from "./requestModal";
 import { useRequestModalControls } from "./useRequestModalControls";
 import { useMeetingChannelsData } from "./shared/useMeetingChannelsData";
@@ -20,7 +20,7 @@ type StudentMeetingChannelsState = {
   refresh: () => Promise<void>;
   openAdd: () => void;
   closeForm: () => void;
-  submitForm: (payload: MeetingChannelUpsertPayload) => Promise<void>;
+  submitForm: (payload: MeetingChannelFormPayload) => Promise<void>;
   copyToClipboard: (value: string) => Promise<boolean>;
   closeRequestModal: () => void;
 };
@@ -78,13 +78,16 @@ export function useStudentMeetingChannelsState(
   }, []);
 
   const submitForm = useCallback(
-    async (payload: MeetingChannelUpsertPayload) => {
+    async (payload: MeetingChannelFormPayload) => {
       openLoadingModal(
         "Submitting meeting channel",
         "Submitting meeting channel for this project.",
       );
 
       try {
+        if (!("platform" in payload)) {
+          throw toApiError(null, "Select a meeting platform and try again.");
+        }
         await createChannel(payload);
         openSuccessModal(
           "Meeting channel submitted",

@@ -27,8 +27,8 @@ export function SupervisorMeetingRecordsSection({
   return (
     <>
       <SectionCard
-        title="Meeting Records"
-        subtitle="Review, approve, and maintain meeting records for this project."
+        title="Meeting History"
+        subtitle="Record, review, approve, and maintain supervision meeting history for this project."
         actions={
           <>
             <IconActionButton

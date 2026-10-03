@@ -1,7 +1,10 @@
 import { useCallback, useEffect } from "react";
 import type { ApiError } from "@/types";
 import { supervisorApi } from "@/features/supervisor/api/supervisorApi";
-import type { MeetingChannel, MeetingChannelUpsertPayload } from "../types";
+import type {
+  MeetingChannel,
+  MeetingChannelFormPayload,
+} from "../types";
 import { toApiError } from "./requestModal";
 import { useRequestModalControls } from "./useRequestModalControls";
 import { useMeetingChannelsData } from "./shared/useMeetingChannelsData";
@@ -25,7 +28,7 @@ type SupervisorMeetingChannelsState = {
   openAdd: () => void;
   openEdit: (channel: MeetingChannel) => void;
   closeForm: () => void;
-  submitForm: (payload: MeetingChannelUpsertPayload) => Promise<void>;
+  submitForm: (payload: MeetingChannelFormPayload) => Promise<void>;
   openDelete: (channel: MeetingChannel) => void;
   closeDelete: () => void;
   confirmDelete: () => Promise<void>;
@@ -96,7 +99,7 @@ export function useSupervisorMeetingChannelsState(
   }, [closeDelete, closeForm, projectId]);
 
   const submitForm = useCallback(
-    async (payload: MeetingChannelUpsertPayload) => {
+    async (payload: MeetingChannelFormPayload) => {
       if (formMode === "edit" && !editingChannel) {
         openErrorModal(
           "Unable to save channel",
@@ -117,13 +120,19 @@ export function useSupervisorMeetingChannelsState(
 
       try {
         if (formMode === "add") {
+          if (!("platform" in payload)) {
+            throw toApiError(null, "Select a meeting platform and try again.");
+          }
           await createChannel(payload);
           openSuccessModal(
             "Meeting channel added",
             "Meeting channel was added successfully.",
           );
         } else {
-          await updateChannel(editingChannel!.id, payload);
+          await updateChannel(editingChannel!.id, {
+            channelName: payload.channelName,
+            linkOrIdentifier: payload.linkOrIdentifier,
+          });
           openSuccessModal(
             "Meeting channel updated",
             "Meeting channel was updated successfully.",

@@ -134,7 +134,6 @@ describe("supervisorApi meeting-channels cache", () => {
     vi.mocked(apiClientMock.post).mockResolvedValue(updated);
 
     const payload = {
-      platform: "ZOOM" as const,
       channelName: "Updated",
       linkOrIdentifier: "https://example.com/updated",
     };

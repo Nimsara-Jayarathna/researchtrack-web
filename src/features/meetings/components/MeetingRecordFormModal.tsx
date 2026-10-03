@@ -32,6 +32,14 @@ function toLocalIsoDate(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
+function RequiredMark() {
+  return (
+    <span className="ml-1 text-red-500" aria-hidden="true">
+      *
+    </span>
+  );
+}
+
 export function MeetingRecordFormModal({
   isOpen,
   mode,
@@ -88,30 +96,61 @@ export function MeetingRecordFormModal({
     return value;
   }, [durationMinutes]);
 
-  const canSubmit = useMemo(() => {
-    return (
-      meetingDate.trim().length > 0 &&
-      parsedDuration !== null &&
-      parsedDuration > 0 &&
-      discussionSummary.trim().length > 0
-    );
-  }, [discussionSummary, meetingDate, parsedDuration]);
-
-  if (!isOpen) {
-    return null;
-  }
-
-  function handleSubmit() {
-    const payload: MeetingRecordUpsertPayload = {
+  const normalizedPayload = useMemo<MeetingRecordUpsertPayload>(
+    () => ({
       meetingDate: meetingDate.trim(),
       durationMinutes: parsedDuration ?? 0,
       discussionSummary: discussionSummary.trim(),
       discussionDetails: discussionDetails.trim().length
         ? discussionDetails.trim()
         : null,
-      channelId: channelId.trim().length ? channelId : null,
-    };
-    onSubmit(payload);
+      channelId: channelId.trim().length ? channelId.trim() : null,
+    }),
+    [
+      channelId,
+      discussionDetails,
+      discussionSummary,
+      meetingDate,
+      parsedDuration,
+    ],
+  );
+
+  const hasChanges = useMemo(() => {
+    if (mode !== "edit" || !initialRecord) {
+      return true;
+    }
+
+    return (
+      normalizedPayload.meetingDate !== initialRecord.meetingDate.trim() ||
+      normalizedPayload.durationMinutes !== initialRecord.durationMinutes ||
+      normalizedPayload.discussionSummary !==
+        initialRecord.discussionSummary.trim() ||
+      (normalizedPayload.discussionDetails ?? null) !==
+        (initialRecord.discussionDetails?.trim() || null) ||
+      (normalizedPayload.channelId ?? null) !==
+        (initialRecord.channelId?.trim() || null)
+    );
+  }, [initialRecord, mode, normalizedPayload]);
+
+  const canSubmit = useMemo(() => {
+    const isValid =
+      normalizedPayload.meetingDate.length > 0 &&
+      parsedDuration !== null &&
+      parsedDuration > 0 &&
+      normalizedPayload.discussionSummary.length > 0;
+
+    return isValid && (mode === "add" || hasChanges);
+  }, [hasChanges, mode, normalizedPayload, parsedDuration]);
+
+  if (!isOpen) {
+    return null;
+  }
+
+  function handleSubmit() {
+    if (!canSubmit) {
+      return;
+    }
+    onSubmit(normalizedPayload);
   }
 
   const modal = (
@@ -151,10 +190,13 @@ export function MeetingRecordFormModal({
             <div className="space-y-1.5">
               <label className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
                 Meeting date
+                <RequiredMark />
               </label>
               <Input
                 type="date"
                 value={meetingDate}
+                required
+                aria-required="true"
                 onChange={(event) => setMeetingDate(event.target.value)}
                 className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none transition-all focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50"
               />
@@ -163,12 +205,15 @@ export function MeetingRecordFormModal({
             <div className="space-y-1.5">
               <label className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
                 Duration (minutes)
+                <RequiredMark />
               </label>
               <Input
                 type="number"
                 inputMode="numeric"
                 min={1}
                 value={durationMinutes}
+                required
+                aria-required="true"
                 onChange={(event) => setDurationMinutes(event.target.value)}
                 placeholder="45"
                 className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none transition-all focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50"
@@ -198,11 +243,14 @@ export function MeetingRecordFormModal({
           <div className="space-y-1.5">
             <label className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
               Discussion summary
+              <RequiredMark />
             </label>
             <textarea
               value={discussionSummary}
               onChange={(event) => setDiscussionSummary(event.target.value)}
               maxLength={maxSummaryLength}
+              required
+              aria-required="true"
               rows={3}
               placeholder="What was discussed?"
               className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 outline-none transition-all focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50"
@@ -239,6 +287,11 @@ export function MeetingRecordFormModal({
             variant="primary"
             onClick={handleSubmit}
             disabled={!canSubmit}
+            title={
+              mode === "edit" && !hasChanges
+                ? "Make a change before saving."
+                : undefined
+            }
           >
             {mode === "add" ? "Add record" : "Save changes"}
           </Button>

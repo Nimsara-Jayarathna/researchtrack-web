@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ApiError } from "@/types";
-import type { MeetingChannel, MeetingChannelUpsertPayload } from "../../types";
+import type {
+  MeetingChannel,
+  MeetingChannelCreatePayload,
+  MeetingChannelUpdatePayload,
+} from "../../types";
 import { sortMeetingChannels } from "../../lib/sortMeetingChannels";
 import { toApiError } from "../requestModal";
 import type { MeetingLoadResult } from "./useMeetingRecordsData";
@@ -12,12 +16,12 @@ export type MeetingChannelsApiPort = {
   ) => Promise<MeetingChannel[]>;
   createProjectMeetingChannel: (
     projectId: string,
-    payload: MeetingChannelUpsertPayload,
+    payload: MeetingChannelCreatePayload,
   ) => Promise<MeetingChannel>;
   updateProjectMeetingChannel: (
     projectId: string,
     channelId: string,
-    payload: MeetingChannelUpsertPayload,
+    payload: MeetingChannelUpdatePayload,
   ) => Promise<MeetingChannel>;
   deleteProjectMeetingChannel: (
     projectId: string,
@@ -42,11 +46,11 @@ type MeetingChannelsData = {
   hasLoaded: boolean;
   load: (options?: { forceRefresh?: boolean }) => Promise<MeetingLoadResult>;
   createChannel: (
-    payload: MeetingChannelUpsertPayload,
+    payload: MeetingChannelCreatePayload,
   ) => Promise<MeetingChannel>;
   updateChannel: (
     channelId: string,
-    payload: MeetingChannelUpsertPayload,
+    payload: MeetingChannelUpdatePayload,
   ) => Promise<MeetingChannel>;
   deleteChannel: (channelId: string) => Promise<void>;
   approveChannel: (channelId: string) => Promise<MeetingChannel>;
@@ -104,7 +108,7 @@ export function useMeetingChannelsData({
   );
 
   const createChannel = useCallback(
-    async (payload: MeetingChannelUpsertPayload): Promise<MeetingChannel> => {
+    async (payload: MeetingChannelCreatePayload): Promise<MeetingChannel> => {
       const created = await api.createProjectMeetingChannel(projectId, payload);
       setChannels((current) =>
         sortMeetingChannels([
@@ -120,7 +124,7 @@ export function useMeetingChannelsData({
   const updateChannel = useCallback(
     async (
       channelId: string,
-      payload: MeetingChannelUpsertPayload,
+      payload: MeetingChannelUpdatePayload,
     ): Promise<MeetingChannel> => {
       const updated = await api.updateProjectMeetingChannel(
         projectId,

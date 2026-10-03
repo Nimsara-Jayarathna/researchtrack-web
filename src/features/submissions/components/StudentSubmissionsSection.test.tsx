@@ -78,6 +78,7 @@ const submission: ResearchSubmission = {
       isLate: false,
       isCurrent: true,
       isApproved: false,
+      review: null,
     },
   ],
 };

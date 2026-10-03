@@ -1,9 +1,12 @@
 import { apiClient } from "@/services/apiClient";
 import type {
+  CreateSubmissionCommentRequest,
+  CreateSubmissionReviewRequest,
   CreateUploadSessionRequest,
   DownloadGrant,
   RequirementMutation,
   ResearchSubmission,
+  SubmissionComment,
   SubmissionRequirement,
   UploadSession,
 } from "../types";
@@ -118,6 +121,37 @@ export const submissionApi = {
   ): Promise<DownloadGrant> {
     return apiClient.get<DownloadGrant>(
       `${base(projectId)}/${submissionId}/versions/${versionId}/download-url?disposition=${disposition}`,
+    );
+  },
+
+  reviewSubmission(
+    projectId: string,
+    submissionId: string,
+    payload: CreateSubmissionReviewRequest,
+  ): Promise<ResearchSubmission> {
+    return apiClient.post<ResearchSubmission>(
+      `${base(projectId)}/${submissionId}/reviews`,
+      payload,
+    );
+  },
+
+  listComments(
+    projectId: string,
+    submissionId: string,
+  ): Promise<SubmissionComment[]> {
+    return apiClient.get<SubmissionComment[]>(
+      `${base(projectId)}/${submissionId}/comments`,
+    );
+  },
+
+  addComment(
+    projectId: string,
+    submissionId: string,
+    payload: CreateSubmissionCommentRequest,
+  ): Promise<SubmissionComment> {
+    return apiClient.post<SubmissionComment>(
+      `${base(projectId)}/${submissionId}/comments`,
+      payload,
     );
   },
 };

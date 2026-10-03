@@ -254,7 +254,7 @@ export function MeetingChannelsTable({
         },
         {
           key: "link",
-          header: "Link / Identifier",
+          header: "Meeting Link",
           className: "whitespace-nowrap",
         },
         {

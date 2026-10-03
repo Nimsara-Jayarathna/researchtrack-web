@@ -180,7 +180,7 @@ export function MeetingChannelFormModal({
 
           <div className="space-y-1.5">
             <label className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
-              Link or identifier
+              Meeting link
             </label>
             <Input
               value={linkOrIdentifier}

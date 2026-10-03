@@ -376,7 +376,7 @@ export function createRoleProjectApi({
     }
 
     const request = apiClient.get<MeetingChannel[]>(
-      `${roleBasePath}/projects/${projectId}/meeting-channels`,
+      `${toVersionedApiPath("/api/projects")}/${projectId}/meetings/channels`,
     );
     inFlightMeetingChannelsByProjectId[projectId] = request;
 
@@ -394,7 +394,7 @@ export function createRoleProjectApi({
     payload: MeetingChannelUpsertPayload,
   ): Promise<MeetingChannel> {
     const created = await apiClient.post<MeetingChannel>(
-      `${roleBasePath}/projects/${projectId}/meeting-channels`,
+      `${toVersionedApiPath("/api/projects")}/${projectId}/meetings/channels`,
       payload,
     );
     delete inFlightMeetingChannelsByProjectId[projectId];
@@ -414,7 +414,7 @@ export function createRoleProjectApi({
     payload: MeetingChannelUpsertPayload,
   ): Promise<MeetingChannel> {
     const updated = await apiClient.patch<MeetingChannel>(
-      `${roleBasePath}/projects/${projectId}/meeting-channels/${channelId}`,
+      `${toVersionedApiPath("/api/projects")}/${projectId}/meetings/channels/${channelId}`,
       payload,
     );
     delete inFlightMeetingChannelsByProjectId[projectId];
@@ -432,7 +432,7 @@ export function createRoleProjectApi({
     channelId: string,
   ): Promise<void> {
     await apiClient.del<void>(
-      `${roleBasePath}/projects/${projectId}/meeting-channels/${channelId}`,
+      `${toVersionedApiPath("/api/projects")}/${projectId}/meetings/channels/${channelId}`,
     );
     delete inFlightMeetingChannelsByProjectId[projectId];
     const existing = cachedMeetingChannelsByProjectId[projectId];
@@ -448,7 +448,7 @@ export function createRoleProjectApi({
     channelId: string,
   ): Promise<MeetingChannel> {
     const approved = await apiClient.post<MeetingChannel>(
-      `${roleBasePath}/projects/${projectId}/meeting-channels/${channelId}/approve`,
+      `${toVersionedApiPath("/api/projects")}/${projectId}/meetings/channels/${channelId}/approve`,
       {},
     );
     delete inFlightMeetingChannelsByProjectId[projectId];

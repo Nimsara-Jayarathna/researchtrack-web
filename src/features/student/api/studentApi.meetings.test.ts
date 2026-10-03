@@ -58,6 +58,9 @@ describe("studentApi meeting-channels cache", () => {
     const second = studentApi.getProjectMeetingChannels("p-1");
 
     expect(apiClientMock.get).toHaveBeenCalledTimes(1);
+    expect(apiClientMock.get).toHaveBeenCalledWith(
+      "/api/v1/projects/p-1/meetings/channels",
+    );
     resolveGet?.([channel()]);
 
     await expect(first).resolves.toEqual([channel()]);
@@ -99,6 +102,15 @@ describe("studentApi meeting-channels cache", () => {
       channelName: "Weekly sync",
       linkOrIdentifier: "https://example.com",
     });
+
+    expect(apiClientMock.post).toHaveBeenCalledWith(
+      "/api/v1/projects/p-1/meetings/channels",
+      {
+        platform: "ZOOM",
+        channelName: "Weekly sync",
+        linkOrIdentifier: "https://example.com",
+      },
+    );
 
     vi.mocked(apiClientMock.get).mockClear();
     const next = await studentApi.getProjectMeetingChannels("p-1");

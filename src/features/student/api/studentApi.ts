@@ -33,7 +33,9 @@ type StudentRoleProjectApi = Omit<
 >;
 
 function toStudentRoleProjectApi(): StudentRoleProjectApi {
-  const studentSurface = { ...roleProjectApi } as Partial<typeof roleProjectApi>;
+  const studentSurface = { ...roleProjectApi } as Partial<
+    typeof roleProjectApi
+  >;
 
   Reflect.deleteProperty(studentSurface, "updateProjectMeetingChannel");
   Reflect.deleteProperty(studentSurface, "deleteProjectMeetingChannel");

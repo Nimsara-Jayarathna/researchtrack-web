@@ -25,9 +25,7 @@ function channel(overrides: Partial<MeetingChannel> = {}): MeetingChannel {
 
 describe("MeetingChannelsTable", () => {
   it("does not expose Supervisor management actions in Student read-only mode", () => {
-    render(
-      <MeetingChannelsTable channels={[channel()]} canManage={false} />,
-    );
+    render(<MeetingChannelsTable channels={[channel()]} canManage={false} />);
 
     expect(
       screen.queryByRole("button", { name: "Approve channel" }),

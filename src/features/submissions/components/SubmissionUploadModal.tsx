@@ -174,7 +174,7 @@ export function SubmissionUploadModal({
   }
 
   async function startUpload() {
-    if (!file || fileError) return;
+    if (!requirement || !file || fileError) return;
     try {
       setPhase("preparing");
       setError(null);

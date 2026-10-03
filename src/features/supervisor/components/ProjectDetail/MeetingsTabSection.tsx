@@ -12,7 +12,7 @@ export function MeetingsTabSection({ projectId }: MeetingsTabSectionProps) {
   const [activeTab, setActiveTab] = useState<MeetingsInnerTab>("channels");
   const tabs: Array<{ value: MeetingsInnerTab; label: string }> = [
     { value: "channels", label: "Channels" },
-    { value: "records", label: "Records" },
+    { value: "records", label: "History" },
   ];
 
   return (

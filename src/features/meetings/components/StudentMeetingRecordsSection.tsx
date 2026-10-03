@@ -26,8 +26,8 @@ export function StudentMeetingRecordsSection({
   return (
     <>
       <SectionCard
-        title="Meeting Records"
-        subtitle="Log meetings quickly and request supervisor approval when needed."
+        title="Meeting History"
+        subtitle="View the project meeting history and submit meeting records for Supervisor approval."
         actions={
           <>
             <IconActionButton
@@ -47,18 +47,18 @@ export function StudentMeetingRecordsSection({
               onClick={state.openAdd}
               leftIcon={<Plus className="h-4 w-4" />}
             >
-              Add record
+              Submit record
             </Button>
           </>
         }
       >
         {state.isLoading ? <MeetingSectionSkeleton /> : null}
 
-        {state.error ? (
+        {state.error && !state.hasLoaded ? (
           <ErrorState error={state.error} onRetry={() => void state.load()} />
         ) : null}
 
-        {!state.isLoading && !state.error ? (
+        {!state.isLoading && (!state.error || state.hasLoaded) ? (
           <MeetingRecordsTable
             records={state.records}
             channelsById={channelsById}
@@ -75,6 +75,9 @@ export function StudentMeetingRecordsSection({
         channels={state.channels}
         onClose={state.closeForm}
         onSubmit={(payload) => void state.submitForm(payload)}
+        addTitle="Submit meeting record"
+        addSubmitLabel="Submit for approval"
+        addHelperText="Student-submitted meeting records are saved as Pending until the project Supervisor approves them."
       />
 
       <MeetingRecordDetailsModal

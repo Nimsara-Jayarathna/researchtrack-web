@@ -1,10 +1,7 @@
 import { useCallback, useEffect } from "react";
 import type { ApiError } from "@/types";
 import { supervisorApi } from "@/features/supervisor/api/supervisorApi";
-import type {
-  MeetingChannel,
-  MeetingChannelFormPayload,
-} from "../types";
+import type { MeetingChannel, MeetingChannelFormPayload } from "../types";
 import { toApiError } from "./requestModal";
 import { useRequestModalControls } from "./useRequestModalControls";
 import { useMeetingChannelsData } from "./shared/useMeetingChannelsData";

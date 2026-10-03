@@ -39,8 +39,7 @@ export type MeetingChannelUpdatePayload = {
 };
 
 export type MeetingChannelFormPayload =
-  | MeetingChannelCreatePayload
-  | MeetingChannelUpdatePayload;
+  MeetingChannelCreatePayload | MeetingChannelUpdatePayload;
 
 export type MeetingRecordStatus = "PENDING" | "APPROVED";
 

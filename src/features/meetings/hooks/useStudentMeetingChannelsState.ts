@@ -1,10 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { ApiError } from "@/types";
 import { studentApi } from "@/features/student/api/studentApi";
-import type {
-  MeetingChannel,
-  MeetingChannelFormPayload,
-} from "../types";
+import type { MeetingChannel, MeetingChannelFormPayload } from "../types";
 import { toApiError } from "./requestModal";
 import { useRequestModalControls } from "./useRequestModalControls";
 import { useMeetingChannelsData } from "./shared/useMeetingChannelsData";

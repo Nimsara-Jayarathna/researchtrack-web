@@ -38,7 +38,9 @@ describe("MeetingRecordFormModal", () => {
 
     expect(screen.getAllByText("*")).toHaveLength(3);
     expect(screen.getByText("Channel (optional)")).toBeInTheDocument();
-    expect(screen.getByText("Discussion details (optional)")).toBeInTheDocument();
+    expect(
+      screen.getByText("Discussion details (optional)"),
+    ).toBeInTheDocument();
   });
 
   it("keeps edit save disabled until a real normalized value changes", async () => {

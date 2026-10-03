@@ -186,7 +186,8 @@ export function MeetingChannelFormModal({
                 value={platform}
                 onChange={(event) =>
                   setPlatform(
-                    event.target.value as MeetingChannelCreatePayload["platform"],
+                    event.target
+                      .value as MeetingChannelCreatePayload["platform"],
                   )
                 }
                 required
@@ -207,7 +208,10 @@ export function MeetingChannelFormModal({
                   aria-label={`Platform: ${toPlatformLabel(platform)}. Locked after creation.`}
                 >
                   <span>{toPlatformLabel(platform)}</span>
-                  <LockKeyhole className="h-4 w-4 text-slate-400" aria-hidden="true" />
+                  <LockKeyhole
+                    className="h-4 w-4 text-slate-400"
+                    aria-hidden="true"
+                  />
                 </div>
                 <p className="text-[11px] font-medium text-slate-500">
                   Platform is fixed after this channel is created.

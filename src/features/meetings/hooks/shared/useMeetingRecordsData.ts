@@ -21,16 +21,16 @@ export type MeetingRecordsApiPort = {
     projectId: string,
     payload: MeetingRecordUpsertPayload,
   ) => Promise<MeetingRecord>;
-  updateProjectMeetingRecord: (
+  updateProjectMeetingRecord?: (
     projectId: string,
     recordId: string,
     payload: MeetingRecordUpsertPayload,
   ) => Promise<MeetingRecord>;
-  deleteProjectMeetingRecord: (
+  deleteProjectMeetingRecord?: (
     projectId: string,
     recordId: string,
   ) => Promise<void>;
-  approveProjectMeetingRecord: (
+  approveProjectMeetingRecord?: (
     projectId: string,
     recordId: string,
   ) => Promise<MeetingRecord>;
@@ -139,6 +139,9 @@ export function useMeetingRecordsData({
       recordId: string,
       payload: MeetingRecordUpsertPayload,
     ): Promise<MeetingRecord> => {
+      if (!api.updateProjectMeetingRecord) {
+        throw toApiError(null, "This account cannot update meeting records.");
+      }
       const updated = await api.updateProjectMeetingRecord(
         projectId,
         recordId,
@@ -156,6 +159,9 @@ export function useMeetingRecordsData({
 
   const deleteRecord = useCallback(
     async (recordId: string): Promise<void> => {
+      if (!api.deleteProjectMeetingRecord) {
+        throw toApiError(null, "This account cannot delete meeting records.");
+      }
       await api.deleteProjectMeetingRecord(projectId, recordId);
       setRecords((current) => current.filter((item) => item.id !== recordId));
     },
@@ -164,6 +170,9 @@ export function useMeetingRecordsData({
 
   const approveRecord = useCallback(
     async (recordId: string): Promise<MeetingRecord> => {
+      if (!api.approveProjectMeetingRecord) {
+        throw toApiError(null, "This account cannot approve meeting records.");
+      }
       const approved = await api.approveProjectMeetingRecord(
         projectId,
         recordId,

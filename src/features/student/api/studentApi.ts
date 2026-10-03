@@ -18,6 +18,34 @@ const { clearCache: clearRoleProjectCache, ...roleProjectApi } =
     apiClient,
     roleBasePath: "/api/student",
   });
+
+type SupervisorOnlyMeetingMutation =
+  | "updateProjectMeetingChannel"
+  | "deleteProjectMeetingChannel"
+  | "approveProjectMeetingChannel"
+  | "updateProjectMeetingRecord"
+  | "deleteProjectMeetingRecord"
+  | "approveProjectMeetingRecord";
+
+type StudentRoleProjectApi = Omit<
+  typeof roleProjectApi,
+  SupervisorOnlyMeetingMutation
+>;
+
+function toStudentRoleProjectApi(): StudentRoleProjectApi {
+  const studentSurface = { ...roleProjectApi } as Partial<typeof roleProjectApi>;
+
+  Reflect.deleteProperty(studentSurface, "updateProjectMeetingChannel");
+  Reflect.deleteProperty(studentSurface, "deleteProjectMeetingChannel");
+  Reflect.deleteProperty(studentSurface, "approveProjectMeetingChannel");
+  Reflect.deleteProperty(studentSurface, "updateProjectMeetingRecord");
+  Reflect.deleteProperty(studentSurface, "deleteProjectMeetingRecord");
+  Reflect.deleteProperty(studentSurface, "approveProjectMeetingRecord");
+
+  return studentSurface as StudentRoleProjectApi;
+}
+
+const studentRoleProjectApi = toStudentRoleProjectApi();
 const studentProjectsApi = createStudentProjectsApi({
   apiClient,
   cachedProjectsById,
@@ -37,7 +65,7 @@ export const studentApi = {
     clearStudentApiCache();
   },
 
-  ...roleProjectApi,
+  ...studentRoleProjectApi,
   ...studentProjectsApi,
 
   getProjectGitHubRepositories(

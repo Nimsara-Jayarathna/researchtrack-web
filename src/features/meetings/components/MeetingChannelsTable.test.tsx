@@ -24,6 +24,23 @@ function channel(overrides: Partial<MeetingChannel> = {}): MeetingChannel {
 }
 
 describe("MeetingChannelsTable", () => {
+  it("does not expose Supervisor management actions in Student read-only mode", () => {
+    render(
+      <MeetingChannelsTable channels={[channel()]} canManage={false} />,
+    );
+
+    expect(
+      screen.queryByRole("button", { name: "Approve channel" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Edit channel" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Delete channel" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("PENDING")).toBeInTheDocument();
+  });
+
   it("truncates channel name by character limit and preserves hover title", () => {
     const longName =
       "This is a very long channel name that should be truncated";

@@ -65,6 +65,17 @@ describe("studentApi meeting-channels cache", () => {
     vi.clearAllMocks();
   });
 
+  it("does not expose Supervisor-only meeting management mutations", async () => {
+    const studentApi = await loadStudentApi();
+
+    expect("updateProjectMeetingChannel" in studentApi).toBe(false);
+    expect("deleteProjectMeetingChannel" in studentApi).toBe(false);
+    expect("approveProjectMeetingChannel" in studentApi).toBe(false);
+    expect("updateProjectMeetingRecord" in studentApi).toBe(false);
+    expect("deleteProjectMeetingRecord" in studentApi).toBe(false);
+    expect("approveProjectMeetingRecord" in studentApi).toBe(false);
+  });
+
   it("deduplicates concurrent meeting-channels requests", async () => {
     const studentApi = await loadStudentApi();
     let resolveGet: ((value: unknown) => void) | null = null;

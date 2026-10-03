@@ -22,6 +22,27 @@ const existingChannel: MeetingChannel = {
 };
 
 describe("MeetingChannelFormModal", () => {
+  it("supports Student proposal wording without changing Supervisor defaults", () => {
+    render(
+      <MeetingChannelFormModal
+        isOpen
+        mode="add"
+        initialChannel={null}
+        onClose={vi.fn()}
+        onSubmit={vi.fn()}
+        addTitle="Propose meeting channel"
+        addSubmitLabel="Submit proposal"
+      />,
+    );
+
+    expect(
+      screen.getByRole("dialog", { name: "Propose meeting channel" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Submit proposal" }),
+    ).toBeInTheDocument();
+  });
+
   it("marks required add fields and disables submit until a valid http/https link is entered", async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();

@@ -27,6 +27,7 @@ type Props = {
   isOpen: boolean;
   projectId: string;
   requirement: SubmissionRequirement | null;
+  existingSubmission?: ResearchSubmission | null;
   onClose: () => void;
   onCompleted: (submission: ResearchSubmission) => void;
 };
@@ -45,6 +46,7 @@ export function SubmissionUploadModal({
   isOpen,
   projectId,
   requirement,
+  existingSubmission = null,
   onClose,
   onCompleted,
 }: Props) {
@@ -58,6 +60,8 @@ export function SubmissionUploadModal({
   );
   const [storageUploaded, setStorageUploaded] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  const isRevision = Boolean(existingSubmission);
 
   useEffect(() => {
     if (!isOpen) {
@@ -76,12 +80,9 @@ export function SubmissionUploadModal({
       setPreviewUrl(null);
       return;
     }
-
     const nextUrl = URL.createObjectURL(file);
     setPreviewUrl(nextUrl);
-    return () => {
-      URL.revokeObjectURL(nextUrl);
-    };
+    return () => URL.revokeObjectURL(nextUrl);
   }, [file]);
 
   const fileError = useMemo(() => {
@@ -99,6 +100,8 @@ export function SubmissionUploadModal({
   const sessionExpired = uploadSession
     ? new Date(uploadSession.expiresAt).getTime() <= Date.now()
     : false;
+  const expectedVersion =
+    uploadSession?.versionNumber ?? (existingSubmission?.versionCount ?? 0) + 1;
 
   async function completeSession(sessionId: string) {
     try {
@@ -130,8 +133,6 @@ export function SubmissionUploadModal({
       setPhase("success");
       onCompleted(submission);
     } catch {
-      // The backend marks an expired session inactive while rejecting completion.
-      // Clearing the local session then allows a fresh upload session to be created.
       setUploadSession(null);
       setStorageUploaded(false);
       setProgress(0);
@@ -144,7 +145,6 @@ export function SubmissionUploadModal({
 
   async function uploadBytes(session: UploadSession) {
     if (!file) return;
-
     if (new Date(session.expiresAt).getTime() <= Date.now()) {
       await releaseExpiredSession(session);
       return;
@@ -174,8 +174,7 @@ export function SubmissionUploadModal({
   }
 
   async function startUpload() {
-    if (!requirement || !file || fileError) return;
-
+    if (!file || fileError) return;
     try {
       setPhase("preparing");
       setError(null);
@@ -226,13 +225,19 @@ export function SubmissionUploadModal({
       dialogClassName="relative z-10 w-full max-w-2xl"
       onBackdropClick={isBusy || Boolean(uploadSession) ? undefined : onClose}
       lockBodyScroll
-      ariaLabel="Submit research document"
+      ariaLabel={
+        isRevision
+          ? "Upload revised research document"
+          : "Submit research document"
+      }
     >
       <div className="max-h-[92vh] w-full overflow-y-auto rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h3 className="text-lg font-bold text-slate-900">
-              Submit research document
+              {isRevision
+                ? "Upload revised version"
+                : "Submit research document"}
             </h3>
             <p className="mt-1 text-sm text-slate-500">{requirement.title}</p>
           </div>
@@ -246,6 +251,14 @@ export function SubmissionUploadModal({
             <X className="h-5 w-5" />
           </button>
         </div>
+
+        {isRevision ? (
+          <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+            <strong>Revision requested.</strong> This upload will create Version{" "}
+            {expectedVersion}; previous versions and Supervisor reviews remain
+            unchanged.
+          </div>
+        ) : null}
 
         <div className="mt-5 rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">
           <p>
@@ -262,20 +275,20 @@ export function SubmissionUploadModal({
               : "No due date"}
           </p>
           <p className="mt-2 text-xs leading-5 text-slate-500">
-            The browser uploads directly to private S3 with a short-lived
-            object-scoped URL. ResearchTrack records Version 1 only after the
-            backend verifies the stored object.
+            The browser uploads directly to private S3. ResearchTrack records
+            the immutable version only after server-side object verification.
           </p>
         </div>
 
         {phase === "success" ? (
           <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-emerald-800">
             <div className="flex items-center gap-2 font-semibold">
-              <CheckCircle2 className="h-5 w-5" /> Submission recorded
+              <CheckCircle2 className="h-5 w-5" /> Version {expectedVersion}{" "}
+              recorded
             </div>
             <p className="mt-2 text-sm leading-6">
-              Version 1 is now pending review. This recorded version cannot be
-              deleted or replaced by the Student in the current story.
+              The submission is now pending Supervisor review. Earlier versions
+              remain immutable and available in version history.
             </p>
             <Button className="mt-4" onClick={onClose}>
               Close
@@ -336,7 +349,11 @@ export function SubmissionUploadModal({
                 maxLength={2000}
                 onChange={(event) => setNote(event.target.value)}
                 className="mt-2 min-h-24 w-full resize-y rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-slate-400"
-                placeholder="Add context for this submission"
+                placeholder={
+                  isRevision
+                    ? "Summarize what changed in this revision"
+                    : "Add context for this submission"
+                }
               />
               <span className="mt-1 block text-right text-xs font-normal text-slate-400">
                 {note.length}/2000
@@ -409,18 +426,14 @@ export function SubmissionUploadModal({
                   leftIcon={<FileUp className="h-4 w-4" />}
                   onClick={() => void startUpload()}
                 >
-                  {phase === "preparing" ? "Preparing…" : "Submit file"}
+                  {phase === "preparing"
+                    ? "Preparing…"
+                    : isRevision
+                      ? "Upload revision"
+                      : "Submit file"}
                 </Button>
               ) : null}
             </div>
-
-            {uploadSession ? (
-              <p className="mt-3 text-center text-xs leading-5 text-slate-400">
-                Keep this window open while the upload session is active. If the
-                direct S3 transfer fails, use Retry S3 upload instead of
-                creating another submission.
-              </p>
-            ) : null}
           </>
         )}
       </div>

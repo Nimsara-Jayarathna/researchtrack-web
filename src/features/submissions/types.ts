@@ -1,6 +1,8 @@
 export type SubmissionRequirementStatus = "OPEN" | "CLOSED" | "ARCHIVED";
 export type SubmissionStatus =
   "PENDING_REVIEW" | "CHANGES_REQUESTED" | "APPROVED" | "REJECTED";
+export type ReviewDecision = "APPROVED" | "CHANGES_REQUESTED" | "REJECTED";
+export type SubmissionParticipantRole = "STUDENT" | "SUPERVISOR";
 
 export type SubmissionSummary = {
   id: string;
@@ -50,6 +52,17 @@ export type UploadSession = {
   requiredHeaders: Record<string, string>;
 };
 
+export type SubmissionReview = {
+  id: string;
+  submissionId: string;
+  versionId: string;
+  decision: ReviewDecision;
+  feedback: string | null;
+  reviewedBy: string;
+  reviewedByName: string;
+  reviewedAt: string;
+};
+
 export type SubmissionVersion = {
   id: string;
   submissionId: string;
@@ -65,6 +78,7 @@ export type SubmissionVersion = {
   isLate: boolean;
   isCurrent: boolean;
   isApproved: boolean;
+  review: SubmissionReview | null;
 };
 
 export type ResearchSubmission = {
@@ -92,4 +106,26 @@ export type ResearchSubmission = {
 export type DownloadGrant = {
   url: string;
   expiresAt: string;
+};
+
+export type CreateSubmissionReviewRequest = {
+  versionId: string;
+  decision: ReviewDecision;
+  feedback: string | null;
+};
+
+export type SubmissionComment = {
+  id: string;
+  submissionId: string;
+  versionId: string | null;
+  authorId: string;
+  authorName: string;
+  authorRole: SubmissionParticipantRole;
+  comment: string;
+  createdAt: string;
+};
+
+export type CreateSubmissionCommentRequest = {
+  versionId: string | null;
+  comment: string;
 };

@@ -3,6 +3,7 @@ import {
   CalendarClock,
   Download,
   Eye,
+  FileClock,
   FileText,
   RefreshCw,
   Upload,
@@ -24,10 +25,10 @@ import type {
   SubmissionStatus,
   SubmissionVersion,
 } from "../types";
+import { SubmissionDetailModal } from "./SubmissionDetailModal";
 import { SubmissionUploadModal } from "./SubmissionUploadModal";
 
 type Props = { projectId: string };
-
 type FileDisposition = "inline" | "attachment";
 
 function requirementStatusTone(status: SubmissionRequirement["status"]) {
@@ -41,9 +42,7 @@ function requirementStatusTone(status: SubmissionRequirement["status"]) {
 function submissionStatusTone(status: SubmissionStatus) {
   if (status === "APPROVED") return "success";
   if (status === "REJECTED") return "danger";
-  if (status === "PENDING_REVIEW" || status === "CHANGES_REQUESTED")
-    return "warning";
-  return "neutral";
+  return "warning";
 }
 
 function readableStatus(status: string) {
@@ -106,6 +105,10 @@ export function StudentSubmissionsSection({ projectId }: Props) {
   const [actionError, setActionError] = useState<string | null>(null);
   const [uploadRequirement, setUploadRequirement] =
     useState<SubmissionRequirement | null>(null);
+  const [uploadSubmission, setUploadSubmission] =
+    useState<ResearchSubmission | null>(null);
+  const [detailSubmission, setDetailSubmission] =
+    useState<ResearchSubmission | null>(null);
   const [fileAction, setFileAction] = useState<string | null>(null);
 
   const load = useCallback(
@@ -119,22 +122,17 @@ export function StudentSubmissionsSection({ projectId }: Props) {
         setRequirements(nextRequirements);
         setSubmissionsByRequirement(
           Object.fromEntries(
-            submissions.map((submission) => [
-              submission.requirementId,
-              submission,
-            ]),
+            submissions.map((item) => [item.requirementId, item]),
           ),
         );
         setError(null);
         setActionError(null);
       } catch (caught) {
-        if (isApiException(caught)) {
-          setError(caught.apiError);
-        } else {
+        if (isApiException(caught)) setError(caught.apiError);
+        else
           setActionError(
             "Unable to load the submission workspace. Please try again.",
           );
-        }
       } finally {
         if (showLoading) setLoading(false);
       }
@@ -147,13 +145,15 @@ export function StudentSubmissionsSection({ projectId }: Props) {
   }, [load]);
 
   const summary = useMemo(() => {
-    const submitted = Object.keys(submissionsByRequirement).length;
-    const awaiting = requirements.filter(
-      (requirement) =>
-        requirement.status === "OPEN" &&
-        !submissionsByRequirement[requirement.id],
-    ).length;
-    return { submitted, awaiting };
+    const submissions = Object.values(submissionsByRequirement);
+    return {
+      ready: requirements.filter(
+        (r) => r.status === "OPEN" && !submissionsByRequirement[r.id],
+      ).length,
+      pending: submissions.filter((s) => s.status === "PENDING_REVIEW").length,
+      revisions: submissions.filter((s) => s.status === "CHANGES_REQUESTED")
+        .length,
+    };
   }, [requirements, submissionsByRequirement]);
 
   async function openVersion(
@@ -161,8 +161,8 @@ export function StudentSubmissionsSection({ projectId }: Props) {
     version: SubmissionVersion,
     disposition: FileDisposition,
   ) {
-    const actionKey = `${version.id}:${disposition}`;
-    setFileAction(actionKey);
+    const key = `${version.id}:${disposition}`;
+    setFileAction(key);
     setActionError(null);
     try {
       const grant = await submissionApi.getDownloadUrl(
@@ -183,11 +183,14 @@ export function StudentSubmissionsSection({ projectId }: Props) {
     }
   }
 
-  function handleCompleted(submission: ResearchSubmission) {
+  function handleUpdated(submission: ResearchSubmission) {
     setSubmissionsByRequirement((current) => ({
       ...current,
       [submission.requirementId]: submission,
     }));
+    setDetailSubmission((current) =>
+      current?.id === submission.id ? submission : current,
+    );
     setRequirements((current) =>
       current.map((requirement) =>
         requirement.id === submission.requirementId
@@ -208,11 +211,19 @@ export function StudentSubmissionsSection({ projectId }: Props) {
     setActionError(null);
   }
 
+  function startUpload(
+    requirement: SubmissionRequirement,
+    submission: ResearchSubmission | null,
+  ) {
+    setUploadRequirement(requirement);
+    setUploadSubmission(submission);
+  }
+
   return (
     <>
       <SectionCard
         title="Research Submissions"
-        subtitle="Submit each required document securely. A completed version is immutable and cannot be deleted or replaced."
+        subtitle="Submit required documents, respond to formal Supervisor feedback, and keep every recorded version immutable."
         actions={
           <IconActionButton
             label="Refresh submissions"
@@ -230,26 +241,26 @@ export function StudentSubmissionsSection({ projectId }: Props) {
           <div className="mb-5 grid gap-3 sm:grid-cols-3">
             <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Requirements
-              </p>
-              <p className="mt-1 text-xl font-bold text-slate-900">
-                {requirements.length}
-              </p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Ready to submit
               </p>
               <p className="mt-1 text-xl font-bold text-slate-900">
-                {summary.awaiting}
+                {summary.ready}
               </p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Submitted
+                Pending review
               </p>
               <p className="mt-1 text-xl font-bold text-slate-900">
-                {summary.submitted}
+                {summary.pending}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Changes requested
+              </p>
+              <p className="mt-1 text-xl font-bold text-slate-900">
+                {summary.revisions}
               </p>
             </div>
           </div>
@@ -266,7 +277,6 @@ export function StudentSubmissionsSection({ projectId }: Props) {
             {actionError}
           </div>
         ) : null}
-
         {!error && loading ? (
           <div className="space-y-3">
             {[0, 1, 2].map((item) => (
@@ -277,7 +287,6 @@ export function StudentSubmissionsSection({ projectId }: Props) {
             ))}
           </div>
         ) : null}
-
         {!error && !loading && requirements.length === 0 ? (
           <EmptyStateCard message="No submission requirements have been created for this project yet." />
         ) : null}
@@ -288,11 +297,16 @@ export function StudentSubmissionsSection({ projectId }: Props) {
               const submission =
                 submissionsByRequirement[requirement.id] ?? null;
               const version = currentVersion(submission);
-              const canSubmit = requirement.status === "OPEN" && !submission;
+              const canInitialSubmit =
+                requirement.status === "OPEN" && !submission;
+              const canResubmit =
+                requirement.status === "OPEN" &&
+                submission?.status === "CHANGES_REQUESTED";
               const isPastDue = Boolean(
                 requirement.dueAt &&
                 new Date(requirement.dueAt).getTime() < Date.now(),
               );
+              const latestFeedback = version?.review?.feedback ?? null;
 
               return (
                 <article
@@ -325,14 +339,14 @@ export function StudentSubmissionsSection({ projectId }: Props) {
                       ) : null}
                     </div>
 
-                    {canSubmit ? (
+                    {canInitialSubmit || canResubmit ? (
                       <Button
                         size="sm"
                         variant="primary"
                         leftIcon={<Upload className="h-4 w-4" />}
-                        onClick={() => setUploadRequirement(requirement)}
+                        onClick={() => startUpload(requirement, submission)}
                       >
-                        Submit file
+                        {canResubmit ? "Upload revised version" : "Submit file"}
                       </Button>
                     ) : null}
                   </div>
@@ -361,6 +375,33 @@ export function StudentSubmissionsSection({ projectId }: Props) {
                       ) : null}
                     </span>
                   </div>
+
+                  {version?.review ? (
+                    <div
+                      className={`mt-4 rounded-2xl border p-4 ${submission?.status === "REJECTED" ? "border-rose-200 bg-rose-50" : submission?.status === "APPROVED" ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}`}
+                    >
+                      <p className="text-xs font-bold uppercase tracking-wide text-slate-700">
+                        Supervisor decision ·{" "}
+                        {readableStatus(version.review.decision)}
+                      </p>
+                      {latestFeedback ? (
+                        <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-800">
+                          {latestFeedback}
+                        </p>
+                      ) : null}
+                      <p className="mt-2 text-xs text-slate-600">
+                        Reviewed Version {version.versionNumber} by{" "}
+                        {version.review.reviewedByName} on{" "}
+                        {formatDateTime(version.review.reviewedAt)}.
+                      </p>
+                      {submission?.status === "CHANGES_REQUESTED" ? (
+                        <p className="mt-2 text-xs font-semibold text-amber-800">
+                          Uploading a revision will create Version{" "}
+                          {submission.versionCount + 1}.
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : null}
 
                   {submission && version ? (
                     <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
@@ -397,13 +438,21 @@ export function StudentSubmissionsSection({ projectId }: Props) {
                               ? "Preparing…"
                               : "Download"}
                           </Button>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            leftIcon={<FileClock className="h-4 w-4" />}
+                            onClick={() => setDetailSubmission(submission)}
+                          >
+                            Version history
+                          </Button>
                         </div>
                       </div>
                       <p className="mt-4 border-t border-slate-200 pt-3 text-xs leading-5 text-slate-500">
-                        This recorded version is immutable. Additional uploads
-                        remain locked in this story; the later review and
-                        resubmission workflow will decide when a revised version
-                        can be submitted.
+                        This recorded version is immutable.{" "}
+                        {submission.status === "CHANGES_REQUESTED"
+                          ? "A revised version is allowed because the Supervisor formally requested changes."
+                          : "Additional uploads remain locked until the workflow explicitly allows a revision."}
                       </p>
                     </div>
                   ) : requirement.status !== "OPEN" ? (
@@ -426,8 +475,21 @@ export function StudentSubmissionsSection({ projectId }: Props) {
         isOpen={Boolean(uploadRequirement)}
         projectId={projectId}
         requirement={uploadRequirement}
-        onClose={() => setUploadRequirement(null)}
-        onCompleted={handleCompleted}
+        existingSubmission={uploadSubmission}
+        onClose={() => {
+          setUploadRequirement(null);
+          setUploadSubmission(null);
+        }}
+        onCompleted={handleUpdated}
+      />
+
+      <SubmissionDetailModal
+        isOpen={Boolean(detailSubmission)}
+        projectId={projectId}
+        submission={detailSubmission}
+        viewerRole="STUDENT"
+        onClose={() => setDetailSubmission(null)}
+        onUpdated={handleUpdated}
       />
     </>
   );

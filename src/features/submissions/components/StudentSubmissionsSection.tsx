@@ -31,18 +31,23 @@ type Props = { projectId: string };
 type FileDisposition = "inline" | "attachment";
 
 function requirementStatusTone(status: SubmissionRequirement["status"]) {
-  return status === "OPEN" ? "success" : status === "CLOSED" ? "warning" : "neutral";
+  return status === "OPEN"
+    ? "success"
+    : status === "CLOSED"
+      ? "warning"
+      : "neutral";
 }
 
 function submissionStatusTone(status: SubmissionStatus) {
   if (status === "APPROVED") return "success";
   if (status === "REJECTED") return "danger";
-  if (status === "PENDING_REVIEW" || status === "CHANGES_REQUESTED") return "warning";
+  if (status === "PENDING_REVIEW" || status === "CHANGES_REQUESTED")
+    return "warning";
   return "neutral";
 }
 
 function readableStatus(status: string) {
-  return status.replaceAll("_", " ");
+  return status.replace(/_/g, " ");
 }
 
 function formatDateTime(value: string) {
@@ -53,7 +58,9 @@ function currentVersion(submission: ResearchSubmission | null | undefined) {
   if (!submission) return null;
   return (
     submission.versions.find((version) => version.isCurrent) ??
-    submission.versions.find((version) => version.id === submission.currentVersionId) ??
+    submission.versions.find(
+      (version) => version.id === submission.currentVersionId,
+    ) ??
     submission.versions[0] ??
     null
   );
@@ -72,7 +79,9 @@ function SubmissionFileDetails({ version }: { version: SubmissionVersion }) {
         <span>Version {version.versionNumber}</span>
         <span>{formatBytes(version.fileSizeBytes)}</span>
         <span>{formatDateTime(version.submittedAt)}</span>
-        {version.isLate ? <span className="font-semibold text-amber-700">Late submission</span> : null}
+        {version.isLate ? (
+          <span className="font-semibold text-amber-700">Late submission</span>
+        ) : null}
       </div>
       <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
         <UserRound className="h-3.5 w-3.5" />
@@ -95,7 +104,8 @@ export function StudentSubmissionsSection({ projectId }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ApiError | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [uploadRequirement, setUploadRequirement] = useState<SubmissionRequirement | null>(null);
+  const [uploadRequirement, setUploadRequirement] =
+    useState<SubmissionRequirement | null>(null);
   const [fileAction, setFileAction] = useState<string | null>(null);
 
   const load = useCallback(
@@ -108,7 +118,12 @@ export function StudentSubmissionsSection({ projectId }: Props) {
         ]);
         setRequirements(nextRequirements);
         setSubmissionsByRequirement(
-          Object.fromEntries(submissions.map((submission) => [submission.requirementId, submission])),
+          Object.fromEntries(
+            submissions.map((submission) => [
+              submission.requirementId,
+              submission,
+            ]),
+          ),
         );
         setError(null);
         setActionError(null);
@@ -116,7 +131,9 @@ export function StudentSubmissionsSection({ projectId }: Props) {
         if (isApiException(caught)) {
           setError(caught.apiError);
         } else {
-          setActionError("Unable to load the submission workspace. Please try again.");
+          setActionError(
+            "Unable to load the submission workspace. Please try again.",
+          );
         }
       } finally {
         if (showLoading) setLoading(false);
@@ -133,7 +150,8 @@ export function StudentSubmissionsSection({ projectId }: Props) {
     const submitted = Object.keys(submissionsByRequirement).length;
     const awaiting = requirements.filter(
       (requirement) =>
-        requirement.status === "OPEN" && !submissionsByRequirement[requirement.id],
+        requirement.status === "OPEN" &&
+        !submissionsByRequirement[requirement.id],
     ).length;
     return { submitted, awaiting };
   }, [requirements, submissionsByRequirement]);
@@ -200,28 +218,46 @@ export function StudentSubmissionsSection({ projectId }: Props) {
             label="Refresh submissions"
             onClick={() => void load()}
             disabled={loading}
-            icon={<RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />}
+            icon={
+              <RefreshCw
+                className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
+              />
+            }
           />
         }
       >
         {!loading && !error && requirements.length > 0 ? (
           <div className="mb-5 grid gap-3 sm:grid-cols-3">
             <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Requirements</p>
-              <p className="mt-1 text-xl font-bold text-slate-900">{requirements.length}</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Requirements
+              </p>
+              <p className="mt-1 text-xl font-bold text-slate-900">
+                {requirements.length}
+              </p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Ready to submit</p>
-              <p className="mt-1 text-xl font-bold text-slate-900">{summary.awaiting}</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Ready to submit
+              </p>
+              <p className="mt-1 text-xl font-bold text-slate-900">
+                {summary.awaiting}
+              </p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Submitted</p>
-              <p className="mt-1 text-xl font-bold text-slate-900">{summary.submitted}</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Submitted
+              </p>
+              <p className="mt-1 text-xl font-bold text-slate-900">
+                {summary.submitted}
+              </p>
             </div>
           </div>
         ) : null}
 
-        {error ? <ErrorState error={error} onRetry={() => void load()} /> : null}
+        {error ? (
+          <ErrorState error={error} onRetry={() => void load()} />
+        ) : null}
         {actionError ? (
           <div
             role="alert"
@@ -234,7 +270,10 @@ export function StudentSubmissionsSection({ projectId }: Props) {
         {!error && loading ? (
           <div className="space-y-3">
             {[0, 1, 2].map((item) => (
-              <div key={item} className="h-44 animate-pulse rounded-2xl bg-slate-100" />
+              <div
+                key={item}
+                className="h-44 animate-pulse rounded-2xl bg-slate-100"
+              />
             ))}
           </div>
         ) : null}
@@ -246,11 +285,13 @@ export function StudentSubmissionsSection({ projectId }: Props) {
         {!error && !loading && requirements.length > 0 ? (
           <div className="space-y-4">
             {requirements.map((requirement) => {
-              const submission = submissionsByRequirement[requirement.id] ?? null;
+              const submission =
+                submissionsByRequirement[requirement.id] ?? null;
               const version = currentVersion(submission);
               const canSubmit = requirement.status === "OPEN" && !submission;
               const isPastDue = Boolean(
-                requirement.dueAt && new Date(requirement.dueAt).getTime() < Date.now(),
+                requirement.dueAt &&
+                new Date(requirement.dueAt).getTime() < Date.now(),
               );
 
               return (
@@ -261,12 +302,18 @@ export function StudentSubmissionsSection({ projectId }: Props) {
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-bold text-slate-900">{requirement.title}</h3>
-                        <StatusBadge tone={requirementStatusTone(requirement.status)}>
+                        <h3 className="font-bold text-slate-900">
+                          {requirement.title}
+                        </h3>
+                        <StatusBadge
+                          tone={requirementStatusTone(requirement.status)}
+                        >
                           {requirement.status}
                         </StatusBadge>
                         {submission ? (
-                          <StatusBadge tone={submissionStatusTone(submission.status)}>
+                          <StatusBadge
+                            tone={submissionStatusTone(submission.status)}
+                          >
                             {readableStatus(submission.status)}
                           </StatusBadge>
                         ) : null}
@@ -293,7 +340,9 @@ export function StudentSubmissionsSection({ projectId }: Props) {
                   <div className="mt-4 grid gap-2 rounded-2xl bg-slate-50 p-4 text-xs text-slate-600 sm:grid-cols-3">
                     <span>
                       <strong className="text-slate-700">Accepted:</strong>{" "}
-                      {requirement.allowedFileTypes.map((type) => `.${type}`).join(", ")}
+                      {requirement.allowedFileTypes
+                        .map((type) => `.${type}`)
+                        .join(", ")}
                     </span>
                     <span>
                       <strong className="text-slate-700">Maximum:</strong>{" "}
@@ -302,9 +351,13 @@ export function StudentSubmissionsSection({ projectId }: Props) {
                     <span className="flex items-center gap-1.5">
                       <CalendarClock className="h-3.5 w-3.5" />
                       <strong className="text-slate-700">Due:</strong>{" "}
-                      {requirement.dueAt ? formatDateTime(requirement.dueAt) : "No due date"}
+                      {requirement.dueAt
+                        ? formatDateTime(requirement.dueAt)
+                        : "No due date"}
                       {isPastDue && !submission ? (
-                        <span className="font-semibold text-amber-700">(late if submitted now)</span>
+                        <span className="font-semibold text-amber-700">
+                          (late if submitted now)
+                        </span>
                       ) : null}
                     </span>
                   </div>
@@ -319,23 +372,38 @@ export function StudentSubmissionsSection({ projectId }: Props) {
                             variant="secondary"
                             disabled={fileAction !== null}
                             leftIcon={<Eye className="h-4 w-4" />}
-                            onClick={() => void openVersion(submission, version, "inline")}
+                            onClick={() =>
+                              void openVersion(submission, version, "inline")
+                            }
                           >
-                            {fileAction === `${version.id}:inline` ? "Opening…" : "Preview"}
+                            {fileAction === `${version.id}:inline`
+                              ? "Opening…"
+                              : "Preview"}
                           </Button>
                           <Button
                             size="sm"
                             variant="secondary"
                             disabled={fileAction !== null}
                             leftIcon={<Download className="h-4 w-4" />}
-                            onClick={() => void openVersion(submission, version, "attachment")}
+                            onClick={() =>
+                              void openVersion(
+                                submission,
+                                version,
+                                "attachment",
+                              )
+                            }
                           >
-                            {fileAction === `${version.id}:attachment` ? "Preparing…" : "Download"}
+                            {fileAction === `${version.id}:attachment`
+                              ? "Preparing…"
+                              : "Download"}
                           </Button>
                         </div>
                       </div>
                       <p className="mt-4 border-t border-slate-200 pt-3 text-xs leading-5 text-slate-500">
-                        This recorded version is immutable. Additional uploads remain locked in this story; the later review and resubmission workflow will decide when a revised version can be submitted.
+                        This recorded version is immutable. Additional uploads
+                        remain locked in this story; the later review and
+                        resubmission workflow will decide when a revised version
+                        can be submitted.
                       </p>
                     </div>
                   ) : requirement.status !== "OPEN" ? (

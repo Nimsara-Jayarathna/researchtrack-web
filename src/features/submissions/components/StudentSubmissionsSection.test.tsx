@@ -17,8 +17,14 @@ vi.mock("../api/submissionApi", () => ({
 }));
 
 vi.mock("./SubmissionUploadModal", () => ({
-  SubmissionUploadModal: ({ requirement }: { requirement: SubmissionRequirement | null }) =>
-    requirement ? <div data-testid="upload-modal">upload:{requirement.title}</div> : null,
+  SubmissionUploadModal: ({
+    requirement,
+  }: {
+    requirement: SubmissionRequirement | null;
+  }) =>
+    requirement ? (
+      <div data-testid="upload-modal">upload:{requirement.title}</div>
+    ) : null,
 }));
 
 const requirement: SubmissionRequirement = {
@@ -93,11 +99,17 @@ describe("StudentSubmissionsSection", () => {
     render(<StudentSubmissionsSection projectId="project-1" />);
 
     expect(await screen.findByText("Research Proposal")).toBeInTheDocument();
-    expect(screen.getByText("No document has been submitted for this requirement yet.")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "No document has been submitted for this requirement yet.",
+      ),
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Submit file" })).toBeEnabled();
 
     await user.click(screen.getByRole("button", { name: "Submit file" }));
-    expect(screen.getByTestId("upload-modal")).toHaveTextContent("upload:Research Proposal");
+    expect(screen.getByTestId("upload-modal")).toHaveTextContent(
+      "upload:Research Proposal",
+    );
   });
 
   it("shows the recorded immutable current version and secure file actions", async () => {
@@ -108,8 +120,12 @@ describe("StudentSubmissionsSection", () => {
 
     expect(await screen.findByText("proposal.pdf")).toBeInTheDocument();
     expect(screen.getByText("PENDING REVIEW")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Submit file" })).not.toBeInTheDocument();
-    expect(screen.getByText(/immutable/i)).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Submit file" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/This recorded version is immutable\./i),
+    ).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Preview" }));
 

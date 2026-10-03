@@ -1,5 +1,8 @@
 import { SupervisorSubmissionRequirementsSection } from "@/features/submissions/components/SupervisorSubmissionRequirementsSection";
-import type { ProjectFile, ProjectFileConfig } from "@/features/projectfiles/types";
+import type {
+  ProjectFile,
+  ProjectFileConfig,
+} from "@/features/projectfiles/types";
 
 type FilesTabSectionProps = {
   projectId: string;

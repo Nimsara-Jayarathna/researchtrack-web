@@ -1,5 +1,8 @@
 import { StudentSubmissionsSection } from "@/features/submissions/components/StudentSubmissionsSection";
-import type { ProjectFile, ProjectFileConfig } from "@/features/projectfiles/types";
+import type {
+  ProjectFile,
+  ProjectFileConfig,
+} from "@/features/projectfiles/types";
 
 type StudentFilesTabSectionProps = {
   projectId: string;
@@ -9,6 +12,8 @@ type StudentFilesTabSectionProps = {
   } | null;
 };
 
-export function StudentFilesTabSection({ projectId }: StudentFilesTabSectionProps) {
+export function StudentFilesTabSection({
+  projectId,
+}: StudentFilesTabSectionProps) {
   return <StudentSubmissionsSection projectId={projectId} />;
 }

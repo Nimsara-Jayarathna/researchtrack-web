@@ -11,12 +11,19 @@ const CONTENT_TYPES: Record<string, string[]> = {
 
 export function fileExtension(fileName: string) {
   const dot = fileName.lastIndexOf(".");
-  return dot < 0 ? "" : fileName.slice(dot + 1).trim().toLowerCase();
+  return dot < 0
+    ? ""
+    : fileName
+        .slice(dot + 1)
+        .trim()
+        .toLowerCase();
 }
 
 export function normalizedContentType(file: File) {
   const extension = fileExtension(file.name);
-  return file.type || CONTENT_TYPES[extension]?.[0] || "application/octet-stream";
+  return (
+    file.type || CONTENT_TYPES[extension]?.[0] || "application/octet-stream"
+  );
 }
 
 export function validateSubmissionFile(

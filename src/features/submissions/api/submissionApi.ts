@@ -14,7 +14,9 @@ function base(projectId: string) {
 
 export const submissionApi = {
   listRequirements(projectId: string): Promise<SubmissionRequirement[]> {
-    return apiClient.get<SubmissionRequirement[]>(`${base(projectId)}/requirements`);
+    return apiClient.get<SubmissionRequirement[]>(
+      `${base(projectId)}/requirements`,
+    );
   },
 
   listSubmissions(projectId: string): Promise<ResearchSubmission[]> {
@@ -25,7 +27,10 @@ export const submissionApi = {
     projectId: string,
     payload: RequirementMutation,
   ): Promise<SubmissionRequirement> {
-    return apiClient.post<SubmissionRequirement>(`${base(projectId)}/requirements`, payload);
+    return apiClient.post<SubmissionRequirement>(
+      `${base(projectId)}/requirements`,
+      payload,
+    );
   },
 
   updateRequirement(
@@ -70,7 +75,9 @@ export const submissionApi = {
   },
 
   deleteRequirement(projectId: string, requirementId: string): Promise<void> {
-    return apiClient.del<void>(`${base(projectId)}/requirements/${requirementId}`);
+    return apiClient.del<void>(
+      `${base(projectId)}/requirements/${requirementId}`,
+    );
   },
 
   createUploadSession(
@@ -98,7 +105,9 @@ export const submissionApi = {
     projectId: string,
     submissionId: string,
   ): Promise<ResearchSubmission> {
-    return apiClient.get<ResearchSubmission>(`${base(projectId)}/${submissionId}`);
+    return apiClient.get<ResearchSubmission>(
+      `${base(projectId)}/${submissionId}`,
+    );
   },
 
   getDownloadUrl(

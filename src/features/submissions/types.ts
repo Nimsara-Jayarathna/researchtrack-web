@@ -1,9 +1,6 @@
 export type SubmissionRequirementStatus = "OPEN" | "CLOSED" | "ARCHIVED";
 export type SubmissionStatus =
-  | "PENDING_REVIEW"
-  | "CHANGES_REQUESTED"
-  | "APPROVED"
-  | "REJECTED";
+  "PENDING_REVIEW" | "CHANGES_REQUESTED" | "APPROVED" | "REJECTED";
 
 export type SubmissionSummary = {
   id: string;

@@ -80,8 +80,8 @@ export function useStudentMeetingChannelsState(
   const submitForm = useCallback(
     async (payload: MeetingChannelFormPayload) => {
       openLoadingModal(
-        "Submitting meeting channel",
-        "Submitting meeting channel for this project.",
+        "Submitting meeting channel proposal",
+        "Submitting this meeting channel for Supervisor approval.",
       );
 
       try {
@@ -90,17 +90,17 @@ export function useStudentMeetingChannelsState(
         }
         await createChannel(payload);
         openSuccessModal(
-          "Meeting channel submitted",
-          "Meeting channel was submitted for approval.",
+          "Meeting channel proposal submitted",
+          "Your meeting channel is pending Supervisor approval.",
         );
         closeForm();
       } catch (caught) {
         const apiError = toApiError(
           caught,
-          "Unable to submit meeting channel right now.",
+          "Unable to submit the meeting channel proposal right now.",
         );
         openErrorModal(
-          "Unable to submit meeting channel",
+          "Unable to submit meeting channel proposal",
           apiError,
           () => void submitForm(payload),
         );

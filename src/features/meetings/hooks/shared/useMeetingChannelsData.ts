@@ -18,16 +18,16 @@ export type MeetingChannelsApiPort = {
     projectId: string,
     payload: MeetingChannelCreatePayload,
   ) => Promise<MeetingChannel>;
-  updateProjectMeetingChannel: (
+  updateProjectMeetingChannel?: (
     projectId: string,
     channelId: string,
     payload: MeetingChannelUpdatePayload,
   ) => Promise<MeetingChannel>;
-  deleteProjectMeetingChannel: (
+  deleteProjectMeetingChannel?: (
     projectId: string,
     channelId: string,
   ) => Promise<void>;
-  approveProjectMeetingChannel: (
+  approveProjectMeetingChannel?: (
     projectId: string,
     channelId: string,
   ) => Promise<MeetingChannel>;
@@ -126,6 +126,9 @@ export function useMeetingChannelsData({
       channelId: string,
       payload: MeetingChannelUpdatePayload,
     ): Promise<MeetingChannel> => {
+      if (!api.updateProjectMeetingChannel) {
+        throw toApiError(null, "This account cannot update meeting channels.");
+      }
       const updated = await api.updateProjectMeetingChannel(
         projectId,
         channelId,
@@ -143,6 +146,9 @@ export function useMeetingChannelsData({
 
   const deleteChannel = useCallback(
     async (channelId: string): Promise<void> => {
+      if (!api.deleteProjectMeetingChannel) {
+        throw toApiError(null, "This account cannot delete meeting channels.");
+      }
       await api.deleteProjectMeetingChannel(projectId, channelId);
       setChannels((current) => current.filter((item) => item.id !== channelId));
     },
@@ -151,6 +157,9 @@ export function useMeetingChannelsData({
 
   const approveChannel = useCallback(
     async (channelId: string): Promise<MeetingChannel> => {
+      if (!api.approveProjectMeetingChannel) {
+        throw toApiError(null, "This account cannot approve meeting channels.");
+      }
       const approved = await api.approveProjectMeetingChannel(
         projectId,
         channelId,

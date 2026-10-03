@@ -20,6 +20,8 @@ type MeetingChannelFormModalProps = {
   onSubmit: (payload: MeetingChannelFormPayload) => void;
   maxNameLength?: number;
   maxLinkLength?: number;
+  addTitle?: string;
+  addSubmitLabel?: string;
 };
 
 function toPlatformLabel(value: string) {
@@ -57,6 +59,8 @@ export function MeetingChannelFormModal({
   onSubmit,
   maxNameLength = 120,
   maxLinkLength = 1024,
+  addTitle = "Add channel",
+  addSubmitLabel = "Add channel",
 }: MeetingChannelFormModalProps) {
   const [isMounted, setIsMounted] = useState(false);
   const [platform, setPlatform] =
@@ -64,7 +68,7 @@ export function MeetingChannelFormModal({
   const [channelName, setChannelName] = useState("");
   const [linkOrIdentifier, setLinkOrIdentifier] = useState("");
 
-  const title = mode === "add" ? "Add channel" : "Edit channel";
+  const title = mode === "add" ? addTitle : "Edit channel";
 
   useEffect(() => {
     if (!isOpen) {
@@ -280,7 +284,7 @@ export function MeetingChannelFormModal({
                 : undefined
             }
           >
-            {mode === "add" ? "Add channel" : "Save changes"}
+            {mode === "add" ? addSubmitLabel : "Save changes"}
           </Button>
         </div>
       </div>

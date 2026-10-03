@@ -108,8 +108,10 @@ export function useMeetingRecordsData({
           caught,
           "Unable to load meeting records right now.",
         );
-        setRecords([]);
-        setChannels([]);
+        if (!hasLoaded) {
+          setRecords([]);
+          setChannels([]);
+        }
         setError(apiError);
         return { ok: false, error: apiError };
       } finally {
@@ -117,7 +119,7 @@ export function useMeetingRecordsData({
         setIsLoading(false);
       }
     },
-    [api, projectId],
+    [api, hasLoaded, projectId],
   );
 
   const createRecord = useCallback(

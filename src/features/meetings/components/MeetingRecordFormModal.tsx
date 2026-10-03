@@ -20,6 +20,9 @@ type MeetingRecordFormModalProps = {
   onSubmit: (payload: MeetingRecordUpsertPayload) => void;
   maxSummaryLength?: number;
   maxDetailsLength?: number;
+  addTitle?: string;
+  addSubmitLabel?: string;
+  addHelperText?: string;
 };
 
 const DEFAULT_MAX_SUMMARY_LENGTH = 1024;
@@ -49,6 +52,9 @@ export function MeetingRecordFormModal({
   onSubmit,
   maxSummaryLength = DEFAULT_MAX_SUMMARY_LENGTH,
   maxDetailsLength = DEFAULT_MAX_DETAILS_LENGTH,
+  addTitle = "Add record",
+  addSubmitLabel = "Add record",
+  addHelperText,
 }: MeetingRecordFormModalProps) {
   const [isMounted, setIsMounted] = useState(false);
   const [meetingDate, setMeetingDate] = useState("");
@@ -57,7 +63,7 @@ export function MeetingRecordFormModal({
   const [discussionDetails, setDiscussionDetails] = useState("");
   const [channelId, setChannelId] = useState("");
 
-  const title = mode === "add" ? "Add record" : "Edit record";
+  const title = mode === "add" ? addTitle : "Edit record";
 
   useEffect(() => {
     if (!isOpen) {
@@ -92,7 +98,7 @@ export function MeetingRecordFormModal({
 
   const parsedDuration = useMemo(() => {
     const value = Number(durationMinutes);
-    if (!Number.isFinite(value)) return null;
+    if (!Number.isFinite(value) || !Number.isInteger(value)) return null;
     return value;
   }, [durationMinutes]);
 
@@ -186,6 +192,12 @@ export function MeetingRecordFormModal({
         </div>
 
         <div className="space-y-5 px-6 py-5">
+          {mode === "add" && addHelperText ? (
+            <p className="rounded-2xl border border-indigo-100 bg-indigo-50/70 px-4 py-3 text-sm font-medium text-indigo-900">
+              {addHelperText}
+            </p>
+          ) : null}
+
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="space-y-1.5">
               <label className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
@@ -211,6 +223,7 @@ export function MeetingRecordFormModal({
                 type="number"
                 inputMode="numeric"
                 min={1}
+                step={1}
                 value={durationMinutes}
                 required
                 aria-required="true"
@@ -293,7 +306,7 @@ export function MeetingRecordFormModal({
                 : undefined
             }
           >
-            {mode === "add" ? "Add record" : "Save changes"}
+            {mode === "add" ? addSubmitLabel : "Save changes"}
           </Button>
         </div>
       </div>

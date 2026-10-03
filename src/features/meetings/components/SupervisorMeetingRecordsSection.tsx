@@ -55,11 +55,11 @@ export function SupervisorMeetingRecordsSection({
       >
         {state.isLoading ? <MeetingSectionSkeleton /> : null}
 
-        {state.error ? (
+        {state.error && !state.hasLoaded ? (
           <ErrorState error={state.error} onRetry={() => void state.load()} />
         ) : null}
 
-        {!state.isLoading && !state.error ? (
+        {!state.isLoading && (!state.error || state.hasLoaded) ? (
           <MeetingRecordsTable
             records={state.records}
             channelsById={channelsById}

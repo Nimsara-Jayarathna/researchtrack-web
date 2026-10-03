@@ -184,4 +184,61 @@ describe("studentApi meeting-records shared endpoint", () => {
       payload,
     );
   });
+
+  it("deduplicates and caches concurrent Student meeting-history reads", async () => {
+    const studentApi = await loadStudentApi();
+    let resolveGet: ((value: unknown) => void) | null = null;
+
+    vi.mocked(apiClientMock.get).mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveGet = resolve;
+        }),
+    );
+
+    const first = studentApi.getProjectMeetingRecords("p-1");
+    const second = studentApi.getProjectMeetingRecords("p-1");
+
+    expect(apiClientMock.get).toHaveBeenCalledTimes(1);
+    expect(apiClientMock.get).toHaveBeenCalledWith(
+      "/api/v1/projects/p-1/meetings/records",
+    );
+
+    resolveGet?.([record()]);
+    await expect(first).resolves.toEqual([record()]);
+    await expect(second).resolves.toEqual([record()]);
+
+    vi.mocked(apiClientMock.get).mockClear();
+    await expect(studentApi.getProjectMeetingRecords("p-1")).resolves.toEqual([
+      record(),
+    ]);
+    expect(apiClientMock.get).not.toHaveBeenCalled();
+  });
+
+  it("patches Student meeting-history cache after a pending submission", async () => {
+    const studentApi = await loadStudentApi();
+    const existing = record({
+      id: "r-old",
+      status: "APPROVED",
+      meetingDate: "2026-10-01",
+    });
+    vi.mocked(apiClientMock.get).mockResolvedValue([existing]);
+    await studentApi.getProjectMeetingRecords("p-1");
+
+    const created = record({ id: "r-new", status: "PENDING" });
+    vi.mocked(apiClientMock.post).mockResolvedValue(created);
+    await studentApi.createProjectMeetingRecord("p-1", {
+      meetingDate: "2026-10-02",
+      durationMinutes: 45,
+      discussionSummary: "Discussed methodology",
+      discussionDetails: null,
+      channelId: null,
+    });
+
+    vi.mocked(apiClientMock.get).mockClear();
+    const next = await studentApi.getProjectMeetingRecords("p-1");
+    expect(apiClientMock.get).not.toHaveBeenCalled();
+    expect(next.map((item) => item.id)).toEqual(["r-new", "r-old"]);
+    expect(next[0]?.status).toBe("PENDING");
+  });
 });

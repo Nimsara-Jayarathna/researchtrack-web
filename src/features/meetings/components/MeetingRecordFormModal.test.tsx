@@ -99,4 +99,56 @@ describe("MeetingRecordFormModal", () => {
       channelId: null,
     });
   });
+
+  it("supports Student submission wording without changing the shared form contract", () => {
+    render(
+      <MeetingRecordFormModal
+        isOpen
+        mode="add"
+        initialRecord={null}
+        channels={[]}
+        onClose={vi.fn()}
+        onSubmit={vi.fn()}
+        addTitle="Submit meeting record"
+        addSubmitLabel="Submit for approval"
+        addHelperText="Student-submitted meeting records are saved as Pending until the project Supervisor approves them."
+      />,
+    );
+
+    expect(
+      screen.getByRole("dialog", { name: "Submit meeting record" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Submit for approval" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /saved as Pending until the project Supervisor approves them/i,
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("does not submit fractional meeting durations", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+
+    render(
+      <MeetingRecordFormModal
+        isOpen
+        mode="add"
+        initialRecord={null}
+        channels={[]}
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+      />,
+    );
+
+    const duration = screen.getByRole("spinbutton");
+    const summary = screen.getByPlaceholderText("What was discussed?");
+    await user.type(duration, "12.5");
+    await user.type(summary, "Discussed progress");
+
+    expect(screen.getByRole("button", { name: "Add record" })).toBeDisabled();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
 });

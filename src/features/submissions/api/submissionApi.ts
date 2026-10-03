@@ -17,6 +17,10 @@ export const submissionApi = {
     return apiClient.get<SubmissionRequirement[]>(`${base(projectId)}/requirements`);
   },
 
+  listSubmissions(projectId: string): Promise<ResearchSubmission[]> {
+    return apiClient.get<ResearchSubmission[]>(base(projectId));
+  },
+
   createRequirement(
     projectId: string,
     payload: RequirementMutation,

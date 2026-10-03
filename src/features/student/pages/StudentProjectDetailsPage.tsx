@@ -22,6 +22,7 @@ import { StudentMeetingsTabSection } from "../components/StudentMeetingsTabSecti
 import type { StudentProjectDetailTab } from "../types";
 
 function toTabLabel(tab: string) {
+  if (tab === "files") return "Submissions";
   return tab.charAt(0).toUpperCase() + tab.slice(1);
 }
 

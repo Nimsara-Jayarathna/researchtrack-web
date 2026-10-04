@@ -133,7 +133,7 @@ describe("StudentSubmissionsSection", () => {
     const user = userEvent.setup();
     render(<StudentSubmissionsSection projectId="project-1" />);
 
-    expect(await screen.findByText("proposal.pdf")).toBeInTheDocument();
+    expect(await screen.findAllByText("proposal.pdf")).toHaveLength(2);
     expect(screen.getByText("PENDING REVIEW")).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Submit file" }),
@@ -142,7 +142,7 @@ describe("StudentSubmissionsSection", () => {
       screen.queryByText(/This recorded version is immutable/i),
     ).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Preview" }));
+    await user.click(screen.getAllByRole("button", { name: "Preview" })[0]);
     expect(screen.getByTestId("preview-modal")).toHaveTextContent(
       "preview:proposal.pdf",
     );

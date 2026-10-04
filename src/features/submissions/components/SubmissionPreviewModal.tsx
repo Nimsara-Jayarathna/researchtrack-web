@@ -122,6 +122,8 @@ export function SubmissionPreviewModal({
   useEffect(() => {
     if (!isOpen || !submissionId || !version || !kind) return;
 
+    const previewSubmissionId = submissionId;
+    const previewVersionId = version.id;
     const controller = new AbortController();
     let objectUrl: string | null = null;
 
@@ -134,8 +136,8 @@ export function SubmissionPreviewModal({
       try {
         const grant = await submissionApi.getDownloadUrl(
           projectId,
-          submissionId,
-          version.id,
+          previewSubmissionId,
+          previewVersionId,
           "inline",
         );
         const response = await fetch(grant.url, { signal: controller.signal });

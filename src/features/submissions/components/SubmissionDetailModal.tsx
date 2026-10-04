@@ -300,7 +300,7 @@ export function SubmissionDetailModal({
                           Current submission
                         </p>
                         <StatusBadge tone="neutral">
-                          V{current.versionNumber}
+                          {`V${current.versionNumber}`}
                         </StatusBadge>
                         {current.isLate ? (
                           <StatusBadge tone="warning">Late</StatusBadge>

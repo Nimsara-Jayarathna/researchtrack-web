@@ -95,7 +95,7 @@ describe("SubmissionDetailModal", () => {
       />,
     );
 
-    expect(await screen.findByText("thesis.pdf")).toBeInTheDocument();
+    expect(await screen.findAllByText("thesis.pdf")).toHaveLength(2);
     await user.click(screen.getByRole("button", { name: "Request changes" }));
     await user.type(
       screen.getByPlaceholderText(

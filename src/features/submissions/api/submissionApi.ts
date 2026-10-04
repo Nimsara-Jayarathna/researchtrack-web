@@ -132,6 +132,4 @@ export const submissionApi = {
       payload,
     );
   },
-
-
 };

@@ -1,8 +1,12 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { StudentSubmissionsSection } from "./StudentSubmissionsSection";
-import type { ResearchSubmission, SubmissionRequirement } from "../types";
+import type {
+  ResearchSubmission,
+  SubmissionRequirement,
+  SubmissionVersion,
+} from "../types";
 
 const { submissionApiMock } = vi.hoisted(() => ({
   submissionApiMock: {
@@ -24,6 +28,17 @@ vi.mock("./SubmissionUploadModal", () => ({
   }) =>
     requirement ? (
       <div data-testid="upload-modal">upload:{requirement.title}</div>
+    ) : null,
+}));
+
+vi.mock("./SubmissionPreviewModal", () => ({
+  SubmissionPreviewModal: ({
+    version,
+  }: {
+    version: SubmissionVersion | null;
+  }) =>
+    version ? (
+      <div data-testid="preview-modal">preview:{version.originalFileName}</div>
     ) : null,
 }));
 
@@ -88,24 +103,23 @@ describe("StudentSubmissionsSection", () => {
     vi.clearAllMocks();
     submissionApiMock.listRequirements.mockResolvedValue([requirement]);
     submissionApiMock.listSubmissions.mockResolvedValue([]);
-    submissionApiMock.getDownloadUrl.mockResolvedValue({
-      url: "https://example.test/file",
-      expiresAt: "2026-10-03T12:05:00Z",
-    });
-    vi.spyOn(window, "open").mockImplementation(() => null);
   });
 
-  it("shows an OPEN requirement as ready for the student's initial submission", async () => {
+  it("shows an OPEN requirement as ready and expands its workflow details", async () => {
     const user = userEvent.setup();
     render(<StudentSubmissionsSection projectId="project-1" />);
 
     expect(await screen.findByText("Research Proposal")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Submit file" })).toBeEnabled();
+
+    await user.click(
+      screen.getByRole("button", { name: "Expand Research Proposal" }),
+    );
     expect(
       screen.getByText(
         "No document has been submitted for this requirement yet.",
       ),
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Submit file" })).toBeEnabled();
 
     await user.click(screen.getByRole("button", { name: "Submit file" }));
     expect(screen.getByTestId("upload-modal")).toHaveTextContent(
@@ -113,7 +127,7 @@ describe("StudentSubmissionsSection", () => {
     );
   });
 
-  it("shows the recorded immutable current version and secure file actions", async () => {
+  it("keeps a submitted card compact and opens the in-app preview", async () => {
     submissionApiMock.listSubmissions.mockResolvedValue([submission]);
 
     const user = userEvent.setup();
@@ -125,23 +139,12 @@ describe("StudentSubmissionsSection", () => {
       screen.queryByRole("button", { name: "Submit file" }),
     ).not.toBeInTheDocument();
     expect(
-      screen.getByText(/This recorded version is immutable\./i),
-    ).toBeInTheDocument();
+      screen.queryByText(/This recorded version is immutable/i),
+    ).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Preview" }));
-
-    await waitFor(() => {
-      expect(submissionApiMock.getDownloadUrl).toHaveBeenCalledWith(
-        "project-1",
-        "submission-1",
-        "version-1",
-        "inline",
-      );
-    });
-    expect(window.open).toHaveBeenCalledWith(
-      "https://example.test/file",
-      "_blank",
-      "noopener,noreferrer",
+    expect(screen.getByTestId("preview-modal")).toHaveTextContent(
+      "preview:proposal.pdf",
     );
   });
 });

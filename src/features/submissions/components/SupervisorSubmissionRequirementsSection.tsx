@@ -74,8 +74,9 @@ function formatDue(value: string | null) {
 
 function currentVersionNumber(submission: ResearchSubmission) {
   return (
-    submission.versions.find((version) => version.id === submission.currentVersionId)
-      ?.versionNumber ??
+    submission.versions.find(
+      (version) => version.id === submission.currentVersionId,
+    )?.versionNumber ??
     submission.versions.find((version) => version.isCurrent)?.versionNumber ??
     submission.versionCount
   );
@@ -84,7 +85,9 @@ function currentVersionNumber(submission: ResearchSubmission) {
 function currentVersion(submission: ResearchSubmission | null) {
   if (!submission) return null;
   return (
-    submission.versions.find((version) => version.id === submission.currentVersionId) ??
+    submission.versions.find(
+      (version) => version.id === submission.currentVersionId,
+    ) ??
     submission.versions.find((version) => version.isCurrent) ??
     submission.versions[0] ??
     null
@@ -207,7 +210,8 @@ export function SupervisorSubmissionRequirementsSection({ projectId }: Props) {
   const [editing, setEditing] = useState<SubmissionRequirement | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [detailSubmission, setDetailSubmission] = useState<ResearchSubmission | null>(null);
+  const [detailSubmission, setDetailSubmission] =
+    useState<ResearchSubmission | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -222,7 +226,8 @@ export function SupervisorSubmissionRequirementsSection({ projectId }: Props) {
       setActionError(null);
     } catch (caught) {
       setError(isApiException(caught) ? caught.apiError : null);
-      if (!isApiException(caught)) setActionError("Unable to load the submission workspace.");
+      if (!isApiException(caught))
+        setActionError("Unable to load the submission workspace.");
     } finally {
       setLoading(false);
     }
@@ -233,16 +238,27 @@ export function SupervisorSubmissionRequirementsSection({ projectId }: Props) {
   }, [load]);
 
   const submissionsByRequirement = useMemo(
-    () => Object.fromEntries(submissions.map((submission) => [submission.requirementId, submission])),
+    () =>
+      Object.fromEntries(
+        submissions.map((submission) => [submission.requirementId, submission]),
+      ),
     [submissions],
   );
 
   const summary = useMemo(
     () => ({
-      pending: submissions.filter((submission) => submission.status === "PENDING_REVIEW").length,
-      changes: submissions.filter((submission) => submission.status === "CHANGES_REQUESTED").length,
-      approved: submissions.filter((submission) => submission.status === "APPROVED").length,
-      rejected: submissions.filter((submission) => submission.status === "REJECTED").length,
+      pending: submissions.filter(
+        (submission) => submission.status === "PENDING_REVIEW",
+      ).length,
+      changes: submissions.filter(
+        (submission) => submission.status === "CHANGES_REQUESTED",
+      ).length,
+      approved: submissions.filter(
+        (submission) => submission.status === "APPROVED",
+      ).length,
+      rejected: submissions.filter(
+        (submission) => submission.status === "REJECTED",
+      ).length,
     }),
     [submissions],
   );
@@ -253,31 +269,40 @@ export function SupervisorSubmissionRequirementsSection({ projectId }: Props) {
       submission: submissionsByRequirement[requirement.id] ?? null,
     }));
 
-    const needsReview = items.filter((item) => item.submission?.status === "PENDING_REVIEW");
-    const waitingRevision = items.filter((item) => item.submission?.status === "CHANGES_REQUESTED");
+    const needsReview = items.filter(
+      (item) => item.submission?.status === "PENDING_REVIEW",
+    );
+    const waitingRevision = items.filter(
+      (item) => item.submission?.status === "CHANGES_REQUESTED",
+    );
     const openUnsubmitted = items.filter(
       (item) => item.requirement.status === "OPEN" && !item.submission,
     );
     const completed = items.filter(
-      (item) => item.submission?.status === "APPROVED" || item.submission?.status === "REJECTED",
+      (item) =>
+        item.submission?.status === "APPROVED" ||
+        item.submission?.status === "REJECTED",
     );
     const historical = items.filter(
       (item) =>
         !item.submission &&
-        (item.requirement.status === "CLOSED" || item.requirement.status === "ARCHIVED"),
+        (item.requirement.status === "CLOSED" ||
+          item.requirement.status === "ARCHIVED"),
     );
 
     return [
       {
         key: "review",
         title: "Needs review",
-        description: "Current student versions waiting for your formal decision.",
+        description:
+          "Current student versions waiting for your formal decision.",
         items: sortWorkspaceItems(needsReview),
       },
       {
         key: "revision",
         title: "Waiting on revision",
-        description: "Changes were requested and the next action belongs to the students.",
+        description:
+          "Changes were requested and the next action belongs to the students.",
         items: sortWorkspaceItems(waitingRevision),
       },
       {
@@ -289,7 +314,8 @@ export function SupervisorSubmissionRequirementsSection({ projectId }: Props) {
       {
         key: "completed",
         title: "Completed reviews",
-        description: "Approved and rejected submissions are kept below active work.",
+        description:
+          "Approved and rejected submissions are kept below active work.",
         items: sortWorkspaceItems(completed),
       },
       {
@@ -305,7 +331,9 @@ export function SupervisorSubmissionRequirementsSection({ projectId }: Props) {
     setRequirements((current) => {
       const exists = current.some((item) => item.id === requirement.id);
       return exists
-        ? current.map((item) => (item.id === requirement.id ? requirement : item))
+        ? current.map((item) =>
+            item.id === requirement.id ? requirement : item,
+          )
         : [requirement, ...current];
     });
   }
@@ -314,7 +342,9 @@ export function SupervisorSubmissionRequirementsSection({ projectId }: Props) {
     setSubmissions((current) =>
       current.map((item) => (item.id === updated.id ? updated : item)),
     );
-    setDetailSubmission((current) => (current?.id === updated.id ? updated : current));
+    setDetailSubmission((current) =>
+      current?.id === updated.id ? updated : current,
+    );
     setRequirements((current) =>
       current.map((requirement) =>
         requirement.id === updated.requirementId
@@ -336,12 +366,16 @@ export function SupervisorSubmissionRequirementsSection({ projectId }: Props) {
   async function runAction(requirement: SubmissionRequirement, action: Action) {
     if (
       action === "delete" &&
-      !window.confirm(`Delete “${requirement.title}”? Only unused requirements can be deleted.`)
+      !window.confirm(
+        `Delete “${requirement.title}”? Only unused requirements can be deleted.`,
+      )
     )
       return;
     if (
       action === "archive" &&
-      !window.confirm(`Archive “${requirement.title}”? Archived requirements are read-only.`)
+      !window.confirm(
+        `Archive “${requirement.title}”? Archived requirements are read-only.`,
+      )
     )
       return;
 
@@ -350,7 +384,9 @@ export function SupervisorSubmissionRequirementsSection({ projectId }: Props) {
     try {
       if (action === "delete") {
         await submissionApi.deleteRequirement(projectId, requirement.id);
-        setRequirements((current) => current.filter((item) => item.id !== requirement.id));
+        setRequirements((current) =>
+          current.filter((item) => item.id !== requirement.id),
+        );
         return;
       }
       const next =
@@ -382,7 +418,11 @@ export function SupervisorSubmissionRequirementsSection({ projectId }: Props) {
               label="Refresh submissions"
               onClick={() => void load()}
               disabled={loading}
-              icon={<RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />}
+              icon={
+                <RefreshCw
+                  className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
+                />
+              }
             />
             <Button
               size="sm"
@@ -401,25 +441,43 @@ export function SupervisorSubmissionRequirementsSection({ projectId }: Props) {
         {!loading && !error ? (
           <div className="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">Needs review</p>
-              <p className="mt-1 text-2xl font-bold text-amber-900">{summary.pending}</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
+                Needs review
+              </p>
+              <p className="mt-1 text-2xl font-bold text-amber-900">
+                {summary.pending}
+              </p>
             </div>
             <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-sky-700">Waiting on revision</p>
-              <p className="mt-1 text-2xl font-bold text-sky-900">{summary.changes}</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-sky-700">
+                Waiting on revision
+              </p>
+              <p className="mt-1 text-2xl font-bold text-sky-900">
+                {summary.changes}
+              </p>
             </div>
             <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Approved</p>
-              <p className="mt-1 text-2xl font-bold text-emerald-900">{summary.approved}</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
+                Approved
+              </p>
+              <p className="mt-1 text-2xl font-bold text-emerald-900">
+                {summary.approved}
+              </p>
             </div>
             <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-rose-700">Rejected</p>
-              <p className="mt-1 text-2xl font-bold text-rose-900">{summary.rejected}</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-rose-700">
+                Rejected
+              </p>
+              <p className="mt-1 text-2xl font-bold text-rose-900">
+                {summary.rejected}
+              </p>
             </div>
           </div>
         ) : null}
 
-        {error ? <ErrorState error={error} onRetry={() => void load()} /> : null}
+        {error ? (
+          <ErrorState error={error} onRetry={() => void load()} />
+        ) : null}
         {actionError ? (
           <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
             {actionError}
@@ -428,7 +486,10 @@ export function SupervisorSubmissionRequirementsSection({ projectId }: Props) {
         {!error && loading ? (
           <div className="space-y-3">
             {[0, 1, 2].map((item) => (
-              <div key={item} className="h-36 animate-pulse rounded-2xl bg-slate-100" />
+              <div
+                key={item}
+                className="h-36 animate-pulse rounded-2xl bg-slate-100"
+              />
             ))}
           </div>
         ) : null}
@@ -455,11 +516,16 @@ export function SupervisorSubmissionRequirementsSection({ projectId }: Props) {
               <section key={group.key}>
                 <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
                   <div>
-                    <h3 className="text-sm font-bold text-slate-900">{group.title}</h3>
-                    <p className="mt-1 text-xs text-slate-500">{group.description}</p>
+                    <h3 className="text-sm font-bold text-slate-900">
+                      {group.title}
+                    </h3>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {group.description}
+                    </p>
                   </div>
                   <span className="text-xs font-semibold text-slate-400">
-                    {group.items.length} item{group.items.length === 1 ? "" : "s"}
+                    {group.items.length} item
+                    {group.items.length === 1 ? "" : "s"}
                   </span>
                 </div>
 
@@ -467,7 +533,9 @@ export function SupervisorSubmissionRequirementsSection({ projectId }: Props) {
                   {group.items.map(({ requirement, submission }) => {
                     const version = currentVersion(submission);
                     const isPending = submission?.status === "PENDING_REVIEW";
-                    const completed = submission?.status === "APPROVED" || submission?.status === "REJECTED";
+                    const completed =
+                      submission?.status === "APPROVED" ||
+                      submission?.status === "REJECTED";
                     const primaryLabel = isPending
                       ? "Review submission"
                       : submission?.status === "APPROVED"
@@ -485,49 +553,96 @@ export function SupervisorSubmissionRequirementsSection({ projectId }: Props) {
                       >
                         <div className="flex flex-wrap items-start justify-between gap-4">
                           <div className="min-w-0 flex-1">
-                            <h4 className="text-base font-bold text-slate-900">{requirement.title}</h4>
+                            <h4 className="text-base font-bold text-slate-900">
+                              {requirement.title}
+                            </h4>
                             {requirement.description ? (
-                              <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">{requirement.description}</p>
+                              <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">
+                                {requirement.description}
+                              </p>
                             ) : null}
 
                             <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-slate-500">
                               <span className="flex items-center gap-1.5">
-                                <span className="font-semibold text-slate-500">Requirement</span>
-                                <StatusBadge tone={requirementTone(requirement.status)}>{requirement.status}</StatusBadge>
+                                <span className="font-semibold text-slate-500">
+                                  Requirement
+                                </span>
+                                <StatusBadge
+                                  tone={requirementTone(requirement.status)}
+                                >
+                                  {requirement.status}
+                                </StatusBadge>
                               </span>
                               {submission ? (
                                 <span className="flex items-center gap-1.5">
-                                  <span className="font-semibold text-slate-500">Submission</span>
-                                  <StatusBadge tone={submissionTone(submission.status)}>{readable(submission.status)}</StatusBadge>
+                                  <span className="font-semibold text-slate-500">
+                                    Submission
+                                  </span>
+                                  <StatusBadge
+                                    tone={submissionTone(submission.status)}
+                                  >
+                                    {readable(submission.status)}
+                                  </StatusBadge>
                                 </span>
                               ) : (
-                                <span className="font-medium text-slate-500">No submission yet</span>
+                                <span className="font-medium text-slate-500">
+                                  No submission yet
+                                </span>
                               )}
                             </div>
 
                             <div className="mt-4 grid gap-2 rounded-2xl bg-slate-50 px-4 py-3 text-xs text-slate-600 sm:grid-cols-3">
-                              <span><strong className="text-slate-700">Types:</strong> {requirement.allowedFileTypes.map((type) => `.${type}`).join(", ")}</span>
-                              <span><strong className="text-slate-700">Maximum:</strong> {formatBytes(requirement.maxFileSizeBytes)}</span>
-                              <span><strong className="text-slate-700">Deadline:</strong> {formatDue(requirement.dueAt)}</span>
+                              <span>
+                                <strong className="text-slate-700">
+                                  Types:
+                                </strong>{" "}
+                                {requirement.allowedFileTypes
+                                  .map((type) => `.${type}`)
+                                  .join(", ")}
+                              </span>
+                              <span>
+                                <strong className="text-slate-700">
+                                  Maximum:
+                                </strong>{" "}
+                                {formatBytes(requirement.maxFileSizeBytes)}
+                              </span>
+                              <span>
+                                <strong className="text-slate-700">
+                                  Deadline:
+                                </strong>{" "}
+                                {formatDue(requirement.dueAt)}
+                              </span>
                             </div>
 
                             {submission && version ? (
                               <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
-                                <span className="flex items-center gap-1"><FileClock className="h-3.5 w-3.5" /> {submission.versionCount} version{submission.versionCount === 1 ? "" : "s"}</span>
+                                <span className="flex items-center gap-1">
+                                  <FileClock className="h-3.5 w-3.5" />{" "}
+                                  {submission.versionCount} version
+                                  {submission.versionCount === 1 ? "" : "s"}
+                                </span>
                                 <span>Current V{version.versionNumber}</span>
-                                <span>Submitted by {version.uploadedByName}</span>
-                                <span>{new Date(submission.lastSubmittedAt).toLocaleString()}</span>
+                                <span>
+                                  Submitted by {version.uploadedByName}
+                                </span>
+                                <span>
+                                  {new Date(
+                                    submission.lastSubmittedAt,
+                                  ).toLocaleString()}
+                                </span>
                               </div>
                             ) : null}
 
                             {isPending ? (
                               <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">
-                                This submission is waiting for your formal review.
+                                This submission is waiting for your formal
+                                review.
                               </p>
                             ) : null}
                             {submission?.status === "CHANGES_REQUESTED" ? (
                               <p className="mt-4 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-medium text-sky-800">
-                                Feedback was sent. Students can upload the next immutable version while the requirement remains open.
+                                Feedback was sent. Students can upload a revised
+                                version while the requirement remains open.
                               </p>
                             ) : null}
                           </div>
@@ -551,7 +666,9 @@ export function SupervisorSubmissionRequirementsSection({ projectId }: Props) {
                                 setEditing(requirement);
                                 setEditorOpen(true);
                               }}
-                              onAction={(action) => void runAction(requirement, action)}
+                              onAction={(action) =>
+                                void runAction(requirement, action)
+                              }
                             />
                           </div>
                         </div>

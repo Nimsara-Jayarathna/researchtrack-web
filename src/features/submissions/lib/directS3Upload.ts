@@ -1,35 +1,35 @@
 export function uploadFileDirectly(
-  url: string,
+  uploadUrl: string,
   file: File,
   requiredHeaders: Record<string, string>,
-  onProgress: (percentage: number) => void,
+  onProgress: (progress: number) => void,
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     const request = new XMLHttpRequest();
-    request.open("PUT", url, true);
+    request.open("PUT", uploadUrl, true);
 
     Object.entries(requiredHeaders).forEach(([name, value]) => {
       request.setRequestHeader(name, value);
     });
 
     request.upload.onprogress = (event) => {
-      if (!event.lengthComputable || event.total <= 0) return;
-      onProgress(Math.min(100, Math.round((event.loaded / event.total) * 100)));
+      if (!event.lengthComputable) return;
+      onProgress(Math.round((event.loaded / event.total) * 100));
     };
-    request.onerror = () => reject(new Error("The direct S3 upload failed."));
-    request.onabort = () => reject(new Error("The upload was cancelled."));
+
+    request.onerror = () => reject(new Error("The file upload failed."));
+    request.onabort = () => reject(new Error("The file upload was cancelled."));
     request.onload = () => {
       if (request.status >= 200 && request.status < 300) {
         onProgress(100);
         resolve();
-        return;
+      } else {
+        reject(
+          new Error("The file upload was not accepted. Please try again."),
+        );
       }
-      reject(
-        new Error(
-          `S3 rejected the upload (${request.status || "network error"}).`,
-        ),
-      );
     };
+
     request.send(file);
   });
 }

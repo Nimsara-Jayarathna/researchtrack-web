@@ -76,7 +76,9 @@ export function RequirementEditorModal({
     setAllowedTypes(requirement?.allowedFileTypes ?? ["pdf", "docx"]);
     setMaxSizeMb(
       requirement
-        ? String(Math.max(1, Math.round(requirement.maxFileSizeBytes / 1024 / 1024)))
+        ? String(
+            Math.max(1, Math.round(requirement.maxFileSizeBytes / 1024 / 1024)),
+          )
         : "10",
     );
     setError(null);
@@ -155,7 +157,11 @@ export function RequirementEditorModal({
 
     try {
       const saved = requirement
-        ? await submissionApi.updateRequirement(projectId, requirement.id, payload)
+        ? await submissionApi.updateRequirement(
+            projectId,
+            requirement.id,
+            payload,
+          )
         : await submissionApi.createRequirement(projectId, payload);
       onSaved(saved);
       onClose();
@@ -178,16 +184,23 @@ export function RequirementEditorModal({
       dialogClassName="relative z-10"
       onBackdropClick={saving ? undefined : onClose}
       lockBodyScroll
-      ariaLabel={requirement ? "Edit submission requirement" : "Create submission requirement"}
+      ariaLabel={
+        requirement
+          ? "Edit submission requirement"
+          : "Create submission requirement"
+      }
     >
       <div className="w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h3 className="text-lg font-bold text-slate-900">
-              {requirement ? "Edit submission requirement" : "Create submission requirement"}
+              {requirement
+                ? "Edit submission requirement"
+                : "Create submission requirement"}
             </h3>
             <p className="mt-1 text-sm leading-6 text-slate-500">
-              Define the document rules students must satisfy before a file can be recorded.
+              Define the document rules students must satisfy before a file can
+              be recorded.
             </p>
           </div>
           <button
@@ -225,9 +238,12 @@ export function RequirementEditorModal({
           <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold text-slate-800">Submission deadline</p>
+                <p className="text-sm font-semibold text-slate-800">
+                  Submission deadline
+                </p>
                 <p className="mt-1 text-xs text-slate-500">
-                  Only future dates and times can be selected for a new deadline.
+                  Only future dates and times can be selected for a new
+                  deadline.
                 </p>
               </div>
               <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-slate-600">
@@ -281,7 +297,9 @@ export function RequirementEditorModal({
 
           <div className="grid gap-4 sm:grid-cols-[1fr_180px]">
             <fieldset>
-              <legend className="text-sm font-semibold text-slate-700">Accepted file types</legend>
+              <legend className="text-sm font-semibold text-slate-700">
+                Accepted file types
+              </legend>
               <div className="mt-2 flex flex-wrap gap-2">
                 {FILE_TYPES.map((type) => {
                   const selected = allowedTypes.includes(type);
@@ -318,7 +336,9 @@ export function RequirementEditorModal({
 
           {requirement?.submissionSummary ? (
             <div className="rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 text-xs leading-5 text-sky-800">
-              This requirement already has submission history. File type and size changes apply only to future uploads; recorded versions and formal reviews remain unchanged.
+              This requirement already has submission history. File type and
+              size changes apply only to future uploads; recorded versions and
+              formal reviews remain unchanged.
             </div>
           ) : null}
         </div>
@@ -333,8 +353,16 @@ export function RequirementEditorModal({
           <Button variant="secondary" disabled={saving} onClick={onClose}>
             Cancel
           </Button>
-          <Button variant="primary" disabled={saving} onClick={() => void save()}>
-            {saving ? "Saving…" : requirement ? "Save changes" : "Create requirement"}
+          <Button
+            variant="primary"
+            disabled={saving}
+            onClick={() => void save()}
+          >
+            {saving
+              ? "Saving…"
+              : requirement
+                ? "Save changes"
+                : "Create requirement"}
           </Button>
         </div>
       </div>

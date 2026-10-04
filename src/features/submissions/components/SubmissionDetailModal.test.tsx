@@ -106,7 +106,8 @@ describe("SubmissionDetailModal", () => {
       />,
     );
 
-    expect(await screen.findAllByText("thesis.pdf")).toHaveLength(2);
+    expect(await screen.findByText("thesis.pdf")).toBeInTheDocument();
+    expect(screen.getByText("No previous versions yet. This is the first submitted version.")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Request changes" }));
     await user.type(
       screen.getByPlaceholderText(

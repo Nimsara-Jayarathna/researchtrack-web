@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   CheckCircle2,
   Download,
@@ -17,6 +17,7 @@ import type {
   ResearchSubmission,
   ReviewDecision,
   SubmissionParticipantRole,
+  SubmissionRequirementStatus,
   SubmissionStatus,
   SubmissionVersion,
 } from "../types";
@@ -31,7 +32,6 @@ type Props = {
   onClose: () => void;
   onUpdated: (submission: ResearchSubmission) => void;
 };
-
 
 function authorityRoleLabel(value: string | null | undefined) {
   if (value === "PROJECT_LEADER") return "Project Leader";
@@ -51,6 +51,12 @@ function statusTone(status: SubmissionStatus) {
   if (status === "APPROVED") return "success";
   if (status === "REJECTED") return "danger";
   return "warning";
+}
+
+function requirementTone(status: SubmissionRequirementStatus) {
+  if (status === "OPEN") return "success";
+  if (status === "CLOSED") return "warning";
+  return "neutral";
 }
 
 function decisionTone(decision: ReviewDecision) {
@@ -86,6 +92,23 @@ function VersionActions({
       >
         {downloadBusy ? "Preparing…" : "Download"}
       </Button>
+    </div>
+  );
+}
+
+function MetadataField({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="min-w-0">
+      <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">
+        {label}
+      </p>
+      <div className="mt-1 text-sm font-medium text-slate-700">{children}</div>
     </div>
   );
 }
@@ -150,13 +173,12 @@ export function SubmissionDetailModal({
     [detail],
   );
 
-  const orderedVersions = useMemo(
-    () =>
-      [...(detail?.versions ?? [])].sort(
-        (a, b) => b.versionNumber - a.versionNumber,
-      ),
-    [detail?.versions],
-  );
+  const previousVersions = useMemo(() => {
+    if (!detail || !current) return [];
+    return detail.versions
+      .filter((version) => version.id !== current.id && !version.isCurrent)
+      .sort((a, b) => b.versionNumber - a.versionNumber);
+  }, [current, detail]);
 
   async function downloadVersion(version: SubmissionVersion) {
     if (!detail) return;
@@ -211,7 +233,7 @@ export function SubmissionDetailModal({
       setError(
         isApiException(caught)
           ? caught.apiError.message
-          : "Unable to record the formal review.",
+          : "Unable to record the Supervisor decision.",
       );
       if (isApiException(caught) && caught.apiError.status === 409) {
         await load();
@@ -240,21 +262,30 @@ export function SubmissionDetailModal({
         <div className="max-h-[94vh] w-full overflow-y-auto rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="truncate text-xl font-bold text-slate-900">
-                  {detail?.requirement.title ??
-                    submission?.requirement.title ??
-                    "Submission"}
-                </h2>
-                {detail ? (
-                  <StatusBadge tone={statusTone(detail.status)}>
-                    {readable(detail.status)}
-                  </StatusBadge>
-                ) : null}
-              </div>
-              <p className="mt-1 text-sm text-slate-500">
-                Review the current submission and compare previous versions.
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">
+                Requirement
               </p>
+              <h2 className="mt-1 truncate text-xl font-bold text-slate-900">
+                {detail?.requirement.title ??
+                  submission?.requirement.title ??
+                  "Submission"}
+              </h2>
+              {detail ? (
+                <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
+                  <span className="flex items-center gap-2 text-slate-500">
+                    Requirement status
+                    <StatusBadge tone={requirementTone(detail.requirement.status)}>
+                      {detail.requirement.status}
+                    </StatusBadge>
+                  </span>
+                  <span className="flex items-center gap-2 text-slate-500">
+                    Submission status
+                    <StatusBadge tone={statusTone(detail.status)}>
+                      {readable(detail.status)}
+                    </StatusBadge>
+                  </span>
+                </div>
+              ) : null}
             </div>
             <div className="flex gap-2">
               <Button
@@ -301,13 +332,13 @@ export function SubmissionDetailModal({
               >
                 <section className="rounded-3xl border border-slate-200 bg-slate-50/70 p-5">
                   <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
-                          Current submission
+                          Current version
                         </p>
                         <StatusBadge tone="neutral">
-                          {`V${current.versionNumber}`}
+                          Version {current.versionNumber}
                         </StatusBadge>
                         {current.isLate ? (
                           <StatusBadge tone="warning">Late</StatusBadge>
@@ -316,24 +347,42 @@ export function SubmissionDetailModal({
                           <StatusBadge tone="success">Approved</StatusBadge>
                         ) : null}
                       </div>
-                      <p className="mt-3 break-all text-base font-bold text-slate-900">
-                        {current.originalFileName}
-                      </p>
-                      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
-                        <span>{formatBytes(current.fileSizeBytes)}</span>
-                        <span>{formatDate(current.submittedAt)}</span>
-                        <span className="flex items-center gap-1">
-                          <UserRound className="h-3.5 w-3.5" />
-                          {current.uploadedByName}
-                          {authorityRoleLabel(current.submitterRoleSnapshot)
-                            ? ` · ${authorityRoleLabel(current.submitterRoleSnapshot)}`
-                            : ""}
-                        </span>
+
+                      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                        <MetadataField label="Submitted file">
+                          <span className="break-all font-semibold text-slate-900">
+                            {current.originalFileName}
+                          </span>
+                          <span className="ml-2 text-xs font-normal text-slate-500">
+                            {formatBytes(current.fileSizeBytes)}
+                          </span>
+                        </MetadataField>
+                        <MetadataField label="Submitted by">
+                          <span className="inline-flex items-center gap-1.5">
+                            <UserRound className="h-3.5 w-3.5 text-slate-400" />
+                            {current.uploadedByName}
+                            {authorityRoleLabel(current.submitterRoleSnapshot)
+                              ? ` · ${authorityRoleLabel(current.submitterRoleSnapshot)}`
+                              : ""}
+                          </span>
+                        </MetadataField>
+                        <MetadataField label="Submitted on">
+                          {formatDate(current.submittedAt)}
+                        </MetadataField>
+                        <MetadataField label="Version">
+                          Version {current.versionNumber}
+                        </MetadataField>
                       </div>
+
                       {current.submissionNote ? (
-                        <p className="mt-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-600">
-                          {current.submissionNote}
-                        </p>
+                        <div className="mt-4 rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">
+                            Submission note
+                          </p>
+                          <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-slate-700">
+                            {current.submissionNote}
+                          </p>
+                        </div>
                       ) : null}
                     </div>
                     <VersionActions
@@ -348,7 +397,7 @@ export function SubmissionDetailModal({
                     <div className="mt-5 border-t border-slate-200 pt-4">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                          Formal decision
+                          Supervisor decision
                         </span>
                         <StatusBadge
                           tone={decisionTone(current.review.decision)}
@@ -357,9 +406,14 @@ export function SubmissionDetailModal({
                         </StatusBadge>
                       </div>
                       {current.review.feedback ? (
-                        <p className="mt-3 whitespace-pre-wrap rounded-2xl bg-white px-4 py-3 text-sm leading-6 text-slate-700">
-                          {current.review.feedback}
-                        </p>
+                        <div className="mt-3 rounded-2xl bg-white px-4 py-3">
+                          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">
+                            Supervisor feedback
+                          </p>
+                          <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-slate-700">
+                            {current.review.feedback}
+                          </p>
+                        </div>
                       ) : null}
                       <p className="mt-2 text-xs text-slate-500">
                         Reviewed by {current.review.reviewedByName} ·{" "}
@@ -367,20 +421,25 @@ export function SubmissionDetailModal({
                       </p>
                     </div>
                   ) : detail.status === "PENDING_REVIEW" ? (
-                    <p className="mt-5 border-t border-slate-200 pt-4 text-sm font-medium text-amber-700">
-                      Waiting for a Supervisor decision.
-                    </p>
+                    <div className="mt-5 border-t border-slate-200 pt-4">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Supervisor decision
+                      </p>
+                      <p className="mt-1 text-sm font-medium text-amber-700">
+                        Waiting for Supervisor review.
+                      </p>
+                    </div>
                   ) : null}
                 </section>
 
                 {canReview ? (
                   <section className="rounded-3xl border border-slate-200 p-5">
                     <h3 className="font-bold text-slate-900">
-                      Formal Supervisor decision
+                      Supervisor decision
                     </h3>
                     <p className="mt-1 text-sm leading-6 text-slate-500">
-                      Record the decision and feedback for Version{" "}
-                      {current.versionNumber}.
+                      Choose the outcome for Version {current.versionNumber} and
+                      add feedback when needed.
                     </p>
 
                     <div className="mt-4 grid gap-2 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
@@ -456,89 +515,110 @@ export function SubmissionDetailModal({
                     <FileClock className="h-5 w-5 text-slate-500" />
                     <div>
                       <h3 className="font-bold text-slate-900">
-                        Version history
+                        Previous versions
                       </h3>
                       <p className="text-xs text-slate-500">
-                        Review previous submissions and their decisions.
+                        Earlier submissions and the review outcome recorded for
+                        each one.
                       </p>
                     </div>
                   </div>
                   <span className="text-xs font-semibold text-slate-500">
-                    {detail.versionCount} version
-                    {detail.versionCount === 1 ? "" : "s"}
+                    {previousVersions.length} previous version
+                    {previousVersions.length === 1 ? "" : "s"}
                   </span>
                 </div>
 
-                <div className="space-y-3">
-                  {orderedVersions.map((version) => (
-                    <article
-                      key={version.id}
-                      className="rounded-2xl border border-slate-200 bg-white p-4"
-                    >
-                      <div className="flex flex-wrap items-start justify-between gap-4">
-                        <div className="min-w-0">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <p className="font-bold text-slate-900">
-                              Version {version.versionNumber}
-                            </p>
-                            {version.isCurrent ? (
-                              <StatusBadge tone="neutral">Current</StatusBadge>
-                            ) : null}
-                            {version.isApproved ? (
-                              <StatusBadge tone="success">Approved</StatusBadge>
-                            ) : null}
-                            {version.isLate ? (
-                              <StatusBadge tone="warning">Late</StatusBadge>
-                            ) : null}
-                          </div>
-                          <p className="mt-2 break-all text-sm font-semibold text-slate-700">
-                            {version.originalFileName}
-                          </p>
-                          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
-                            <span>{formatBytes(version.fileSizeBytes)}</span>
-                            <span>{formatDate(version.submittedAt)}</span>
-                            <span>
-                              Submitted by {version.uploadedByName}
-                              {authorityRoleLabel(version.submitterRoleSnapshot)
-                                ? ` · ${authorityRoleLabel(version.submitterRoleSnapshot)}`
-                                : ""}
-                            </span>
-                          </div>
-                        </div>
-                        <VersionActions
-                          version={version}
-                          downloadBusy={downloadVersionId === version.id}
-                          onPreview={() => setPreviewVersion(version)}
-                          onDownload={() => void downloadVersion(version)}
-                        />
-                      </div>
+                {previousVersions.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 px-5 py-6 text-sm text-slate-500">
+                    No previous versions yet. This is the first submitted
+                    version.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {previousVersions.map((version) => (
+                      <article
+                        key={version.id}
+                        className="rounded-2xl border border-slate-200 bg-white p-4"
+                      >
+                        <div className="flex flex-wrap items-start justify-between gap-4">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="font-bold text-slate-900">
+                                Version {version.versionNumber}
+                              </p>
+                              {version.isApproved ? (
+                                <StatusBadge tone="success">Approved</StatusBadge>
+                              ) : null}
+                              {version.isLate ? (
+                                <StatusBadge tone="warning">Late</StatusBadge>
+                              ) : null}
+                            </div>
 
-                      {version.review ? (
-                        <div className="mt-4 border-t border-slate-200 pt-4">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                              Formal review
-                            </span>
-                            <StatusBadge
-                              tone={decisionTone(version.review.decision)}
-                            >
-                              {readable(version.review.decision)}
-                            </StatusBadge>
+                            <div className="mt-4 grid gap-4 sm:grid-cols-3">
+                              <MetadataField label="Submitted file">
+                                <span className="break-all">
+                                  {version.originalFileName}
+                                </span>
+                                <span className="ml-2 text-xs font-normal text-slate-500">
+                                  {formatBytes(version.fileSizeBytes)}
+                                </span>
+                              </MetadataField>
+                              <MetadataField label="Submitted by">
+                                {version.uploadedByName}
+                                {authorityRoleLabel(version.submitterRoleSnapshot)
+                                  ? ` · ${authorityRoleLabel(version.submitterRoleSnapshot)}`
+                                  : ""}
+                              </MetadataField>
+                              <MetadataField label="Submitted on">
+                                {formatDate(version.submittedAt)}
+                              </MetadataField>
+                            </div>
                           </div>
-                          {version.review.feedback ? (
-                            <p className="mt-3 whitespace-pre-wrap rounded-xl bg-slate-50 px-3 py-3 text-sm leading-6 text-slate-700">
-                              {version.review.feedback}
-                            </p>
-                          ) : null}
-                          <p className="mt-2 text-xs text-slate-500">
-                            Reviewed by {version.review.reviewedByName} ·{" "}
-                            {formatDate(version.review.reviewedAt)}
-                          </p>
+                          <VersionActions
+                            version={version}
+                            downloadBusy={downloadVersionId === version.id}
+                            onPreview={() => setPreviewVersion(version)}
+                            onDownload={() => void downloadVersion(version)}
+                          />
                         </div>
-                      ) : null}
-                    </article>
-                  ))}
-                </div>
+
+                        {version.review ? (
+                          <div className="mt-4 border-t border-slate-200 pt-4">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                Review outcome
+                              </span>
+                              <StatusBadge
+                                tone={decisionTone(version.review.decision)}
+                              >
+                                {readable(version.review.decision)}
+                              </StatusBadge>
+                            </div>
+                            {version.review.feedback ? (
+                              <div className="mt-3 rounded-xl bg-slate-50 px-3 py-3">
+                                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">
+                                  Supervisor feedback
+                                </p>
+                                <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-slate-700">
+                                  {version.review.feedback}
+                                </p>
+                              </div>
+                            ) : null}
+                            <p className="mt-2 text-xs text-slate-500">
+                              Reviewed by {version.review.reviewedByName} ·{" "}
+                              {formatDate(version.review.reviewedAt)}
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="mt-4 border-t border-slate-200 pt-4 text-xs text-slate-500">
+                            No review outcome was recorded for this version.
+                          </div>
+                        )}
+                      </article>
+                    ))}
+                  </div>
+                )}
               </section>
             </div>
           ) : null}

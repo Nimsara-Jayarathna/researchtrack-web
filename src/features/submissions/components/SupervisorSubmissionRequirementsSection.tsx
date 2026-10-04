@@ -1,16 +1,22 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  AlertTriangle,
   Archive,
+  CalendarClock,
+  CheckCircle2,
+  ChevronDown,
+  Crown,
   Edit3,
   Eye,
   FileClock,
+  FileText,
   Lock,
   MoreHorizontal,
   Plus,
   RefreshCw,
   RotateCcw,
   Trash2,
-  AlertTriangle,
+  UserRound,
 } from "lucide-react";
 import { ErrorState } from "@/components/feedback/ErrorState";
 import { Button } from "@/components/ui/Button";
@@ -237,6 +243,9 @@ export function SupervisorSubmissionRequirementsSection({
   const [actionError, setActionError] = useState<string | null>(null);
   const [detailSubmission, setDetailSubmission] =
     useState<ResearchSubmission | null>(null);
+  const [expandedRequirementId, setExpandedRequirementId] = useState<
+    string | null
+  >(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -320,7 +329,7 @@ export function SupervisorSubmissionRequirementsSection({
         key: "review",
         title: "Needs review",
         description:
-          "Current student versions waiting for your formal decision.",
+          "Current student versions waiting for your Supervisor decision.",
         items: sortWorkspaceItems(needsReview),
       },
       {
@@ -537,209 +546,428 @@ export function SupervisorSubmissionRequirementsSection({
 
         {!error && !loading && requirements.length > 0 ? (
           <div className="space-y-7">
-            {groups.map((group) => (
-              <section key={group.key}>
-                <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-900">
-                      {group.title}
-                    </h3>
-                    <p className="mt-1 text-xs text-slate-500">
-                      {group.description}
-                    </p>
+            {groups.map((group) => {
+              const groupIcon =
+                group.key === "review" ? (
+                  <Eye className="h-4 w-4" />
+                ) : group.key === "revision" ? (
+                  <FileClock className="h-4 w-4" />
+                ) : group.key === "open" ? (
+                  <FileText className="h-4 w-4" />
+                ) : group.key === "completed" ? (
+                  <CheckCircle2 className="h-4 w-4" />
+                ) : (
+                  <Archive className="h-4 w-4" />
+                );
+
+              return (
+                <section
+                  key={group.key}
+                  className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-50/40"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-5">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500">
+                        {groupIcon}
+                      </span>
+                      <div className="min-w-0">
+                        <h3 className="text-sm font-bold text-slate-900">
+                          {group.title}
+                        </h3>
+                        <p className="mt-0.5 text-xs text-slate-500">
+                          {group.description}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="inline-flex min-w-8 items-center justify-center rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-600">
+                      {group.items.length}
+                    </span>
                   </div>
-                  <span className="text-xs font-semibold text-slate-400">
-                    {group.items.length} item
-                    {group.items.length === 1 ? "" : "s"}
-                  </span>
-                </div>
 
-                <div className="space-y-3">
-                  {group.items.map(({ requirement, submission }) => {
-                    const version = currentVersion(submission);
-                    const isPending = submission?.status === "PENDING_REVIEW";
-                    const completed =
-                      submission?.status === "APPROVED" ||
-                      submission?.status === "REJECTED";
-                    const primaryLabel = isPending
-                      ? "Review submission"
-                      : submission?.status === "APPROVED"
-                        ? "View approved submission"
-                        : submission?.status === "REJECTED"
-                          ? "View rejected submission"
-                          : submission?.status === "CHANGES_REQUESTED"
-                            ? "View requested changes"
-                            : "View submission";
+                  <div className="space-y-3 border-t border-slate-200 p-4">
+                    {group.items.map(({ requirement, submission }) => {
+                      const version = currentVersion(submission);
+                      const isPending =
+                        submission?.status === "PENDING_REVIEW";
+                      const expanded =
+                        expandedRequirementId === requirement.id;
+                      const primaryLabel = isPending
+                        ? "Review submission"
+                        : submission?.status === "APPROVED"
+                          ? "View approved submission"
+                          : submission?.status === "REJECTED"
+                            ? "View rejected submission"
+                            : submission?.status === "CHANGES_REQUESTED"
+                              ? "View requested changes"
+                              : "View submission";
+                      const displayRole =
+                        version?.submitterRoleSnapshot ??
+                        requirement.responsibility.responsibleStudentRole;
+                      const displayPerson =
+                        version?.uploadedByName ??
+                        requirement.responsibility.responsibleStudentName;
+                      const accentClass = isPending
+                        ? "border-l-amber-400"
+                        : submission?.status === "CHANGES_REQUESTED"
+                          ? "border-l-sky-400"
+                          : submission?.status === "APPROVED"
+                            ? "border-l-emerald-400"
+                            : submission?.status === "REJECTED"
+                              ? "border-l-rose-400"
+                              : requirement.status === "OPEN"
+                                ? "border-l-slate-300"
+                                : "border-l-slate-200";
 
-                    return (
-                      <article
-                        key={requirement.id}
-                        className={`rounded-2xl border p-5 transition ${isPending ? "border-amber-200 bg-amber-50/40" : completed ? "border-slate-200 bg-slate-50/30" : "border-slate-200 bg-white"}`}
-                      >
-                        <div className="flex flex-wrap items-start justify-between gap-4">
-                          <div className="min-w-0 flex-1">
-                            <h4 className="text-base font-bold text-slate-900">
-                              {requirement.title}
-                            </h4>
-                            {requirement.description ? (
-                              <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">
-                                {requirement.description}
+                      return (
+                        <article
+                          key={requirement.id}
+                          className={`overflow-hidden rounded-2xl border border-l-4 border-slate-200 bg-white transition-shadow duration-200 ${accentClass} ${expanded ? "shadow-sm" : ""}`}
+                        >
+                          <div className="flex flex-col gap-3 p-4 sm:p-5 lg:flex-row lg:items-center">
+                            <button
+                              type="button"
+                              className="min-w-0 flex-1 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-200"
+                              aria-expanded={expanded}
+                              aria-controls={`supervisor-submission-${requirement.id}`}
+                              onClick={() =>
+                                setExpandedRequirementId((current) =>
+                                  current === requirement.id
+                                    ? null
+                                    : requirement.id,
+                                )
+                              }
+                            >
+                              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
+                                Requirement
                               </p>
-                            ) : null}
-
-                            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-slate-500">
-                              <span className="flex items-center gap-1.5">
-                                <span className="font-semibold text-slate-500">
-                                  Requirement
-                                </span>
+                              <div className="mt-1 flex flex-wrap items-center gap-2">
+                                <h4 className="font-bold text-slate-900">
+                                  {requirement.title}
+                                </h4>
                                 <StatusBadge
                                   tone={requirementTone(requirement.status)}
                                 >
                                   {requirement.status}
                                 </StatusBadge>
-                              </span>
-                              {submission ? (
+                              </div>
+
+                              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
+                                {version ? (
+                                  <>
+                                    <span className="font-semibold text-slate-700">
+                                      Version {version.versionNumber}
+                                    </span>
+                                    <span className="max-w-[28rem] truncate">
+                                      {version.originalFileName}
+                                    </span>
+                                    <span>
+                                      {formatBytes(version.fileSizeBytes)}
+                                    </span>
+                                  </>
+                                ) : (
+                                  <span>No document submitted</span>
+                                )}
                                 <span className="flex items-center gap-1.5">
-                                  <span className="font-semibold text-slate-500">
-                                    Submission
-                                  </span>
-                                  <StatusBadge
-                                    tone={submissionTone(submission.status)}
-                                  >
-                                    {readable(submission.status)}
-                                  </StatusBadge>
+                                  <CalendarClock className="h-3.5 w-3.5" />
+                                  {requirement.dueAt
+                                    ? `Due ${formatDue(requirement.dueAt)}`
+                                    : "No deadline"}
                                 </span>
-                              ) : (
-                                <span className="font-medium text-slate-500">
-                                  No submission yet
-                                </span>
-                              )}
-                            </div>
+                              </div>
 
-                            <div className="mt-4 grid gap-2 rounded-2xl bg-slate-50 px-4 py-3 text-xs text-slate-600 sm:grid-cols-3">
-                              <span>
-                                <strong className="text-slate-700">
-                                  Types:
-                                </strong>{" "}
-                                {requirement.allowedFileTypes
-                                  .map((type) => `.${type}`)
-                                  .join(", ")}
-                              </span>
-                              <span>
-                                <strong className="text-slate-700">
-                                  Maximum:
-                                </strong>{" "}
-                                {formatBytes(requirement.maxFileSizeBytes)}
-                              </span>
-                              <span>
-                                <strong className="text-slate-700">
-                                  Deadline:
-                                </strong>{" "}
-                                {formatDue(requirement.dueAt)}
-                              </span>
-                            </div>
-
-                            {requirement.responsibility.requiresAssignment ? (
-                              <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
-                                <div className="flex min-w-0 items-start gap-2 text-xs leading-5 text-amber-800">
-                                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-                                  <span>
-                                    {requirement.responsibility.mode ===
-                                    "PROJECT_LEADER"
-                                      ? "No Project Leader is assigned. Assign a leader or edit this requirement to choose a specific student."
-                                      : "The assigned submitter is no longer an active project member. Choose another student."}
+                              <div className="mt-2 flex min-w-0 items-center gap-2 text-xs text-slate-500">
+                                {displayRole === "PROJECT_LEADER" ? (
+                                  <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+                                    <Crown className="h-3.5 w-3.5" />
                                   </span>
-                                </div>
+                                ) : (
+                                  <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+                                    <UserRound className="h-3.5 w-3.5" />
+                                  </span>
+                                )}
+                                <span className="text-slate-400">
+                                  {version ? "Submitted by" : "Responsible"}
+                                </span>
+                                <span className="truncate font-semibold text-slate-700">
+                                  {displayPerson ?? "Not assigned"}
+                                </span>
+                                {authorityRoleLabel(displayRole) ? (
+                                  <>
+                                    <span className="text-slate-300">·</span>
+                                    <span className="truncate text-slate-400">
+                                      {authorityRoleLabel(displayRole)}
+                                    </span>
+                                  </>
+                                ) : null}
+                              </div>
+                            </button>
+
+                            <div className="flex shrink-0 flex-wrap items-center gap-2">
+                              {submission ? (
+                                <StatusBadge
+                                  tone={submissionTone(submission.status)}
+                                >
+                                  {readable(submission.status)}
+                                </StatusBadge>
+                              ) : null}
+                              {submission ? (
                                 <Button
                                   size="sm"
-                                  variant="secondary"
-                                  onClick={onManageMembers}
+                                  variant={isPending ? "primary" : "secondary"}
+                                  leftIcon={<Eye className="h-4 w-4" />}
+                                  onClick={() =>
+                                    setDetailSubmission(submission)
+                                  }
                                 >
-                                  Manage project team
+                                  {primaryLabel}
                                 </Button>
-                              </div>
-                            ) : (
-                              <div className="mt-3 text-xs text-slate-600">
-                                <span className="font-semibold text-slate-700">
-                                  Responsible submitter:
-                                </span>{" "}
-                                {requirement.responsibility.responsibleStudentName}{" "}
-                                <span className="text-slate-400">·</span>{" "}
-                                {authorityRoleLabel(
-                                  requirement.responsibility.responsibleStudentRole,
-                                )}
-                              </div>
-                            )}
-
-                            {submission && version ? (
-                              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
-                                <span className="flex items-center gap-1">
-                                  <FileClock className="h-3.5 w-3.5" />{" "}
-                                  {submission.versionCount} version
-                                  {submission.versionCount === 1 ? "" : "s"}
-                                </span>
-                                <span>Current V{version.versionNumber}</span>
-                                <span>
-                                  Submitted by {version.uploadedByName}
-                                  {authorityRoleLabel(
-                                    version.submitterRoleSnapshot,
+                              ) : null}
+                              <button
+                                type="button"
+                                aria-label={
+                                  expanded
+                                    ? `Collapse ${requirement.title}`
+                                    : `Expand ${requirement.title}`
+                                }
+                                aria-expanded={expanded}
+                                onClick={() =>
+                                  setExpandedRequirementId((current) =>
+                                    current === requirement.id
+                                      ? null
+                                      : requirement.id,
                                   )
-                                    ? ` · ${authorityRoleLabel(version.submitterRoleSnapshot)}`
-                                    : ""}
-                                </span>
-                                <span>
-                                  {new Date(
-                                    submission.lastSubmittedAt,
-                                  ).toLocaleString()}
-                                </span>
-                              </div>
-                            ) : null}
-
-                            {isPending ? (
-                              <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">
-                                This submission is waiting for your formal
-                                review.
-                              </p>
-                            ) : null}
-                            {submission?.status === "CHANGES_REQUESTED" ? (
-                              <p className="mt-4 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-medium text-sky-800">
-                                Feedback was sent. The responsible submitter can upload a revised
-                                version while the requirement remains open.
-                              </p>
-                            ) : null}
-                          </div>
-
-                          <div className="flex shrink-0 items-center gap-2">
-                            {submission ? (
-                              <Button
-                                size="sm"
-                                variant={isPending ? "primary" : "secondary"}
-                                leftIcon={<Eye className="h-4 w-4" />}
-                                onClick={() => setDetailSubmission(submission)}
+                                }
+                                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-200"
                               >
-                                {primaryLabel}
-                              </Button>
-                            ) : null}
-                            <RequirementActionsMenu
-                              requirement={requirement}
-                              submission={submission}
-                              busy={busyId === requirement.id}
-                              onEdit={() => {
-                                setEditing(requirement);
-                                setEditorOpen(true);
-                              }}
-                              onAction={(action) =>
-                                void runAction(requirement, action)
-                              }
-                            />
+                                <ChevronDown
+                                  className={`h-4 w-4 transition-transform duration-200 ease-out ${expanded ? "rotate-180" : ""}`}
+                                />
+                              </button>
+                              <RequirementActionsMenu
+                                requirement={requirement}
+                                submission={submission}
+                                busy={busyId === requirement.id}
+                                onEdit={() => {
+                                  setEditing(requirement);
+                                  setEditorOpen(true);
+                                }}
+                                onAction={(action) =>
+                                  void runAction(requirement, action)
+                                }
+                              />
+                            </div>
                           </div>
-                        </div>
-                      </article>
-                    );
-                  })}
-                </div>
-              </section>
-            ))}
+
+                          <div
+                            id={`supervisor-submission-${requirement.id}`}
+                            className={`grid transition-[grid-template-rows,opacity] duration-200 ease-out ${
+                              expanded
+                                ? "grid-rows-[1fr] opacity-100"
+                                : "grid-rows-[0fr] opacity-0"
+                            }`}
+                          >
+                            <div className="overflow-hidden">
+                              <div className="border-t border-slate-200 px-4 pb-5 pt-4 sm:px-5">
+                                {requirement.description ? (
+                                  <div className="mb-4">
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
+                                      Requirement description
+                                    </p>
+                                    <p className="mt-1 max-w-4xl text-sm leading-6 text-slate-600">
+                                      {requirement.description}
+                                    </p>
+                                  </div>
+                                ) : null}
+
+                                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
+                                  Requirement details
+                                </p>
+                                <div className="mt-2 grid gap-3 rounded-2xl bg-slate-50 px-4 py-3 text-xs text-slate-600 sm:grid-cols-3">
+                                  <span>
+                                    <strong className="text-slate-700">
+                                      Accepted formats
+                                    </strong>
+                                    <span className="mt-1 block">
+                                      {requirement.allowedFileTypes
+                                        .map((type) => `.${type}`)
+                                        .join(", ")}
+                                    </span>
+                                  </span>
+                                  <span>
+                                    <strong className="text-slate-700">
+                                      Maximum file size
+                                    </strong>
+                                    <span className="mt-1 block">
+                                      {formatBytes(
+                                        requirement.maxFileSizeBytes,
+                                      )}
+                                    </span>
+                                  </span>
+                                  <span>
+                                    <strong className="text-slate-700">
+                                      Deadline
+                                    </strong>
+                                    <span className="mt-1 block">
+                                      {formatDue(requirement.dueAt)}
+                                    </span>
+                                  </span>
+                                </div>
+
+                                {requirement.responsibility
+                                  .requiresAssignment ? (
+                                  <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+                                    <div className="flex min-w-0 items-start gap-2 text-xs leading-5 text-amber-800">
+                                      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                                      <span>
+                                        {requirement.responsibility.mode ===
+                                        "PROJECT_LEADER"
+                                          ? "No Project Leader is assigned. Assign a leader or choose a specific Student for this requirement."
+                                          : "The assigned submitter is no longer an active project member. Choose another Student."}
+                                      </span>
+                                    </div>
+                                    <Button
+                                      size="sm"
+                                      variant="secondary"
+                                      onClick={onManageMembers}
+                                    >
+                                      Manage project team
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <div className="mt-4 rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
+                                      Responsible submitter
+                                    </p>
+                                    <div className="mt-2 flex items-center gap-2 text-sm text-slate-700">
+                                      {requirement.responsibility
+                                        .responsibleStudentRole ===
+                                      "PROJECT_LEADER" ? (
+                                        <Crown className="h-4 w-4 text-amber-600" />
+                                      ) : (
+                                        <UserRound className="h-4 w-4 text-slate-400" />
+                                      )}
+                                      <span className="font-semibold">
+                                        {requirement.responsibility
+                                          .responsibleStudentName ??
+                                          "Not assigned"}
+                                      </span>
+                                      {authorityRoleLabel(
+                                        requirement.responsibility
+                                          .responsibleStudentRole,
+                                      ) ? (
+                                        <span className="text-slate-400">
+                                          · {authorityRoleLabel(
+                                            requirement.responsibility
+                                              .responsibleStudentRole,
+                                          )}
+                                        </span>
+                                      ) : null}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {submission && version ? (
+                                  <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
+                                        Current version
+                                      </p>
+                                      <span className="text-xs font-semibold text-slate-500">
+                                        Version {version.versionNumber} of{" "}
+                                        {submission.versionCount}
+                                      </span>
+                                    </div>
+                                    <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                                      <div>
+                                        <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                                          Submitted file
+                                        </p>
+                                        <p className="mt-1 break-all text-sm font-semibold text-slate-800">
+                                          {version.originalFileName}
+                                        </p>
+                                        <p className="mt-1 text-xs text-slate-500">
+                                          {formatBytes(version.fileSizeBytes)}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                                          Submitted by
+                                        </p>
+                                        <p className="mt-1 text-sm font-semibold text-slate-800">
+                                          {version.uploadedByName}
+                                        </p>
+                                        <p className="mt-1 text-xs text-slate-500">
+                                          {authorityRoleLabel(
+                                            version.submitterRoleSnapshot,
+                                          ) ?? "Project member"}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                                          Submitted on
+                                        </p>
+                                        <p className="mt-1 text-sm text-slate-700">
+                                          {new Date(
+                                            version.submittedAt,
+                                          ).toLocaleString()}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                                          Submission status
+                                        </p>
+                                        <div className="mt-1">
+                                          <StatusBadge
+                                            tone={submissionTone(
+                                              submission.status,
+                                            )}
+                                          >
+                                            {readable(submission.status)}
+                                          </StatusBadge>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="mt-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-4 text-sm text-slate-500">
+                                    No submission has been made for this
+                                    requirement yet.
+                                  </div>
+                                )}
+
+                                {isPending ? (
+                                  <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-amber-700">
+                                      Next action
+                                    </p>
+                                    <p className="mt-1 text-sm font-semibold text-amber-800">
+                                      Review the current version and record a
+                                      Supervisor decision.
+                                    </p>
+                                  </div>
+                                ) : null}
+                                {submission?.status ===
+                                "CHANGES_REQUESTED" ? (
+                                  <div className="mt-4 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3">
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-sky-700">
+                                      Next action
+                                    </p>
+                                    <p className="mt-1 text-sm font-medium text-sky-800">
+                                      Waiting for the responsible Student to
+                                      submit a revised version.
+                                    </p>
+                                  </div>
+                                ) : null}
+                              </div>
+                            </div>
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                </section>
+              );
+            })}
           </div>
         ) : null}
       </SectionCard>

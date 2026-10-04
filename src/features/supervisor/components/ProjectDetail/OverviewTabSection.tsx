@@ -1,4 +1,5 @@
 import { ProjectOverviewContent } from "@/features/projects/components/ProjectOverviewContent";
+import type { SubmissionOverviewState } from "@/features/submissions/hooks/useSubmissionOverview";
 import type { OverviewState } from "../../hooks/useProjectDetailsPageState";
 import { FIELD_LIMITS, LIFECYCLE_OPTIONS } from "../../projectDetails.shared";
 import type {
@@ -9,16 +10,19 @@ import type {
 type OverviewTabSectionProps = {
   project: SupervisorProjectDetail;
   overview: OverviewState;
+  submissionOverview: SubmissionOverviewState;
 };
 
 export function OverviewTabSection({
   project,
   overview,
+  submissionOverview,
 }: OverviewTabSectionProps) {
   return (
     <ProjectOverviewContent
       project={project}
       role="supervisor"
+      submissionOverview={submissionOverview}
       edit={{
         isEditing: overview.isEditingOverview,
         isSaving: overview.isSavingOverview,

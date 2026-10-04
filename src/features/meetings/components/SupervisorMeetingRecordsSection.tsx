@@ -27,8 +27,8 @@ export function SupervisorMeetingRecordsSection({
   return (
     <>
       <SectionCard
-        title="Meeting Records"
-        subtitle="Review, approve, and maintain meeting records for this project."
+        title="Meeting History"
+        subtitle="Record, review, approve, and maintain supervision meeting history for this project."
         actions={
           <>
             <IconActionButton
@@ -55,11 +55,11 @@ export function SupervisorMeetingRecordsSection({
       >
         {state.isLoading ? <MeetingSectionSkeleton /> : null}
 
-        {state.error ? (
+        {state.error && !state.hasLoaded ? (
           <ErrorState error={state.error} onRetry={() => void state.load()} />
         ) : null}
 
-        {!state.isLoading && !state.error ? (
+        {!state.isLoading && (!state.error || state.hasLoaded) ? (
           <MeetingRecordsTable
             records={state.records}
             channelsById={channelsById}

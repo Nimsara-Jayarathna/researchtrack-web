@@ -30,7 +30,8 @@ import type {
 } from "@/features/shared/types/jira.types";
 import type {
   MeetingChannel,
-  MeetingChannelUpsertPayload,
+  MeetingChannelCreatePayload,
+  MeetingChannelUpdatePayload,
   MeetingRecord,
   MeetingRecordUpsertPayload,
 } from "@/features/meetings/types";
@@ -376,7 +377,7 @@ export function createRoleProjectApi({
     }
 
     const request = apiClient.get<MeetingChannel[]>(
-      `${roleBasePath}/projects/${projectId}/meeting-channels`,
+      `${toVersionedApiPath("/api/projects")}/${projectId}/meetings/channels`,
     );
     inFlightMeetingChannelsByProjectId[projectId] = request;
 
@@ -391,10 +392,10 @@ export function createRoleProjectApi({
 
   async function createProjectMeetingChannel(
     projectId: string,
-    payload: MeetingChannelUpsertPayload,
+    payload: MeetingChannelCreatePayload,
   ): Promise<MeetingChannel> {
     const created = await apiClient.post<MeetingChannel>(
-      `${roleBasePath}/projects/${projectId}/meeting-channels`,
+      `${toVersionedApiPath("/api/projects")}/${projectId}/meetings/channels`,
       payload,
     );
     delete inFlightMeetingChannelsByProjectId[projectId];
@@ -411,10 +412,10 @@ export function createRoleProjectApi({
   async function updateProjectMeetingChannel(
     projectId: string,
     channelId: string,
-    payload: MeetingChannelUpsertPayload,
+    payload: MeetingChannelUpdatePayload,
   ): Promise<MeetingChannel> {
     const updated = await apiClient.patch<MeetingChannel>(
-      `${roleBasePath}/projects/${projectId}/meeting-channels/${channelId}`,
+      `${toVersionedApiPath("/api/projects")}/${projectId}/meetings/channels/${channelId}`,
       payload,
     );
     delete inFlightMeetingChannelsByProjectId[projectId];
@@ -432,9 +433,13 @@ export function createRoleProjectApi({
     channelId: string,
   ): Promise<void> {
     await apiClient.del<void>(
-      `${roleBasePath}/projects/${projectId}/meeting-channels/${channelId}`,
+      `${toVersionedApiPath("/api/projects")}/${projectId}/meetings/channels/${channelId}`,
     );
     delete inFlightMeetingChannelsByProjectId[projectId];
+    // The database clears MeetingRecord.ChannelId when a channel is deleted.
+    // Drop the cached history so the next read reflects that relationship change.
+    delete cachedMeetingRecordsByProjectId[projectId];
+    delete inFlightMeetingRecordsByProjectId[projectId];
     const existing = cachedMeetingChannelsByProjectId[projectId];
     if (existing) {
       cachedMeetingChannelsByProjectId[projectId] = existing.filter(
@@ -448,7 +453,7 @@ export function createRoleProjectApi({
     channelId: string,
   ): Promise<MeetingChannel> {
     const approved = await apiClient.post<MeetingChannel>(
-      `${roleBasePath}/projects/${projectId}/meeting-channels/${channelId}/approve`,
+      `${toVersionedApiPath("/api/projects")}/${projectId}/meetings/channels/${channelId}/approve`,
       {},
     );
     delete inFlightMeetingChannelsByProjectId[projectId];
@@ -480,7 +485,7 @@ export function createRoleProjectApi({
     }
 
     const request = apiClient.get<MeetingRecord[]>(
-      `${roleBasePath}/projects/${projectId}/meeting-records`,
+      `${toVersionedApiPath("/api/projects")}/${projectId}/meetings/records`,
     );
     inFlightMeetingRecordsByProjectId[projectId] = request;
 
@@ -498,7 +503,7 @@ export function createRoleProjectApi({
     payload: MeetingRecordUpsertPayload,
   ): Promise<MeetingRecord> {
     const created = await apiClient.post<MeetingRecord>(
-      `${roleBasePath}/projects/${projectId}/meeting-records`,
+      `${toVersionedApiPath("/api/projects")}/${projectId}/meetings/records`,
       payload,
     );
     delete inFlightMeetingRecordsByProjectId[projectId];
@@ -518,7 +523,7 @@ export function createRoleProjectApi({
     payload: MeetingRecordUpsertPayload,
   ): Promise<MeetingRecord> {
     const updated = await apiClient.patch<MeetingRecord>(
-      `${roleBasePath}/projects/${projectId}/meeting-records/${recordId}`,
+      `${toVersionedApiPath("/api/projects")}/${projectId}/meetings/records/${recordId}`,
       payload,
     );
     delete inFlightMeetingRecordsByProjectId[projectId];
@@ -536,7 +541,7 @@ export function createRoleProjectApi({
     recordId: string,
   ): Promise<void> {
     await apiClient.del<void>(
-      `${roleBasePath}/projects/${projectId}/meeting-records/${recordId}`,
+      `${toVersionedApiPath("/api/projects")}/${projectId}/meetings/records/${recordId}`,
     );
     delete inFlightMeetingRecordsByProjectId[projectId];
     const existing = cachedMeetingRecordsByProjectId[projectId];
@@ -552,7 +557,7 @@ export function createRoleProjectApi({
     recordId: string,
   ): Promise<MeetingRecord> {
     const approved = await apiClient.post<MeetingRecord>(
-      `${roleBasePath}/projects/${projectId}/meeting-records/${recordId}/approve`,
+      `${toVersionedApiPath("/api/projects")}/${projectId}/meetings/records/${recordId}/approve`,
       {},
     );
     delete inFlightMeetingRecordsByProjectId[projectId];

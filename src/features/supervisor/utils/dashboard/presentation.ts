@@ -23,6 +23,8 @@ export function jiraIndicatorClasses(indicator: string | null) {
   if (indicator === "BEHIND") return "border-rose-200 bg-rose-50 text-rose-700";
   if (indicator === "HEALTHY")
     return "border-emerald-200 bg-emerald-50 text-emerald-700";
+  if (indicator === "UNAVAILABLE")
+    return "border-slate-200 bg-slate-50 text-slate-500";
   return "border-slate-200 bg-slate-100 text-slate-400";
 }
 
@@ -33,6 +35,7 @@ export function jiraIndicatorLabel(
   if (indicator === "BEHIND") return "Behind";
   if (indicator === "HEALTHY") return "Healthy";
   if (indicator === "NOT_CONNECTED") return "Not linked";
+  if (indicator === "UNAVAILABLE") return "Unavailable";
   return "-";
 }
 

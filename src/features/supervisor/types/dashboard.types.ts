@@ -18,7 +18,7 @@ export type SupervisorDashboardProjectItem = {
   progressPercent: number | null;
   memberCount: number;
   jiraHealthIndicator:
-    "AT_RISK" | "BEHIND" | "HEALTHY" | "NOT_CONNECTED" | null;
+    "AT_RISK" | "BEHIND" | "HEALTHY" | "NOT_CONNECTED" | "UNAVAILABLE" | null;
 };
 
 export type SupervisorDashboard = {
@@ -31,6 +31,27 @@ export type SupervisorDashboard = {
   upcomingMilestonesCount: number;
   jiraAtRiskCount: number;
   jiraBehindCount: number;
+  jiraConnectedCount?: number;
+  jiraMetricsStatus?: "READY" | "UNAVAILABLE";
   projects: SupervisorDashboardProjectItem[];
   recentProjects: SupervisorDashboardProjectItem[];
+};
+
+export type SupervisorDashboardJiraProjectHealth = {
+  projectId: string;
+  connected: boolean;
+  indicator: "AT_RISK" | "BEHIND" | "HEALTHY" | "NOT_CONNECTED";
+  completionPercent: number;
+  openIssues: number;
+  overdueIssues: number;
+  highPriorityOpen: number;
+  syncStatus: string | null;
+  lastSyncedAt: string | null;
+};
+
+export type SupervisorDashboardJiraHealth = {
+  connectedCount: number;
+  atRiskCount: number;
+  behindCount: number;
+  projects: SupervisorDashboardJiraProjectHealth[];
 };

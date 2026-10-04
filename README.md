@@ -164,10 +164,12 @@ The Jira feature is supervisor-only. It consists of two main parts:
 
 ## Documentation
 
-- Overview index: `docs/README.md`
+- [Documentation index](docs/README.md)
 - Feature guides: `docs/features/*.md`
 - Owner-granted GitHub repository access: [`docs/features/owner-granted-github-access.md`](docs/features/owner-granted-github-access.md)
-- Branch/fix docs: `docs/branches/*.md` (including SCRUM-80, SCRUM-81, SCRUM-97 major-fixes)
+- Submission guides and testing: `docs/submission/*.md`
+- Meeting plans: `docs/meeting/*.md`
+- Development workflow: `docs/devops/*.md`
 - Shared UI notes: `docs/ui/*.md`
 
 ## Note

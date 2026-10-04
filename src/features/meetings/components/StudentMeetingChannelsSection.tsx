@@ -24,7 +24,7 @@ export function StudentMeetingChannelsSection({
     <>
       <SectionCard
         title="Meeting Channels"
-        subtitle="Add the meeting link or identifier for your project meetings."
+        subtitle="View project meeting channels or propose a new channel for Supervisor approval."
         actions={
           <>
             <IconActionButton
@@ -44,7 +44,7 @@ export function StudentMeetingChannelsSection({
               onClick={state.openAdd}
               leftIcon={<Plus className="h-4 w-4" />}
             >
-              Add channel
+              Propose channel
             </Button>
           </>
         }
@@ -70,6 +70,8 @@ export function StudentMeetingChannelsSection({
         initialChannel={null}
         onClose={state.closeForm}
         onSubmit={(payload) => void state.submitForm(payload)}
+        addTitle="Propose meeting channel"
+        addSubmitLabel="Submit proposal"
       />
 
       <RequestStateModal

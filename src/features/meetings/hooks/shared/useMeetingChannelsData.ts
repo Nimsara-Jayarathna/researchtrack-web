@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ApiError } from "@/types";
-import type { MeetingChannel, MeetingChannelUpsertPayload } from "../../types";
+import type {
+  MeetingChannel,
+  MeetingChannelCreatePayload,
+  MeetingChannelUpdatePayload,
+} from "../../types";
 import { sortMeetingChannels } from "../../lib/sortMeetingChannels";
 import { toApiError } from "../requestModal";
 import type { MeetingLoadResult } from "./useMeetingRecordsData";
@@ -12,18 +16,18 @@ export type MeetingChannelsApiPort = {
   ) => Promise<MeetingChannel[]>;
   createProjectMeetingChannel: (
     projectId: string,
-    payload: MeetingChannelUpsertPayload,
+    payload: MeetingChannelCreatePayload,
   ) => Promise<MeetingChannel>;
-  updateProjectMeetingChannel: (
+  updateProjectMeetingChannel?: (
     projectId: string,
     channelId: string,
-    payload: MeetingChannelUpsertPayload,
+    payload: MeetingChannelUpdatePayload,
   ) => Promise<MeetingChannel>;
-  deleteProjectMeetingChannel: (
+  deleteProjectMeetingChannel?: (
     projectId: string,
     channelId: string,
   ) => Promise<void>;
-  approveProjectMeetingChannel: (
+  approveProjectMeetingChannel?: (
     projectId: string,
     channelId: string,
   ) => Promise<MeetingChannel>;
@@ -42,11 +46,11 @@ type MeetingChannelsData = {
   hasLoaded: boolean;
   load: (options?: { forceRefresh?: boolean }) => Promise<MeetingLoadResult>;
   createChannel: (
-    payload: MeetingChannelUpsertPayload,
+    payload: MeetingChannelCreatePayload,
   ) => Promise<MeetingChannel>;
   updateChannel: (
     channelId: string,
-    payload: MeetingChannelUpsertPayload,
+    payload: MeetingChannelUpdatePayload,
   ) => Promise<MeetingChannel>;
   deleteChannel: (channelId: string) => Promise<void>;
   approveChannel: (channelId: string) => Promise<MeetingChannel>;
@@ -104,7 +108,7 @@ export function useMeetingChannelsData({
   );
 
   const createChannel = useCallback(
-    async (payload: MeetingChannelUpsertPayload): Promise<MeetingChannel> => {
+    async (payload: MeetingChannelCreatePayload): Promise<MeetingChannel> => {
       const created = await api.createProjectMeetingChannel(projectId, payload);
       setChannels((current) =>
         sortMeetingChannels([
@@ -120,8 +124,11 @@ export function useMeetingChannelsData({
   const updateChannel = useCallback(
     async (
       channelId: string,
-      payload: MeetingChannelUpsertPayload,
+      payload: MeetingChannelUpdatePayload,
     ): Promise<MeetingChannel> => {
+      if (!api.updateProjectMeetingChannel) {
+        throw toApiError(null, "This account cannot update meeting channels.");
+      }
       const updated = await api.updateProjectMeetingChannel(
         projectId,
         channelId,
@@ -139,6 +146,9 @@ export function useMeetingChannelsData({
 
   const deleteChannel = useCallback(
     async (channelId: string): Promise<void> => {
+      if (!api.deleteProjectMeetingChannel) {
+        throw toApiError(null, "This account cannot delete meeting channels.");
+      }
       await api.deleteProjectMeetingChannel(projectId, channelId);
       setChannels((current) => current.filter((item) => item.id !== channelId));
     },
@@ -147,6 +157,9 @@ export function useMeetingChannelsData({
 
   const approveChannel = useCallback(
     async (channelId: string): Promise<MeetingChannel> => {
+      if (!api.approveProjectMeetingChannel) {
+        throw toApiError(null, "This account cannot approve meeting channels.");
+      }
       const approved = await api.approveProjectMeetingChannel(
         projectId,
         channelId,

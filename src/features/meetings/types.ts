@@ -27,11 +27,19 @@ export type MeetingChannel = {
   updatedAt: string | null;
 };
 
-export type MeetingChannelUpsertPayload = {
+export type MeetingChannelCreatePayload = {
   platform: MeetingChannelPlatform;
   channelName: string;
   linkOrIdentifier: string;
 };
+
+export type MeetingChannelUpdatePayload = {
+  channelName: string;
+  linkOrIdentifier: string;
+};
+
+export type MeetingChannelFormPayload =
+  MeetingChannelCreatePayload | MeetingChannelUpdatePayload;
 
 export type MeetingRecordStatus = "PENDING" | "APPROVED";
 

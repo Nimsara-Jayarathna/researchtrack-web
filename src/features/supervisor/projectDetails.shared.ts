@@ -171,5 +171,6 @@ export function buildMilestoneForm(
 }
 
 export function toTabLabel(tab: string) {
+  if (tab === "files") return "Submissions";
   return tab.charAt(0).toUpperCase() + tab.slice(1);
 }

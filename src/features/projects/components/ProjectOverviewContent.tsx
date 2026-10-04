@@ -549,7 +549,12 @@ export function ProjectOverviewContent({
 }: ProjectOverviewContentProps) {
   const summary = buildMilestoneSummary(project);
   const healthBrief = buildHealthBrief(summary);
-  const focusItems = buildFocusItems(role, project, summary, submissionOverview);
+  const focusItems = buildFocusItems(
+    role,
+    project,
+    summary,
+    submissionOverview,
+  );
   const primaryMilestone = pickPrimaryMilestone(summary);
   const riskTone = getRiskTone(summary.riskLevel);
   const riskToneClasses = getToneClasses(riskTone);
@@ -1031,7 +1036,8 @@ export function ProjectOverviewContent({
                 {summary.cancelled} cancelled.
               </p>
             </div>
-            {submissionAnalytics && submissionAnalytics.totalRequirements > 0 ? (
+            {submissionAnalytics &&
+            submissionAnalytics.totalRequirements > 0 ? (
               <div className="flex items-start gap-2">
                 <FileCheck2
                   className={cn(

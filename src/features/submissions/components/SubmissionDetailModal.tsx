@@ -288,7 +288,9 @@ export function SubmissionDetailModal({
                 <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-500">
                   <span className="flex items-center gap-2">
                     <span>Requirement status</span>
-                    <StatusBadge tone={requirementTone(detail.requirement.status)}>
+                    <StatusBadge
+                      tone={requirementTone(detail.requirement.status)}
+                    >
                       {detail.requirement.status}
                     </StatusBadge>
                   </span>
@@ -429,13 +431,16 @@ export function SubmissionDetailModal({
                     Supervisor decision
                   </h3>
                   <p className="mt-1 text-sm leading-6 text-slate-500">
-                    Review Version {current.versionNumber} and record the outcome.
+                    Review Version {current.versionNumber} and record the
+                    outcome.
                   </p>
 
                   <div className="mt-4 grid gap-2 sm:grid-cols-3">
                     <Button
                       size="sm"
-                      variant={decision === "APPROVED" ? "primary" : "secondary"}
+                      variant={
+                        decision === "APPROVED" ? "primary" : "secondary"
+                      }
                       onClick={() => setDecision("APPROVED")}
                     >
                       Approve
@@ -443,7 +448,9 @@ export function SubmissionDetailModal({
                     <Button
                       size="sm"
                       variant={
-                        decision === "CHANGES_REQUESTED" ? "primary" : "secondary"
+                        decision === "CHANGES_REQUESTED"
+                          ? "primary"
+                          : "secondary"
                       }
                       onClick={() => setDecision("CHANGES_REQUESTED")}
                     >
@@ -500,7 +507,8 @@ export function SubmissionDetailModal({
                         Previous versions
                       </h3>
                       <p className="text-xs text-slate-500">
-                        Earlier submissions and the review outcome recorded for each one.
+                        Earlier submissions and the review outcome recorded for
+                        each one.
                       </p>
                     </div>
                   </div>
@@ -512,7 +520,8 @@ export function SubmissionDetailModal({
 
                 {previousVersions.length === 0 ? (
                   <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-5 text-sm text-slate-500">
-                    No previous versions yet. This is the first submitted version.
+                    No previous versions yet. This is the first submitted
+                    version.
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -553,7 +562,9 @@ export function SubmissionDetailModal({
                               <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                                 Review outcome
                               </span>
-                              <StatusBadge tone={decisionTone(version.review.decision)}>
+                              <StatusBadge
+                                tone={decisionTone(version.review.decision)}
+                              >
                                 {readable(version.review.decision)}
                               </StatusBadge>
                             </div>

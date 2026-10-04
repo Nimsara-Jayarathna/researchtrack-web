@@ -57,8 +57,7 @@ export function DashboardStatsSection({
   isLoading,
 }: DashboardStatsSectionProps) {
   const showSkeleton = isLoading || !dashboard;
-  const jiraMetricsUnavailable =
-    dashboard?.jiraMetricsStatus === "UNAVAILABLE";
+  const jiraMetricsUnavailable = dashboard?.jiraMetricsStatus === "UNAVAILABLE";
   const hasConnectedJiraProject =
     dashboard?.projects.some(
       (project) =>
@@ -83,8 +82,8 @@ export function DashboardStatsSection({
                 Unavailable
               </span>
             ) : (stat.key === "jiraAtRiskCount" ||
-                  stat.key === "jiraBehindCount") &&
-                !hasConnectedJiraProject ? (
+                stat.key === "jiraBehindCount") &&
+              !hasConnectedJiraProject ? (
               <span className="text-sm font-semibold normal-case tracking-normal text-slate-500">
                 Not linked
               </span>

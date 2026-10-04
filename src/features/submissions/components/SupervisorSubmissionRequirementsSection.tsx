@@ -57,11 +57,7 @@ type WorkspaceItem = {
   submission: ResearchSubmission | null;
 };
 type WorkspaceGroupKey =
-  | "review"
-  | "revision"
-  | "open"
-  | "completed"
-  | "historical";
+  "review" | "revision" | "open" | "completed" | "historical";
 type WorkspaceGroup = {
   key: WorkspaceGroupKey;
   title: string;
@@ -202,9 +198,9 @@ function SubmitterIdentity({
   version: SubmissionVersion | null;
 }) {
   const roleSnapshot = authorityRoleLabel(version?.submitterRoleSnapshot);
-  const role = roleSnapshot ?? authorityRoleLabel(
-    requirement.responsibility.responsibleStudentRole,
-  );
+  const role =
+    roleSnapshot ??
+    authorityRoleLabel(requirement.responsibility.responsibleStudentRole);
   const isLeader = version
     ? version.submitterRoleSnapshot === "PROJECT_LEADER"
     : requirement.responsibility.responsibleStudentRole === "PROJECT_LEADER";
@@ -629,7 +625,9 @@ export function SupervisorSubmissionRequirementsSection({
           </div>
         ) : null}
 
-        {error ? <ErrorState error={error} onRetry={() => void load()} /> : null}
+        {error ? (
+          <ErrorState error={error} onRetry={() => void load()} />
+        ) : null}
         {actionError ? (
           <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
             {actionError}
@@ -793,7 +791,9 @@ export function SupervisorSubmissionRequirementsSection({
                                   size="sm"
                                   variant="primary"
                                   leftIcon={<Eye className="h-4 w-4" />}
-                                  onClick={() => setDetailSubmission(submission)}
+                                  onClick={() =>
+                                    setDetailSubmission(submission)
+                                  }
                                 >
                                   Review submission
                                 </Button>
@@ -857,7 +857,9 @@ export function SupervisorSubmissionRequirementsSection({
                                       Maximum file size
                                     </p>
                                     <p className="mt-1">
-                                      {formatBytes(requirement.maxFileSizeBytes)}
+                                      {formatBytes(
+                                        requirement.maxFileSizeBytes,
+                                      )}
                                     </p>
                                   </div>
                                   <div>
@@ -870,7 +872,8 @@ export function SupervisorSubmissionRequirementsSection({
                                   </div>
                                 </div>
 
-                                {requirement.responsibility.requiresAssignment ? (
+                                {requirement.responsibility
+                                  .requiresAssignment ? (
                                   <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
                                     <div className="flex min-w-0 items-start gap-2 text-xs leading-5 text-amber-800">
                                       <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
@@ -898,27 +901,37 @@ export function SupervisorSubmissionRequirementsSection({
                                         Current version
                                       </p>
                                       <p className="mt-1 truncate text-sm font-semibold text-slate-800">
-                                        Version {version.versionNumber} · {version.originalFileName}
+                                        Version {version.versionNumber} ·{" "}
+                                        {version.originalFileName}
                                       </p>
                                       <p className="mt-1 text-xs text-slate-500">
                                         Submitted by {version.uploadedByName}
-                                        {authorityRoleLabel(version.submitterRoleSnapshot)
+                                        {authorityRoleLabel(
+                                          version.submitterRoleSnapshot,
+                                        )
                                           ? ` · ${authorityRoleLabel(version.submitterRoleSnapshot)}`
                                           : ""}
                                       </p>
                                     </div>
                                     <Button
                                       size="sm"
-                                      variant={isPending ? "primary" : "secondary"}
+                                      variant={
+                                        isPending ? "primary" : "secondary"
+                                      }
                                       leftIcon={<Eye className="h-4 w-4" />}
-                                      onClick={() => setDetailSubmission(submission)}
+                                      onClick={() =>
+                                        setDetailSubmission(submission)
+                                      }
                                     >
-                                      {isPending ? "Review submission" : "Submission details"}
+                                      {isPending
+                                        ? "Review submission"
+                                        : "Submission details"}
                                     </Button>
                                   </div>
                                 ) : (
                                   <p className="mt-4 text-sm text-slate-500">
-                                    No document has been submitted for this requirement yet.
+                                    No document has been submitted for this
+                                    requirement yet.
                                   </p>
                                 )}
 

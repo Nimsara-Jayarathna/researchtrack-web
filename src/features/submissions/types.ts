@@ -1,17 +1,11 @@
 export type SubmissionRequirementStatus = "OPEN" | "CLOSED" | "ARCHIVED";
 export type SubmissionStatus =
-  | "PENDING_REVIEW"
-  | "CHANGES_REQUESTED"
-  | "APPROVED"
-  | "REJECTED";
+  "PENDING_REVIEW" | "CHANGES_REQUESTED" | "APPROVED" | "REJECTED";
 export type ReviewDecision = "APPROVED" | "CHANGES_REQUESTED" | "REJECTED";
 export type SubmissionParticipantRole = "STUDENT" | "SUPERVISOR";
 export type SubmissionResponsibilityMode =
-  | "PROJECT_LEADER"
-  | "ASSIGNED_STUDENT";
-export type SubmissionAuthorityRole =
-  | "PROJECT_LEADER"
-  | "ASSIGNED_STUDENT";
+  "PROJECT_LEADER" | "ASSIGNED_STUDENT";
+export type SubmissionAuthorityRole = "PROJECT_LEADER" | "ASSIGNED_STUDENT";
 
 export type SubmissionResponsibility = {
   mode: SubmissionResponsibilityMode;

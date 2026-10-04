@@ -205,5 +205,4 @@ describe("StudentSubmissionsSection", () => {
       screen.queryByRole("button", { name: "Submit file" }),
     ).not.toBeInTheDocument();
   });
-
 });

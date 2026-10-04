@@ -43,11 +43,7 @@ type StudentItem = {
 };
 
 type StudentGroupKey =
-  | "action"
-  | "team"
-  | "review"
-  | "completed"
-  | "unavailable";
+  "action" | "team" | "review" | "completed" | "unavailable";
 
 type StudentGroup = {
   key: StudentGroupKey;
@@ -161,7 +157,9 @@ function SubmissionFileDetails({ version }: { version: SubmissionVersion }) {
         <span className="truncate font-medium text-slate-700">
           {version.uploadedByName}
         </span>
-        {role ? <span className="shrink-0 text-slate-400">· {role}</span> : null}
+        {role ? (
+          <span className="shrink-0 text-slate-400">· {role}</span>
+        ) : null}
       </div>
       <p className="mt-2 text-xs text-slate-500">
         Submitted {formatDateTime(version.submittedAt)}
@@ -179,7 +177,6 @@ function SubmissionFileDetails({ version }: { version: SubmissionVersion }) {
     </div>
   );
 }
-
 
 function groupPresentation(key: StudentGroupKey) {
   if (key === "action") {
@@ -281,10 +278,10 @@ function SubmitterIdentity({
       >
         <Icon className={compact ? "h-3.5 w-3.5" : "h-4 w-4"} aria-hidden />
       </span>
-      <span className="min-w-0 truncate font-medium text-slate-700">{name}</span>
-      {role ? (
-        <span className="shrink-0 text-slate-400">· {role}</span>
-      ) : null}
+      <span className="min-w-0 truncate font-medium text-slate-700">
+        {name}
+      </span>
+      {role ? <span className="shrink-0 text-slate-400">· {role}</span> : null}
     </div>
   );
 }
@@ -351,8 +348,8 @@ export function StudentSubmissionsSection({ projectId }: Props) {
     (requirement: SubmissionRequirement) =>
       Boolean(
         user?.id &&
-          !requirement.responsibility.requiresAssignment &&
-          requirement.responsibility.responsibleStudentId === user.id,
+        !requirement.responsibility.requiresAssignment &&
+        requirement.responsibility.responsibleStudentId === user.id,
       ),
     [user?.id],
   );
@@ -375,12 +372,7 @@ export function StudentSubmissionsSection({ projectId }: Props) {
       );
       return revision?.id ?? null;
     });
-  }, [
-    loading,
-    requirements,
-    submissionsByRequirement,
-    canCurrentUserSubmit,
-  ]);
+  }, [loading, requirements, submissionsByRequirement, canCurrentUserSubmit]);
 
   const summary = useMemo(() => {
     const submissions = Object.values(submissionsByRequirement);
@@ -667,11 +659,10 @@ export function StudentSubmissionsSection({ projectId }: Props) {
                       const needsAction = canInitialSubmit || canResubmit;
                       const isPastDue = Boolean(
                         requirement.dueAt &&
-                          new Date(requirement.dueAt).getTime() < Date.now(),
+                        new Date(requirement.dueAt).getTime() < Date.now(),
                       );
                       const latestFeedback = version?.review?.feedback ?? null;
-                      const expanded =
-                        expandedRequirementId === requirement.id;
+                      const expanded = expandedRequirementId === requirement.id;
 
                       return (
                         <article
@@ -853,7 +844,9 @@ export function StudentSubmissionsSection({ projectId }: Props) {
                                   <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
                                     Responsible submitter
                                   </p>
-                                  <SubmitterIdentity requirement={requirement} />
+                                  <SubmitterIdentity
+                                    requirement={requirement}
+                                  />
                                   {!isResponsible &&
                                   !requirement.responsibility
                                     .requiresAssignment ? (
@@ -884,8 +877,8 @@ export function StudentSubmissionsSection({ projectId }: Props) {
                                       </p>
                                     ) : null}
                                     <p className="mt-2 text-xs text-slate-600">
-                                      Reviewed Version {version.versionNumber} by{" "}
-                                      {version.review.reviewedByName} on{" "}
+                                      Reviewed Version {version.versionNumber}{" "}
+                                      by {version.review.reviewedByName} on{" "}
                                       {formatDateTime(
                                         version.review.reviewedAt,
                                       )}
@@ -904,7 +897,9 @@ export function StudentSubmissionsSection({ projectId }: Props) {
                                 {submission && version ? (
                                   <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
                                     <div className="flex flex-wrap items-start justify-between gap-4">
-                                      <SubmissionFileDetails version={version} />
+                                      <SubmissionFileDetails
+                                        version={version}
+                                      />
                                       <div className="flex shrink-0 flex-wrap gap-2">
                                         <SubmissionPreviewButton
                                           version={version}
@@ -953,7 +948,8 @@ export function StudentSubmissionsSection({ projectId }: Props) {
                                   </div>
                                 ) : requirement.status !== "OPEN" ? (
                                   <p className="mt-4 text-sm font-medium text-slate-500">
-                                    This requirement is not accepting submissions.
+                                    This requirement is not accepting
+                                    submissions.
                                   </p>
                                 ) : (
                                   <p className="mt-4 text-sm text-slate-500">

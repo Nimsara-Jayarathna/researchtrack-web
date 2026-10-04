@@ -115,12 +115,8 @@ export function RequirementEditorModal({
           )
         : "10",
     );
-    setResponsibilityMode(
-      requirement?.responsibility.mode ?? "PROJECT_LEADER",
-    );
-    setAssignedStudentId(
-      requirement?.responsibility.assignedStudentId ?? "",
-    );
+    setResponsibilityMode(requirement?.responsibility.mode ?? "PROJECT_LEADER");
+    setAssignedStudentId(requirement?.responsibility.assignedStudentId ?? "");
     setError(null);
   }, [isOpen, requirement]);
 
@@ -137,8 +133,8 @@ export function RequirementEditorModal({
   );
   const previousAssigneeMissing = Boolean(
     responsibilityMode === "ASSIGNED_STUDENT" &&
-      assignedStudentId &&
-      !activeAssignedStudent,
+    assignedStudentId &&
+    !activeAssignedStudent,
   );
   const responsibilityValid =
     responsibilityMode === "PROJECT_LEADER"
@@ -191,11 +187,10 @@ export function RequirementEditorModal({
       );
       return;
     }
-    if (
-      responsibilityMode === "ASSIGNED_STUDENT" &&
-      !activeAssignedStudent
-    ) {
-      setError("Choose one active project student as the responsible submitter.");
+    if (responsibilityMode === "ASSIGNED_STUDENT" && !activeAssignedStudent) {
+      setError(
+        "Choose one active project student as the responsible submitter.",
+      );
       return;
     }
 
@@ -228,7 +223,7 @@ export function RequirementEditorModal({
       responsibilityMode,
       assignedStudentId:
         responsibilityMode === "ASSIGNED_STUDENT"
-          ? activeAssignedStudent?.id ?? null
+          ? (activeAssignedStudent?.id ?? null)
           : null,
     };
 
@@ -438,7 +433,8 @@ export function RequirementEditorModal({
                   />
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 text-sm font-bold text-slate-900">
-                      <Crown className="h-4 w-4 text-amber-600" /> Project Leader
+                      <Crown className="h-4 w-4 text-amber-600" /> Project
+                      Leader
                     </div>
                     {projectLeader ? (
                       <>
@@ -578,7 +574,11 @@ export function RequirementEditorModal({
             disabled={saving || !responsibilityValid}
             onClick={() => void save()}
           >
-            {saving ? "Saving…" : requirement ? "Save changes" : "Create requirement"}
+            {saving
+              ? "Saving…"
+              : requirement
+                ? "Save changes"
+                : "Create requirement"}
           </Button>
         </div>
       </div>

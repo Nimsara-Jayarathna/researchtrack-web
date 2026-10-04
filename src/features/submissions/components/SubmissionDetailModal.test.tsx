@@ -32,6 +32,15 @@ const pending: ResearchSubmission = {
     allowedFileTypes: ["pdf"],
     maxFileSizeBytes: 10485760,
     status: "OPEN",
+    responsibility: {
+      mode: "PROJECT_LEADER",
+      assignedStudentId: null,
+      assignedStudentName: null,
+      responsibleStudentId: "student-1",
+      responsibleStudentName: "Student One",
+      responsibleStudentRole: "PROJECT_LEADER",
+      requiresAssignment: false,
+    },
   },
   versions: [
     {
@@ -44,6 +53,8 @@ const pending: ResearchSubmission = {
       fileSizeBytes: 2048,
       uploadedBy: "student-1",
       uploadedByName: "Student One",
+      submitterRoleSnapshot: "PROJECT_LEADER",
+      responsibilityModeSnapshot: "PROJECT_LEADER",
       submissionNote: null,
       submittedAt: "2026-10-04T10:00:00Z",
       isLate: false,
@@ -95,7 +106,8 @@ describe("SubmissionDetailModal", () => {
       />,
     );
 
-    expect(await screen.findAllByText("thesis.pdf")).toHaveLength(2);
+    expect(await screen.findByText("thesis.pdf")).toBeInTheDocument();
+    expect(screen.getByText(/No previous versions yet/i)).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Request changes" }));
     await user.type(
       screen.getByPlaceholderText(

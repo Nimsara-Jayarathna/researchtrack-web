@@ -3,6 +3,19 @@ export type SubmissionStatus =
   "PENDING_REVIEW" | "CHANGES_REQUESTED" | "APPROVED" | "REJECTED";
 export type ReviewDecision = "APPROVED" | "CHANGES_REQUESTED" | "REJECTED";
 export type SubmissionParticipantRole = "STUDENT" | "SUPERVISOR";
+export type SubmissionResponsibilityMode =
+  "PROJECT_LEADER" | "ASSIGNED_STUDENT";
+export type SubmissionAuthorityRole = "PROJECT_LEADER" | "ASSIGNED_STUDENT";
+
+export type SubmissionResponsibility = {
+  mode: SubmissionResponsibilityMode;
+  assignedStudentId: string | null;
+  assignedStudentName: string | null;
+  responsibleStudentId: string | null;
+  responsibleStudentName: string | null;
+  responsibleStudentRole: SubmissionAuthorityRole | null;
+  requiresAssignment: boolean;
+};
 
 export type SubmissionSummary = {
   id: string;
@@ -25,6 +38,7 @@ export type SubmissionRequirement = {
   createdByName: string;
   createdAt: string;
   updatedAt: string | null;
+  responsibility: SubmissionResponsibility;
   submissionSummary: SubmissionSummary | null;
 };
 
@@ -34,6 +48,8 @@ export type RequirementMutation = {
   dueAt: string | null;
   allowedFileTypes: string[];
   maxFileSizeBytes: number;
+  responsibilityMode: SubmissionResponsibilityMode;
+  assignedStudentId: string | null;
 };
 
 export type CreateUploadSessionRequest = {
@@ -73,6 +89,8 @@ export type SubmissionVersion = {
   fileSizeBytes: number;
   uploadedBy: string;
   uploadedByName: string;
+  submitterRoleSnapshot: SubmissionAuthorityRole | null;
+  responsibilityModeSnapshot: SubmissionResponsibilityMode | null;
   submissionNote: string | null;
   submittedAt: string;
   isLate: boolean;
@@ -99,6 +117,7 @@ export type ResearchSubmission = {
     allowedFileTypes: string[];
     maxFileSizeBytes: number;
     status: SubmissionRequirementStatus;
+    responsibility: SubmissionResponsibility;
   };
   versions: SubmissionVersion[];
 };

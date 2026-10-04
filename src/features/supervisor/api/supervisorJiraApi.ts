@@ -1,4 +1,5 @@
 import type { createRoleProjectApi } from "@/features/shared/api/createRoleProjectApi";
+import { invalidateSupervisorDashboardCache } from "../cache/supervisorDashboardCache";
 import type {
   JiraAuthUrl,
   JiraBoardListResult,
@@ -7,6 +8,7 @@ import type {
   JiraLinkPayload,
   JiraOAuthCompletePayload,
   JiraOAuthCompleteResult,
+  SupervisorDashboardJiraHealth,
 } from "../types";
 type RoleProjectApi = Omit<
   ReturnType<typeof createRoleProjectApi>,
@@ -50,21 +52,35 @@ export function createSupervisorJiraApi({
         `/api/v1/projects/${projectId}/jira/boards?${q.toString()}`,
       );
     },
-    linkJiraProject(
+    async linkJiraProject(
       projectId: string,
       payload: JiraLinkPayload,
     ): Promise<JiraConnection> {
-      return apiClient.post<JiraConnection>(
+      const connection = await apiClient.post<JiraConnection>(
         `/api/v1/projects/${projectId}/jira/link`,
         payload,
       );
+      roleProjectApi.invalidateJiraCache(projectId);
+      invalidateSupervisorDashboardCache();
+      return connection;
     },
-    disconnectProjectJira(
+    async disconnectProjectJira(
       projectId: string,
     ): Promise<{ disconnected: boolean }> {
-      return apiClient.post<{ disconnected: boolean }>(
+      const result = await apiClient.post<{ disconnected: boolean }>(
         `/api/v1/projects/${projectId}/jira/disconnect`,
         {},
+      );
+      roleProjectApi.invalidateJiraCache(projectId);
+      invalidateSupervisorDashboardCache();
+      return result;
+    },
+    getDashboardJiraHealth(
+      projectIds: string[],
+    ): Promise<SupervisorDashboardJiraHealth> {
+      return apiClient.post<SupervisorDashboardJiraHealth>(
+        "/api/v1/jira/dashboard/health",
+        { projectIds },
       );
     },
     async refreshProjectJira(projectId: string): Promise<JiraHealth> {
@@ -74,6 +90,7 @@ export function createSupervisorJiraApi({
       );
       roleProjectApi.invalidateJiraCache(projectId);
       roleProjectApi.primeJiraHealth(projectId, fresh);
+      invalidateSupervisorDashboardCache();
       return fresh;
     },
   };

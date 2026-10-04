@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  Archive,
   CalendarClock,
+  CheckCircle2,
   ChevronDown,
+  CircleAlert,
+  Clock3,
+  Crown,
   Download,
   FileClock,
   FileText,
@@ -37,8 +42,15 @@ type StudentItem = {
   submission: ResearchSubmission | null;
 };
 
+type StudentGroupKey =
+  | "action"
+  | "team"
+  | "review"
+  | "completed"
+  | "unavailable";
+
 type StudentGroup = {
-  key: string;
+  key: StudentGroupKey;
   title: string;
   description: string;
   items: StudentItem[];
@@ -62,7 +74,6 @@ function submissionStatusTone(status: SubmissionStatus) {
   if (status === "REJECTED") return "danger";
   return "warning";
 }
-
 
 function authorityRoleLabel(value: string | null | undefined) {
   if (value === "PROJECT_LEADER") return "Project Leader";
@@ -145,14 +156,103 @@ function SubmissionFileDetails({ version }: { version: SubmissionVersion }) {
   );
 }
 
-function stateHint(submission: ResearchSubmission | null) {
-  if (!submission) return "Ready for your submission";
-  if (submission.status === "CHANGES_REQUESTED")
-    return "Supervisor requested a revision";
-  if (submission.status === "PENDING_REVIEW")
-    return "Waiting for Supervisor review";
-  if (submission.status === "APPROVED") return "Submission approved";
-  return "Submission rejected";
+function groupPresentation(key: StudentGroupKey) {
+  if (key === "action") {
+    return {
+      icon: CircleAlert,
+      shell: "border-sky-100 bg-sky-50/45",
+      header: "border-sky-100",
+      iconClass: "bg-sky-100 text-sky-700",
+      countClass: "border-sky-200 bg-white text-sky-700",
+    };
+  }
+
+  if (key === "team") {
+    return {
+      icon: UserRound,
+      shell: "border-violet-100 bg-violet-50/35",
+      header: "border-violet-100",
+      iconClass: "bg-violet-100 text-violet-700",
+      countClass: "border-violet-200 bg-white text-violet-700",
+    };
+  }
+
+  if (key === "review") {
+    return {
+      icon: Clock3,
+      shell: "border-amber-100 bg-amber-50/40",
+      header: "border-amber-100",
+      iconClass: "bg-amber-100 text-amber-700",
+      countClass: "border-amber-200 bg-white text-amber-700",
+    };
+  }
+
+  if (key === "completed") {
+    return {
+      icon: CheckCircle2,
+      shell: "border-slate-200 bg-slate-50/65",
+      header: "border-slate-200",
+      iconClass: "bg-slate-200 text-slate-700",
+      countClass: "border-slate-200 bg-white text-slate-700",
+    };
+  }
+
+  return {
+    icon: Archive,
+    shell: "border-slate-200 bg-slate-50/45",
+    header: "border-slate-200",
+    iconClass: "bg-slate-100 text-slate-500",
+    countClass: "border-slate-200 bg-white text-slate-600",
+  };
+}
+
+function cardAccentClass(
+  submission: ResearchSubmission | null,
+  needsAction: boolean,
+) {
+  if (needsAction) return "border-l-sky-400";
+  if (!submission) return "border-l-slate-300";
+  if (submission.status === "PENDING_REVIEW") return "border-l-amber-400";
+  if (submission.status === "CHANGES_REQUESTED") return "border-l-orange-400";
+  if (submission.status === "APPROVED") return "border-l-emerald-400";
+  return "border-l-rose-400";
+}
+
+function SubmitterIdentity({
+  requirement,
+  compact = false,
+}: {
+  requirement: SubmissionRequirement;
+  compact?: boolean;
+}) {
+  const responsibility = requirement.responsibility;
+  const role = authorityRoleLabel(responsibility.responsibleStudentRole);
+  const isLeader = responsibility.responsibleStudentRole === "PROJECT_LEADER";
+  const Icon = isLeader ? Crown : UserRound;
+  const name = responsibility.responsibleStudentName ?? "Submitter not assigned";
+
+  return (
+    <div
+      className="flex min-w-0 items-center gap-2 text-xs text-slate-500"
+      aria-label={role ? `${role}: ${name}` : name}
+    >
+      <span
+        className={`inline-flex shrink-0 items-center justify-center rounded-lg ${
+          compact ? "h-6 w-6" : "h-7 w-7"
+        } ${
+          isLeader
+            ? "bg-amber-100 text-amber-700"
+            : "bg-slate-100 text-slate-500"
+        }`}
+      >
+        <Icon className={compact ? "h-3.5 w-3.5" : "h-4 w-4"} aria-hidden />
+      </span>
+      <span className="min-w-0 truncate font-medium text-slate-700">{name}</span>
+      {role ? (
+        <span className="shrink-0 text-slate-400">· {role}</span>
+      ) : null}
+    </div>
+  );
 }
 
 export function StudentSubmissionsSection({ projectId }: Props) {
@@ -484,164 +584,75 @@ export function StudentSubmissionsSection({ projectId }: Props) {
 
         {!error && !loading && requirements.length > 0 ? (
           <div className="space-y-7">
-            {groups.map((group) => (
-              <section key={group.key}>
-                <div className="mb-3">
-                  <h3 className="text-sm font-bold text-slate-900">
-                    {group.title}
-                  </h3>
-                  <p className="mt-1 text-xs text-slate-500">
-                    {group.description}
-                  </p>
-                </div>
-                <div className="space-y-3">
-                  {group.items.map(({ requirement, submission }) => {
-                    const version = currentVersion(submission);
-                    const isResponsible = canCurrentUserSubmit(requirement);
-                    const canInitialSubmit =
-                      requirement.status === "OPEN" &&
-                      !submission &&
-                      isResponsible;
-                    const canResubmit =
-                      requirement.status === "OPEN" &&
-                      submission?.status === "CHANGES_REQUESTED" &&
-                      isResponsible;
-                    const needsAction = canInitialSubmit || canResubmit;
-                    const isPastDue = Boolean(
-                      requirement.dueAt &&
-                      new Date(requirement.dueAt).getTime() < Date.now(),
-                    );
-                    const latestFeedback = version?.review?.feedback ?? null;
-                    const expanded = expandedRequirementId === requirement.id;
+            {groups.map((group) => {
+              const presentation = groupPresentation(group.key);
+              const GroupIcon = presentation.icon;
 
-                    return (
-                      <article
-                        key={requirement.id}
-                        className={`overflow-hidden rounded-2xl border transition-shadow duration-200 ${
-                          needsAction
-                            ? "border-sky-200 bg-sky-50/20"
-                            : submission?.status === "PENDING_REVIEW"
-                              ? "border-amber-200 bg-amber-50/20"
-                              : "border-slate-200 bg-white"
-                        } ${expanded ? "shadow-sm" : ""}`}
+              return (
+                <section
+                  key={group.key}
+                  className={`overflow-hidden rounded-3xl border ${presentation.shell}`}
+                >
+                  <div
+                    className={`flex items-start justify-between gap-4 border-b px-4 py-4 sm:px-5 ${presentation.header}`}
+                  >
+                    <div className="flex min-w-0 items-start gap-3">
+                      <span
+                        className={`mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${presentation.iconClass}`}
                       >
-                        <div className="flex flex-col gap-3 p-4 sm:p-5 lg:flex-row lg:items-center">
-                          <button
-                            type="button"
-                            className="min-w-0 flex-1 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-200"
-                            aria-expanded={expanded}
-                            aria-controls={`student-submission-${requirement.id}`}
-                            onClick={() =>
-                              setExpandedRequirementId((current) =>
-                                current === requirement.id
-                                  ? null
-                                  : requirement.id,
-                              )
-                            }
-                          >
-                            <div className="flex flex-wrap items-center gap-2">
-                              <h4 className="font-bold text-slate-900">
-                                {requirement.title}
-                              </h4>
-                              <StatusBadge
-                                tone={requirementStatusTone(requirement.status)}
-                              >
-                                {requirement.status}
-                              </StatusBadge>
-                              {submission ? (
-                                <StatusBadge
-                                  tone={submissionStatusTone(submission.status)}
-                                >
-                                  {readableStatus(submission.status)}
-                                </StatusBadge>
-                              ) : null}
-                            </div>
+                        <GroupIcon className="h-4 w-4" aria-hidden />
+                      </span>
+                      <div className="min-w-0">
+                        <h3 className="text-sm font-bold text-slate-900">
+                          {group.title}
+                        </h3>
+                        <p className="mt-1 text-xs leading-5 text-slate-500">
+                          {group.description}
+                        </p>
+                      </div>
+                    </div>
+                    <span
+                      className={`inline-flex min-w-8 shrink-0 items-center justify-center rounded-full border px-2.5 py-1 text-xs font-bold ${presentation.countClass}`}
+                      aria-label={`${group.items.length} ${group.items.length === 1 ? "item" : "items"}`}
+                    >
+                      {group.items.length}
+                    </span>
+                  </div>
+                  <div className="space-y-3 p-3 sm:p-4">
+                    {group.items.map(({ requirement, submission }) => {
+                      const version = currentVersion(submission);
+                      const isResponsible = canCurrentUserSubmit(requirement);
+                      const canInitialSubmit =
+                        requirement.status === "OPEN" &&
+                        !submission &&
+                        isResponsible;
+                      const canResubmit =
+                        requirement.status === "OPEN" &&
+                        submission?.status === "CHANGES_REQUESTED" &&
+                        isResponsible;
+                      const needsAction = canInitialSubmit || canResubmit;
+                      const isPastDue = Boolean(
+                        requirement.dueAt &&
+                          new Date(requirement.dueAt).getTime() < Date.now(),
+                      );
+                      const latestFeedback = version?.review?.feedback ?? null;
+                      const expanded =
+                        expandedRequirementId === requirement.id;
 
-                            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
-                              {version ? (
-                                <>
-                                  <span className="font-semibold text-slate-700">
-                                    V{version.versionNumber}
-                                  </span>
-                                  <span className="max-w-[26rem] truncate">
-                                    {version.originalFileName}
-                                  </span>
-                                  <span>
-                                    {formatBytes(version.fileSizeBytes)}
-                                  </span>
-                                </>
-                              ) : (
-                                <span>No document submitted</span>
-                              )}
-                              <span className="flex items-center gap-1.5">
-                                <CalendarClock className="h-3.5 w-3.5" />
-                                {requirement.dueAt
-                                  ? formatDateTime(requirement.dueAt)
-                                  : "No deadline"}
-                              </span>
-                            </div>
-                            <p
-                              className={`mt-2 text-xs font-semibold ${
-                                submission?.status === "REJECTED"
-                                  ? "text-rose-700"
-                                  : submission?.status === "APPROVED"
-                                    ? "text-emerald-700"
-                                    : submission?.status === "CHANGES_REQUESTED"
-                                      ? "text-amber-700"
-                                      : "text-slate-500"
-                              }`}
-                            >
-                              {submission
-                                ? stateHint(submission)
-                                : isResponsible
-                                  ? "Ready for your submission"
-                                  : requirement.responsibility.requiresAssignment
-                                    ? "Waiting for a responsible submitter to be assigned"
-                                    : `Assigned to ${requirement.responsibility.responsibleStudentName ?? "another project member"}`}
-                            </p>
-                            <p className="mt-1 text-xs text-slate-500">
-                              Responsible:{" "}
-                              {requirement.responsibility.responsibleStudentName ??
-                                "Not assigned"}
-                              {authorityRoleLabel(
-                                requirement.responsibility.responsibleStudentRole,
-                              )
-                                ? ` · ${authorityRoleLabel(requirement.responsibility.responsibleStudentRole)}`
-                                : ""}
-                            </p>
-                          </button>
-
-                          <div className="flex shrink-0 flex-wrap items-center gap-2">
-                            {needsAction ? (
-                              <Button
-                                size="sm"
-                                variant="primary"
-                                leftIcon={<Upload className="h-4 w-4" />}
-                                onClick={() =>
-                                  startUpload(requirement, submission)
-                                }
-                              >
-                                {canResubmit
-                                  ? "Upload revised version"
-                                  : "Submit file"}
-                              </Button>
-                            ) : null}
-                            {submission && version ? (
-                              <SubmissionPreviewButton
-                                version={version}
-                                onPreview={() =>
-                                  setPreviewTarget({ submission, version })
-                                }
-                              />
-                            ) : null}
+                      return (
+                        <article
+                          key={requirement.id}
+                          className={`overflow-hidden rounded-2xl border border-l-4 border-slate-200 bg-white transition-all duration-200 ${cardAccentClass(
+                            submission,
+                            needsAction,
+                          )} ${expanded ? "shadow-sm" : "shadow-none"}`}
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-stretch sm:gap-3">
                             <button
                               type="button"
-                              aria-label={
-                                expanded
-                                  ? `Collapse ${requirement.title}`
-                                  : `Expand ${requirement.title}`
-                              }
+                              className="min-w-0 flex-1 px-4 py-4 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-200 sm:px-5"
                               aria-expanded={expanded}
+                              aria-controls={`student-submission-${requirement.id}`}
                               onClick={() =>
                                 setExpandedRequirementId((current) =>
                                   current === requirement.id
@@ -649,184 +660,275 @@ export function StudentSubmissionsSection({ projectId }: Props) {
                                     : requirement.id,
                                 )
                               }
-                              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-200"
                             >
-                              <ChevronDown
-                                className={`h-4 w-4 transition-transform duration-200 ease-out ${expanded ? "rotate-180" : ""}`}
-                              />
-                            </button>
-                          </div>
-                        </div>
-
-                        <div
-                          id={`student-submission-${requirement.id}`}
-                          className={`grid transition-[grid-template-rows,opacity] duration-200 ease-out ${
-                            expanded
-                              ? "grid-rows-[1fr] opacity-100"
-                              : "grid-rows-[0fr] opacity-0"
-                          }`}
-                        >
-                          <div className="overflow-hidden">
-                            <div className="border-t border-slate-200 px-4 pb-5 pt-4 sm:px-5">
-                              {requirement.description ? (
-                                <p className="mb-4 max-w-4xl text-sm leading-6 text-slate-600">
-                                  {requirement.description}
-                                </p>
-                              ) : null}
-
-                              <div className="grid gap-2 rounded-2xl bg-slate-50 p-4 text-xs text-slate-600 sm:grid-cols-3">
-                                <span>
-                                  <strong className="text-slate-700">
-                                    Accepted:
-                                  </strong>{" "}
-                                  {requirement.allowedFileTypes
-                                    .map((type) => `.${type}`)
-                                    .join(", ")}
-                                </span>
-                                <span>
-                                  <strong className="text-slate-700">
-                                    Maximum:
-                                  </strong>{" "}
-                                  {formatBytes(requirement.maxFileSizeBytes)}
-                                </span>
-                                <span className="flex flex-wrap items-center gap-1.5">
-                                  <CalendarClock className="h-3.5 w-3.5" />
-                                  <strong className="text-slate-700">
-                                    Due:
-                                  </strong>{" "}
-                                  {requirement.dueAt
-                                    ? formatDateTime(requirement.dueAt)
-                                    : "No deadline"}
-                                  {isPastDue && !submission ? (
-                                    <span className="font-semibold text-amber-700">
-                                      Late if submitted now
-                                    </span>
-                                  ) : null}
-                                </span>
-                              </div>
-
-                              <div className="mt-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs text-slate-600">
-                                <span className="font-semibold text-slate-700">
-                                  Responsible submitter:
-                                </span>{" "}
-                                {requirement.responsibility.responsibleStudentName ??
-                                  "Not assigned"}
-                                {authorityRoleLabel(
-                                  requirement.responsibility.responsibleStudentRole,
-                                )
-                                  ? ` · ${authorityRoleLabel(requirement.responsibility.responsibleStudentRole)}`
-                                  : ""}
-                                {!isResponsible &&
-                                !requirement.responsibility.requiresAssignment ? (
-                                  <span className="ml-2 text-slate-500">
-                                    You can view this submission, but only the
-                                    responsible student can upload an official
-                                    version.
-                                  </span>
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                                  <h4 className="truncate font-bold text-slate-900">
+                                    {requirement.title}
+                                  </h4>
+                                  <StatusBadge
+                                    tone={requirementStatusTone(
+                                      requirement.status,
+                                    )}
+                                    className="px-2.5 py-0.5 text-[10px] tracking-[0.14em]"
+                                  >
+                                    {requirement.status}
+                                  </StatusBadge>
+                                </div>
+                                {submission ? (
+                                  <StatusBadge
+                                    tone={submissionStatusTone(
+                                      submission.status,
+                                    )}
+                                    className="shrink-0 px-2.5 py-0.5 text-[10px] tracking-[0.14em]"
+                                  >
+                                    {readableStatus(submission.status)}
+                                  </StatusBadge>
                                 ) : null}
                               </div>
 
-                              {version?.review ? (
-                                <div
-                                  className={`mt-4 rounded-2xl border p-4 ${
-                                    submission?.status === "REJECTED"
-                                      ? "border-rose-200 bg-rose-50"
-                                      : submission?.status === "APPROVED"
-                                        ? "border-emerald-200 bg-emerald-50"
-                                        : "border-amber-200 bg-amber-50"
-                                  }`}
-                                >
-                                  <p className="text-xs font-bold uppercase tracking-wide text-slate-700">
-                                    Supervisor decision ·{" "}
-                                    {readableStatus(version.review.decision)}
-                                  </p>
-                                  {latestFeedback ? (
-                                    <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-800">
-                                      {latestFeedback}
-                                    </p>
-                                  ) : null}
-                                  <p className="mt-2 text-xs text-slate-600">
-                                    Reviewed Version {version.versionNumber} by{" "}
-                                    {version.review.reviewedByName} on{" "}
-                                    {formatDateTime(version.review.reviewedAt)}.
-                                  </p>
-                                  {submission?.status ===
-                                  "CHANGES_REQUESTED" ? (
-                                    <p className="mt-2 text-xs font-semibold text-amber-800">
-                                      Your next submission will be Version{" "}
-                                      {submission.versionCount + 1}.
-                                    </p>
-                                  ) : null}
-                                </div>
-                              ) : null}
+                              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
+                                {version ? (
+                                  <>
+                                    <span className="font-semibold text-slate-700">
+                                      V{version.versionNumber}
+                                    </span>
+                                    <span
+                                      className="max-w-[28rem] truncate"
+                                      title={version.originalFileName}
+                                    >
+                                      {version.originalFileName}
+                                    </span>
+                                    <span>{formatBytes(version.fileSizeBytes)}</span>
+                                  </>
+                                ) : (
+                                  <span>No document submitted</span>
+                                )}
+                                <span className="flex items-center gap-1.5 text-slate-400">
+                                  <CalendarClock className="h-3.5 w-3.5" />
+                                  {requirement.dueAt
+                                    ? `Due ${formatDateTime(requirement.dueAt)}`
+                                    : "No deadline"}
+                                </span>
+                              </div>
 
-                              {submission && version ? (
-                                <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                  <div className="flex flex-wrap items-start justify-between gap-4">
-                                    <SubmissionFileDetails version={version} />
-                                    <div className="flex shrink-0 flex-wrap gap-2">
-                                      <SubmissionPreviewButton
-                                        version={version}
-                                        busy={downloadVersionId === version.id}
-                                        onPreview={() =>
-                                          setPreviewTarget({
-                                            submission,
-                                            version,
-                                          })
-                                        }
-                                      />
-                                      <Button
-                                        size="sm"
-                                        variant="secondary"
-                                        disabled={downloadVersionId !== null}
-                                        leftIcon={
-                                          <Download className="h-4 w-4" />
-                                        }
-                                        onClick={() =>
-                                          void downloadVersion(
-                                            submission,
-                                            version,
-                                          )
-                                        }
-                                      >
-                                        {downloadVersionId === version.id
-                                          ? "Preparing…"
-                                          : "Download"}
-                                      </Button>
-                                      <Button
-                                        size="sm"
-                                        variant="secondary"
-                                        leftIcon={
-                                          <FileClock className="h-4 w-4" />
-                                        }
-                                        onClick={() =>
-                                          setDetailSubmission(submission)
-                                        }
-                                      >
-                                        Version history
-                                      </Button>
-                                    </div>
-                                  </div>
-                                </div>
-                              ) : requirement.status !== "OPEN" ? (
-                                <p className="mt-4 text-sm font-medium text-slate-500">
-                                  This requirement is not accepting submissions.
-                                </p>
-                              ) : (
-                                <p className="mt-4 text-sm text-slate-500">
-                                  No document has been submitted for this
-                                  requirement yet.
-                                </p>
-                              )}
+                              <div className="mt-3">
+                                <SubmitterIdentity
+                                  requirement={requirement}
+                                  compact
+                                />
+                              </div>
+                            </button>
+
+                            <div className="flex shrink-0 items-center justify-end gap-2 px-4 pb-4 sm:px-0 sm:pb-0 sm:pr-4 sm:py-3">
+                              {needsAction ? (
+                                <Button
+                                  size="sm"
+                                  variant="primary"
+                                  leftIcon={<Upload className="h-4 w-4" />}
+                                  onClick={() =>
+                                    startUpload(requirement, submission)
+                                  }
+                                >
+                                  {canResubmit
+                                    ? "Upload revised version"
+                                    : "Submit file"}
+                                </Button>
+                              ) : null}
+                              <button
+                                type="button"
+                                aria-label={
+                                  expanded
+                                    ? `Collapse ${requirement.title}`
+                                    : `Expand ${requirement.title}`
+                                }
+                                aria-expanded={expanded}
+                                onClick={() =>
+                                  setExpandedRequirementId((current) =>
+                                    current === requirement.id
+                                      ? null
+                                      : requirement.id,
+                                  )
+                                }
+                                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-200"
+                              >
+                                <ChevronDown
+                                  className={`h-4 w-4 transition-transform duration-200 ease-out ${expanded ? "rotate-180" : ""}`}
+                                />
+                              </button>
                             </div>
                           </div>
-                        </div>
-                      </article>
-                    );
-                  })}
-                </div>
-              </section>
-            ))}
+
+                          <div
+                            id={`student-submission-${requirement.id}`}
+                            aria-hidden={!expanded}
+                            className={`grid transition-[grid-template-rows,opacity] duration-200 ease-out ${
+                              expanded
+                                ? "grid-rows-[1fr] opacity-100"
+                                : "grid-rows-[0fr] opacity-0"
+                            }`}
+                          >
+                            <div className="overflow-hidden">
+                              <div className="border-t border-slate-200 px-4 pb-5 pt-4 sm:px-5">
+                                {requirement.description ? (
+                                  <p className="mb-4 max-w-4xl text-sm leading-6 text-slate-600">
+                                    {requirement.description}
+                                  </p>
+                                ) : null}
+
+                                <div className="grid gap-2 rounded-2xl bg-slate-50 p-4 text-xs text-slate-600 sm:grid-cols-3">
+                                  <span>
+                                    <strong className="text-slate-700">
+                                      Accepted:
+                                    </strong>{" "}
+                                    {requirement.allowedFileTypes
+                                      .map((type) => `.${type}`)
+                                      .join(", ")}
+                                  </span>
+                                  <span>
+                                    <strong className="text-slate-700">
+                                      Maximum:
+                                    </strong>{" "}
+                                    {formatBytes(requirement.maxFileSizeBytes)}
+                                  </span>
+                                  <span className="flex flex-wrap items-center gap-1.5">
+                                    <CalendarClock className="h-3.5 w-3.5" />
+                                    <strong className="text-slate-700">
+                                      Due:
+                                    </strong>{" "}
+                                    {requirement.dueAt
+                                      ? formatDateTime(requirement.dueAt)
+                                      : "No deadline"}
+                                    {isPastDue && !submission ? (
+                                      <span className="font-semibold text-amber-700">
+                                        Late if submitted now
+                                      </span>
+                                    ) : null}
+                                  </span>
+                                </div>
+
+                                <div className="mt-3 rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                                  <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
+                                    Responsible submitter
+                                  </p>
+                                  <SubmitterIdentity requirement={requirement} />
+                                  {!isResponsible &&
+                                  !requirement.responsibility
+                                    .requiresAssignment ? (
+                                    <p className="mt-2 text-xs leading-5 text-slate-500">
+                                      Only this student can upload the official
+                                      version for this requirement.
+                                    </p>
+                                  ) : null}
+                                </div>
+
+                                {version?.review ? (
+                                  <div
+                                    className={`mt-4 rounded-2xl border p-4 ${
+                                      submission?.status === "REJECTED"
+                                        ? "border-rose-200 bg-rose-50"
+                                        : submission?.status === "APPROVED"
+                                          ? "border-emerald-200 bg-emerald-50"
+                                          : "border-amber-200 bg-amber-50"
+                                    }`}
+                                  >
+                                    <p className="text-xs font-bold uppercase tracking-wide text-slate-700">
+                                      Supervisor decision ·{" "}
+                                      {readableStatus(version.review.decision)}
+                                    </p>
+                                    {latestFeedback ? (
+                                      <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-800">
+                                        {latestFeedback}
+                                      </p>
+                                    ) : null}
+                                    <p className="mt-2 text-xs text-slate-600">
+                                      Reviewed Version {version.versionNumber} by{" "}
+                                      {version.review.reviewedByName} on{" "}
+                                      {formatDateTime(
+                                        version.review.reviewedAt,
+                                      )}
+                                      .
+                                    </p>
+                                    {submission?.status ===
+                                    "CHANGES_REQUESTED" ? (
+                                      <p className="mt-2 text-xs font-semibold text-amber-800">
+                                        Your next submission will be Version{" "}
+                                        {submission.versionCount + 1}.
+                                      </p>
+                                    ) : null}
+                                  </div>
+                                ) : null}
+
+                                {submission && version ? (
+                                  <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                    <div className="flex flex-wrap items-start justify-between gap-4">
+                                      <SubmissionFileDetails version={version} />
+                                      <div className="flex shrink-0 flex-wrap gap-2">
+                                        <SubmissionPreviewButton
+                                          version={version}
+                                          busy={
+                                            downloadVersionId === version.id
+                                          }
+                                          onPreview={() =>
+                                            setPreviewTarget({
+                                              submission,
+                                              version,
+                                            })
+                                          }
+                                        />
+                                        <Button
+                                          size="sm"
+                                          variant="secondary"
+                                          disabled={downloadVersionId !== null}
+                                          leftIcon={
+                                            <Download className="h-4 w-4" />
+                                          }
+                                          onClick={() =>
+                                            void downloadVersion(
+                                              submission,
+                                              version,
+                                            )
+                                          }
+                                        >
+                                          {downloadVersionId === version.id
+                                            ? "Preparing…"
+                                            : "Download"}
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          variant="secondary"
+                                          leftIcon={
+                                            <FileClock className="h-4 w-4" />
+                                          }
+                                          onClick={() =>
+                                            setDetailSubmission(submission)
+                                          }
+                                        >
+                                          Version history
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ) : requirement.status !== "OPEN" ? (
+                                  <p className="mt-4 text-sm font-medium text-slate-500">
+                                    This requirement is not accepting submissions.
+                                  </p>
+                                ) : (
+                                  <p className="mt-4 text-sm text-slate-500">
+                                    No document has been submitted for this
+                                    requirement yet.
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                </section>
+              );
+            })}
           </div>
         ) : null}
       </SectionCard>

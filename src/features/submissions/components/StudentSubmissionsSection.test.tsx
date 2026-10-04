@@ -157,13 +157,22 @@ describe("StudentSubmissionsSection", () => {
     expect(await screen.findAllByText("proposal.pdf")).toHaveLength(2);
     expect(screen.getByText("PENDING REVIEW")).toBeInTheDocument();
     expect(
+      screen.getAllByLabelText("Project Leader: Student One").length,
+    ).toBeGreaterThan(0);
+    expect(
       screen.queryByRole("button", { name: "Submit file" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Preview" }),
     ).not.toBeInTheDocument();
     expect(
       screen.queryByText(/This recorded version is immutable/i),
     ).not.toBeInTheDocument();
 
-    await user.click(screen.getAllByRole("button", { name: "Preview" })[0]);
+    await user.click(
+      screen.getByRole("button", { name: "Expand Research Proposal" }),
+    );
+    await user.click(screen.getByRole("button", { name: "Preview" }));
     expect(screen.getByTestId("preview-modal")).toHaveTextContent(
       "preview:proposal.pdf",
     );
@@ -189,7 +198,9 @@ describe("StudentSubmissionsSection", () => {
 
     expect(await screen.findByText("Research Proposal")).toBeInTheDocument();
     expect(screen.getByText("Team submissions")).toBeInTheDocument();
-    expect(screen.getByText("Assigned to Student Two")).toBeInTheDocument();
+    expect(
+      screen.getAllByLabelText("Assigned submitter: Student Two").length,
+    ).toBeGreaterThan(0);
     expect(
       screen.queryByRole("button", { name: "Submit file" }),
     ).not.toBeInTheDocument();

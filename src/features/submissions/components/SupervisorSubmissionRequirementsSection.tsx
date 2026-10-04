@@ -3,9 +3,9 @@ import {
   Archive,
   Edit3,
   Eye,
-  FileCheck2,
   FileClock,
   Lock,
+  MoreHorizontal,
   Plus,
   RefreshCw,
   RotateCcw,
@@ -31,6 +31,17 @@ import { SubmissionDetailModal } from "./SubmissionDetailModal";
 
 type Props = { projectId: string };
 type Action = "close" | "reopen" | "archive" | "delete";
+type WorkspaceItem = {
+  requirement: SubmissionRequirement;
+  submission: ResearchSubmission | null;
+};
+
+type WorkspaceGroup = {
+  key: string;
+  title: string;
+  description: string;
+  items: WorkspaceItem[];
+};
 
 function requirementTone(status: SubmissionRequirement["status"]) {
   return status === "OPEN"
@@ -50,6 +61,17 @@ function readable(value: string) {
   return value.replace(/_/g, " ");
 }
 
+function formatDue(value: string | null) {
+  if (!value) return "No deadline";
+  return new Date(value).toLocaleString([], {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
 function currentVersionNumber(submission: ResearchSubmission) {
   return (
     submission.versions.find(
@@ -57,6 +79,125 @@ function currentVersionNumber(submission: ResearchSubmission) {
     )?.versionNumber ??
     submission.versions.find((version) => version.isCurrent)?.versionNumber ??
     submission.versionCount
+  );
+}
+
+function currentVersion(submission: ResearchSubmission | null) {
+  if (!submission) return null;
+  return (
+    submission.versions.find(
+      (version) => version.id === submission.currentVersionId,
+    ) ??
+    submission.versions.find((version) => version.isCurrent) ??
+    submission.versions[0] ??
+    null
+  );
+}
+
+function dueSortValue(requirement: SubmissionRequirement) {
+  if (!requirement.dueAt) return Number.MAX_SAFE_INTEGER;
+  const value = new Date(requirement.dueAt).getTime();
+  return Number.isFinite(value) ? value : Number.MAX_SAFE_INTEGER;
+}
+
+function sortWorkspaceItems(items: WorkspaceItem[]) {
+  return [...items].sort((a, b) => {
+    const due = dueSortValue(a.requirement) - dueSortValue(b.requirement);
+    if (due !== 0) return due;
+    return a.requirement.title.localeCompare(b.requirement.title);
+  });
+}
+
+function RequirementActionsMenu({
+  requirement,
+  submission,
+  busy,
+  onEdit,
+  onAction,
+}: {
+  requirement: SubmissionRequirement;
+  submission: ResearchSubmission | null;
+  busy: boolean;
+  onEdit: () => void;
+  onAction: (action: Action) => void;
+}) {
+  if (requirement.status === "ARCHIVED") return null;
+
+  const closeDetails = (target: EventTarget & HTMLElement) => {
+    target.closest("details")?.removeAttribute("open");
+  };
+
+  return (
+    <details className="relative">
+      <summary
+        aria-label={`Manage ${requirement.title}`}
+        className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 [&::-webkit-details-marker]:hidden"
+      >
+        <MoreHorizontal className="h-4 w-4" />
+      </summary>
+      <div className="absolute right-0 z-30 mt-2 w-52 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl">
+        <button
+          type="button"
+          disabled={busy}
+          onClick={(event) => {
+            closeDetails(event.currentTarget);
+            onEdit();
+          }}
+          className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+        >
+          <Edit3 className="h-4 w-4" /> Edit requirement
+        </button>
+        {requirement.status === "OPEN" ? (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={(event) => {
+              closeDetails(event.currentTarget);
+              onAction("close");
+            }}
+            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          >
+            <Lock className="h-4 w-4" /> Close requirement
+          </button>
+        ) : (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={(event) => {
+              closeDetails(event.currentTarget);
+              onAction("reopen");
+            }}
+            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          >
+            <RotateCcw className="h-4 w-4" /> Reopen requirement
+          </button>
+        )}
+        <button
+          type="button"
+          disabled={busy}
+          onClick={(event) => {
+            closeDetails(event.currentTarget);
+            onAction("archive");
+          }}
+          className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+        >
+          <Archive className="h-4 w-4" /> Archive requirement
+        </button>
+        {!submission ? (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={(event) => {
+              closeDetails(event.currentTarget);
+              onAction("delete");
+            }}
+            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50"
+          >
+            <Trash2 className="h-4 w-4" /> Delete unused requirement
+          </button>
+        ) : null}
+      </div>
+    </details>
   );
 }
 
@@ -103,16 +244,12 @@ export function SupervisorSubmissionRequirementsSection({ projectId }: Props) {
       ),
     [submissions],
   );
-  const pending = useMemo(
-    () =>
-      submissions.filter(
-        (submission) => submission.status === "PENDING_REVIEW",
-      ),
-    [submissions],
-  );
+
   const summary = useMemo(
     () => ({
-      pending: pending.length,
+      pending: submissions.filter(
+        (submission) => submission.status === "PENDING_REVIEW",
+      ).length,
       changes: submissions.filter(
         (submission) => submission.status === "CHANGES_REQUESTED",
       ).length,
@@ -123,8 +260,72 @@ export function SupervisorSubmissionRequirementsSection({ projectId }: Props) {
         (submission) => submission.status === "REJECTED",
       ).length,
     }),
-    [pending.length, submissions],
+    [submissions],
   );
+
+  const groups = useMemo<WorkspaceGroup[]>(() => {
+    const items = requirements.map((requirement) => ({
+      requirement,
+      submission: submissionsByRequirement[requirement.id] ?? null,
+    }));
+
+    const needsReview = items.filter(
+      (item) => item.submission?.status === "PENDING_REVIEW",
+    );
+    const waitingRevision = items.filter(
+      (item) => item.submission?.status === "CHANGES_REQUESTED",
+    );
+    const openUnsubmitted = items.filter(
+      (item) => item.requirement.status === "OPEN" && !item.submission,
+    );
+    const completed = items.filter(
+      (item) =>
+        item.submission?.status === "APPROVED" ||
+        item.submission?.status === "REJECTED",
+    );
+    const historical = items.filter(
+      (item) =>
+        !item.submission &&
+        (item.requirement.status === "CLOSED" ||
+          item.requirement.status === "ARCHIVED"),
+    );
+
+    return [
+      {
+        key: "review",
+        title: "Needs review",
+        description:
+          "Current student versions waiting for your formal decision.",
+        items: sortWorkspaceItems(needsReview),
+      },
+      {
+        key: "revision",
+        title: "Waiting on revision",
+        description:
+          "Changes were requested and the next action belongs to the students.",
+        items: sortWorkspaceItems(waitingRevision),
+      },
+      {
+        key: "open",
+        title: "Open requirements",
+        description: "Requirements accepting their first student submission.",
+        items: sortWorkspaceItems(openUnsubmitted),
+      },
+      {
+        key: "completed",
+        title: "Completed reviews",
+        description:
+          "Approved and rejected submissions are kept below active work.",
+        items: sortWorkspaceItems(completed),
+      },
+      {
+        key: "historical",
+        title: "Closed & archived",
+        description: "Requirements that no longer accept submissions.",
+        items: sortWorkspaceItems(historical),
+      },
+    ].filter((group) => group.items.length > 0);
+  }, [requirements, submissionsByRequirement]);
 
   function upsertRequirement(requirement: SubmissionRequirement) {
     setRequirements((current) => {
@@ -177,6 +378,7 @@ export function SupervisorSubmissionRequirementsSection({ projectId }: Props) {
       )
     )
       return;
+
     setBusyId(requirement.id);
     setActionError(null);
     try {
@@ -208,136 +410,12 @@ export function SupervisorSubmissionRequirementsSection({ projectId }: Props) {
   return (
     <>
       <SectionCard
-        title="Submission Review"
-        subtitle="Review the exact current version, leave project comments, and record one immutable formal decision per version."
-        actions={
-          <IconActionButton
-            label="Refresh submissions"
-            onClick={() => void load()}
-            disabled={loading}
-            icon={
-              <RefreshCw
-                className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
-              />
-            }
-          />
-        }
-      >
-        {!loading && !error ? (
-          <div className="mb-5 grid gap-3 sm:grid-cols-4">
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
-                Pending review
-              </p>
-              <p className="mt-1 text-xl font-bold text-amber-900">
-                {summary.pending}
-              </p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Changes requested
-              </p>
-              <p className="mt-1 text-xl font-bold text-slate-900">
-                {summary.changes}
-              </p>
-            </div>
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
-                Approved
-              </p>
-              <p className="mt-1 text-xl font-bold text-emerald-900">
-                {summary.approved}
-              </p>
-            </div>
-            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-rose-700">
-                Rejected
-              </p>
-              <p className="mt-1 text-xl font-bold text-rose-900">
-                {summary.rejected}
-              </p>
-            </div>
-          </div>
-        ) : null}
-
-        {error ? (
-          <ErrorState error={error} onRetry={() => void load()} />
-        ) : null}
-        {actionError ? (
-          <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
-            {actionError}
-          </div>
-        ) : null}
-        {!error && loading ? (
-          <div className="space-y-3">
-            {[0, 1].map((item) => (
-              <div
-                key={item}
-                className="h-28 animate-pulse rounded-2xl bg-slate-100"
-              />
-            ))}
-          </div>
-        ) : null}
-        {!error && !loading && pending.length === 0 ? (
-          <EmptyStateCard message="No submissions are waiting for formal review." />
-        ) : null}
-        {!error && !loading && pending.length > 0 ? (
-          <div className="space-y-3">
-            {pending.map((submission) => {
-              const version =
-                submission.versions.find(
-                  (item) => item.id === submission.currentVersionId,
-                ) ?? submission.versions[0];
-              return (
-                <article
-                  key={submission.id}
-                  className="rounded-2xl border border-amber-200 bg-amber-50/60 p-4"
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-bold text-slate-900">
-                          {submission.requirement.title}
-                        </h3>
-                        <StatusBadge tone="warning">Pending review</StatusBadge>
-                      </div>
-                      {version ? (
-                        <p className="mt-2 text-sm text-slate-600">
-                          Version {version.versionNumber} ·{" "}
-                          {version.originalFileName} · submitted by{" "}
-                          {version.uploadedByName}
-                        </p>
-                      ) : null}
-                      <p className="mt-1 text-xs text-slate-500">
-                        Submitted{" "}
-                        {new Date(submission.lastSubmittedAt).toLocaleString()}
-                      </p>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="primary"
-                      leftIcon={<Eye className="h-4 w-4" />}
-                      onClick={() => setDetailSubmission(submission)}
-                    >
-                      Review submission
-                    </Button>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        ) : null}
-      </SectionCard>
-
-      <div className="mt-6" />
-
-      <SectionCard
-        title="Submission Requirements"
-        subtitle="Define required research documents and their upload constraints. Existing versions and formal reviews remain immutable."
+        title="Research Submissions"
+        subtitle="Create requirements and work through the submissions that need your attention first."
         actions={
           <>
             <IconActionButton
-              label="Refresh requirements"
+              label="Refresh submissions"
               onClick={() => void load()}
               disabled={loading}
               icon={
@@ -360,6 +438,61 @@ export function SupervisorSubmissionRequirementsSection({ projectId }: Props) {
           </>
         }
       >
+        {!loading && !error ? (
+          <div className="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
+                Needs review
+              </p>
+              <p className="mt-1 text-2xl font-bold text-amber-900">
+                {summary.pending}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-sky-700">
+                Waiting on revision
+              </p>
+              <p className="mt-1 text-2xl font-bold text-sky-900">
+                {summary.changes}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
+                Approved
+              </p>
+              <p className="mt-1 text-2xl font-bold text-emerald-900">
+                {summary.approved}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-rose-700">
+                Rejected
+              </p>
+              <p className="mt-1 text-2xl font-bold text-rose-900">
+                {summary.rejected}
+              </p>
+            </div>
+          </div>
+        ) : null}
+
+        {error ? (
+          <ErrorState error={error} onRetry={() => void load()} />
+        ) : null}
+        {actionError ? (
+          <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+            {actionError}
+          </div>
+        ) : null}
+        {!error && loading ? (
+          <div className="space-y-3">
+            {[0, 1, 2].map((item) => (
+              <div
+                key={item}
+                className="h-36 animate-pulse rounded-2xl bg-slate-100"
+              />
+            ))}
+          </div>
+        ) : null}
         {!error && !loading && requirements.length === 0 ? (
           <EmptyStateCard
             message="No submission requirements yet. Create one before students can submit documents."
@@ -378,153 +511,173 @@ export function SupervisorSubmissionRequirementsSection({ projectId }: Props) {
         ) : null}
 
         {!error && !loading && requirements.length > 0 ? (
-          <div className="space-y-4">
-            {requirements.map((requirement) => {
-              const submission =
-                submissionsByRequirement[requirement.id] ?? null;
-              return (
-                <article
-                  key={requirement.id}
-                  className="rounded-2xl border border-slate-200 p-5"
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-bold text-slate-900">
-                          {requirement.title}
-                        </h3>
-                        <StatusBadge tone={requirementTone(requirement.status)}>
-                          {requirement.status}
-                        </StatusBadge>
-                        {submission ? (
-                          <StatusBadge tone={submissionTone(submission.status)}>
-                            {readable(submission.status)}
-                          </StatusBadge>
-                        ) : null}
-                      </div>
-                      {requirement.description ? (
-                        <p className="mt-2 text-sm text-slate-600">
-                          {requirement.description}
-                        </p>
-                      ) : null}
-                      <div className="mt-4 grid gap-2 text-xs text-slate-500 sm:grid-cols-3">
-                        <span>
-                          Types:{" "}
-                          {requirement.allowedFileTypes
-                            .map((type) => `.${type}`)
-                            .join(", ")}
-                        </span>
-                        <span>
-                          Max: {formatBytes(requirement.maxFileSizeBytes)}
-                        </span>
-                        <span>
-                          Due:{" "}
-                          {requirement.dueAt
-                            ? new Date(requirement.dueAt).toLocaleString()
-                            : "No due date"}
-                        </span>
-                      </div>
-                      {submission ? (
-                        <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-slate-600">
-                          <span className="flex items-center gap-1">
-                            <FileClock className="h-4 w-4" />
-                            {submission.versionCount} version
-                            {submission.versionCount === 1 ? "" : "s"}
-                          </span>
-                          <span>
-                            Current: V{currentVersionNumber(submission)}
-                          </span>
-                          {submission.approvedVersionId ? (
-                            <span className="flex items-center gap-1 font-semibold text-emerald-700">
-                              <FileCheck2 className="h-4 w-4" />
-                              Approved version recorded
-                            </span>
-                          ) : null}
-                        </div>
-                      ) : null}
-                    </div>
-
-                    <div className="flex flex-wrap justify-end gap-2">
-                      {submission ? (
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          leftIcon={<Eye className="h-4 w-4" />}
-                          onClick={() => setDetailSubmission(submission)}
-                        >
-                          View submission
-                        </Button>
-                      ) : null}
-                      {requirement.status !== "ARCHIVED" ? (
-                        <>
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            disabled={busyId === requirement.id}
-                            leftIcon={<Edit3 className="h-4 w-4" />}
-                            onClick={() => {
-                              setEditing(requirement);
-                              setEditorOpen(true);
-                            }}
-                          >
-                            Edit
-                          </Button>
-                          {requirement.status === "OPEN" ? (
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              disabled={busyId === requirement.id}
-                              leftIcon={<Lock className="h-4 w-4" />}
-                              onClick={() =>
-                                void runAction(requirement, "close")
-                              }
-                            >
-                              Close
-                            </Button>
-                          ) : (
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              disabled={busyId === requirement.id}
-                              leftIcon={<RotateCcw className="h-4 w-4" />}
-                              onClick={() =>
-                                void runAction(requirement, "reopen")
-                              }
-                            >
-                              Reopen
-                            </Button>
-                          )}
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            disabled={busyId === requirement.id}
-                            leftIcon={<Archive className="h-4 w-4" />}
-                            onClick={() =>
-                              void runAction(requirement, "archive")
-                            }
-                          >
-                            Archive
-                          </Button>
-                          {!submission ? (
-                            <Button
-                              size="sm"
-                              variant="danger"
-                              disabled={busyId === requirement.id}
-                              leftIcon={<Trash2 className="h-4 w-4" />}
-                              onClick={() =>
-                                void runAction(requirement, "delete")
-                              }
-                            >
-                              Delete
-                            </Button>
-                          ) : null}
-                        </>
-                      ) : null}
-                    </div>
+          <div className="space-y-7">
+            {groups.map((group) => (
+              <section key={group.key}>
+                <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900">
+                      {group.title}
+                    </h3>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {group.description}
+                    </p>
                   </div>
-                </article>
-              );
-            })}
+                  <span className="text-xs font-semibold text-slate-400">
+                    {group.items.length} item
+                    {group.items.length === 1 ? "" : "s"}
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  {group.items.map(({ requirement, submission }) => {
+                    const version = currentVersion(submission);
+                    const isPending = submission?.status === "PENDING_REVIEW";
+                    const completed =
+                      submission?.status === "APPROVED" ||
+                      submission?.status === "REJECTED";
+                    const primaryLabel = isPending
+                      ? "Review submission"
+                      : submission?.status === "APPROVED"
+                        ? "View approved submission"
+                        : submission?.status === "REJECTED"
+                          ? "View rejected submission"
+                          : submission?.status === "CHANGES_REQUESTED"
+                            ? "View requested changes"
+                            : "View submission";
+
+                    return (
+                      <article
+                        key={requirement.id}
+                        className={`rounded-2xl border p-5 transition ${isPending ? "border-amber-200 bg-amber-50/40" : completed ? "border-slate-200 bg-slate-50/30" : "border-slate-200 bg-white"}`}
+                      >
+                        <div className="flex flex-wrap items-start justify-between gap-4">
+                          <div className="min-w-0 flex-1">
+                            <h4 className="text-base font-bold text-slate-900">
+                              {requirement.title}
+                            </h4>
+                            {requirement.description ? (
+                              <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">
+                                {requirement.description}
+                              </p>
+                            ) : null}
+
+                            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-slate-500">
+                              <span className="flex items-center gap-1.5">
+                                <span className="font-semibold text-slate-500">
+                                  Requirement
+                                </span>
+                                <StatusBadge
+                                  tone={requirementTone(requirement.status)}
+                                >
+                                  {requirement.status}
+                                </StatusBadge>
+                              </span>
+                              {submission ? (
+                                <span className="flex items-center gap-1.5">
+                                  <span className="font-semibold text-slate-500">
+                                    Submission
+                                  </span>
+                                  <StatusBadge
+                                    tone={submissionTone(submission.status)}
+                                  >
+                                    {readable(submission.status)}
+                                  </StatusBadge>
+                                </span>
+                              ) : (
+                                <span className="font-medium text-slate-500">
+                                  No submission yet
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="mt-4 grid gap-2 rounded-2xl bg-slate-50 px-4 py-3 text-xs text-slate-600 sm:grid-cols-3">
+                              <span>
+                                <strong className="text-slate-700">
+                                  Types:
+                                </strong>{" "}
+                                {requirement.allowedFileTypes
+                                  .map((type) => `.${type}`)
+                                  .join(", ")}
+                              </span>
+                              <span>
+                                <strong className="text-slate-700">
+                                  Maximum:
+                                </strong>{" "}
+                                {formatBytes(requirement.maxFileSizeBytes)}
+                              </span>
+                              <span>
+                                <strong className="text-slate-700">
+                                  Deadline:
+                                </strong>{" "}
+                                {formatDue(requirement.dueAt)}
+                              </span>
+                            </div>
+
+                            {submission && version ? (
+                              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
+                                <span className="flex items-center gap-1">
+                                  <FileClock className="h-3.5 w-3.5" />{" "}
+                                  {submission.versionCount} version
+                                  {submission.versionCount === 1 ? "" : "s"}
+                                </span>
+                                <span>Current V{version.versionNumber}</span>
+                                <span>
+                                  Submitted by {version.uploadedByName}
+                                </span>
+                                <span>
+                                  {new Date(
+                                    submission.lastSubmittedAt,
+                                  ).toLocaleString()}
+                                </span>
+                              </div>
+                            ) : null}
+
+                            {isPending ? (
+                              <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">
+                                This submission is waiting for your formal
+                                review.
+                              </p>
+                            ) : null}
+                            {submission?.status === "CHANGES_REQUESTED" ? (
+                              <p className="mt-4 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-medium text-sky-800">
+                                Feedback was sent. Students can upload a revised
+                                version while the requirement remains open.
+                              </p>
+                            ) : null}
+                          </div>
+
+                          <div className="flex shrink-0 items-center gap-2">
+                            {submission ? (
+                              <Button
+                                size="sm"
+                                variant={isPending ? "primary" : "secondary"}
+                                leftIcon={<Eye className="h-4 w-4" />}
+                                onClick={() => setDetailSubmission(submission)}
+                              >
+                                {primaryLabel}
+                              </Button>
+                            ) : null}
+                            <RequirementActionsMenu
+                              requirement={requirement}
+                              submission={submission}
+                              busy={busyId === requirement.id}
+                              onEdit={() => {
+                                setEditing(requirement);
+                                setEditorOpen(true);
+                              }}
+                              onAction={(action) =>
+                                void runAction(requirement, action)
+                              }
+                            />
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
           </div>
         ) : null}
       </SectionCard>

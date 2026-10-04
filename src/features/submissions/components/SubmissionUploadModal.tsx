@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   CheckCircle2,
   FileText,
   FileUp,
   RefreshCw,
+  Trash2,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -35,13 +36,6 @@ type Props = {
 type Phase =
   "idle" | "preparing" | "uploading" | "verifying" | "success" | "error";
 
-function isPdf(file: File) {
-  return (
-    file.type.toLowerCase() === "application/pdf" ||
-    file.name.toLowerCase().endsWith(".pdf")
-  );
-}
-
 export function SubmissionUploadModal({
   isOpen,
   projectId,
@@ -59,7 +53,7 @@ export function SubmissionUploadModal({
     null,
   );
   const [storageUploaded, setStorageUploaded] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const isRevision = Boolean(existingSubmission);
 
@@ -72,18 +66,9 @@ export function SubmissionUploadModal({
       setError(null);
       setUploadSession(null);
       setStorageUploaded(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   }, [isOpen]);
-
-  useEffect(() => {
-    if (!file || !isPdf(file) || typeof URL.createObjectURL !== "function") {
-      setPreviewUrl(null);
-      return;
-    }
-    const nextUrl = URL.createObjectURL(file);
-    setPreviewUrl(nextUrl);
-    return () => URL.revokeObjectURL(nextUrl);
-  }, [file]);
 
   const fileError = useMemo(() => {
     if (!file || !requirement) return null;
@@ -103,6 +88,29 @@ export function SubmissionUploadModal({
   const expectedVersion =
     uploadSession?.versionNumber ?? (existingSubmission?.versionCount ?? 0) + 1;
 
+  function selectFile(nextFile: File | null) {
+    if (isBusy || uploadSession) return;
+    setFile(nextFile);
+    setError(null);
+    setProgress(0);
+    setPhase("idle");
+  }
+
+  function removeSelectedFile() {
+    if (isBusy || uploadSession) return;
+    setFile(null);
+    setError(null);
+    setProgress(0);
+    setPhase("idle");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  function chooseAnotherFile() {
+    if (isBusy || uploadSession) return;
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    fileInputRef.current?.click();
+  }
+
   async function completeSession(sessionId: string) {
     try {
       setPhase("verifying");
@@ -118,7 +126,7 @@ export function SubmissionUploadModal({
       setError(
         isApiException(caught)
           ? caught.apiError.message
-          : "The file reached storage, but ResearchTrack could not finalize it. Retry finalization without uploading the file again.",
+          : "The file was uploaded, but ResearchTrack could not finish recording the submission. Retry finalization without uploading the file again.",
       );
     }
   }
@@ -138,7 +146,7 @@ export function SubmissionUploadModal({
       setProgress(0);
       setPhase("error");
       setError(
-        "The secure upload URL expired. Submit the selected file again to create a new upload session.",
+        "This upload attempt expired. Try again to start a fresh upload.",
       );
     }
   }
@@ -162,14 +170,10 @@ export function SubmissionUploadModal({
       );
       setStorageUploaded(true);
       await completeSession(session.uploadSessionId);
-    } catch (caught) {
+    } catch {
       setStorageUploaded(false);
       setPhase("error");
-      setError(
-        caught instanceof Error
-          ? `${caught.message} The same secure upload can be retried while its URL is still valid.`
-          : "Unable to upload this file to S3. Retry the upload while the secure URL remains valid.",
-      );
+      setError("The file upload did not complete. You can retry this upload.");
     }
   }
 
@@ -197,9 +201,7 @@ export function SubmissionUploadModal({
       setError(
         isApiException(caught)
           ? caught.apiError.message
-          : caught instanceof Error
-            ? caught.message
-            : "Unable to prepare this submission.",
+          : "Unable to start this submission. Please try again.",
       );
     }
   }
@@ -254,29 +256,26 @@ export function SubmissionUploadModal({
 
         {isRevision ? (
           <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-            <strong>Revision requested.</strong> This upload will create Version{" "}
-            {expectedVersion}; previous versions and Supervisor reviews remain
-            unchanged.
+            <strong>Revision requested.</strong> This submission will be Version{" "}
+            {expectedVersion}. Previous versions remain available in version
+            history.
           </div>
         ) : null}
 
-        <div className="mt-5 rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">
+        <div className="mt-5 grid gap-2 rounded-2xl bg-slate-50 p-4 text-sm text-slate-600 sm:grid-cols-3">
           <p>
-            Accepted:{" "}
+            <span className="font-semibold text-slate-700">Accepted:</span>{" "}
             {requirement.allowedFileTypes.map((type) => `.${type}`).join(", ")}
           </p>
-          <p className="mt-1">
-            Maximum size: {formatBytes(requirement.maxFileSizeBytes)}
+          <p>
+            <span className="font-semibold text-slate-700">Maximum:</span>{" "}
+            {formatBytes(requirement.maxFileSizeBytes)}
           </p>
-          <p className="mt-1">
-            Due:{" "}
+          <p>
+            <span className="font-semibold text-slate-700">Due:</span>{" "}
             {requirement.dueAt
               ? new Date(requirement.dueAt).toLocaleString()
-              : "No due date"}
-          </p>
-          <p className="mt-2 text-xs leading-5 text-slate-500">
-            The browser uploads directly to private S3. ResearchTrack records
-            the immutable version only after server-side object verification.
+              : "No deadline"}
           </p>
         </div>
 
@@ -284,11 +283,11 @@ export function SubmissionUploadModal({
           <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-emerald-800">
             <div className="flex items-center gap-2 font-semibold">
               <CheckCircle2 className="h-5 w-5" /> Version {expectedVersion}{" "}
-              recorded
+              submitted
             </div>
             <p className="mt-2 text-sm leading-6">
-              The submission is now pending Supervisor review. Earlier versions
-              remain immutable and available in version history.
+              Your submission is now waiting for Supervisor review. Previous
+              versions remain available in version history.
             </p>
             <Button className="mt-4" onClick={onClose}>
               Close
@@ -296,45 +295,71 @@ export function SubmissionUploadModal({
           </div>
         ) : (
           <>
-            <label className="mt-5 block text-sm font-semibold text-slate-700">
-              File
-              <input
-                type="file"
-                disabled={isBusy || Boolean(uploadSession)}
-                accept={requirement.allowedFileTypes
-                  .map((type) => `.${type}`)
-                  .join(",")}
-                onChange={(event) => {
-                  setFile(event.target.files?.[0] ?? null);
-                  setError(null);
-                  setProgress(0);
-                }}
-                className="mt-2 block w-full rounded-2xl border border-slate-200 bg-white p-3 text-sm text-slate-700 file:mr-3 file:rounded-xl file:border-0 file:bg-slate-100 file:px-3 file:py-2 file:font-semibold"
-              />
-            </label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              disabled={isBusy || Boolean(uploadSession)}
+              accept={requirement.allowedFileTypes
+                .map((type) => `.${type}`)
+                .join(",")}
+              onChange={(event) => selectFile(event.target.files?.[0] ?? null)}
+              className="sr-only"
+            />
 
-            {file ? (
-              <div className="mt-3 rounded-2xl border border-slate-200 p-4">
-                <div className="flex items-start gap-3">
-                  <FileText className="mt-0.5 h-5 w-5 shrink-0 text-slate-500" />
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-slate-900">
-                      {file.name}
-                    </p>
-                    <p className="mt-1 text-xs text-slate-500">
-                      {formatBytes(file.size)} · {normalizedContentType(file)}
-                    </p>
+            {!file ? (
+              <button
+                type="button"
+                disabled={isBusy || Boolean(uploadSession)}
+                onClick={chooseAnotherFile}
+                className="mt-5 flex w-full flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-8 text-center transition hover:border-slate-400 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-sky-200 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <FileUp className="h-7 w-7 text-slate-500" />
+                <span className="mt-3 text-sm font-semibold text-slate-900">
+                  Choose a file
+                </span>
+                <span className="mt-1 text-xs text-slate-500">
+                  Select one of the accepted file types shown above.
+                </span>
+              </button>
+            ) : (
+              <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-4">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="flex min-w-0 items-start gap-3">
+                    <div className="rounded-xl bg-slate-100 p-2.5">
+                      <FileText className="h-5 w-5 text-slate-600" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-slate-900">
+                        {file.name}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {formatBytes(file.size)} · {normalizedContentType(file)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      disabled={isBusy || Boolean(uploadSession)}
+                      leftIcon={<FileUp className="h-4 w-4" />}
+                      onClick={chooseAnotherFile}
+                    >
+                      Choose another
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={isBusy || Boolean(uploadSession)}
+                      leftIcon={<Trash2 className="h-4 w-4" />}
+                      onClick={removeSelectedFile}
+                    >
+                      Remove
+                    </Button>
                   </div>
                 </div>
-                {previewUrl ? (
-                  <iframe
-                    title="Selected PDF preview"
-                    src={previewUrl}
-                    className="mt-4 h-64 w-full rounded-xl border border-slate-200 bg-white"
-                  />
-                ) : null}
               </div>
-            ) : null}
+            )}
 
             {fileError ? (
               <p className="mt-2 text-sm text-rose-600">{fileError}</p>
@@ -367,10 +392,10 @@ export function SubmissionUploadModal({
                 <div className="flex justify-between text-xs font-semibold text-slate-600">
                   <span>
                     {phase === "preparing"
-                      ? "Creating secure upload session"
+                      ? "Preparing upload"
                       : phase === "uploading"
-                        ? "Uploading directly to S3"
-                        : "Verifying and recording submission"}
+                        ? "Uploading file"
+                        : "Finalizing submission"}
                   </span>
                   <span>{phase === "uploading" ? `${progress}%` : "…"}</span>
                 </div>
@@ -402,10 +427,10 @@ export function SubmissionUploadModal({
                     onClick={() => void retryCurrentStep()}
                   >
                     {sessionExpired
-                      ? "Reset expired upload"
+                      ? "Start a fresh upload"
                       : storageUploaded
                         ? "Retry finalization"
-                        : "Retry S3 upload"}
+                        : "Retry upload"}
                   </Button>
                 ) : null}
               </div>

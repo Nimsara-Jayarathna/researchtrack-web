@@ -424,6 +424,7 @@ export function RequirementEditorModal({
                   <input
                     type="radio"
                     name="submission-responsibility"
+                    aria-label="Project Leader"
                     checked={responsibilityMode === "PROJECT_LEADER"}
                     onChange={() => {
                       setResponsibilityMode("PROJECT_LEADER");
@@ -477,6 +478,7 @@ export function RequirementEditorModal({
                   <input
                     type="radio"
                     name="submission-responsibility"
+                    aria-label="Specific student"
                     checked={responsibilityMode === "ASSIGNED_STUDENT"}
                     onChange={() => {
                       setResponsibilityMode("ASSIGNED_STUDENT");

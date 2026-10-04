@@ -351,7 +351,7 @@ export function SubmissionDetailModal({
                         Current version
                       </p>
                       <StatusBadge tone="neutral">
-                        Version {current.versionNumber}
+                        {`Version ${current.versionNumber}`}
                       </StatusBadge>
                       {current.isLate ? (
                         <StatusBadge tone="warning">Late</StatusBadge>

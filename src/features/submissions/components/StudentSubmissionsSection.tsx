@@ -426,7 +426,7 @@ export function StudentSubmissionsSection({ projectId }: Props) {
         !completed.includes(item),
     );
 
-    return [
+    const studentGroups: StudentGroup[] = [
       {
         key: "action",
         title: "Action needed",
@@ -463,7 +463,9 @@ export function StudentSubmissionsSection({ projectId }: Props) {
         description: "Requirements that are no longer accepting uploads.",
         items: sortItems(unavailable),
       },
-    ].filter((group) => group.items.length > 0);
+    ];
+
+    return studentGroups.filter((group) => group.items.length > 0);
   }, [requirements, submissionsByRequirement, canCurrentUserSubmit]);
 
   async function downloadVersion(

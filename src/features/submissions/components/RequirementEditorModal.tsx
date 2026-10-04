@@ -1,20 +1,48 @@
 import { useEffect, useMemo, useState } from "react";
-import { CalendarDays, Clock3, X } from "lucide-react";
+import {
+  AlertTriangle,
+  CalendarDays,
+  Clock3,
+  Crown,
+  UserRound,
+  UsersRound,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { ModalShell } from "@/components/ui/ModalShell";
 import { isApiException } from "@/services/apiClient";
 import { submissionApi } from "../api/submissionApi";
-import type { SubmissionRequirement } from "../types";
+import type {
+  SubmissionRequirement,
+  SubmissionResponsibilityMode,
+} from "../types";
 
 const FILE_TYPES = ["pdf", "docx", "pptx", "zip"] as const;
+
+type ProjectPerson = {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string;
+};
 
 type Props = {
   isOpen: boolean;
   projectId: string;
   requirement: SubmissionRequirement | null;
+  projectLeader: ProjectPerson | null;
+  studentMembers: ProjectPerson[];
+  onManageMembers: () => void;
   onClose: () => void;
   onSaved: (requirement: SubmissionRequirement) => void;
 };
+
+function displayName(person: ProjectPerson | null | undefined) {
+  if (!person) return "";
+  return (
+    `${person.firstName ?? ""} ${person.lastName ?? ""}`.trim() || person.email
+  );
+}
 
 function pad(value: number) {
   return String(value).padStart(2, "0");
@@ -52,6 +80,9 @@ export function RequirementEditorModal({
   isOpen,
   projectId,
   requirement,
+  projectLeader,
+  studentMembers,
+  onManageMembers,
   onClose,
   onSaved,
 }: Props) {
@@ -62,6 +93,9 @@ export function RequirementEditorModal({
   const [dueTime, setDueTime] = useState("");
   const [allowedTypes, setAllowedTypes] = useState<string[]>(["pdf", "docx"]);
   const [maxSizeMb, setMaxSizeMb] = useState("10");
+  const [responsibilityMode, setResponsibilityMode] =
+    useState<SubmissionResponsibilityMode>("PROJECT_LEADER");
+  const [assignedStudentId, setAssignedStudentId] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -81,6 +115,12 @@ export function RequirementEditorModal({
           )
         : "10",
     );
+    setResponsibilityMode(
+      requirement?.responsibility.mode ?? "PROJECT_LEADER",
+    );
+    setAssignedStudentId(
+      requirement?.responsibility.assignedStudentId ?? "",
+    );
     setError(null);
   }, [isOpen, requirement]);
 
@@ -91,6 +131,19 @@ export function RequirementEditorModal({
     now.setMinutes(now.getMinutes() + 1, 0, 0);
     return localTimeValue(now);
   }, [dueDate, today]);
+
+  const activeAssignedStudent = studentMembers.find(
+    (member) => member.id === assignedStudentId,
+  );
+  const previousAssigneeMissing = Boolean(
+    responsibilityMode === "ASSIGNED_STUDENT" &&
+      assignedStudentId &&
+      !activeAssignedStudent,
+  );
+  const responsibilityValid =
+    responsibilityMode === "PROJECT_LEADER"
+      ? Boolean(projectLeader)
+      : Boolean(activeAssignedStudent);
 
   if (!isOpen) return null;
 
@@ -112,6 +165,12 @@ export function RequirementEditorModal({
     }
   }
 
+  function goToMemberManagement() {
+    if (saving) return;
+    onClose();
+    onManageMembers();
+  }
+
   async function save() {
     const maxMb = Number(maxSizeMb);
     if (!title.trim()) {
@@ -124,6 +183,19 @@ export function RequirementEditorModal({
     }
     if (!Number.isFinite(maxMb) || maxMb <= 0) {
       setError("Maximum file size must be greater than zero.");
+      return;
+    }
+    if (responsibilityMode === "PROJECT_LEADER" && !projectLeader) {
+      setError(
+        "Assign a Project Leader first, or choose a specific student for this requirement.",
+      );
+      return;
+    }
+    if (
+      responsibilityMode === "ASSIGNED_STUDENT" &&
+      !activeAssignedStudent
+    ) {
+      setError("Choose one active project student as the responsible submitter.");
       return;
     }
 
@@ -153,6 +225,11 @@ export function RequirementEditorModal({
       dueAt,
       allowedFileTypes: allowedTypes,
       maxFileSizeBytes: Math.round(maxMb * 1024 * 1024),
+      responsibilityMode,
+      assignedStudentId:
+        responsibilityMode === "ASSIGNED_STUDENT"
+          ? activeAssignedStudent?.id ?? null
+          : null,
     };
 
     try {
@@ -181,7 +258,7 @@ export function RequirementEditorModal({
       isOpen={isOpen}
       containerClassName="fixed inset-0 z-50 flex items-center justify-center p-4"
       backdropClassName="absolute inset-0 bg-slate-950/45"
-      dialogClassName="relative z-10"
+      dialogClassName="relative z-10 w-full max-w-3xl"
       onBackdropClick={saving ? undefined : onClose}
       lockBodyScroll
       ariaLabel={
@@ -190,7 +267,7 @@ export function RequirementEditorModal({
           : "Create submission requirement"
       }
     >
-      <div className="w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl">
+      <div className="max-h-[94vh] w-full overflow-y-auto rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h3 className="text-lg font-bold text-slate-900">
@@ -199,8 +276,8 @@ export function RequirementEditorModal({
                 : "Create submission requirement"}
             </h3>
             <p className="mt-1 text-sm leading-6 text-slate-500">
-              Define the document rules students must satisfy before a file can
-              be recorded.
+              Define the document rules and choose who is responsible for the
+              official submission.
             </p>
           </div>
           <button
@@ -242,8 +319,8 @@ export function RequirementEditorModal({
                   Submission deadline
                 </p>
                 <p className="mt-1 text-xs text-slate-500">
-                  Only future dates and times can be selected for a new
-                  deadline.
+                  Set a clear due date and time, or leave the requirement open
+                  without a deadline.
                 </p>
               </div>
               <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-slate-600">
@@ -334,11 +411,154 @@ export function RequirementEditorModal({
             </label>
           </div>
 
+          <fieldset className="rounded-2xl border border-slate-200 p-4">
+            <legend className="px-1 text-sm font-semibold text-slate-800">
+              Submission responsibility
+            </legend>
+            <p className="mt-1 text-xs leading-5 text-slate-500">
+              Exactly one student owns the official upload. The Project Leader
+              is used by default, or you can delegate this requirement to one
+              specific project member.
+            </p>
+
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              <label
+                className={`cursor-pointer rounded-2xl border p-4 transition ${responsibilityMode === "PROJECT_LEADER" ? "border-sky-300 bg-sky-50" : "border-slate-200 bg-white hover:bg-slate-50"}`}
+              >
+                <div className="flex items-start gap-3">
+                  <input
+                    type="radio"
+                    name="submission-responsibility"
+                    checked={responsibilityMode === "PROJECT_LEADER"}
+                    onChange={() => {
+                      setResponsibilityMode("PROJECT_LEADER");
+                      setError(null);
+                    }}
+                    className="mt-1"
+                  />
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 text-sm font-bold text-slate-900">
+                      <Crown className="h-4 w-4 text-amber-600" /> Project Leader
+                    </div>
+                    {projectLeader ? (
+                      <>
+                        <p className="mt-2 truncate text-sm font-semibold text-slate-800">
+                          {displayName(projectLeader)}
+                        </p>
+                        <p className="truncate text-xs text-slate-500">
+                          {projectLeader.email}
+                        </p>
+                      </>
+                    ) : (
+                      <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3">
+                        <div className="flex gap-2 text-xs leading-5 text-amber-800">
+                          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                          <span>
+                            No Project Leader has been assigned to this project.
+                            Assign a leader first, or choose a specific student.
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.preventDefault();
+                            goToMemberManagement();
+                          }}
+                          className="mt-2 text-xs font-bold text-sky-700 hover:text-sky-900"
+                        >
+                          Go to member management →
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </label>
+
+              <label
+                className={`cursor-pointer rounded-2xl border p-4 transition ${responsibilityMode === "ASSIGNED_STUDENT" ? "border-sky-300 bg-sky-50" : "border-slate-200 bg-white hover:bg-slate-50"}`}
+              >
+                <div className="flex items-start gap-3">
+                  <input
+                    type="radio"
+                    name="submission-responsibility"
+                    checked={responsibilityMode === "ASSIGNED_STUDENT"}
+                    onChange={() => {
+                      setResponsibilityMode("ASSIGNED_STUDENT");
+                      setError(null);
+                    }}
+                    className="mt-1"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 text-sm font-bold text-slate-900">
+                      <UserRound className="h-4 w-4 text-sky-700" /> Specific
+                      student
+                    </div>
+                    <p className="mt-1 text-xs leading-5 text-slate-500">
+                      Delegate the official upload to one active project member.
+                    </p>
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            {responsibilityMode === "ASSIGNED_STUDENT" ? (
+              <div className="mt-4 rounded-2xl bg-slate-50 p-4">
+                <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Responsible student
+                  <div className="relative mt-2">
+                    <UsersRound className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <select
+                      value={assignedStudentId}
+                      onChange={(event) => {
+                        setAssignedStudentId(event.target.value);
+                        setError(null);
+                      }}
+                      className="h-11 w-full rounded-2xl border border-slate-200 bg-white pl-10 pr-4 text-sm font-normal text-slate-800 outline-none focus:border-slate-400"
+                    >
+                      <option value="">Select a project student</option>
+                      {previousAssigneeMissing && assignedStudentId ? (
+                        <option value={assignedStudentId} disabled>
+                          {requirement?.responsibility.assignedStudentName ??
+                            "Previous assignee"}{" "}
+                          (no longer active)
+                        </option>
+                      ) : null}
+                      {studentMembers.map((member) => (
+                        <option key={member.id} value={member.id}>
+                          {displayName(member)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </label>
+
+                {previousAssigneeMissing ? (
+                  <div className="mt-3 flex gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-800">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                    <span>
+                      The previous submitter is no longer an active project
+                      member. Choose another student before saving.
+                    </span>
+                  </div>
+                ) : null}
+
+                {studentMembers.length === 0 ? (
+                  <button
+                    type="button"
+                    onClick={goToMemberManagement}
+                    className="mt-3 text-xs font-bold text-sky-700 hover:text-sky-900"
+                  >
+                    Add students in member management →
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
+          </fieldset>
+
           {requirement?.submissionSummary ? (
             <div className="rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 text-xs leading-5 text-sky-800">
-              This requirement already has submission history. File type and
-              size changes apply only to future uploads; recorded versions and
-              formal reviews remain unchanged.
+              File rules and submission responsibility changes apply to future
+              uploads. Existing version history remains unchanged.
             </div>
           ) : null}
         </div>
@@ -355,14 +575,10 @@ export function RequirementEditorModal({
           </Button>
           <Button
             variant="primary"
-            disabled={saving}
+            disabled={saving || !responsibilityValid}
             onClick={() => void save()}
           >
-            {saving
-              ? "Saving…"
-              : requirement
-                ? "Save changes"
-                : "Create requirement"}
+            {saving ? "Saving…" : requirement ? "Save changes" : "Create requirement"}
           </Button>
         </div>
       </div>

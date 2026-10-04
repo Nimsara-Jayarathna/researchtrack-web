@@ -398,7 +398,10 @@ export function ProjectDetailsPage() {
       ) : null}
 
       {activeTab === "files" ? (
-        <FilesTabSection projectId={project.id} initialFiles={project.files} />
+        <FilesTabSection
+          project={project}
+          onManageMembers={() => setActiveTab("team")}
+        />
       ) : null}
 
       {activeTab === "meetings" ? (

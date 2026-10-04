@@ -32,6 +32,13 @@ type Props = {
   onUpdated: (submission: ResearchSubmission) => void;
 };
 
+
+function authorityRoleLabel(value: string | null | undefined) {
+  if (value === "PROJECT_LEADER") return "Project Leader";
+  if (value === "ASSIGNED_STUDENT") return "Assigned submitter";
+  return null;
+}
+
 function readable(value: string) {
   return value.replace(/_/g, " ");
 }
@@ -318,6 +325,9 @@ export function SubmissionDetailModal({
                         <span className="flex items-center gap-1">
                           <UserRound className="h-3.5 w-3.5" />
                           {current.uploadedByName}
+                          {authorityRoleLabel(current.submitterRoleSnapshot)
+                            ? ` · ${authorityRoleLabel(current.submitterRoleSnapshot)}`
+                            : ""}
                         </span>
                       </div>
                       {current.submissionNote ? (
@@ -487,7 +497,12 @@ export function SubmissionDetailModal({
                           <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
                             <span>{formatBytes(version.fileSizeBytes)}</span>
                             <span>{formatDate(version.submittedAt)}</span>
-                            <span>Submitted by {version.uploadedByName}</span>
+                            <span>
+                              Submitted by {version.uploadedByName}
+                              {authorityRoleLabel(version.submitterRoleSnapshot)
+                                ? ` · ${authorityRoleLabel(version.submitterRoleSnapshot)}`
+                                : ""}
+                            </span>
                           </div>
                         </div>
                         <VersionActions

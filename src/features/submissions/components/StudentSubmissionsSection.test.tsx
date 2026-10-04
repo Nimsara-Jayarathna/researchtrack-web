@@ -20,6 +20,15 @@ vi.mock("../api/submissionApi", () => ({
   submissionApi: submissionApiMock,
 }));
 
+vi.mock("@/features/auth/state/authState", () => ({
+  useAuthStateValue: () => ({
+    user: { id: "student-1" },
+    status: "authenticated",
+    isLoading: false,
+    error: null,
+  }),
+}));
+
 vi.mock("./SubmissionUploadModal", () => ({
   SubmissionUploadModal: ({
     requirement,
@@ -55,6 +64,15 @@ const requirement: SubmissionRequirement = {
   createdByName: "Supervisor",
   createdAt: "2026-10-01T12:00:00Z",
   updatedAt: null,
+  responsibility: {
+    mode: "PROJECT_LEADER",
+    assignedStudentId: null,
+    assignedStudentName: null,
+    responsibleStudentId: "student-1",
+    responsibleStudentName: "Student One",
+    responsibleStudentRole: "PROJECT_LEADER",
+    requiresAssignment: false,
+  },
   submissionSummary: null,
 };
 
@@ -76,6 +94,7 @@ const submission: ResearchSubmission = {
     allowedFileTypes: ["pdf", "docx"],
     maxFileSizeBytes: 10 * 1024 * 1024,
     status: "OPEN",
+    responsibility: requirement.responsibility,
   },
   versions: [
     {
@@ -88,6 +107,8 @@ const submission: ResearchSubmission = {
       fileSizeBytes: 2048,
       uploadedBy: "student-1",
       uploadedByName: "Student One",
+      submitterRoleSnapshot: "PROJECT_LEADER",
+      responsibilityModeSnapshot: "PROJECT_LEADER",
       submissionNote: "Initial submission",
       submittedAt: "2026-10-03T12:00:00Z",
       isLate: false,
@@ -147,4 +168,31 @@ describe("StudentSubmissionsSection", () => {
       "preview:proposal.pdf",
     );
   });
+
+  it("keeps official upload actions hidden from project members who are not responsible", async () => {
+    submissionApiMock.listRequirements.mockResolvedValue([
+      {
+        ...requirement,
+        responsibility: {
+          mode: "ASSIGNED_STUDENT",
+          assignedStudentId: "student-2",
+          assignedStudentName: "Student Two",
+          responsibleStudentId: "student-2",
+          responsibleStudentName: "Student Two",
+          responsibleStudentRole: "ASSIGNED_STUDENT",
+          requiresAssignment: false,
+        },
+      },
+    ]);
+
+    render(<StudentSubmissionsSection projectId="project-1" />);
+
+    expect(await screen.findByText("Research Proposal")).toBeInTheDocument();
+    expect(screen.getByText("Team submissions")).toBeInTheDocument();
+    expect(screen.getByText("Assigned to Student Two")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Submit file" }),
+    ).not.toBeInTheDocument();
+  });
+
 });

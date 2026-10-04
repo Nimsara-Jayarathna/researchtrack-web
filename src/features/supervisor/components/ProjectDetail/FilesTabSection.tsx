@@ -1,17 +1,30 @@
 import { SupervisorSubmissionRequirementsSection } from "@/features/submissions/components/SupervisorSubmissionRequirementsSection";
-import type {
-  ProjectFile,
-  ProjectFileConfig,
-} from "@/features/projectfiles/types";
+import type { SupervisorProjectDetail } from "../../types";
 
 type FilesTabSectionProps = {
-  projectId: string;
-  initialFiles?: {
-    items: ProjectFile[];
-    config: ProjectFileConfig;
-  } | null;
+  project: SupervisorProjectDetail;
+  onManageMembers: () => void;
 };
 
-export function FilesTabSection({ projectId }: FilesTabSectionProps) {
-  return <SupervisorSubmissionRequirementsSection projectId={projectId} />;
+export function FilesTabSection({
+  project,
+  onManageMembers,
+}: FilesTabSectionProps) {
+  const studentMembers = project.members
+    .filter((member) => member.memberRole === "STUDENT")
+    .map((member) => ({
+      id: member.id,
+      firstName: member.firstName,
+      lastName: member.lastName,
+      email: member.email,
+    }));
+
+  return (
+    <SupervisorSubmissionRequirementsSection
+      projectId={project.id}
+      projectLeader={project.leader}
+      studentMembers={studentMembers}
+      onManageMembers={onManageMembers}
+    />
+  );
 }

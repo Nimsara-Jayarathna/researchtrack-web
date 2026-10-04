@@ -10,6 +10,7 @@ import {
   RefreshCw,
   RotateCcw,
   Trash2,
+  AlertTriangle,
 } from "lucide-react";
 import { ErrorState } from "@/components/feedback/ErrorState";
 import { Button } from "@/components/ui/Button";
@@ -29,7 +30,19 @@ import type {
 import { RequirementEditorModal } from "./RequirementEditorModal";
 import { SubmissionDetailModal } from "./SubmissionDetailModal";
 
-type Props = { projectId: string };
+type ProjectPerson = {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string;
+};
+
+type Props = {
+  projectId: string;
+  projectLeader: ProjectPerson | null;
+  studentMembers: ProjectPerson[];
+  onManageMembers: () => void;
+};
 type Action = "close" | "reopen" | "archive" | "delete";
 type WorkspaceItem = {
   requirement: SubmissionRequirement;
@@ -55,6 +68,13 @@ function submissionTone(status: SubmissionStatus) {
   if (status === "APPROVED") return "success";
   if (status === "REJECTED") return "danger";
   return "warning";
+}
+
+
+function authorityRoleLabel(value: string | null | undefined) {
+  if (value === "PROJECT_LEADER") return "Project Leader";
+  if (value === "ASSIGNED_STUDENT") return "Assigned submitter";
+  return null;
 }
 
 function readable(value: string) {
@@ -201,7 +221,12 @@ function RequirementActionsMenu({
   );
 }
 
-export function SupervisorSubmissionRequirementsSection({ projectId }: Props) {
+export function SupervisorSubmissionRequirementsSection({
+  projectId,
+  projectLeader,
+  studentMembers,
+  onManageMembers,
+}: Props) {
   const [requirements, setRequirements] = useState<SubmissionRequirement[]>([]);
   const [submissions, setSubmissions] = useState<ResearchSubmission[]>([]);
   const [loading, setLoading] = useState(true);
@@ -614,6 +639,38 @@ export function SupervisorSubmissionRequirementsSection({ projectId }: Props) {
                               </span>
                             </div>
 
+                            {requirement.responsibility.requiresAssignment ? (
+                              <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+                                <div className="flex min-w-0 items-start gap-2 text-xs leading-5 text-amber-800">
+                                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                                  <span>
+                                    {requirement.responsibility.mode ===
+                                    "PROJECT_LEADER"
+                                      ? "No Project Leader is assigned. Assign a leader or edit this requirement to choose a specific student."
+                                      : "The assigned submitter is no longer an active project member. Choose another student."}
+                                  </span>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  variant="secondary"
+                                  onClick={onManageMembers}
+                                >
+                                  Manage project team
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="mt-3 text-xs text-slate-600">
+                                <span className="font-semibold text-slate-700">
+                                  Responsible submitter:
+                                </span>{" "}
+                                {requirement.responsibility.responsibleStudentName}{" "}
+                                <span className="text-slate-400">·</span>{" "}
+                                {authorityRoleLabel(
+                                  requirement.responsibility.responsibleStudentRole,
+                                )}
+                              </div>
+                            )}
+
                             {submission && version ? (
                               <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
                                 <span className="flex items-center gap-1">
@@ -624,6 +681,11 @@ export function SupervisorSubmissionRequirementsSection({ projectId }: Props) {
                                 <span>Current V{version.versionNumber}</span>
                                 <span>
                                   Submitted by {version.uploadedByName}
+                                  {authorityRoleLabel(
+                                    version.submitterRoleSnapshot,
+                                  )
+                                    ? ` · ${authorityRoleLabel(version.submitterRoleSnapshot)}`
+                                    : ""}
                                 </span>
                                 <span>
                                   {new Date(
@@ -641,7 +703,7 @@ export function SupervisorSubmissionRequirementsSection({ projectId }: Props) {
                             ) : null}
                             {submission?.status === "CHANGES_REQUESTED" ? (
                               <p className="mt-4 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-medium text-sky-800">
-                                Feedback was sent. Students can upload a revised
+                                Feedback was sent. The responsible submitter can upload a revised
                                 version while the requirement remains open.
                               </p>
                             ) : null}
@@ -686,6 +748,9 @@ export function SupervisorSubmissionRequirementsSection({ projectId }: Props) {
         isOpen={editorOpen}
         projectId={projectId}
         requirement={editing}
+        projectLeader={projectLeader}
+        studentMembers={studentMembers}
+        onManageMembers={onManageMembers}
         onClose={() => setEditorOpen(false)}
         onSaved={upsertRequirement}
       />

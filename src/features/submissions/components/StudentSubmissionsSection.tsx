@@ -10,6 +10,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { ErrorState } from "@/components/feedback/ErrorState";
+import { useAuthStateValue } from "@/features/auth/state/authState";
 import { Button } from "@/components/ui/Button";
 import { EmptyStateCard } from "@/components/ui/EmptyStateCard";
 import { IconActionButton } from "@/components/ui/IconActionButton";
@@ -60,6 +61,13 @@ function submissionStatusTone(status: SubmissionStatus) {
   if (status === "APPROVED") return "success";
   if (status === "REJECTED") return "danger";
   return "warning";
+}
+
+
+function authorityRoleLabel(value: string | null | undefined) {
+  if (value === "PROJECT_LEADER") return "Project Leader";
+  if (value === "ASSIGNED_STUDENT") return "Assigned submitter";
+  return null;
 }
 
 function readableStatus(status: string) {
@@ -121,7 +129,12 @@ function SubmissionFileDetails({ version }: { version: SubmissionVersion }) {
       </div>
       <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
         <UserRound className="h-3.5 w-3.5" />
-        <span>Submitted by {version.uploadedByName}</span>
+        <span>
+          Submitted by {version.uploadedByName}
+          {authorityRoleLabel(version.submitterRoleSnapshot)
+            ? ` · ${authorityRoleLabel(version.submitterRoleSnapshot)}`
+            : ""}
+        </span>
       </div>
       {version.submissionNote ? (
         <p className="mt-3 rounded-xl bg-white px-3 py-2 text-xs leading-5 text-slate-600">
@@ -143,6 +156,7 @@ function stateHint(submission: ResearchSubmission | null) {
 }
 
 export function StudentSubmissionsSection({ projectId }: Props) {
+  const { user } = useAuthStateValue();
   const [requirements, setRequirements] = useState<SubmissionRequirement[]>([]);
   const [submissionsByRequirement, setSubmissionsByRequirement] = useState<
     Record<string, ResearchSubmission>
@@ -199,6 +213,16 @@ export function StudentSubmissionsSection({ projectId }: Props) {
     void load();
   }, [load]);
 
+  const canCurrentUserSubmit = useCallback(
+    (requirement: SubmissionRequirement) =>
+      Boolean(
+        user?.id &&
+          !requirement.responsibility.requiresAssignment &&
+          requirement.responsibility.responsibleStudentId === user.id,
+      ),
+    [user?.id],
+  );
+
   useEffect(() => {
     if (loading || requirements.length === 0) return;
     setExpandedRequirementId((current) => {
@@ -210,24 +234,37 @@ export function StudentSubmissionsSection({ projectId }: Props) {
       }
       const revision = requirements.find(
         (requirement) =>
+          requirement.status === "OPEN" &&
+          canCurrentUserSubmit(requirement) &&
           submissionsByRequirement[requirement.id]?.status ===
-            "CHANGES_REQUESTED" && requirement.status === "OPEN",
+            "CHANGES_REQUESTED",
       );
       return revision?.id ?? null;
     });
-  }, [loading, requirements, submissionsByRequirement]);
+  }, [
+    loading,
+    requirements,
+    submissionsByRequirement,
+    canCurrentUserSubmit,
+  ]);
 
   const summary = useMemo(() => {
     const submissions = Object.values(submissionsByRequirement);
     return {
       ready: requirements.filter(
-        (r) => r.status === "OPEN" && !submissionsByRequirement[r.id],
+        (r) =>
+          r.status === "OPEN" &&
+          !submissionsByRequirement[r.id] &&
+          canCurrentUserSubmit(r),
       ).length,
       pending: submissions.filter((s) => s.status === "PENDING_REVIEW").length,
-      revisions: submissions.filter((s) => s.status === "CHANGES_REQUESTED")
-        .length,
+      revisions: requirements.filter(
+        (requirement) =>
+          submissionsByRequirement[requirement.id]?.status ===
+            "CHANGES_REQUESTED" && canCurrentUserSubmit(requirement),
+      ).length,
     };
-  }, [requirements, submissionsByRequirement]);
+  }, [requirements, submissionsByRequirement, canCurrentUserSubmit]);
 
   const groups = useMemo<StudentGroup[]>(() => {
     const items: StudentItem[] = requirements.map((requirement) => ({
@@ -237,9 +274,15 @@ export function StudentSubmissionsSection({ projectId }: Props) {
 
     const actionNeeded = items.filter(
       (item) =>
-        (item.submission?.status === "CHANGES_REQUESTED" &&
-          item.requirement.status === "OPEN") ||
-        (!item.submission && item.requirement.status === "OPEN"),
+        item.requirement.status === "OPEN" &&
+        canCurrentUserSubmit(item.requirement) &&
+        (item.submission?.status === "CHANGES_REQUESTED" || !item.submission),
+    );
+    const teamOpen = items.filter(
+      (item) =>
+        item.requirement.status === "OPEN" &&
+        !canCurrentUserSubmit(item.requirement) &&
+        (item.submission?.status === "CHANGES_REQUESTED" || !item.submission),
     );
     const inReview = items.filter(
       (item) => item.submission?.status === "PENDING_REVIEW",
@@ -252,6 +295,7 @@ export function StudentSubmissionsSection({ projectId }: Props) {
     const unavailable = items.filter(
       (item) =>
         !actionNeeded.includes(item) &&
+        !teamOpen.includes(item) &&
         !inReview.includes(item) &&
         !completed.includes(item),
     );
@@ -266,6 +310,13 @@ export function StudentSubmissionsSection({ projectId }: Props) {
           const br = b.submission?.status === "CHANGES_REQUESTED" ? 0 : 1;
           return ar - br;
         }),
+      },
+      {
+        key: "team",
+        title: "Team submissions",
+        description:
+          "Open requirements currently assigned to another project member.",
+        items: sortItems(teamOpen),
       },
       {
         key: "review",
@@ -287,7 +338,7 @@ export function StudentSubmissionsSection({ projectId }: Props) {
         items: sortItems(unavailable),
       },
     ].filter((group) => group.items.length > 0);
-  }, [requirements, submissionsByRequirement]);
+  }, [requirements, submissionsByRequirement, canCurrentUserSubmit]);
 
   async function downloadVersion(
     submission: ResearchSubmission,
@@ -347,6 +398,14 @@ export function StudentSubmissionsSection({ projectId }: Props) {
     requirement: SubmissionRequirement,
     submission: ResearchSubmission | null,
   ) {
+    if (!canCurrentUserSubmit(requirement)) {
+      setActionError(
+        requirement.responsibility.requiresAssignment
+          ? "This requirement needs a responsible submitter before another version can be uploaded."
+          : `Only ${requirement.responsibility.responsibleStudentName ?? "the responsible submitter"} can upload the official version.`,
+      );
+      return;
+    }
     setUploadRequirement(requirement);
     setUploadSubmission(submission);
   }
@@ -438,11 +497,15 @@ export function StudentSubmissionsSection({ projectId }: Props) {
                 <div className="space-y-3">
                   {group.items.map(({ requirement, submission }) => {
                     const version = currentVersion(submission);
+                    const isResponsible = canCurrentUserSubmit(requirement);
                     const canInitialSubmit =
-                      requirement.status === "OPEN" && !submission;
+                      requirement.status === "OPEN" &&
+                      !submission &&
+                      isResponsible;
                     const canResubmit =
                       requirement.status === "OPEN" &&
-                      submission?.status === "CHANGES_REQUESTED";
+                      submission?.status === "CHANGES_REQUESTED" &&
+                      isResponsible;
                     const needsAction = canInitialSubmit || canResubmit;
                     const isPastDue = Boolean(
                       requirement.dueAt &&
@@ -528,7 +591,23 @@ export function StudentSubmissionsSection({ projectId }: Props) {
                                       : "text-slate-500"
                               }`}
                             >
-                              {stateHint(submission)}
+                              {submission
+                                ? stateHint(submission)
+                                : isResponsible
+                                  ? "Ready for your submission"
+                                  : requirement.responsibility.requiresAssignment
+                                    ? "Waiting for a responsible submitter to be assigned"
+                                    : `Assigned to ${requirement.responsibility.responsibleStudentName ?? "another project member"}`}
+                            </p>
+                            <p className="mt-1 text-xs text-slate-500">
+                              Responsible:{" "}
+                              {requirement.responsibility.responsibleStudentName ??
+                                "Not assigned"}
+                              {authorityRoleLabel(
+                                requirement.responsibility.responsibleStudentRole,
+                              )
+                                ? ` · ${authorityRoleLabel(requirement.responsibility.responsibleStudentRole)}`
+                                : ""}
                             </p>
                           </button>
 
@@ -624,6 +703,27 @@ export function StudentSubmissionsSection({ projectId }: Props) {
                                     </span>
                                   ) : null}
                                 </span>
+                              </div>
+
+                              <div className="mt-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs text-slate-600">
+                                <span className="font-semibold text-slate-700">
+                                  Responsible submitter:
+                                </span>{" "}
+                                {requirement.responsibility.responsibleStudentName ??
+                                  "Not assigned"}
+                                {authorityRoleLabel(
+                                  requirement.responsibility.responsibleStudentRole,
+                                )
+                                  ? ` · ${authorityRoleLabel(requirement.responsibility.responsibleStudentRole)}`
+                                  : ""}
+                                {!isResponsible &&
+                                !requirement.responsibility.requiresAssignment ? (
+                                  <span className="ml-2 text-slate-500">
+                                    You can view this submission, but only the
+                                    responsible student can upload an official
+                                    version.
+                                  </span>
+                                ) : null}
                               </div>
 
                               {version?.review ? (

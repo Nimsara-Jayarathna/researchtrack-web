@@ -29,6 +29,7 @@ import { useSupervisorProjectDetailsTabs } from "../hooks/projectDetails/useSupe
 import { useSupervisorProjectGitHubDashboard } from "../hooks/projectDetails/useSupervisorProjectGitHubDashboard";
 import { useSupervisorProjectJiraFlow } from "../hooks/projectDetails/useSupervisorProjectJiraFlow";
 import { useSupervisorProjectGitHubSetupRedirect } from "../hooks/projectDetails/useSupervisorProjectGitHubSetupRedirect";
+import { useSubmissionOverview } from "@/features/submissions/hooks/useSubmissionOverview";
 
 export function ProjectDetailsPage() {
   const { projectId } = useParams();
@@ -60,6 +61,10 @@ export function ProjectDetailsPage() {
   const projectRepositoriesState = useProjectRepositories(projectId, {
     enabled: Boolean(projectId),
   });
+  const submissionOverview = useSubmissionOverview(
+    projectId,
+    activeTab === "overview",
+  );
 
   const projectWithIntegrations = useMemo(
     () =>
@@ -386,6 +391,7 @@ export function ProjectDetailsPage() {
         <OverviewTabSection
           project={projectWithIntegrations ?? project}
           overview={overview}
+          submissionOverview={submissionOverview}
         />
       ) : null}
 

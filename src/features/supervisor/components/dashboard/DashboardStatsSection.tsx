@@ -57,11 +57,14 @@ export function DashboardStatsSection({
   isLoading,
 }: DashboardStatsSectionProps) {
   const showSkeleton = isLoading || !dashboard;
+  const jiraMetricsUnavailable =
+    dashboard?.jiraMetricsStatus === "UNAVAILABLE";
   const hasConnectedJiraProject =
     dashboard?.projects.some(
       (project) =>
         project.jiraHealthIndicator !== null &&
-        project.jiraHealthIndicator !== "NOT_CONNECTED",
+        project.jiraHealthIndicator !== "NOT_CONNECTED" &&
+        project.jiraHealthIndicator !== "UNAVAILABLE",
     ) ?? false;
 
   return (
@@ -75,7 +78,13 @@ export function DashboardStatsSection({
             showSkeleton || !dashboard ? undefined : (stat.key ===
                 "jiraAtRiskCount" ||
                 stat.key === "jiraBehindCount") &&
-              !hasConnectedJiraProject ? (
+              jiraMetricsUnavailable ? (
+              <span className="text-sm font-semibold normal-case tracking-normal text-slate-500">
+                Unavailable
+              </span>
+            ) : (stat.key === "jiraAtRiskCount" ||
+                  stat.key === "jiraBehindCount") &&
+                !hasConnectedJiraProject ? (
               <span className="text-sm font-semibold normal-case tracking-normal text-slate-500">
                 Not linked
               </span>

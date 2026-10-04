@@ -3,7 +3,7 @@ import {
   CalendarDays,
   CheckCircle2,
   Clock3,
-  FileStack,
+  FileCheck2,
   Flag,
   Github,
   MessagesSquare,
@@ -17,6 +17,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { cn } from "@/lib/cn";
 import { parseLocalDateOnly } from "@/lib/dateOnly";
 import type { MeetingAnalyticsState } from "@/features/projects/hooks/useMeetingAnalytics";
+import type { SubmissionOverviewState } from "@/features/submissions/hooks/useSubmissionOverview";
 import { SEMESTER_OPTIONS } from "@/features/projects/semester";
 
 type StatusBadgeTone =
@@ -116,6 +117,7 @@ type ProjectOverviewContentProps = {
   project: ProjectOverviewProject;
   role: OverviewRole;
   meetingAnalytics?: MeetingAnalyticsState;
+  submissionOverview?: SubmissionOverviewState;
   edit?: ProjectOverviewEditState;
 };
 
@@ -413,20 +415,44 @@ function buildFocusItems(
   role: OverviewRole,
   project: ProjectOverviewProject,
   summary: MilestoneSummary,
+  submissionOverview?: SubmissionOverviewState,
 ): string[] {
-  if (summary.total === 0) {
-    return role === "supervisor"
-      ? [
-          "Define at least 3 milestones with due dates so delivery health can be tracked week by week.",
-          "Assign a project leader to own delivery follow-ups and unblock milestone owners quickly.",
-        ]
-      : [
-          "Define at least 3 milestones with due dates so delivery health can be tracked week by week.",
-          "Ask the team lead to run a weekly milestone checkpoint to avoid late surprises.",
-        ];
+  const items: string[] = [];
+  const submissions = submissionOverview?.analytics;
+
+  if (submissions?.focusRequirementTitle && submissions.focusStatus) {
+    if (submissions.focusStatus === "CHANGES_REQUESTED") {
+      items.push(
+        role === "student"
+          ? `Revise "${submissions.focusRequirementTitle}" first. The Supervisor requested changes and a new version can be submitted.`
+          : `Track the revision for "${submissions.focusRequirementTitle}". Changes were requested and the team now needs to submit the next version.`,
+      );
+    } else if (submissions.focusStatus === "PENDING_REVIEW") {
+      items.push(
+        role === "supervisor"
+          ? `Review "${submissions.focusRequirementTitle}" first. The latest version is waiting for your decision.`
+          : `"${submissions.focusRequirementTitle}" is waiting for Supervisor review. No further upload is needed until a decision is recorded.`,
+      );
+    } else if (submissions.focusStatus === "UNSUBMITTED") {
+      items.push(
+        `"${submissions.focusRequirementTitle}" is still open and has not been submitted yet.`,
+      );
+    }
   }
 
-  const items: string[] = [];
+  if (summary.total === 0) {
+    items.push(
+      "Define at least 3 milestones with due dates so delivery health can be tracked week by week.",
+    );
+    if (!project.leader) {
+      items.push(
+        role === "supervisor"
+          ? "Assign a project leader to own delivery follow-ups and unblock milestone owners quickly."
+          : "Request a project leader assignment to centralize communication and milestone accountability.",
+      );
+    }
+    return items.slice(0, 3);
+  }
 
   if (summary.overdueOpen > 0 && summary.highestRiskMilestone) {
     items.push(
@@ -518,11 +544,12 @@ export function ProjectOverviewContent({
   project,
   role,
   meetingAnalytics,
+  submissionOverview,
   edit,
 }: ProjectOverviewContentProps) {
   const summary = buildMilestoneSummary(project);
   const healthBrief = buildHealthBrief(summary);
-  const focusItems = buildFocusItems(role, project, summary);
+  const focusItems = buildFocusItems(role, project, summary, submissionOverview);
   const primaryMilestone = pickPrimaryMilestone(summary);
   const riskTone = getRiskTone(summary.riskLevel);
   const riskToneClasses = getToneClasses(riskTone);
@@ -538,8 +565,30 @@ export function ProjectOverviewContent({
       ? getMilestoneTone(primaryMilestone.milestone.status)
       : "neutral",
   );
-  const filesUploadedCount = project.files?.items.length ?? 0;
-  const allowedFileTypesCount = project.files?.config.allowedTypes.length ?? 0;
+  const submissionAnalytics = submissionOverview?.analytics ?? null;
+  const submissionProgressValue = submissionOverview?.isLoading
+    ? "Loading..."
+    : submissionOverview?.isUnavailable
+      ? "Unavailable"
+      : submissionAnalytics
+        ? `${submissionAnalytics.submittedRequirements}/${submissionAnalytics.totalRequirements}`
+        : "0/0";
+  const submissionProgressLabel = (() => {
+    if (submissionOverview?.isLoading) return "Reading submission workflow";
+    if (submissionOverview?.isUnavailable)
+      return "Submission metrics are temporarily unavailable";
+    if (!submissionAnalytics || submissionAnalytics.totalRequirements === 0)
+      return "No active submission requirements";
+    if (submissionAnalytics.changesRequested > 0)
+      return `${submissionAnalytics.changesRequested} revision${submissionAnalytics.changesRequested === 1 ? "" : "s"} requested`;
+    if (submissionAnalytics.pendingReview > 0)
+      return role === "supervisor"
+        ? `${submissionAnalytics.pendingReview} awaiting review`
+        : `${submissionAnalytics.pendingReview} awaiting Supervisor review`;
+    if (submissionAnalytics.unsubmittedOpen > 0)
+      return `${submissionAnalytics.unsubmittedOpen} open requirement${submissionAnalytics.unsubmittedOpen === 1 ? "" : "s"} awaiting submission`;
+    return `${submissionAnalytics.approved} approved · ${submissionAnalytics.rejected} rejected`;
+  })();
   const linkedRepositoriesCount =
     project.githubRepositories?.repositories.length ?? 0;
   const enabledRepositoriesCount =
@@ -982,6 +1031,23 @@ export function ProjectOverviewContent({
                 {summary.cancelled} cancelled.
               </p>
             </div>
+            {submissionAnalytics && submissionAnalytics.totalRequirements > 0 ? (
+              <div className="flex items-start gap-2">
+                <FileCheck2
+                  className={cn(
+                    "mt-0.5 h-4 w-4",
+                    submissionAnalytics.changesRequested > 0
+                      ? "text-amber-600"
+                      : submissionAnalytics.pendingReview > 0
+                        ? "text-sky-600"
+                        : submissionAnalytics.unsubmittedOpen > 0
+                          ? "text-amber-600"
+                          : "text-emerald-600",
+                  )}
+                />
+                <p>{submissionProgressLabel}.</p>
+              </div>
+            ) : null}
           </div>
         </div>
 
@@ -992,18 +1058,18 @@ export function ProjectOverviewContent({
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-3.5">
               <div className="flex items-start justify-between gap-3">
-                <div>
+                <div className="min-w-0">
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
-                    Files uploaded
+                    Submissions
                   </p>
                   <p className="mt-1 text-base font-semibold text-slate-800">
-                    {filesUploadedCount}
+                    {submissionProgressValue}
                   </p>
                   <p className="text-xs text-slate-500">
-                    {allowedFileTypesCount} allowed file types
+                    {submissionProgressLabel}
                   </p>
                 </div>
-                <FileStack className="h-4 w-4 text-slate-500" />
+                <FileCheck2 className="h-4 w-4 shrink-0 text-slate-500" />
               </div>
             </div>
 

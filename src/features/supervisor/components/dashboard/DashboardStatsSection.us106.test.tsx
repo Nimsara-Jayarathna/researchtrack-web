@@ -13,6 +13,7 @@ const dashboard: SupervisorDashboard = {
   upcomingMilestonesCount: 1,
   jiraAtRiskCount: 0,
   jiraBehindCount: 0,
+  jiraMetricsStatus: "READY",
   projects: [
     {
       id: "project-1",
@@ -34,5 +35,23 @@ describe("DashboardStatsSection US-106", () => {
     render(<DashboardStatsSection dashboard={dashboard} isLoading={false} />);
 
     expect(screen.getAllByText("Not linked")).toHaveLength(2);
+  });
+
+  it("does not mislabel a Jira dependency failure as Not linked", () => {
+    render(
+      <DashboardStatsSection
+        dashboard={{
+          ...dashboard,
+          jiraMetricsStatus: "UNAVAILABLE",
+          projects: dashboard.projects.map((project) => ({
+            ...project,
+            jiraHealthIndicator: "UNAVAILABLE",
+          })),
+        }}
+        isLoading={false}
+      />,
+    );
+
+    expect(screen.getAllByText("Unavailable")).toHaveLength(2);
   });
 });

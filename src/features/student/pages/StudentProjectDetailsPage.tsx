@@ -20,6 +20,7 @@ import { isBlockingError } from "@/utils/errorSeverity";
 import { StudentFilesTabSection } from "../components/StudentFilesTabSection";
 import { StudentMeetingsTabSection } from "../components/StudentMeetingsTabSection";
 import type { StudentProjectDetailTab } from "../types";
+import { useSubmissionOverview } from "@/features/submissions/hooks/useSubmissionOverview";
 
 function toTabLabel(tab: string) {
   if (tab === "files") return "Submissions";
@@ -38,6 +39,10 @@ export function StudentProjectDetailsPage() {
     projectId,
     project?.githubRepositories,
     { enabled: Boolean(projectId) },
+  );
+  const submissionOverview = useSubmissionOverview(
+    projectId,
+    activeTab === "overview",
   );
   const projectWithRepositories = useMemo(
     () =>
@@ -129,6 +134,7 @@ export function StudentProjectDetailsPage() {
         <ProjectOverviewContent
           project={projectWithRepositories ?? project}
           role="student"
+          submissionOverview={submissionOverview}
         />
       ) : null}
 

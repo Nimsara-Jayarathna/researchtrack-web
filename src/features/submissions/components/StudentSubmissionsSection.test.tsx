@@ -148,19 +148,25 @@ describe("StudentSubmissionsSection", () => {
     );
   });
 
-  it("keeps a submitted card compact and exposes preview only after expansion", async () => {
+  it("keeps a submitted card compact and opens the in-app preview", async () => {
     submissionApiMock.listSubmissions.mockResolvedValue([submission]);
 
     const user = userEvent.setup();
     render(<StudentSubmissionsSection projectId="project-1" />);
 
-    expect(await screen.findByText("proposal.pdf")).toBeInTheDocument();
+    expect(await screen.findAllByText("proposal.pdf")).toHaveLength(2);
     expect(screen.getByText("PENDING REVIEW")).toBeInTheDocument();
+    expect(
+      screen.getAllByLabelText("Project Leader: Student One").length,
+    ).toBeGreaterThan(0);
     expect(
       screen.queryByRole("button", { name: "Submit file" }),
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Preview" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/This recorded version is immutable/i),
     ).not.toBeInTheDocument();
 
     await user.click(
@@ -192,8 +198,9 @@ describe("StudentSubmissionsSection", () => {
 
     expect(await screen.findByText("Research Proposal")).toBeInTheDocument();
     expect(screen.getByText("Team submissions")).toBeInTheDocument();
-    expect(screen.getByText("Student Two")).toBeInTheDocument();
-    expect(screen.getByText("Assigned submitter")).toBeInTheDocument();
+    expect(
+      screen.getAllByLabelText("Assigned submitter: Student Two").length,
+    ).toBeGreaterThan(0);
     expect(
       screen.queryByRole("button", { name: "Submit file" }),
     ).not.toBeInTheDocument();

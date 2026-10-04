@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   CheckCircle2,
+  Crown,
   Download,
   FileClock,
   RefreshCw,
@@ -17,7 +18,6 @@ import type {
   ResearchSubmission,
   ReviewDecision,
   SubmissionParticipantRole,
-  SubmissionRequirementStatus,
   SubmissionStatus,
   SubmissionVersion,
 } from "../types";
@@ -44,7 +44,13 @@ function readable(value: string) {
 }
 
 function formatDate(value: string) {
-  return new Date(value).toLocaleString();
+  return new Date(value).toLocaleString([], {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
 }
 
 function statusTone(status: SubmissionStatus) {
@@ -53,16 +59,40 @@ function statusTone(status: SubmissionStatus) {
   return "warning";
 }
 
-function requirementTone(status: SubmissionRequirementStatus) {
+function decisionTone(decision: ReviewDecision) {
+  if (decision === "APPROVED") return "success";
+  if (decision === "REJECTED") return "danger";
+  return "warning";
+}
+
+function requirementTone(status: ResearchSubmission["requirement"]["status"]) {
   if (status === "OPEN") return "success";
   if (status === "CLOSED") return "warning";
   return "neutral";
 }
 
-function decisionTone(decision: ReviewDecision) {
-  if (decision === "APPROVED") return "success";
-  if (decision === "REJECTED") return "danger";
-  return "warning";
+function SubmitterLine({ version }: { version: SubmissionVersion }) {
+  const role = authorityRoleLabel(version.submitterRoleSnapshot);
+  const isLeader = version.submitterRoleSnapshot === "PROJECT_LEADER";
+  const Icon = isLeader ? Crown : UserRound;
+
+  return (
+    <div className="flex min-w-0 items-center gap-2 text-sm text-slate-600">
+      <span
+        className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
+          isLeader
+            ? "bg-amber-100 text-amber-700"
+            : "bg-slate-100 text-slate-500"
+        }`}
+      >
+        <Icon className="h-4 w-4" aria-hidden />
+      </span>
+      <span className="min-w-0 truncate font-semibold text-slate-800">
+        {version.uploadedByName}
+      </span>
+      {role ? <span className="shrink-0 text-slate-400">· {role}</span> : null}
+    </div>
+  );
 }
 
 function VersionActions({
@@ -92,23 +122,6 @@ function VersionActions({
       >
         {downloadBusy ? "Preparing…" : "Download"}
       </Button>
-    </div>
-  );
-}
-
-function MetadataField({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="min-w-0">
-      <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">
-        {label}
-      </p>
-      <div className="mt-1 text-sm font-medium text-slate-700">{children}</div>
     </div>
   );
 }
@@ -173,12 +186,13 @@ export function SubmissionDetailModal({
     [detail],
   );
 
-  const previousVersions = useMemo(() => {
-    if (!detail || !current) return [];
-    return detail.versions
-      .filter((version) => version.id !== current.id && !version.isCurrent)
-      .sort((a, b) => b.versionNumber - a.versionNumber);
-  }, [current, detail]);
+  const previousVersions = useMemo(
+    () =>
+      [...(detail?.versions ?? [])]
+        .filter((version) => version.id !== current?.id)
+        .sort((a, b) => b.versionNumber - a.versionNumber),
+    [current?.id, detail?.versions],
+  );
 
   async function downloadVersion(version: SubmissionVersion) {
     if (!detail) return;
@@ -260,9 +274,9 @@ export function SubmissionDetailModal({
         ariaLabel="Submission details"
       >
         <div className="max-h-[94vh] w-full overflow-y-auto rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl">
-          <div className="flex items-start justify-between gap-4">
+          <header className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
                 Requirement
               </p>
               <h2 className="mt-1 truncate text-xl font-bold text-slate-900">
@@ -271,15 +285,15 @@ export function SubmissionDetailModal({
                   "Submission"}
               </h2>
               {detail ? (
-                <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
-                  <span className="flex items-center gap-2 text-slate-500">
-                    Requirement status
+                <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-500">
+                  <span className="flex items-center gap-2">
+                    <span>Requirement status</span>
                     <StatusBadge tone={requirementTone(detail.requirement.status)}>
                       {detail.requirement.status}
                     </StatusBadge>
                   </span>
-                  <span className="flex items-center gap-2 text-slate-500">
-                    Submission status
+                  <span className="flex items-center gap-2">
+                    <span>Submission status</span>
                     <StatusBadge tone={statusTone(detail.status)}>
                       {readable(detail.status)}
                     </StatusBadge>
@@ -305,12 +319,12 @@ export function SubmissionDetailModal({
                 type="button"
                 aria-label="Close"
                 onClick={onClose}
-                className="rounded-xl p-2 text-slate-500 hover:bg-slate-100"
+                className="rounded-xl p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
-          </div>
+          </header>
 
           {error ? (
             <div
@@ -326,188 +340,156 @@ export function SubmissionDetailModal({
           ) : null}
 
           {detail && current ? (
-            <div className="mt-6 space-y-6">
-              <div
-                className={`grid gap-5 ${canReview ? "lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]" : ""}`}
-              >
-                <section className="rounded-3xl border border-slate-200 bg-slate-50/70 p-5">
-                  <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
-                          Current version
+            <div className="mt-6 space-y-5">
+              <section className="rounded-3xl border border-slate-200 bg-slate-50/65 p-5">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+                        Current version
+                      </p>
+                      <StatusBadge tone="neutral">
+                        Version {current.versionNumber}
+                      </StatusBadge>
+                      {current.isLate ? (
+                        <StatusBadge tone="warning">Late</StatusBadge>
+                      ) : null}
+                    </div>
+
+                    <p className="mt-4 break-words text-lg font-bold text-slate-900">
+                      {current.originalFileName}
+                    </p>
+                    <p className="mt-1 text-sm text-slate-500">
+                      {formatBytes(current.fileSizeBytes)}
+                    </p>
+
+                    <div className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+                      <div>
+                        <SubmitterLine version={current} />
+                        <p className="mt-2 text-xs text-slate-500">
+                          Submitted {formatDate(current.submittedAt)}
                         </p>
-                        <StatusBadge tone="neutral">
-                          Version {current.versionNumber}
-                        </StatusBadge>
-                        {current.isLate ? (
-                          <StatusBadge tone="warning">Late</StatusBadge>
-                        ) : null}
-                        {current.isApproved ? (
-                          <StatusBadge tone="success">Approved</StatusBadge>
-                        ) : null}
                       </div>
-
-                      <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                        <MetadataField label="Submitted file">
-                          <span className="break-all font-semibold text-slate-900">
-                            {current.originalFileName}
-                          </span>
-                          <span className="ml-2 text-xs font-normal text-slate-500">
-                            {formatBytes(current.fileSizeBytes)}
-                          </span>
-                        </MetadataField>
-                        <MetadataField label="Submitted by">
-                          <span className="inline-flex items-center gap-1.5">
-                            <UserRound className="h-3.5 w-3.5 text-slate-400" />
-                            {current.uploadedByName}
-                            {authorityRoleLabel(current.submitterRoleSnapshot)
-                              ? ` · ${authorityRoleLabel(current.submitterRoleSnapshot)}`
-                              : ""}
-                          </span>
-                        </MetadataField>
-                        <MetadataField label="Submitted on">
-                          {formatDate(current.submittedAt)}
-                        </MetadataField>
-                        <MetadataField label="Version">
-                          Version {current.versionNumber}
-                        </MetadataField>
-                      </div>
-
-                      {current.submissionNote ? (
-                        <div className="mt-4 rounded-2xl border border-slate-200 bg-white px-4 py-3">
-                          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">
-                            Submission note
-                          </p>
-                          <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-slate-700">
-                            {current.submissionNote}
-                          </p>
-                        </div>
-                      ) : null}
+                      <VersionActions
+                        version={current}
+                        downloadBusy={downloadVersionId === current.id}
+                        onPreview={() => setPreviewVersion(current)}
+                        onDownload={() => void downloadVersion(current)}
+                      />
                     </div>
-                    <VersionActions
-                      version={current}
-                      downloadBusy={downloadVersionId === current.id}
-                      onPreview={() => setPreviewVersion(current)}
-                      onDownload={() => void downloadVersion(current)}
-                    />
+
+                    {current.submissionNote ? (
+                      <div className="mt-4 rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
+                          Submission note
+                        </p>
+                        <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">
+                          {current.submissionNote}
+                        </p>
+                      </div>
+                    ) : null}
                   </div>
+                </div>
+              </section>
 
-                  {current.review ? (
-                    <div className="mt-5 border-t border-slate-200 pt-4">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                          Supervisor decision
-                        </span>
-                        <StatusBadge
-                          tone={decisionTone(current.review.decision)}
-                        >
-                          {readable(current.review.decision)}
-                        </StatusBadge>
-                      </div>
-                      {current.review.feedback ? (
-                        <div className="mt-3 rounded-2xl bg-white px-4 py-3">
-                          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">
-                            Supervisor feedback
-                          </p>
-                          <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-slate-700">
-                            {current.review.feedback}
-                          </p>
-                        </div>
-                      ) : null}
-                      <p className="mt-2 text-xs text-slate-500">
-                        Reviewed by {current.review.reviewedByName} ·{" "}
-                        {formatDate(current.review.reviewedAt)}
+              {current.review ? (
+                <section className="rounded-3xl border border-slate-200 bg-white p-5">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <h3 className="text-sm font-bold uppercase tracking-[0.12em] text-slate-600">
+                      Supervisor decision
+                    </h3>
+                    <StatusBadge tone={decisionTone(current.review.decision)}>
+                      {readable(current.review.decision)}
+                    </StatusBadge>
+                  </div>
+                  {current.review.feedback ? (
+                    <div className="mt-4 rounded-2xl bg-slate-50 px-4 py-3">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
+                        Supervisor feedback
                       </p>
-                    </div>
-                  ) : detail.status === "PENDING_REVIEW" ? (
-                    <div className="mt-5 border-t border-slate-200 pt-4">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                        Supervisor decision
-                      </p>
-                      <p className="mt-1 text-sm font-medium text-amber-700">
-                        Waiting for Supervisor review.
+                      <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">
+                        {current.review.feedback}
                       </p>
                     </div>
                   ) : null}
+                  <p className="mt-3 text-xs text-slate-500">
+                    Reviewed by {current.review.reviewedByName} ·{" "}
+                    {formatDate(current.review.reviewedAt)}
+                  </p>
                 </section>
+              ) : detail.status === "PENDING_REVIEW" && !canReview ? (
+                <section className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
+                  Waiting for a Supervisor decision.
+                </section>
+              ) : null}
 
-                {canReview ? (
-                  <section className="rounded-3xl border border-slate-200 p-5">
-                    <h3 className="font-bold text-slate-900">
-                      Supervisor decision
-                    </h3>
-                    <p className="mt-1 text-sm leading-6 text-slate-500">
-                      Choose the outcome for Version {current.versionNumber} and
-                      add feedback when needed.
-                    </p>
+              {canReview ? (
+                <section className="rounded-3xl border border-slate-200 bg-white p-5">
+                  <h3 className="font-bold text-slate-900">
+                    Supervisor decision
+                  </h3>
+                  <p className="mt-1 text-sm leading-6 text-slate-500">
+                    Review Version {current.versionNumber} and record the outcome.
+                  </p>
 
-                    <div className="mt-4 grid gap-2 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
-                      <Button
-                        size="sm"
-                        variant={
-                          decision === "APPROVED" ? "primary" : "secondary"
-                        }
-                        onClick={() => setDecision("APPROVED")}
-                      >
-                        Approve
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant={
-                          decision === "CHANGES_REQUESTED"
-                            ? "primary"
-                            : "secondary"
-                        }
-                        onClick={() => setDecision("CHANGES_REQUESTED")}
-                      >
-                        Request changes
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant={
-                          decision === "REJECTED" ? "danger" : "secondary"
-                        }
-                        onClick={() => setDecision("REJECTED")}
-                      >
-                        Reject
-                      </Button>
-                    </div>
-
-                    <label className="mt-4 block text-sm font-semibold text-slate-700">
-                      Feedback{" "}
-                      {decision === "APPROVED" ? (
-                        <span className="font-normal text-slate-400">
-                          (optional)
-                        </span>
-                      ) : null}
-                      <textarea
-                        value={feedback}
-                        maxLength={4000}
-                        onChange={(event) => setFeedback(event.target.value)}
-                        placeholder="Explain the decision and what the Student should do next"
-                        className="mt-2 min-h-32 w-full resize-y rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-slate-400"
-                      />
-                    </label>
+                  <div className="mt-4 grid gap-2 sm:grid-cols-3">
                     <Button
-                      className="mt-3"
-                      fullWidth
-                      variant="primary"
-                      disabled={
-                        reviewBusy ||
-                        !decision ||
-                        ((decision === "CHANGES_REQUESTED" ||
-                          decision === "REJECTED") &&
-                          !feedback.trim())
-                      }
-                      leftIcon={<CheckCircle2 className="h-4 w-4" />}
-                      onClick={() => void submitReview()}
+                      size="sm"
+                      variant={decision === "APPROVED" ? "primary" : "secondary"}
+                      onClick={() => setDecision("APPROVED")}
                     >
-                      {reviewBusy ? "Recording…" : "Record decision"}
+                      Approve
                     </Button>
-                  </section>
-                ) : null}
-              </div>
+                    <Button
+                      size="sm"
+                      variant={
+                        decision === "CHANGES_REQUESTED" ? "primary" : "secondary"
+                      }
+                      onClick={() => setDecision("CHANGES_REQUESTED")}
+                    >
+                      Request changes
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={decision === "REJECTED" ? "danger" : "secondary"}
+                      onClick={() => setDecision("REJECTED")}
+                    >
+                      Reject
+                    </Button>
+                  </div>
+
+                  <label className="mt-4 block text-sm font-semibold text-slate-700">
+                    Feedback{" "}
+                    {decision === "APPROVED" ? (
+                      <span className="font-normal text-slate-400">
+                        (optional)
+                      </span>
+                    ) : null}
+                    <textarea
+                      value={feedback}
+                      maxLength={4000}
+                      onChange={(event) => setFeedback(event.target.value)}
+                      placeholder="Explain the decision and what the Student should do next"
+                      className="mt-2 min-h-28 w-full resize-y rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
+                    />
+                  </label>
+                  <Button
+                    className="mt-3"
+                    variant="primary"
+                    disabled={
+                      reviewBusy ||
+                      !decision ||
+                      ((decision === "CHANGES_REQUESTED" ||
+                        decision === "REJECTED") &&
+                        !feedback.trim())
+                    }
+                    leftIcon={<CheckCircle2 className="h-4 w-4" />}
+                    onClick={() => void submitReview()}
+                  >
+                    {reviewBusy ? "Recording…" : "Record decision"}
+                  </Button>
+                </section>
+              ) : null}
 
               <section>
                 <div className="mb-3 flex items-center justify-between gap-3">
@@ -518,8 +500,7 @@ export function SubmissionDetailModal({
                         Previous versions
                       </h3>
                       <p className="text-xs text-slate-500">
-                        Earlier submissions and the review outcome recorded for
-                        each one.
+                        Earlier submissions and the review outcome recorded for each one.
                       </p>
                     </div>
                   </div>
@@ -530,9 +511,8 @@ export function SubmissionDetailModal({
                 </div>
 
                 {previousVersions.length === 0 ? (
-                  <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 px-5 py-6 text-sm text-slate-500">
-                    No previous versions yet. This is the first submitted
-                    version.
+                  <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-5 text-sm text-slate-500">
+                    No previous versions yet. This is the first submitted version.
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -543,36 +523,20 @@ export function SubmissionDetailModal({
                       >
                         <div className="flex flex-wrap items-start justify-between gap-4">
                           <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <p className="font-bold text-slate-900">
-                                Version {version.versionNumber}
+                            <p className="font-bold text-slate-900">
+                              Version {version.versionNumber}
+                            </p>
+                            <p className="mt-2 break-words text-sm font-semibold text-slate-800">
+                              {version.originalFileName}
+                            </p>
+                            <p className="mt-1 text-xs text-slate-500">
+                              {formatBytes(version.fileSizeBytes)}
+                            </p>
+                            <div className="mt-3">
+                              <SubmitterLine version={version} />
+                              <p className="mt-2 text-xs text-slate-500">
+                                Submitted {formatDate(version.submittedAt)}
                               </p>
-                              {version.isApproved ? (
-                                <StatusBadge tone="success">Approved</StatusBadge>
-                              ) : null}
-                              {version.isLate ? (
-                                <StatusBadge tone="warning">Late</StatusBadge>
-                              ) : null}
-                            </div>
-
-                            <div className="mt-4 grid gap-4 sm:grid-cols-3">
-                              <MetadataField label="Submitted file">
-                                <span className="break-all">
-                                  {version.originalFileName}
-                                </span>
-                                <span className="ml-2 text-xs font-normal text-slate-500">
-                                  {formatBytes(version.fileSizeBytes)}
-                                </span>
-                              </MetadataField>
-                              <MetadataField label="Submitted by">
-                                {version.uploadedByName}
-                                {authorityRoleLabel(version.submitterRoleSnapshot)
-                                  ? ` · ${authorityRoleLabel(version.submitterRoleSnapshot)}`
-                                  : ""}
-                              </MetadataField>
-                              <MetadataField label="Submitted on">
-                                {formatDate(version.submittedAt)}
-                              </MetadataField>
                             </div>
                           </div>
                           <VersionActions
@@ -585,22 +549,20 @@ export function SubmissionDetailModal({
 
                         {version.review ? (
                           <div className="mt-4 border-t border-slate-200 pt-4">
-                            <div className="flex flex-wrap items-center gap-2">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
                               <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                                 Review outcome
                               </span>
-                              <StatusBadge
-                                tone={decisionTone(version.review.decision)}
-                              >
+                              <StatusBadge tone={decisionTone(version.review.decision)}>
                                 {readable(version.review.decision)}
                               </StatusBadge>
                             </div>
                             {version.review.feedback ? (
                               <div className="mt-3 rounded-xl bg-slate-50 px-3 py-3">
-                                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">
+                                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
                                   Supervisor feedback
                                 </p>
-                                <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-slate-700">
+                                <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">
                                   {version.review.feedback}
                                 </p>
                               </div>
@@ -610,11 +572,7 @@ export function SubmissionDetailModal({
                               {formatDate(version.review.reviewedAt)}
                             </p>
                           </div>
-                        ) : (
-                          <div className="mt-4 border-t border-slate-200 pt-4 text-xs text-slate-500">
-                            No review outcome was recorded for this version.
-                          </div>
-                        )}
+                        ) : null}
                       </article>
                     ))}
                   </div>

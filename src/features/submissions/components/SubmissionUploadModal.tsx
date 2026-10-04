@@ -286,8 +286,8 @@ export function SubmissionUploadModal({
               submitted
             </div>
             <p className="mt-2 text-sm leading-6">
-              Your submission is now waiting for Supervisor review. Earlier
-              versions remain available in Submission details.
+              Your submission is now waiting for Supervisor review. Previous
+              versions remain available in version history.
             </p>
             <Button className="mt-4" onClick={onClose}>
               Close

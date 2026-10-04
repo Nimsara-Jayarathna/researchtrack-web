@@ -558,7 +558,7 @@ export function RequirementEditorModal({
           {requirement?.submissionSummary ? (
             <div className="rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 text-xs leading-5 text-sky-800">
               File rules and submission responsibility changes apply to future
-              uploads. Earlier submitted versions are not changed.
+              uploads. Existing version history remains unchanged.
             </div>
           ) : null}
         </div>

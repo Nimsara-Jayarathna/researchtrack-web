@@ -4,6 +4,8 @@ import {
   CalendarClock,
   CheckCircle2,
   ChevronDown,
+  CircleAlert,
+  Clock3,
   Crown,
   Download,
   FileClock,
@@ -11,7 +13,6 @@ import {
   RefreshCw,
   Upload,
   UserRound,
-  UsersRound,
 } from "lucide-react";
 import { ErrorState } from "@/components/feedback/ErrorState";
 import { useAuthStateValue } from "@/features/auth/state/authState";
@@ -41,8 +42,15 @@ type StudentItem = {
   submission: ResearchSubmission | null;
 };
 
+type StudentGroupKey =
+  | "action"
+  | "team"
+  | "review"
+  | "completed"
+  | "unavailable";
+
 type StudentGroup = {
-  key: string;
+  key: StudentGroupKey;
   title: string;
   description: string;
   items: StudentItem[];
@@ -66,7 +74,6 @@ function submissionStatusTone(status: SubmissionStatus) {
   if (status === "REJECTED") return "danger";
   return "warning";
 }
-
 
 function authorityRoleLabel(value: string | null | undefined) {
   if (value === "PROJECT_LEADER") return "Project Leader";
@@ -115,40 +122,172 @@ function sortItems(items: StudentItem[]) {
 }
 
 function SubmissionFileDetails({ version }: { version: SubmissionVersion }) {
+  const role = authorityRoleLabel(version.submitterRoleSnapshot);
+  const isLeader = version.submitterRoleSnapshot === "PROJECT_LEADER";
+  const SubmitterIcon = isLeader ? Crown : UserRound;
+
   return (
     <div className="min-w-0">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
+          Current version
+        </p>
+        <span className="text-xs font-semibold text-slate-600">
+          Version {version.versionNumber}
+        </span>
+        {version.isLate ? (
+          <span className="text-xs font-semibold text-amber-700">Late</span>
+        ) : null}
+      </div>
+      <div className="mt-3 flex min-w-0 items-center gap-2">
         <FileText className="h-4 w-4 shrink-0 text-slate-500" />
         <p className="truncate text-sm font-semibold text-slate-900">
           {version.originalFileName}
         </p>
       </div>
-      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
-        <span>Version {version.versionNumber}</span>
-        <span>{formatBytes(version.fileSizeBytes)}</span>
-        <span>{formatDateTime(version.submittedAt)}</span>
-        {version.isLate ? (
-          <span className="font-semibold text-amber-700">Late submission</span>
-        ) : null}
-      </div>
-      <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
-        <UserRound className="h-3.5 w-3.5" />
-        <span>
-          Submitted by {version.uploadedByName}
-          {authorityRoleLabel(version.submitterRoleSnapshot)
-            ? ` · ${authorityRoleLabel(version.submitterRoleSnapshot)}`
-            : ""}
+      <p className="mt-1 text-xs text-slate-500">
+        {formatBytes(version.fileSizeBytes)}
+      </p>
+      <div className="mt-3 flex min-w-0 items-center gap-2 text-xs text-slate-500">
+        <span
+          className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-lg ${
+            isLeader
+              ? "bg-amber-100 text-amber-700"
+              : "bg-slate-100 text-slate-500"
+          }`}
+        >
+          <SubmitterIcon className="h-3.5 w-3.5" aria-hidden />
         </span>
+        <span className="truncate font-medium text-slate-700">
+          {version.uploadedByName}
+        </span>
+        {role ? <span className="shrink-0 text-slate-400">· {role}</span> : null}
       </div>
+      <p className="mt-2 text-xs text-slate-500">
+        Submitted {formatDateTime(version.submittedAt)}
+      </p>
       {version.submissionNote ? (
-        <p className="mt-3 rounded-xl bg-white px-3 py-2 text-xs leading-5 text-slate-600">
-          {version.submissionNote}
-        </p>
+        <div className="mt-3 rounded-xl bg-white px-3 py-2">
+          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
+            Submission note
+          </p>
+          <p className="mt-1 text-xs leading-5 text-slate-600">
+            {version.submissionNote}
+          </p>
+        </div>
       ) : null}
     </div>
   );
 }
 
+
+function groupPresentation(key: StudentGroupKey) {
+  if (key === "action") {
+    return {
+      icon: CircleAlert,
+      shell: "border-sky-100 bg-sky-50/45",
+      header: "border-sky-100",
+      iconClass: "bg-sky-100 text-sky-700",
+      countClass: "border-sky-200 bg-white text-sky-700",
+    };
+  }
+
+  if (key === "team") {
+    return {
+      icon: UserRound,
+      shell: "border-violet-100 bg-violet-50/35",
+      header: "border-violet-100",
+      iconClass: "bg-violet-100 text-violet-700",
+      countClass: "border-violet-200 bg-white text-violet-700",
+    };
+  }
+
+  if (key === "review") {
+    return {
+      icon: Clock3,
+      shell: "border-amber-100 bg-amber-50/40",
+      header: "border-amber-100",
+      iconClass: "bg-amber-100 text-amber-700",
+      countClass: "border-amber-200 bg-white text-amber-700",
+    };
+  }
+
+  if (key === "completed") {
+    return {
+      icon: CheckCircle2,
+      shell: "border-slate-200 bg-slate-50/65",
+      header: "border-slate-200",
+      iconClass: "bg-slate-200 text-slate-700",
+      countClass: "border-slate-200 bg-white text-slate-700",
+    };
+  }
+
+  return {
+    icon: Archive,
+    shell: "border-slate-200 bg-slate-50/45",
+    header: "border-slate-200",
+    iconClass: "bg-slate-100 text-slate-500",
+    countClass: "border-slate-200 bg-white text-slate-600",
+  };
+}
+
+function cardAccentClass(
+  submission: ResearchSubmission | null,
+  needsAction: boolean,
+) {
+  if (needsAction) return "border-l-sky-400";
+  if (!submission) return "border-l-slate-300";
+  if (submission.status === "PENDING_REVIEW") return "border-l-amber-400";
+  if (submission.status === "CHANGES_REQUESTED") return "border-l-orange-400";
+  if (submission.status === "APPROVED") return "border-l-emerald-400";
+  return "border-l-rose-400";
+}
+
+function SubmitterIdentity({
+  requirement,
+  version = null,
+  compact = false,
+}: {
+  requirement: SubmissionRequirement;
+  version?: SubmissionVersion | null;
+  compact?: boolean;
+}) {
+  const responsibility = requirement.responsibility;
+  const role = version
+    ? authorityRoleLabel(version.submitterRoleSnapshot)
+    : authorityRoleLabel(responsibility.responsibleStudentRole);
+  const isLeader = version
+    ? version.submitterRoleSnapshot === "PROJECT_LEADER"
+    : responsibility.responsibleStudentRole === "PROJECT_LEADER";
+  const Icon = isLeader ? Crown : UserRound;
+  const name =
+    version?.uploadedByName ??
+    responsibility.responsibleStudentName ??
+    "Submitter not assigned";
+
+  return (
+    <div
+      className="flex min-w-0 items-center gap-2 text-xs text-slate-500"
+      aria-label={role ? `${role}: ${name}` : name}
+    >
+      <span
+        className={`inline-flex shrink-0 items-center justify-center rounded-lg ${
+          compact ? "h-6 w-6" : "h-7 w-7"
+        } ${
+          isLeader
+            ? "bg-amber-100 text-amber-700"
+            : "bg-slate-100 text-slate-500"
+        }`}
+      >
+        <Icon className={compact ? "h-3.5 w-3.5" : "h-4 w-4"} aria-hidden />
+      </span>
+      <span className="min-w-0 truncate font-medium text-slate-700">{name}</span>
+      {role ? (
+        <span className="shrink-0 text-slate-400">· {role}</span>
+      ) : null}
+    </div>
+  );
+}
 
 export function StudentSubmissionsSection({ projectId }: Props) {
   const { user } = useAuthStateValue();
@@ -480,44 +619,40 @@ export function StudentSubmissionsSection({ projectId }: Props) {
         {!error && !loading && requirements.length > 0 ? (
           <div className="space-y-7">
             {groups.map((group) => {
-              const groupIcon =
-                group.key === "action" ? (
-                  <Upload className="h-4 w-4" />
-                ) : group.key === "team" ? (
-                  <UsersRound className="h-4 w-4" />
-                ) : group.key === "review" ? (
-                  <FileClock className="h-4 w-4" />
-                ) : group.key === "completed" ? (
-                  <CheckCircle2 className="h-4 w-4" />
-                ) : (
-                  <Archive className="h-4 w-4" />
-                );
+              const presentation = groupPresentation(group.key);
+              const GroupIcon = presentation.icon;
 
               return (
                 <section
                   key={group.key}
-                  className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-50/40"
+                  className={`overflow-hidden rounded-3xl border ${presentation.shell}`}
                 >
-                  <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-5">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500">
-                        {groupIcon}
+                  <div
+                    className={`flex items-start justify-between gap-4 border-b px-4 py-4 sm:px-5 ${presentation.header}`}
+                  >
+                    <div className="flex min-w-0 items-start gap-3">
+                      <span
+                        className={`mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${presentation.iconClass}`}
+                      >
+                        <GroupIcon className="h-4 w-4" aria-hidden />
                       </span>
                       <div className="min-w-0">
                         <h3 className="text-sm font-bold text-slate-900">
                           {group.title}
                         </h3>
-                        <p className="mt-0.5 text-xs text-slate-500">
+                        <p className="mt-1 text-xs leading-5 text-slate-500">
                           {group.description}
                         </p>
                       </div>
                     </div>
-                    <span className="inline-flex min-w-8 items-center justify-center rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-600">
+                    <span
+                      className={`inline-flex min-w-8 shrink-0 items-center justify-center rounded-full border px-2.5 py-1 text-xs font-bold ${presentation.countClass}`}
+                      aria-label={`${group.items.length} ${group.items.length === 1 ? "item" : "items"}`}
+                    >
                       {group.items.length}
                     </span>
                   </div>
-
-                  <div className="space-y-3 border-t border-slate-200 p-4">
+                  <div className="space-y-3 p-3 sm:p-4">
                     {group.items.map(({ requirement, submission }) => {
                       const version = currentVersion(submission);
                       const isResponsible = canCurrentUserSubmit(requirement);
@@ -537,33 +672,19 @@ export function StudentSubmissionsSection({ projectId }: Props) {
                       const latestFeedback = version?.review?.feedback ?? null;
                       const expanded =
                         expandedRequirementId === requirement.id;
-                      const displayRole =
-                        version?.submitterRoleSnapshot ??
-                        requirement.responsibility.responsibleStudentRole;
-                      const displayPerson =
-                        version?.uploadedByName ??
-                        requirement.responsibility.responsibleStudentName;
-                      const accentClass = needsAction
-                        ? "border-l-sky-400"
-                        : submission?.status === "PENDING_REVIEW"
-                          ? "border-l-amber-400"
-                          : submission?.status === "APPROVED"
-                            ? "border-l-emerald-400"
-                            : submission?.status === "REJECTED"
-                              ? "border-l-rose-400"
-                              : submission?.status === "CHANGES_REQUESTED"
-                                ? "border-l-orange-400"
-                                : "border-l-slate-300";
 
                       return (
                         <article
                           key={requirement.id}
-                          className={`overflow-hidden rounded-2xl border border-l-4 border-slate-200 bg-white transition-shadow duration-200 ${accentClass} ${expanded ? "shadow-sm" : ""}`}
+                          className={`overflow-hidden rounded-2xl border border-l-4 border-slate-200 bg-white transition-all duration-200 ${cardAccentClass(
+                            submission,
+                            needsAction,
+                          )} ${expanded ? "shadow-sm" : "shadow-none"}`}
                         >
-                          <div className="flex flex-col gap-3 p-4 sm:p-5 lg:flex-row lg:items-center">
+                          <div className="flex flex-col sm:flex-row sm:items-stretch sm:gap-3">
                             <button
                               type="button"
-                              className="min-w-0 flex-1 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-200"
+                              className="min-w-0 flex-1 px-4 py-4 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-200 sm:px-5"
                               aria-expanded={expanded}
                               aria-controls={`student-submission-${requirement.id}`}
                               onClick={() =>
@@ -574,87 +695,74 @@ export function StudentSubmissionsSection({ projectId }: Props) {
                                 )
                               }
                             >
-                              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
+                              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
                                 Requirement
                               </p>
-                              <div className="mt-1 flex flex-wrap items-center gap-2">
-                                <h4 className="font-bold text-slate-900">
-                                  {requirement.title}
-                                </h4>
-                                <StatusBadge
-                                  tone={requirementStatusTone(
-                                    requirement.status,
-                                  )}
-                                >
-                                  {requirement.status}
-                                </StatusBadge>
+                              <div className="mt-1 flex items-start justify-between gap-3">
+                                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                                  <h4 className="truncate font-bold text-slate-900">
+                                    {requirement.title}
+                                  </h4>
+                                  <StatusBadge
+                                    tone={requirementStatusTone(
+                                      requirement.status,
+                                    )}
+                                    className="px-2.5 py-0.5 text-[10px] tracking-[0.14em]"
+                                  >
+                                    {requirement.status}
+                                  </StatusBadge>
+                                </div>
+                                {submission ? (
+                                  <StatusBadge
+                                    tone={submissionStatusTone(
+                                      submission.status,
+                                    )}
+                                    className="shrink-0 px-2.5 py-0.5 text-[10px] tracking-[0.14em]"
+                                  >
+                                    {readableStatus(submission.status)}
+                                  </StatusBadge>
+                                ) : null}
                               </div>
 
-                              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
+                              <div className="mt-3 grid items-center gap-x-3 gap-y-1 text-xs text-slate-500 sm:grid-cols-[88px_minmax(0,1fr)_72px_220px]">
                                 {version ? (
                                   <>
                                     <span className="font-semibold text-slate-700">
                                       Version {version.versionNumber}
                                     </span>
-                                    <span className="max-w-[28rem] truncate">
+                                    <span
+                                      className="min-w-0 truncate"
+                                      title={version.originalFileName}
+                                    >
                                       {version.originalFileName}
                                     </span>
-                                    <span>
+                                    <span className="sm:text-right">
                                       {formatBytes(version.fileSizeBytes)}
                                     </span>
                                   </>
                                 ) : (
-                                  <span>No document submitted</span>
+                                  <span className="sm:col-span-3">
+                                    No document submitted
+                                  </span>
                                 )}
-                                <span className="flex items-center gap-1.5">
-                                  <CalendarClock className="h-3.5 w-3.5" />
+                                <span className="flex items-center gap-1.5 text-slate-400 sm:justify-end sm:text-right">
+                                  <CalendarClock className="h-3.5 w-3.5 shrink-0" />
                                   {requirement.dueAt
                                     ? `Due ${formatDateTime(requirement.dueAt)}`
                                     : "No deadline"}
                                 </span>
                               </div>
 
-                              <div className="mt-2 flex min-w-0 items-center gap-2 text-xs text-slate-500">
-                                {displayRole === "PROJECT_LEADER" ? (
-                                  <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
-                                    <Crown className="h-3.5 w-3.5" />
-                                  </span>
-                                ) : (
-                                  <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
-                                    <UserRound className="h-3.5 w-3.5" />
-                                  </span>
-                                )}
-                                <span className="text-slate-400">
-                                  {version ? "Submitted by" : "Responsible"}
-                                </span>
-                                <span className="truncate font-semibold text-slate-700">
-                                  {displayPerson ?? "Not assigned"}
-                                </span>
-                                {authorityRoleLabel(displayRole) ? (
-                                  <>
-                                    <span className="text-slate-300">·</span>
-                                    <span className="truncate text-slate-400">
-                                      {authorityRoleLabel(displayRole)}
-                                    </span>
-                                  </>
-                                ) : null}
+                              <div className="mt-3">
+                                <SubmitterIdentity
+                                  requirement={requirement}
+                                  version={version}
+                                  compact
+                                />
                               </div>
                             </button>
 
-                            <div className="flex shrink-0 flex-wrap items-center gap-2">
-                              {submission ? (
-                                <StatusBadge
-                                  tone={submissionStatusTone(
-                                    submission.status,
-                                  )}
-                                >
-                                  {readableStatus(submission.status)}
-                                </StatusBadge>
-                              ) : needsAction ? (
-                                <StatusBadge tone="warning">
-                                  Ready to submit
-                                </StatusBadge>
-                              ) : null}
+                            <div className="flex shrink-0 items-center justify-end gap-2 px-4 pb-4 sm:px-0 sm:pb-0 sm:pr-4 sm:py-3">
                               {needsAction ? (
                                 <Button
                                   size="sm"
@@ -695,6 +803,7 @@ export function StudentSubmissionsSection({ projectId }: Props) {
 
                           <div
                             id={`student-submission-${requirement.id}`}
+                            aria-hidden={!expanded}
                             className={`grid transition-[grid-template-rows,opacity] duration-200 ease-out ${
                               expanded
                                 ? "grid-rows-[1fr] opacity-100"
@@ -704,96 +813,53 @@ export function StudentSubmissionsSection({ projectId }: Props) {
                             <div className="overflow-hidden">
                               <div className="border-t border-slate-200 px-4 pb-5 pt-4 sm:px-5">
                                 {requirement.description ? (
-                                  <div className="mb-4">
-                                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
-                                      Requirement description
-                                    </p>
-                                    <p className="mt-1 max-w-4xl text-sm leading-6 text-slate-600">
-                                      {requirement.description}
-                                    </p>
-                                  </div>
+                                  <p className="mb-4 max-w-4xl text-sm leading-6 text-slate-600">
+                                    {requirement.description}
+                                  </p>
                                 ) : null}
 
-                                <div>
-                                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
-                                    Requirement details
-                                  </p>
-                                  <div className="mt-2 grid gap-3 rounded-2xl bg-slate-50 p-4 text-xs text-slate-600 sm:grid-cols-3">
-                                    <span>
-                                      <strong className="text-slate-700">
-                                        Accepted formats
-                                      </strong>
-                                      <span className="mt-1 block">
-                                        {requirement.allowedFileTypes
-                                          .map((type) => `.${type}`)
-                                          .join(", ")}
-                                      </span>
-                                    </span>
-                                    <span>
-                                      <strong className="text-slate-700">
-                                        Maximum file size
-                                      </strong>
-                                      <span className="mt-1 block">
-                                        {formatBytes(
-                                          requirement.maxFileSizeBytes,
-                                        )}
-                                      </span>
-                                    </span>
-                                    <span>
-                                      <strong className="text-slate-700">
-                                        Deadline
-                                      </strong>
-                                      <span className="mt-1 flex flex-wrap items-center gap-1.5">
-                                        <CalendarClock className="h-3.5 w-3.5" />
-                                        {requirement.dueAt
-                                          ? formatDateTime(requirement.dueAt)
-                                          : "No deadline"}
-                                        {isPastDue && !submission ? (
-                                          <span className="font-semibold text-amber-700">
-                                            Late if submitted now
-                                          </span>
-                                        ) : null}
-                                      </span>
-                                    </span>
-                                  </div>
-                                </div>
-
-                                <div className="mt-4 rounded-2xl border border-slate-200 bg-white px-4 py-3">
-                                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
-                                    Responsible submitter
-                                  </p>
-                                  <div className="mt-2 flex items-center gap-2 text-sm text-slate-700">
-                                    {requirement.responsibility
-                                      .responsibleStudentRole ===
-                                    "PROJECT_LEADER" ? (
-                                      <Crown className="h-4 w-4 text-amber-600" />
-                                    ) : (
-                                      <UserRound className="h-4 w-4 text-slate-400" />
-                                    )}
-                                    <span className="font-semibold">
-                                      {requirement.responsibility
-                                        .responsibleStudentName ??
-                                        "Not assigned"}
-                                    </span>
-                                    {authorityRoleLabel(
-                                      requirement.responsibility
-                                        .responsibleStudentRole,
-                                    ) ? (
-                                      <span className="text-slate-400">
-                                        · {authorityRoleLabel(
-                                          requirement.responsibility
-                                            .responsibleStudentRole,
-                                        )}
+                                <div className="grid gap-2 rounded-2xl bg-slate-50 p-4 text-xs text-slate-600 sm:grid-cols-3">
+                                  <span>
+                                    <strong className="text-slate-700">
+                                      Accepted:
+                                    </strong>{" "}
+                                    {requirement.allowedFileTypes
+                                      .map((type) => `.${type}`)
+                                      .join(", ")}
+                                  </span>
+                                  <span>
+                                    <strong className="text-slate-700">
+                                      Maximum:
+                                    </strong>{" "}
+                                    {formatBytes(requirement.maxFileSizeBytes)}
+                                  </span>
+                                  <span className="flex flex-wrap items-center gap-1.5">
+                                    <CalendarClock className="h-3.5 w-3.5" />
+                                    <strong className="text-slate-700">
+                                      Due:
+                                    </strong>{" "}
+                                    {requirement.dueAt
+                                      ? formatDateTime(requirement.dueAt)
+                                      : "No deadline"}
+                                    {isPastDue && !submission ? (
+                                      <span className="font-semibold text-amber-700">
+                                        Late if submitted now
                                       </span>
                                     ) : null}
-                                  </div>
+                                  </span>
+                                </div>
+
+                                <div className="mt-3 rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                                  <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
+                                    Responsible submitter
+                                  </p>
+                                  <SubmitterIdentity requirement={requirement} />
                                   {!isResponsible &&
                                   !requirement.responsibility
                                     .requiresAssignment ? (
                                     <p className="mt-2 text-xs leading-5 text-slate-500">
-                                      Only the responsible Student can upload
-                                      the official version for this
-                                      requirement.
+                                      Only this student can upload the official
+                                      version for this requirement.
                                     </p>
                                   ) : null}
                                 </div>
@@ -808,62 +874,35 @@ export function StudentSubmissionsSection({ projectId }: Props) {
                                           : "border-amber-200 bg-amber-50"
                                     }`}
                                   >
-                                    <div className="flex flex-wrap items-center gap-2">
-                                      <p className="text-xs font-bold uppercase tracking-wide text-slate-700">
-                                        Supervisor decision
-                                      </p>
-                                      <StatusBadge
-                                        tone={submissionStatusTone(
-                                          version.review.decision,
-                                        )}
-                                      >
-                                        {readableStatus(
-                                          version.review.decision,
-                                        )}
-                                      </StatusBadge>
-                                    </div>
+                                    <p className="text-xs font-bold uppercase tracking-wide text-slate-700">
+                                      Supervisor decision ·{" "}
+                                      {readableStatus(version.review.decision)}
+                                    </p>
                                     {latestFeedback ? (
-                                      <div className="mt-3">
-                                        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
-                                          Supervisor feedback
-                                        </p>
-                                        <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-slate-800">
-                                          {latestFeedback}
-                                        </p>
-                                      </div>
+                                      <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-800">
+                                        {latestFeedback}
+                                      </p>
                                     ) : null}
                                     <p className="mt-2 text-xs text-slate-600">
                                       Reviewed Version {version.versionNumber} by{" "}
                                       {version.review.reviewedByName} on{" "}
                                       {formatDateTime(
                                         version.review.reviewedAt,
-                                      )}.
+                                      )}
+                                      .
                                     </p>
                                     {submission?.status ===
                                     "CHANGES_REQUESTED" ? (
                                       <p className="mt-2 text-xs font-semibold text-amber-800">
-                                        The next upload will be Version{" "}
+                                        Your next submission will be Version{" "}
                                         {submission.versionCount + 1}.
                                       </p>
                                     ) : null}
-                                  </div>
-                                ) : submission?.status ===
-                                  "PENDING_REVIEW" ? (
-                                  <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
-                                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-amber-700">
-                                      Supervisor decision
-                                    </p>
-                                    <p className="mt-1 text-sm font-medium text-amber-800">
-                                      Waiting for Supervisor review.
-                                    </p>
                                   </div>
                                 ) : null}
 
                                 {submission && version ? (
                                   <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                    <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
-                                      Current version
-                                    </p>
                                     <div className="flex flex-wrap items-start justify-between gap-4">
                                       <SubmissionFileDetails version={version} />
                                       <div className="flex shrink-0 flex-wrap gap-2">
@@ -882,9 +921,7 @@ export function StudentSubmissionsSection({ projectId }: Props) {
                                         <Button
                                           size="sm"
                                           variant="secondary"
-                                          disabled={
-                                            downloadVersionId !== null
-                                          }
+                                          disabled={downloadVersionId !== null}
                                           leftIcon={
                                             <Download className="h-4 w-4" />
                                           }
@@ -916,8 +953,7 @@ export function StudentSubmissionsSection({ projectId }: Props) {
                                   </div>
                                 ) : requirement.status !== "OPEN" ? (
                                   <p className="mt-4 text-sm font-medium text-slate-500">
-                                    This requirement is not accepting
-                                    submissions.
+                                    This requirement is not accepting submissions.
                                   </p>
                                 ) : (
                                   <p className="mt-4 text-sm text-slate-500">

@@ -30,6 +30,17 @@ import { SubmissionUploadModal } from "./SubmissionUploadModal";
 
 type Props = { projectId: string };
 type FileDisposition = "inline" | "attachment";
+type StudentItem = {
+  requirement: SubmissionRequirement;
+  submission: ResearchSubmission | null;
+};
+
+type StudentGroup = {
+  key: string;
+  title: string;
+  description: string;
+  items: StudentItem[];
+};
 
 function requirementStatusTone(status: SubmissionRequirement["status"]) {
   return status === "OPEN"
@@ -50,19 +61,37 @@ function readableStatus(status: string) {
 }
 
 function formatDateTime(value: string) {
-  return new Date(value).toLocaleString();
+  return new Date(value).toLocaleString([], {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
 }
 
 function currentVersion(submission: ResearchSubmission | null | undefined) {
   if (!submission) return null;
   return (
     submission.versions.find((version) => version.isCurrent) ??
-    submission.versions.find(
-      (version) => version.id === submission.currentVersionId,
-    ) ??
+    submission.versions.find((version) => version.id === submission.currentVersionId) ??
     submission.versions[0] ??
     null
   );
+}
+
+function dueSortValue(requirement: SubmissionRequirement) {
+  if (!requirement.dueAt) return Number.MAX_SAFE_INTEGER;
+  const value = new Date(requirement.dueAt).getTime();
+  return Number.isFinite(value) ? value : Number.MAX_SAFE_INTEGER;
+}
+
+function sortItems(items: StudentItem[]) {
+  return [...items].sort((a, b) => {
+    const due = dueSortValue(a.requirement) - dueSortValue(b.requirement);
+    if (due !== 0) return due;
+    return a.requirement.title.localeCompare(b.requirement.title);
+  });
 }
 
 function SubmissionFileDetails({ version }: { version: SubmissionVersion }) {
@@ -121,18 +150,13 @@ export function StudentSubmissionsSection({ projectId }: Props) {
         ]);
         setRequirements(nextRequirements);
         setSubmissionsByRequirement(
-          Object.fromEntries(
-            submissions.map((item) => [item.requirementId, item]),
-          ),
+          Object.fromEntries(submissions.map((item) => [item.requirementId, item])),
         );
         setError(null);
         setActionError(null);
       } catch (caught) {
         if (isApiException(caught)) setError(caught.apiError);
-        else
-          setActionError(
-            "Unable to load the submission workspace. Please try again.",
-          );
+        else setActionError("Unable to load the submission workspace. Please try again.");
       } finally {
         if (showLoading) setLoading(false);
       }
@@ -151,9 +175,62 @@ export function StudentSubmissionsSection({ projectId }: Props) {
         (r) => r.status === "OPEN" && !submissionsByRequirement[r.id],
       ).length,
       pending: submissions.filter((s) => s.status === "PENDING_REVIEW").length,
-      revisions: submissions.filter((s) => s.status === "CHANGES_REQUESTED")
-        .length,
+      revisions: submissions.filter((s) => s.status === "CHANGES_REQUESTED").length,
     };
+  }, [requirements, submissionsByRequirement]);
+
+  const groups = useMemo<StudentGroup[]>(() => {
+    const items: StudentItem[] = requirements.map((requirement) => ({
+      requirement,
+      submission: submissionsByRequirement[requirement.id] ?? null,
+    }));
+
+    const actionNeeded = items.filter(
+      (item) =>
+        (item.submission?.status === "CHANGES_REQUESTED" && item.requirement.status === "OPEN") ||
+        (!item.submission && item.requirement.status === "OPEN"),
+    );
+    const inReview = items.filter((item) => item.submission?.status === "PENDING_REVIEW");
+    const completed = items.filter(
+      (item) => item.submission?.status === "APPROVED" || item.submission?.status === "REJECTED",
+    );
+    const unavailable = items.filter(
+      (item) =>
+        !actionNeeded.includes(item) &&
+        !inReview.includes(item) &&
+        !completed.includes(item),
+    );
+
+    return [
+      {
+        key: "action",
+        title: "Action needed",
+        description: "Revisions and unsubmitted open requirements appear first.",
+        items: sortItems(actionNeeded).sort((a, b) => {
+          const ar = a.submission?.status === "CHANGES_REQUESTED" ? 0 : 1;
+          const br = b.submission?.status === "CHANGES_REQUESTED" ? 0 : 1;
+          return ar - br;
+        }),
+      },
+      {
+        key: "review",
+        title: "In review",
+        description: "Submitted versions currently waiting for a Supervisor decision.",
+        items: sortItems(inReview),
+      },
+      {
+        key: "completed",
+        title: "Completed",
+        description: "Approved and rejected submissions are kept below active work.",
+        items: sortItems(completed),
+      },
+      {
+        key: "unavailable",
+        title: "Closed & archived",
+        description: "Requirements that are no longer accepting uploads.",
+        items: sortItems(unavailable),
+      },
+    ].filter((group) => group.items.length > 0);
   }, [requirements, submissionsByRequirement]);
 
   async function openVersion(
@@ -200,8 +277,7 @@ export function StudentSubmissionsSection({ projectId }: Props) {
                 id: submission.id,
                 status: submission.status,
                 versionCount: submission.versionCount,
-                currentVersionNumber:
-                  currentVersion(submission)?.versionNumber ?? null,
+                currentVersionNumber: currentVersion(submission)?.versionNumber ?? null,
                 lastSubmittedAt: submission.lastSubmittedAt,
               },
             }
@@ -229,61 +305,37 @@ export function StudentSubmissionsSection({ projectId }: Props) {
             label="Refresh submissions"
             onClick={() => void load()}
             disabled={loading}
-            icon={
-              <RefreshCw
-                className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
-              />
-            }
+            icon={<RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />}
           />
         }
       >
         {!loading && !error && requirements.length > 0 ? (
-          <div className="mb-5 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Ready to submit
-              </p>
-              <p className="mt-1 text-xl font-bold text-slate-900">
-                {summary.ready}
-              </p>
+          <div className="mb-6 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-sky-700">Ready to submit</p>
+              <p className="mt-1 text-2xl font-bold text-sky-900">{summary.ready}</p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Pending review
-              </p>
-              <p className="mt-1 text-xl font-bold text-slate-900">
-                {summary.pending}
-              </p>
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">Pending review</p>
+              <p className="mt-1 text-2xl font-bold text-amber-900">{summary.pending}</p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Changes requested
-              </p>
-              <p className="mt-1 text-xl font-bold text-slate-900">
-                {summary.revisions}
-              </p>
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-rose-700">Changes requested</p>
+              <p className="mt-1 text-2xl font-bold text-rose-900">{summary.revisions}</p>
             </div>
           </div>
         ) : null}
 
-        {error ? (
-          <ErrorState error={error} onRetry={() => void load()} />
-        ) : null}
+        {error ? <ErrorState error={error} onRetry={() => void load()} /> : null}
         {actionError ? (
-          <div
-            role="alert"
-            className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
-          >
+          <div role="alert" className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
             {actionError}
           </div>
         ) : null}
         {!error && loading ? (
           <div className="space-y-3">
             {[0, 1, 2].map((item) => (
-              <div
-                key={item}
-                className="h-44 animate-pulse rounded-2xl bg-slate-100"
-              />
+              <div key={item} className="h-44 animate-pulse rounded-2xl bg-slate-100" />
             ))}
           </div>
         ) : null}
@@ -292,181 +344,140 @@ export function StudentSubmissionsSection({ projectId }: Props) {
         ) : null}
 
         {!error && !loading && requirements.length > 0 ? (
-          <div className="space-y-4">
-            {requirements.map((requirement) => {
-              const submission =
-                submissionsByRequirement[requirement.id] ?? null;
-              const version = currentVersion(submission);
-              const canInitialSubmit =
-                requirement.status === "OPEN" && !submission;
-              const canResubmit =
-                requirement.status === "OPEN" &&
-                submission?.status === "CHANGES_REQUESTED";
-              const isPastDue = Boolean(
-                requirement.dueAt &&
-                new Date(requirement.dueAt).getTime() < Date.now(),
-              );
-              const latestFeedback = version?.review?.feedback ?? null;
+          <div className="space-y-7">
+            {groups.map((group) => (
+              <section key={group.key}>
+                <div className="mb-3">
+                  <h3 className="text-sm font-bold text-slate-900">{group.title}</h3>
+                  <p className="mt-1 text-xs text-slate-500">{group.description}</p>
+                </div>
+                <div className="space-y-3">
+                  {group.items.map(({ requirement, submission }) => {
+                    const version = currentVersion(submission);
+                    const canInitialSubmit = requirement.status === "OPEN" && !submission;
+                    const canResubmit =
+                      requirement.status === "OPEN" && submission?.status === "CHANGES_REQUESTED";
+                    const isPastDue = Boolean(
+                      requirement.dueAt && new Date(requirement.dueAt).getTime() < Date.now(),
+                    );
+                    const latestFeedback = version?.review?.feedback ?? null;
+                    const needsAction = canInitialSubmit || canResubmit;
 
-              return (
-                <article
-                  key={requirement.id}
-                  className="rounded-2xl border border-slate-200 bg-white p-5"
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-bold text-slate-900">
-                          {requirement.title}
-                        </h3>
-                        <StatusBadge
-                          tone={requirementStatusTone(requirement.status)}
-                        >
-                          {requirement.status}
-                        </StatusBadge>
-                        {submission ? (
-                          <StatusBadge
-                            tone={submissionStatusTone(submission.status)}
-                          >
-                            {readableStatus(submission.status)}
-                          </StatusBadge>
-                        ) : null}
-                      </div>
-                      {requirement.description ? (
-                        <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-                          {requirement.description}
-                        </p>
-                      ) : null}
-                    </div>
-
-                    {canInitialSubmit || canResubmit ? (
-                      <Button
-                        size="sm"
-                        variant="primary"
-                        leftIcon={<Upload className="h-4 w-4" />}
-                        onClick={() => startUpload(requirement, submission)}
+                    return (
+                      <article
+                        key={requirement.id}
+                        className={`rounded-2xl border p-5 ${needsAction ? "border-sky-200 bg-sky-50/30" : submission?.status === "PENDING_REVIEW" ? "border-amber-200 bg-amber-50/30" : "border-slate-200 bg-white"}`}
                       >
-                        {canResubmit ? "Upload revised version" : "Submit file"}
-                      </Button>
-                    ) : null}
-                  </div>
+                        <div className="flex flex-wrap items-start justify-between gap-4">
+                          <div className="min-w-0 flex-1">
+                            <h4 className="font-bold text-slate-900">{requirement.title}</h4>
+                            {requirement.description ? (
+                              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{requirement.description}</p>
+                            ) : null}
+                            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-slate-500">
+                              <span className="flex items-center gap-1.5">
+                                <span className="font-semibold">Requirement</span>
+                                <StatusBadge tone={requirementStatusTone(requirement.status)}>{requirement.status}</StatusBadge>
+                              </span>
+                              {submission ? (
+                                <span className="flex items-center gap-1.5">
+                                  <span className="font-semibold">Submission</span>
+                                  <StatusBadge tone={submissionStatusTone(submission.status)}>{readableStatus(submission.status)}</StatusBadge>
+                                </span>
+                              ) : null}
+                            </div>
+                          </div>
 
-                  <div className="mt-4 grid gap-2 rounded-2xl bg-slate-50 p-4 text-xs text-slate-600 sm:grid-cols-3">
-                    <span>
-                      <strong className="text-slate-700">Accepted:</strong>{" "}
-                      {requirement.allowedFileTypes
-                        .map((type) => `.${type}`)
-                        .join(", ")}
-                    </span>
-                    <span>
-                      <strong className="text-slate-700">Maximum:</strong>{" "}
-                      {formatBytes(requirement.maxFileSizeBytes)}
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <CalendarClock className="h-3.5 w-3.5" />
-                      <strong className="text-slate-700">Due:</strong>{" "}
-                      {requirement.dueAt
-                        ? formatDateTime(requirement.dueAt)
-                        : "No due date"}
-                      {isPastDue && !submission ? (
-                        <span className="font-semibold text-amber-700">
-                          (late if submitted now)
-                        </span>
-                      ) : null}
-                    </span>
-                  </div>
-
-                  {version?.review ? (
-                    <div
-                      className={`mt-4 rounded-2xl border p-4 ${submission?.status === "REJECTED" ? "border-rose-200 bg-rose-50" : submission?.status === "APPROVED" ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}`}
-                    >
-                      <p className="text-xs font-bold uppercase tracking-wide text-slate-700">
-                        Supervisor decision ·{" "}
-                        {readableStatus(version.review.decision)}
-                      </p>
-                      {latestFeedback ? (
-                        <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-800">
-                          {latestFeedback}
-                        </p>
-                      ) : null}
-                      <p className="mt-2 text-xs text-slate-600">
-                        Reviewed Version {version.versionNumber} by{" "}
-                        {version.review.reviewedByName} on{" "}
-                        {formatDateTime(version.review.reviewedAt)}.
-                      </p>
-                      {submission?.status === "CHANGES_REQUESTED" ? (
-                        <p className="mt-2 text-xs font-semibold text-amber-800">
-                          Uploading a revision will create Version{" "}
-                          {submission.versionCount + 1}.
-                        </p>
-                      ) : null}
-                    </div>
-                  ) : null}
-
-                  {submission && version ? (
-                    <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                      <div className="flex flex-wrap items-start justify-between gap-4">
-                        <SubmissionFileDetails version={version} />
-                        <div className="flex shrink-0 flex-wrap gap-2">
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            disabled={fileAction !== null}
-                            leftIcon={<Eye className="h-4 w-4" />}
-                            onClick={() =>
-                              void openVersion(submission, version, "inline")
-                            }
-                          >
-                            {fileAction === `${version.id}:inline`
-                              ? "Opening…"
-                              : "Preview"}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            disabled={fileAction !== null}
-                            leftIcon={<Download className="h-4 w-4" />}
-                            onClick={() =>
-                              void openVersion(
-                                submission,
-                                version,
-                                "attachment",
-                              )
-                            }
-                          >
-                            {fileAction === `${version.id}:attachment`
-                              ? "Preparing…"
-                              : "Download"}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            leftIcon={<FileClock className="h-4 w-4" />}
-                            onClick={() => setDetailSubmission(submission)}
-                          >
-                            Version history
-                          </Button>
+                          {needsAction ? (
+                            <Button
+                              size="sm"
+                              variant="primary"
+                              leftIcon={<Upload className="h-4 w-4" />}
+                              onClick={() => startUpload(requirement, submission)}
+                            >
+                              {canResubmit ? "Upload revised version" : "Submit file"}
+                            </Button>
+                          ) : null}
                         </div>
-                      </div>
-                      <p className="mt-4 border-t border-slate-200 pt-3 text-xs leading-5 text-slate-500">
-                        This recorded version is immutable.{" "}
-                        {submission.status === "CHANGES_REQUESTED"
-                          ? "A revised version is allowed because the Supervisor formally requested changes."
-                          : "Additional uploads remain locked until the workflow explicitly allows a revision."}
-                      </p>
-                    </div>
-                  ) : requirement.status !== "OPEN" ? (
-                    <p className="mt-4 text-sm font-medium text-slate-500">
-                      This requirement is not accepting submissions.
-                    </p>
-                  ) : (
-                    <p className="mt-4 text-sm text-slate-500">
-                      No document has been submitted for this requirement yet.
-                    </p>
-                  )}
-                </article>
-              );
-            })}
+
+                        <div className="mt-4 grid gap-2 rounded-2xl bg-slate-50 p-4 text-xs text-slate-600 sm:grid-cols-3">
+                          <span><strong className="text-slate-700">Accepted:</strong> {requirement.allowedFileTypes.map((type) => `.${type}`).join(", ")}</span>
+                          <span><strong className="text-slate-700">Maximum:</strong> {formatBytes(requirement.maxFileSizeBytes)}</span>
+                          <span className="flex items-center gap-1.5">
+                            <CalendarClock className="h-3.5 w-3.5" />
+                            <strong className="text-slate-700">Due:</strong>{" "}
+                            {requirement.dueAt ? formatDateTime(requirement.dueAt) : "No deadline"}
+                            {isPastDue && !submission ? <span className="font-semibold text-amber-700">(late if submitted now)</span> : null}
+                          </span>
+                        </div>
+
+                        {version?.review ? (
+                          <div className={`mt-4 rounded-2xl border p-4 ${submission?.status === "REJECTED" ? "border-rose-200 bg-rose-50" : submission?.status === "APPROVED" ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}`}>
+                            <p className="text-xs font-bold uppercase tracking-wide text-slate-700">
+                              Supervisor decision · {readableStatus(version.review.decision)}
+                            </p>
+                            {latestFeedback ? (
+                              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-800">{latestFeedback}</p>
+                            ) : null}
+                            <p className="mt-2 text-xs text-slate-600">
+                              Reviewed Version {version.versionNumber} by {version.review.reviewedByName} on {formatDateTime(version.review.reviewedAt)}.
+                            </p>
+                            {submission?.status === "CHANGES_REQUESTED" ? (
+                              <p className="mt-2 text-xs font-semibold text-amber-800">
+                                Your next upload will be recorded as Version {submission.versionCount + 1}.
+                              </p>
+                            ) : null}
+                          </div>
+                        ) : null}
+
+                        {submission && version ? (
+                          <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                            <div className="flex flex-wrap items-start justify-between gap-4">
+                              <SubmissionFileDetails version={version} />
+                              <div className="flex shrink-0 flex-wrap gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="secondary"
+                                  disabled={fileAction !== null}
+                                  leftIcon={<Eye className="h-4 w-4" />}
+                                  onClick={() => void openVersion(submission, version, "inline")}
+                                >
+                                  {fileAction === `${version.id}:inline` ? "Opening…" : "Preview"}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="secondary"
+                                  disabled={fileAction !== null}
+                                  leftIcon={<Download className="h-4 w-4" />}
+                                  onClick={() => void openVersion(submission, version, "attachment")}
+                                >
+                                  {fileAction === `${version.id}:attachment` ? "Preparing…" : "Download"}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="secondary"
+                                  leftIcon={<FileClock className="h-4 w-4" />}
+                                  onClick={() => setDetailSubmission(submission)}
+                                >
+                                  Version history
+                                </Button>
+                              </div>
+                            </div>
+                            <p className="mt-4 border-t border-slate-200 pt-3 text-xs leading-5 text-slate-500">
+                              This recorded version is immutable. {submission.status === "CHANGES_REQUESTED" ? "A revised version is allowed because the Supervisor formally requested changes." : "Additional uploads remain locked until the workflow explicitly allows a revision."}
+                            </p>
+                          </div>
+                        ) : requirement.status !== "OPEN" ? (
+                          <p className="mt-4 text-sm font-medium text-slate-500">This requirement is not accepting submissions.</p>
+                        ) : (
+                          <p className="mt-4 text-sm text-slate-500">No document has been submitted for this requirement yet.</p>
+                        )}
+                      </article>
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
           </div>
         ) : null}
       </SectionCard>

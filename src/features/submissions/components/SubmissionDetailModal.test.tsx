@@ -7,9 +7,7 @@ import type { ResearchSubmission } from "../types";
 const { api } = vi.hoisted(() => ({
   api: {
     getSubmission: vi.fn(),
-    listComments: vi.fn(),
     reviewSubmission: vi.fn(),
-    addComment: vi.fn(),
     getDownloadUrl: vi.fn(),
   },
 }));
@@ -80,7 +78,6 @@ describe("SubmissionDetailModal", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     api.getSubmission.mockResolvedValue(pending);
-    api.listComments.mockResolvedValue([]);
     api.reviewSubmission.mockResolvedValue(changesRequested);
   });
 

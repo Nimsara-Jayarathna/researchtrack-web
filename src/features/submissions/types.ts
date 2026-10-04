@@ -113,19 +113,3 @@ export type CreateSubmissionReviewRequest = {
   decision: ReviewDecision;
   feedback: string | null;
 };
-
-export type SubmissionComment = {
-  id: string;
-  submissionId: string;
-  versionId: string | null;
-  authorId: string;
-  authorName: string;
-  authorRole: SubmissionParticipantRole;
-  comment: string;
-  createdAt: string;
-};
-
-export type CreateSubmissionCommentRequest = {
-  versionId: string | null;
-  comment: string;
-};

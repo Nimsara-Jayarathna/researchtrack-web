@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import { ErrorState } from "@/components/feedback/ErrorState";
 import { Button } from "@/components/ui/Button";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { RequestStateModal } from "@/components/ui/RequestStateModal";
 import { EmptyStateCard } from "@/components/ui/EmptyStateCard";
 import { IconActionButton } from "@/components/ui/IconActionButton";
 import { SectionCard } from "@/components/ui/SectionCard";
@@ -428,6 +430,10 @@ export function SupervisorSubmissionRequirementsSection({
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<SubmissionRequirement | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<{
+    requirement: SubmissionRequirement;
+    action: Action;
+  } | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [detailSubmission, setDetailSubmission] =
     useState<ResearchSubmission | null>(null);
@@ -601,24 +607,14 @@ export function SupervisorSubmissionRequirementsSection({
     );
   }
 
-  async function runAction(requirement: SubmissionRequirement, action: Action) {
-    if (
-      action === "delete" &&
-      !window.confirm(
-        `Delete “${requirement.title}”? Only unused requirements can be deleted.`,
-      )
-    ) {
-      return;
-    }
-    if (
-      action === "archive" &&
-      !window.confirm(
-        `Archive “${requirement.title}”? Archived requirements are read-only.`,
-      )
-    ) {
-      return;
-    }
+  function requestAction(requirement: SubmissionRequirement, action: Action) {
+    if (busyId) return;
+    setPendingAction({ requirement, action });
+  }
 
+  async function runAction(requirement: SubmissionRequirement, action: Action) {
+    if (busyId) return;
+    setPendingAction(null);
     setBusyId(requirement.id);
     setActionError(null);
     try {
@@ -1035,7 +1031,7 @@ export function SupervisorSubmissionRequirementsSection({
                                       setEditorOpen(true);
                                     }}
                                     onAction={(action) =>
-                                      void runAction(requirement, action)
+                                      requestAction(requirement, action)
                                     }
                                   />
                                 </div>
@@ -1052,6 +1048,50 @@ export function SupervisorSubmissionRequirementsSection({
           </div>
         ) : null}
       </SectionCard>
+
+      <ConfirmDialog
+        isOpen={Boolean(pendingAction)}
+        title={
+          pendingAction
+            ? `${pendingAction.action === "delete" ? "Delete" : pendingAction.action === "archive" ? "Archive" : pendingAction.action === "close" ? "Close" : "Reopen"} requirement?`
+            : "Confirm requirement action"
+        }
+        description={
+          pendingAction ? (
+            <span>
+              <strong>“{pendingAction.requirement.title}”</strong>{" "}
+              {pendingAction.action === "archive"
+                ? "will become read-only. Existing submission history will be preserved."
+                : pendingAction.action === "delete"
+                  ? "will be permanently deleted. Only unused requirements can be deleted."
+                  : pendingAction.action === "close"
+                    ? "will stop accepting new submissions until reopened."
+                    : "will start accepting submissions again, subject to its existing rules."}
+            </span>
+          ) : (
+            ""
+          )
+        }
+        confirmLabel={
+          pendingAction
+            ? `${pendingAction.action.charAt(0).toUpperCase()}${pendingAction.action.slice(1)} requirement`
+            : "Confirm"
+        }
+        confirmVariant={
+          pendingAction?.action === "delete" ? "danger" : "primary"
+        }
+        onCancel={() => setPendingAction(null)}
+        onConfirm={() => {
+          if (pendingAction)
+            void runAction(pendingAction.requirement, pendingAction.action);
+        }}
+      />
+      <RequestStateModal
+        isOpen={Boolean(busyId)}
+        status="loading"
+        title="Updating requirement"
+        message="Please wait while your changes are applied."
+      />
 
       <RequirementEditorModal
         isOpen={editorOpen}

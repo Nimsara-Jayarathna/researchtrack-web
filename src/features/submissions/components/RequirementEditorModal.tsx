@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { ModalShell } from "@/components/ui/ModalShell";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { RequestStateModal } from "@/components/ui/RequestStateModal";
 import { isApiException } from "@/services/apiClient";
 import { submissionApi } from "../api/submissionApi";
 import type {
@@ -97,6 +99,7 @@ export function RequirementEditorModal({
     useState<SubmissionResponsibilityMode>("PROJECT_LEADER");
   const [assignedStudentId, setAssignedStudentId] = useState("");
   const [saving, setSaving] = useState(false);
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -118,6 +121,7 @@ export function RequirementEditorModal({
     setResponsibilityMode(requirement?.responsibility.mode ?? "PROJECT_LEADER");
     setAssignedStudentId(requirement?.responsibility.assignedStudentId ?? "");
     setError(null);
+    setConfirmDiscard(false);
   }, [isOpen, requirement]);
 
   const today = localDateValue(new Date());
@@ -160,6 +164,39 @@ export function RequirementEditorModal({
     responsibilityValid &&
     deadlineValid;
 
+  // Compare normalized payload-relevant values, rather than touched-field state.
+  const originalTypes = [
+    ...(requirement?.allowedFileTypes ?? ["pdf", "docx"]),
+  ].sort();
+  const originalSize = requirement
+    ? String(
+        Math.max(1, Math.round(requirement.maxFileSizeBytes / 1024 / 1024)),
+      )
+    : "10";
+  const isDirty =
+    title.trim() !== (requirement?.title ?? "").trim() ||
+    description.trim() !== (requirement?.description ?? "").trim() ||
+    deadlineEnabled !== Boolean(requirement?.dueAt) ||
+    (deadlineEnabled &&
+      (dueDate !== originalDeadline.date ||
+        dueTime !== originalDeadline.time)) ||
+    [...allowedTypes].sort().join(",") !== originalTypes.join(",") ||
+    (Number.isFinite(maxMb) ? String(maxMb) : maxSizeMb) !== originalSize ||
+    responsibilityMode !==
+      (requirement?.responsibility.mode ?? "PROJECT_LEADER") ||
+    (responsibilityMode === "ASSIGNED_STUDENT" &&
+      assignedStudentId !==
+        (requirement?.responsibility.mode === "ASSIGNED_STUDENT"
+          ? (requirement.responsibility.assignedStudentId ?? "")
+          : ""));
+  const canSave = formValid && !saving && (!requirement || isDirty);
+
+  function requestClose() {
+    if (saving) return;
+    if (isDirty) setConfirmDiscard(true);
+    else onClose();
+  }
+
   if (!isOpen) return null;
 
   function toggleType(type: string) {
@@ -182,11 +219,12 @@ export function RequirementEditorModal({
 
   function goToMemberManagement() {
     if (saving) return;
-    onClose();
-    onManageMembers();
+    requestClose();
+    if (!isDirty) onManageMembers();
   }
 
   async function save() {
+    if (!canSave) return;
     const maxMb = Number(maxSizeMb);
     if (!title.trim()) {
       setError("Title is required.");
@@ -268,364 +306,393 @@ export function RequirementEditorModal({
   }
 
   return (
-    <ModalShell
-      isOpen={isOpen}
-      containerClassName="fixed inset-0 z-50 flex items-center justify-center p-4"
-      backdropClassName="absolute inset-0 bg-slate-950/45"
-      dialogClassName="relative z-10 w-full max-w-3xl"
-      onBackdropClick={saving ? undefined : onClose}
-      lockBodyScroll
-      ariaLabel={
-        requirement
-          ? "Edit submission requirement"
-          : "Create submission requirement"
-      }
-    >
-      <div className="max-h-[94vh] w-full overflow-y-auto rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h3 className="text-lg font-bold text-slate-900">
-              {requirement
-                ? "Edit submission requirement"
-                : "Create submission requirement"}
-            </h3>
-            <p className="mt-1 text-sm leading-6 text-slate-500">
-              Define the document rules and choose who is responsible for the
-              official submission.
-            </p>
-          </div>
-          <button
-            type="button"
-            aria-label="Close"
-            disabled={saving}
-            onClick={onClose}
-            className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 disabled:opacity-50"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        <div className="mt-5 grid gap-4">
-          <p className="text-xs text-slate-500">
-            Fields marked <span className="font-bold text-rose-600">*</span> are
-            required.
-          </p>
-          <label className="text-sm font-semibold text-slate-700">
-            Title{" "}
-            <span className="text-rose-600" aria-label="required">
-              *
-            </span>
-            <input
-              value={title}
-              maxLength={200}
-              onChange={(event) => setTitle(event.target.value)}
-              className="mt-2 h-11 w-full rounded-2xl border border-slate-200 px-4 font-normal outline-none focus:border-slate-400"
-            />
-          </label>
-
-          <label className="text-sm font-semibold text-slate-700">
-            Instructions{" "}
-            <span className="font-normal text-slate-500">(optional)</span>
-            <textarea
-              value={description}
-              maxLength={4000}
-              onChange={(event) => setDescription(event.target.value)}
-              className="mt-2 min-h-24 w-full rounded-2xl border border-slate-200 px-4 py-3 font-normal outline-none focus:border-slate-400"
-            />
-          </label>
-
-          <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-slate-800">
-                  Submission deadline
-                </p>
-                <p className="mt-1 text-xs text-slate-500">
-                  Set a clear due date and time, or leave the requirement open
-                  without a deadline.
-                </p>
-              </div>
-              <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-slate-600">
-                <input
-                  type="checkbox"
-                  checked={!deadlineEnabled}
-                  onChange={(event) => toggleDeadline(!event.target.checked)}
-                  className="h-4 w-4 rounded border-slate-300"
-                />
-                No deadline
-              </label>
+    <>
+      <ModalShell
+        isOpen={isOpen}
+        containerClassName="fixed inset-0 z-50 flex items-center justify-center p-4"
+        backdropClassName="absolute inset-0 bg-slate-950/45"
+        dialogClassName="relative z-10 w-full max-w-3xl"
+        onBackdropClick={saving ? undefined : requestClose}
+        lockBodyScroll
+        ariaLabel={
+          requirement
+            ? "Edit submission requirement"
+            : "Create submission requirement"
+        }
+      >
+        <div className="max-h-[94vh] w-full overflow-y-auto rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-bold text-slate-900">
+                {requirement
+                  ? "Edit submission requirement"
+                  : "Create submission requirement"}
+              </h3>
+              <p className="mt-1 text-sm leading-6 text-slate-500">
+                Define the document rules and choose who is responsible for the
+                official submission.
+              </p>
             </div>
-
-            {deadlineEnabled ? (
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Due date <span className="text-rose-600">*</span>
-                  <div className="relative mt-2">
-                    <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                    <input
-                      type="date"
-                      value={dueDate}
-                      min={today}
-                      onChange={(event) => {
-                        setDueDate(event.target.value);
-                        setError(null);
-                      }}
-                      className="h-11 w-full rounded-2xl border border-slate-200 bg-white pl-10 pr-3 text-sm font-normal text-slate-800 outline-none focus:border-slate-400"
-                    />
-                  </div>
-                </label>
-                <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Due time <span className="text-rose-600">*</span>
-                  <div className="relative mt-2">
-                    <Clock3 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                    <input
-                      type="time"
-                      value={dueTime}
-                      min={minimumTime}
-                      onChange={(event) => {
-                        setDueTime(event.target.value);
-                        setError(null);
-                      }}
-                      className="h-11 w-full rounded-2xl border border-slate-200 bg-white pl-10 pr-3 text-sm font-normal text-slate-800 outline-none focus:border-slate-400"
-                    />
-                  </div>
-                </label>
-              </div>
-            ) : null}
+            <button
+              type="button"
+              aria-label="Close"
+              disabled={saving}
+              onClick={requestClose}
+              className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 disabled:opacity-50"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-[1fr_180px]">
-            <fieldset>
-              <legend className="text-sm font-semibold text-slate-700">
-                Accepted file types <span className="text-rose-600">*</span>
-              </legend>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {FILE_TYPES.map((type) => {
-                  const selected = allowedTypes.includes(type);
-                  return (
-                    <label
-                      key={type}
-                      className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold transition ${selected ? "border-slate-400 bg-slate-100 text-slate-900" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selected}
-                        onChange={() => toggleType(type)}
-                        className="h-4 w-4 rounded border-slate-300"
-                      />
-                      .{type}
-                    </label>
-                  );
-                })}
-              </div>
-              {!typesValid && (
-                <p className="mt-2 text-xs text-rose-700" role="alert">
-                  Select at least one accepted file type.
-                </p>
-              )}
-            </fieldset>
-
+          <div className="mt-5 grid gap-4">
+            <p className="text-xs text-slate-500">
+              Fields marked <span className="font-bold text-rose-600">*</span>{" "}
+              are required.
+            </p>
             <label className="text-sm font-semibold text-slate-700">
-              Maximum size (MB) <span className="text-rose-600">*</span>
+              Title{" "}
+              <span className="text-rose-600" aria-label="required">
+                *
+              </span>
               <input
-                type="number"
-                min="1"
-                step="1"
-                value={maxSizeMb}
-                onChange={(event) => setMaxSizeMb(event.target.value)}
+                value={title}
+                maxLength={200}
+                onChange={(event) => setTitle(event.target.value)}
                 className="mt-2 h-11 w-full rounded-2xl border border-slate-200 px-4 font-normal outline-none focus:border-slate-400"
               />
             </label>
-          </div>
 
-          <fieldset className="rounded-2xl border border-slate-200 p-4">
-            <legend className="px-1 text-sm font-semibold text-slate-800">
-              Submission responsibility <span className="text-rose-600">*</span>
-            </legend>
-            <p className="mt-1 text-xs leading-5 text-slate-500">
-              Exactly one student owns the official upload. The Project Leader
-              is used by default, or you can delegate this requirement to one
-              specific project member.
-            </p>
+            <label className="text-sm font-semibold text-slate-700">
+              Instructions{" "}
+              <span className="font-normal text-slate-500">(optional)</span>
+              <textarea
+                value={description}
+                maxLength={4000}
+                onChange={(event) => setDescription(event.target.value)}
+                className="mt-2 min-h-24 w-full rounded-2xl border border-slate-200 px-4 py-3 font-normal outline-none focus:border-slate-400"
+              />
+            </label>
 
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
-              <label
-                className={`cursor-pointer rounded-2xl border p-4 transition ${responsibilityMode === "PROJECT_LEADER" ? "border-sky-300 bg-sky-50" : "border-slate-200 bg-white hover:bg-slate-50"}`}
-              >
-                <div className="flex items-start gap-3">
-                  <input
-                    type="radio"
-                    name="submission-responsibility"
-                    aria-label="Project Leader"
-                    checked={responsibilityMode === "PROJECT_LEADER"}
-                    onChange={() => {
-                      setResponsibilityMode("PROJECT_LEADER");
-                      setError(null);
-                    }}
-                    className="mt-1"
-                  />
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 text-sm font-bold text-slate-900">
-                      <Crown className="h-4 w-4 text-amber-600" /> Project
-                      Leader
-                    </div>
-                    {projectLeader ? (
-                      <>
-                        <p className="mt-2 truncate text-sm font-semibold text-slate-800">
-                          {displayName(projectLeader)}
-                        </p>
-                        <p className="truncate text-xs text-slate-500">
-                          {projectLeader.email}
-                        </p>
-                      </>
-                    ) : (
-                      <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3">
-                        <div className="flex gap-2 text-xs leading-5 text-amber-800">
-                          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-                          <span>
-                            No Project Leader has been assigned to this project.
-                            Assign a leader first, or choose a specific student.
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={(event) => {
-                            event.preventDefault();
-                            goToMemberManagement();
-                          }}
-                          className="mt-2 text-xs font-bold text-sky-700 hover:text-sky-900"
-                        >
-                          Go to member management →
-                        </button>
-                      </div>
-                    )}
-                  </div>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-slate-800">
+                    Submission deadline
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Set a clear due date and time, or leave the requirement open
+                    without a deadline.
+                  </p>
                 </div>
-              </label>
-
-              <label
-                className={`cursor-pointer rounded-2xl border p-4 transition ${responsibilityMode === "ASSIGNED_STUDENT" ? "border-sky-300 bg-sky-50" : "border-slate-200 bg-white hover:bg-slate-50"}`}
-              >
-                <div className="flex items-start gap-3">
+                <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-slate-600">
                   <input
-                    type="radio"
-                    name="submission-responsibility"
-                    aria-label="Specific student"
-                    checked={responsibilityMode === "ASSIGNED_STUDENT"}
-                    onChange={() => {
-                      setResponsibilityMode("ASSIGNED_STUDENT");
-                      setError(null);
-                    }}
-                    className="mt-1"
+                    type="checkbox"
+                    checked={!deadlineEnabled}
+                    onChange={(event) => toggleDeadline(!event.target.checked)}
+                    className="h-4 w-4 rounded border-slate-300"
                   />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 text-sm font-bold text-slate-900">
-                      <UserRound className="h-4 w-4 text-sky-700" /> Specific
-                      student
+                  No deadline
+                </label>
+              </div>
+
+              {deadlineEnabled ? (
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Due date <span className="text-rose-600">*</span>
+                    <div className="relative mt-2">
+                      <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type="date"
+                        value={dueDate}
+                        min={today}
+                        onChange={(event) => {
+                          setDueDate(event.target.value);
+                          setError(null);
+                        }}
+                        className="h-11 w-full rounded-2xl border border-slate-200 bg-white pl-10 pr-3 text-sm font-normal text-slate-800 outline-none focus:border-slate-400"
+                      />
                     </div>
-                    <p className="mt-1 text-xs leading-5 text-slate-500">
-                      Delegate the official upload to one active project member.
-                    </p>
-                  </div>
+                  </label>
+                  <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Due time <span className="text-rose-600">*</span>
+                    <div className="relative mt-2">
+                      <Clock3 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type="time"
+                        value={dueTime}
+                        min={minimumTime}
+                        onChange={(event) => {
+                          setDueTime(event.target.value);
+                          setError(null);
+                        }}
+                        className="h-11 w-full rounded-2xl border border-slate-200 bg-white pl-10 pr-3 text-sm font-normal text-slate-800 outline-none focus:border-slate-400"
+                      />
+                    </div>
+                  </label>
                 </div>
+              ) : null}
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-[1fr_180px]">
+              <fieldset>
+                <legend className="text-sm font-semibold text-slate-700">
+                  Accepted file types <span className="text-rose-600">*</span>
+                </legend>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {FILE_TYPES.map((type) => {
+                    const selected = allowedTypes.includes(type);
+                    return (
+                      <label
+                        key={type}
+                        className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold transition ${selected ? "border-slate-400 bg-slate-100 text-slate-900" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selected}
+                          onChange={() => toggleType(type)}
+                          className="h-4 w-4 rounded border-slate-300"
+                        />
+                        .{type}
+                      </label>
+                    );
+                  })}
+                </div>
+                {!typesValid && (
+                  <p className="mt-2 text-xs text-rose-700" role="alert">
+                    Select at least one accepted file type.
+                  </p>
+                )}
+              </fieldset>
+
+              <label className="text-sm font-semibold text-slate-700">
+                Maximum size (MB) <span className="text-rose-600">*</span>
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={maxSizeMb}
+                  onChange={(event) => setMaxSizeMb(event.target.value)}
+                  className="mt-2 h-11 w-full rounded-2xl border border-slate-200 px-4 font-normal outline-none focus:border-slate-400"
+                />
               </label>
             </div>
 
-            {responsibilityMode === "ASSIGNED_STUDENT" ? (
-              <div className="mt-4 rounded-2xl bg-slate-50 p-4">
-                <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Responsible student <span className="text-rose-600">*</span>
-                  <div className="relative mt-2">
-                    <UsersRound className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                    <select
-                      value={assignedStudentId}
-                      onChange={(event) => {
-                        setAssignedStudentId(event.target.value);
+            <fieldset className="rounded-2xl border border-slate-200 p-4">
+              <legend className="px-1 text-sm font-semibold text-slate-800">
+                Submission responsibility{" "}
+                <span className="text-rose-600">*</span>
+              </legend>
+              <p className="mt-1 text-xs leading-5 text-slate-500">
+                Exactly one student owns the official upload. The Project Leader
+                is used by default, or you can delegate this requirement to one
+                specific project member.
+              </p>
+
+              <div className="mt-4 grid gap-3 md:grid-cols-2">
+                <label
+                  className={`cursor-pointer rounded-2xl border p-4 transition ${responsibilityMode === "PROJECT_LEADER" ? "border-sky-300 bg-sky-50" : "border-slate-200 bg-white hover:bg-slate-50"}`}
+                >
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="radio"
+                      name="submission-responsibility"
+                      aria-label="Project Leader"
+                      checked={responsibilityMode === "PROJECT_LEADER"}
+                      onChange={() => {
+                        setResponsibilityMode("PROJECT_LEADER");
                         setError(null);
                       }}
-                      className="h-11 w-full rounded-2xl border border-slate-200 bg-white pl-10 pr-4 text-sm font-normal text-slate-800 outline-none focus:border-slate-400"
-                    >
-                      <option value="">Select a project student</option>
-                      {previousAssigneeMissing && assignedStudentId ? (
-                        <option value={assignedStudentId} disabled>
-                          {requirement?.responsibility.assignedStudentName ??
-                            "Previous assignee"}{" "}
-                          (no longer active)
-                        </option>
-                      ) : null}
-                      {studentMembers.map((member) => (
-                        <option key={member.id} value={member.id}>
-                          {displayName(member)}
-                        </option>
-                      ))}
-                    </select>
+                      className="mt-1"
+                    />
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 text-sm font-bold text-slate-900">
+                        <Crown className="h-4 w-4 text-amber-600" /> Project
+                        Leader
+                      </div>
+                      {projectLeader ? (
+                        <>
+                          <p className="mt-2 truncate text-sm font-semibold text-slate-800">
+                            {displayName(projectLeader)}
+                          </p>
+                          <p className="truncate text-xs text-slate-500">
+                            {projectLeader.email}
+                          </p>
+                        </>
+                      ) : (
+                        <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3">
+                          <div className="flex gap-2 text-xs leading-5 text-amber-800">
+                            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                            <span>
+                              No Project Leader has been assigned to this
+                              project. Assign a leader first, or choose a
+                              specific student.
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.preventDefault();
+                              goToMemberManagement();
+                            }}
+                            className="mt-2 text-xs font-bold text-sky-700 hover:text-sky-900"
+                          >
+                            Go to member management →
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </label>
 
-                {previousAssigneeMissing ? (
-                  <div className="mt-3 flex gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-800">
-                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-                    <span>
-                      The previous submitter is no longer an active project
-                      member. Choose another student before saving.
-                    </span>
+                <label
+                  className={`cursor-pointer rounded-2xl border p-4 transition ${responsibilityMode === "ASSIGNED_STUDENT" ? "border-sky-300 bg-sky-50" : "border-slate-200 bg-white hover:bg-slate-50"}`}
+                >
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="radio"
+                      name="submission-responsibility"
+                      aria-label="Specific student"
+                      checked={responsibilityMode === "ASSIGNED_STUDENT"}
+                      onChange={() => {
+                        setResponsibilityMode("ASSIGNED_STUDENT");
+                        setError(null);
+                      }}
+                      className="mt-1"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 text-sm font-bold text-slate-900">
+                        <UserRound className="h-4 w-4 text-sky-700" /> Specific
+                        student
+                      </div>
+                      <p className="mt-1 text-xs leading-5 text-slate-500">
+                        Delegate the official upload to one active project
+                        member.
+                      </p>
+                    </div>
                   </div>
-                ) : null}
+                </label>
+              </div>
 
-                {studentMembers.length === 0 ? (
-                  <button
-                    type="button"
-                    onClick={goToMemberManagement}
-                    className="mt-3 text-xs font-bold text-sky-700 hover:text-sky-900"
-                  >
-                    Add students in member management →
-                  </button>
-                ) : null}
+              {responsibilityMode === "ASSIGNED_STUDENT" ? (
+                <div className="mt-4 rounded-2xl bg-slate-50 p-4">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Responsible student <span className="text-rose-600">*</span>
+                    <div className="relative mt-2">
+                      <UsersRound className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                      <select
+                        value={assignedStudentId}
+                        onChange={(event) => {
+                          setAssignedStudentId(event.target.value);
+                          setError(null);
+                        }}
+                        className="h-11 w-full rounded-2xl border border-slate-200 bg-white pl-10 pr-4 text-sm font-normal text-slate-800 outline-none focus:border-slate-400"
+                      >
+                        <option value="">Select a project student</option>
+                        {previousAssigneeMissing && assignedStudentId ? (
+                          <option value={assignedStudentId} disabled>
+                            {requirement?.responsibility.assignedStudentName ??
+                              "Previous assignee"}{" "}
+                            (no longer active)
+                          </option>
+                        ) : null}
+                        {studentMembers.map((member) => (
+                          <option key={member.id} value={member.id}>
+                            {displayName(member)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </label>
+
+                  {previousAssigneeMissing ? (
+                    <div className="mt-3 flex gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-800">
+                      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                      <span>
+                        The previous submitter is no longer an active project
+                        member. Choose another student before saving.
+                      </span>
+                    </div>
+                  ) : null}
+
+                  {studentMembers.length === 0 ? (
+                    <button
+                      type="button"
+                      onClick={goToMemberManagement}
+                      className="mt-3 text-xs font-bold text-sky-700 hover:text-sky-900"
+                    >
+                      Add students in member management →
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
+            </fieldset>
+
+            {!sizeValid && (
+              <p className="text-xs text-rose-700" role="alert">
+                Maximum file size must be greater than zero.
+              </p>
+            )}
+            {deadlineEnabled && !deadlineValid && (
+              <p className="text-xs text-rose-700" role="alert">
+                Choose a valid future deadline.
+              </p>
+            )}
+            {requirement?.submissionSummary ? (
+              <div className="rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 text-xs leading-5 text-sky-800">
+                File rules and submission responsibility changes apply to future
+                uploads. Existing version history remains unchanged.
               </div>
             ) : null}
-          </fieldset>
+          </div>
 
-          {!sizeValid && (
-            <p className="text-xs text-rose-700" role="alert">
-              Maximum file size must be greater than zero.
-            </p>
-          )}
-          {deadlineEnabled && !deadlineValid && (
-            <p className="text-xs text-rose-700" role="alert">
-              Choose a valid future deadline.
-            </p>
-          )}
-          {requirement?.submissionSummary ? (
-            <div className="rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 text-xs leading-5 text-sky-800">
-              File rules and submission responsibility changes apply to future
-              uploads. Existing version history remains unchanged.
+          {error ? (
+            <div className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+              {error}
             </div>
           ) : null}
-        </div>
 
-        {error ? (
-          <div className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
-            {error}
+          <div className="mt-6 flex justify-end gap-2">
+            <Button
+              variant="secondary"
+              disabled={saving}
+              onClick={requestClose}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              disabled={!canSave}
+              onClick={() => void save()}
+            >
+              {saving
+                ? "Saving…"
+                : requirement
+                  ? "Save changes"
+                  : "Create requirement"}
+            </Button>
           </div>
-        ) : null}
-
-        <div className="mt-6 flex justify-end gap-2">
-          <Button variant="secondary" disabled={saving} onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            variant="primary"
-            disabled={saving || !formValid}
-            onClick={() => void save()}
-          >
-            {saving
-              ? "Saving…"
-              : requirement
-                ? "Save changes"
-                : "Create requirement"}
-          </Button>
         </div>
-      </div>
-    </ModalShell>
+      </ModalShell>
+      <ConfirmDialog
+        isOpen={confirmDiscard && !saving}
+        title="Discard unsaved changes?"
+        description="Your changes have not been saved. Discarding will restore the original requirement values."
+        confirmLabel="Discard changes"
+        cancelLabel="Keep editing"
+        onCancel={() => setConfirmDiscard(false)}
+        onConfirm={() => {
+          setConfirmDiscard(false);
+          onClose();
+        }}
+      />
+      <RequestStateModal
+        isOpen={saving}
+        status="loading"
+        title={
+          requirement ? "Saving requirement changes" : "Creating requirement"
+        }
+        message="Please wait while your requirement is saved."
+      />
+    </>
   );
 }

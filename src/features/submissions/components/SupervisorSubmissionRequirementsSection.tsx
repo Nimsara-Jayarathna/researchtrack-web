@@ -257,17 +257,25 @@ function RequirementActionsMenu({
     const rect = trigger.getBoundingClientRect();
     const menuWidth = 208;
     const margin = 8;
+    // Prefer the complete menu, even when it needs to float above the trigger.
+    // Only constrain height if the viewport itself cannot accommodate the menu.
     const desiredHeight =
-      menuRef.current?.scrollHeight ?? (submission ? 170 : 216);
-    const below = window.innerHeight - rect.bottom - margin;
+      menuRef.current?.scrollHeight ?? (submission ? 148 : 196);
+    const viewportHeight = window.innerHeight;
+    const maxHeight = Math.max(0, viewportHeight - margin * 2);
+    const renderedHeight = Math.min(desiredHeight, maxHeight);
+    const below = viewportHeight - rect.bottom - margin;
     const above = rect.top - margin;
-    const upwards = below < Math.min(desiredHeight, 220) && above > below;
-    const available = Math.max(60, upwards ? above : below);
-    const maxHeight = Math.min(desiredHeight, available);
+    const upwards = below < desiredHeight && above > below;
+    const preferredTop = upwards
+      ? rect.top - desiredHeight - margin
+      : rect.bottom + margin;
+    const top = Math.max(
+      margin,
+      Math.min(preferredTop, viewportHeight - renderedHeight - margin),
+    );
     setPosition({
-      top: upwards
-        ? Math.max(margin, rect.top - maxHeight - margin)
-        : rect.bottom + margin,
+      top,
       left: Math.max(
         margin,
         Math.min(

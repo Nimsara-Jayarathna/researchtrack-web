@@ -146,13 +146,19 @@ export function RequirementEditorModal({
   const deadlineChanged =
     originalDeadline.date !== dueDate || originalDeadline.time !== dueTime;
   const deadline = deadlineEnabled ? combineDeadline(dueDate, dueTime) : null;
-  const deadlineValid = !deadlineEnabled || Boolean(
-    deadline && (!deadlineChanged || deadline.getTime() > Date.now()),
-  );
+  const deadlineValid =
+    !deadlineEnabled ||
+    Boolean(deadline && (!deadlineChanged || deadline.getTime() > Date.now()));
   const titleValid = title.trim().length > 0;
   const typesValid = allowedTypes.length > 0;
-  const sizeValid = maxSizeMb.trim().length > 0 && Number.isFinite(maxMb) && maxMb > 0;
-  const formValid = titleValid && typesValid && sizeValid && responsibilityValid && deadlineValid;
+  const sizeValid =
+    maxSizeMb.trim().length > 0 && Number.isFinite(maxMb) && maxMb > 0;
+  const formValid =
+    titleValid &&
+    typesValid &&
+    sizeValid &&
+    responsibilityValid &&
+    deadlineValid;
 
   if (!isOpen) return null;
 
@@ -300,9 +306,15 @@ export function RequirementEditorModal({
         </div>
 
         <div className="mt-5 grid gap-4">
-          <p className="text-xs text-slate-500">Fields marked <span className="font-bold text-rose-600">*</span> are required.</p>
+          <p className="text-xs text-slate-500">
+            Fields marked <span className="font-bold text-rose-600">*</span> are
+            required.
+          </p>
           <label className="text-sm font-semibold text-slate-700">
-            Title <span className="text-rose-600" aria-label="required">*</span>
+            Title{" "}
+            <span className="text-rose-600" aria-label="required">
+              *
+            </span>
             <input
               value={title}
               maxLength={200}
@@ -312,7 +324,8 @@ export function RequirementEditorModal({
           </label>
 
           <label className="text-sm font-semibold text-slate-700">
-            Instructions <span className="font-normal text-slate-500">(optional)</span>
+            Instructions{" "}
+            <span className="font-normal text-slate-500">(optional)</span>
             <textarea
               value={description}
               maxLength={4000}
@@ -405,7 +418,11 @@ export function RequirementEditorModal({
                   );
                 })}
               </div>
-              {!typesValid && <p className="mt-2 text-xs text-rose-700" role="alert">Select at least one accepted file type.</p>}
+              {!typesValid && (
+                <p className="mt-2 text-xs text-rose-700" role="alert">
+                  Select at least one accepted file type.
+                </p>
+              )}
             </fieldset>
 
             <label className="text-sm font-semibold text-slate-700">
@@ -568,8 +585,16 @@ export function RequirementEditorModal({
             ) : null}
           </fieldset>
 
-          {!sizeValid && <p className="text-xs text-rose-700" role="alert">Maximum file size must be greater than zero.</p>}
-          {deadlineEnabled && !deadlineValid && <p className="text-xs text-rose-700" role="alert">Choose a valid future deadline.</p>}
+          {!sizeValid && (
+            <p className="text-xs text-rose-700" role="alert">
+              Maximum file size must be greater than zero.
+            </p>
+          )}
+          {deadlineEnabled && !deadlineValid && (
+            <p className="text-xs text-rose-700" role="alert">
+              Choose a valid future deadline.
+            </p>
+          )}
           {requirement?.submissionSummary ? (
             <div className="rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 text-xs leading-5 text-sky-800">
               File rules and submission responsibility changes apply to future

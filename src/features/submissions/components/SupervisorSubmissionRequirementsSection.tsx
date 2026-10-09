@@ -257,15 +257,24 @@ function RequirementActionsMenu({
     const rect = trigger.getBoundingClientRect();
     const menuWidth = 208;
     const margin = 8;
-    const desiredHeight = menuRef.current?.scrollHeight ?? (submission ? 170 : 216);
+    const desiredHeight =
+      menuRef.current?.scrollHeight ?? (submission ? 170 : 216);
     const below = window.innerHeight - rect.bottom - margin;
     const above = rect.top - margin;
     const upwards = below < Math.min(desiredHeight, 220) && above > below;
     const available = Math.max(60, upwards ? above : below);
     const maxHeight = Math.min(desiredHeight, available);
     setPosition({
-      top: upwards ? Math.max(margin, rect.top - maxHeight - margin) : rect.bottom + margin,
-      left: Math.max(margin, Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - margin)),
+      top: upwards
+        ? Math.max(margin, rect.top - maxHeight - margin)
+        : rect.bottom + margin,
+      left: Math.max(
+        margin,
+        Math.min(
+          rect.right - menuWidth,
+          window.innerWidth - menuWidth - margin,
+        ),
+      ),
       maxHeight,
     });
   }, [submission]);
@@ -275,7 +284,11 @@ function RequirementActionsMenu({
     updatePosition();
     const onPointer = (event: PointerEvent) => {
       const target = event.target as Node;
-      if (!triggerRef.current?.contains(target) && !menuRef.current?.contains(target)) setOpen(false);
+      if (
+        !triggerRef.current?.contains(target) &&
+        !menuRef.current?.contains(target)
+      )
+        setOpen(false);
     };
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -284,7 +297,11 @@ function RequirementActionsMenu({
       }
     };
     const onScroll = (event: Event) => {
-      if (event.target instanceof Node && menuRef.current?.contains(event.target)) return;
+      if (
+        event.target instanceof Node &&
+        menuRef.current?.contains(event.target)
+      )
+        return;
       updatePosition();
     };
     document.addEventListener("pointerdown", onPointer);
@@ -304,7 +321,8 @@ function RequirementActionsMenu({
     setOpen(false);
     action();
   };
-  const itemClass = "flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-500 disabled:opacity-50";
+  const itemClass =
+    "flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-500 disabled:opacity-50";
   return (
     <>
       <button
@@ -319,37 +337,72 @@ function RequirementActionsMenu({
       >
         <MoreHorizontal className="h-4 w-4" />
       </button>
-      {open && createPortal(
-        <div
-          ref={menuRef}
-          role="menu"
-          aria-label={`Actions for ${requirement.title}`}
-          className="fixed z-[100] w-52 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl"
-          style={{ top: position.top, left: position.left, maxHeight: position.maxHeight }}
-        >
-          <button type="button" role="menuitem" disabled={busy} onClick={() => choose(onEdit)} className={itemClass}>
-            <Edit3 className="h-4 w-4" /> Edit requirement
-          </button>
-          {requirement.status === "OPEN" ? (
-            <button type="button" role="menuitem" disabled={busy} onClick={() => choose(() => onAction("close"))} className={itemClass}>
-              <Lock className="h-4 w-4" /> Close requirement
+      {open &&
+        createPortal(
+          <div
+            ref={menuRef}
+            role="menu"
+            aria-label={`Actions for ${requirement.title}`}
+            className="fixed z-[100] w-52 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl"
+            style={{
+              top: position.top,
+              left: position.left,
+              maxHeight: position.maxHeight,
+            }}
+          >
+            <button
+              type="button"
+              role="menuitem"
+              disabled={busy}
+              onClick={() => choose(onEdit)}
+              className={itemClass}
+            >
+              <Edit3 className="h-4 w-4" /> Edit requirement
             </button>
-          ) : (
-            <button type="button" role="menuitem" disabled={busy} onClick={() => choose(() => onAction("reopen"))} className={itemClass}>
-              <RotateCcw className="h-4 w-4" /> Reopen requirement
+            {requirement.status === "OPEN" ? (
+              <button
+                type="button"
+                role="menuitem"
+                disabled={busy}
+                onClick={() => choose(() => onAction("close"))}
+                className={itemClass}
+              >
+                <Lock className="h-4 w-4" /> Close requirement
+              </button>
+            ) : (
+              <button
+                type="button"
+                role="menuitem"
+                disabled={busy}
+                onClick={() => choose(() => onAction("reopen"))}
+                className={itemClass}
+              >
+                <RotateCcw className="h-4 w-4" /> Reopen requirement
+              </button>
+            )}
+            <button
+              type="button"
+              role="menuitem"
+              disabled={busy}
+              onClick={() => choose(() => onAction("archive"))}
+              className={itemClass}
+            >
+              <Archive className="h-4 w-4" /> Archive requirement
             </button>
-          )}
-          <button type="button" role="menuitem" disabled={busy} onClick={() => choose(() => onAction("archive"))} className={itemClass}>
-            <Archive className="h-4 w-4" /> Archive requirement
-          </button>
-          {!submission && (
-            <button type="button" role="menuitem" disabled={busy} onClick={() => choose(() => onAction("delete"))} className={`${itemClass} text-rose-700 hover:bg-rose-50`}>
-              <Trash2 className="h-4 w-4" /> Delete unused requirement
-            </button>
-          )}
-        </div>,
-        document.body,
-      )}
+            {!submission && (
+              <button
+                type="button"
+                role="menuitem"
+                disabled={busy}
+                onClick={() => choose(() => onAction("delete"))}
+                className={`${itemClass} text-rose-700 hover:bg-rose-50`}
+              >
+                <Trash2 className="h-4 w-4" /> Delete unused requirement
+              </button>
+            )}
+          </div>,
+          document.body,
+        )}
     </>
   );
 }

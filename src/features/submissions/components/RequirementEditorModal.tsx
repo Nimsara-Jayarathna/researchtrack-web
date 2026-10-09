@@ -141,6 +141,19 @@ export function RequirementEditorModal({
       ? Boolean(projectLeader)
       : Boolean(activeAssignedStudent);
 
+  const maxMb = Number(maxSizeMb);
+  const originalDeadline = splitDueAt(requirement?.dueAt ?? null);
+  const deadlineChanged =
+    originalDeadline.date !== dueDate || originalDeadline.time !== dueTime;
+  const deadline = deadlineEnabled ? combineDeadline(dueDate, dueTime) : null;
+  const deadlineValid = !deadlineEnabled || Boolean(
+    deadline && (!deadlineChanged || deadline.getTime() > Date.now()),
+  );
+  const titleValid = title.trim().length > 0;
+  const typesValid = allowedTypes.length > 0;
+  const sizeValid = maxSizeMb.trim().length > 0 && Number.isFinite(maxMb) && maxMb > 0;
+  const formValid = titleValid && typesValid && sizeValid && responsibilityValid && deadlineValid;
+
   if (!isOpen) return null;
 
   function toggleType(type: string) {
@@ -287,8 +300,9 @@ export function RequirementEditorModal({
         </div>
 
         <div className="mt-5 grid gap-4">
+          <p className="text-xs text-slate-500">Fields marked <span className="font-bold text-rose-600">*</span> are required.</p>
           <label className="text-sm font-semibold text-slate-700">
-            Title
+            Title <span className="text-rose-600" aria-label="required">*</span>
             <input
               value={title}
               maxLength={200}
@@ -298,7 +312,7 @@ export function RequirementEditorModal({
           </label>
 
           <label className="text-sm font-semibold text-slate-700">
-            Instructions
+            Instructions <span className="font-normal text-slate-500">(optional)</span>
             <textarea
               value={description}
               maxLength={4000}
@@ -332,7 +346,7 @@ export function RequirementEditorModal({
             {deadlineEnabled ? (
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Due date
+                  Due date <span className="text-rose-600">*</span>
                   <div className="relative mt-2">
                     <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                     <input
@@ -348,7 +362,7 @@ export function RequirementEditorModal({
                   </div>
                 </label>
                 <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Due time
+                  Due time <span className="text-rose-600">*</span>
                   <div className="relative mt-2">
                     <Clock3 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                     <input
@@ -370,7 +384,7 @@ export function RequirementEditorModal({
           <div className="grid gap-4 sm:grid-cols-[1fr_180px]">
             <fieldset>
               <legend className="text-sm font-semibold text-slate-700">
-                Accepted file types
+                Accepted file types <span className="text-rose-600">*</span>
               </legend>
               <div className="mt-2 flex flex-wrap gap-2">
                 {FILE_TYPES.map((type) => {
@@ -391,10 +405,11 @@ export function RequirementEditorModal({
                   );
                 })}
               </div>
+              {!typesValid && <p className="mt-2 text-xs text-rose-700" role="alert">Select at least one accepted file type.</p>}
             </fieldset>
 
             <label className="text-sm font-semibold text-slate-700">
-              Maximum size (MB)
+              Maximum size (MB) <span className="text-rose-600">*</span>
               <input
                 type="number"
                 min="1"
@@ -408,7 +423,7 @@ export function RequirementEditorModal({
 
           <fieldset className="rounded-2xl border border-slate-200 p-4">
             <legend className="px-1 text-sm font-semibold text-slate-800">
-              Submission responsibility
+              Submission responsibility <span className="text-rose-600">*</span>
             </legend>
             <p className="mt-1 text-xs leading-5 text-slate-500">
               Exactly one student owns the official upload. The Project Leader
@@ -502,7 +517,7 @@ export function RequirementEditorModal({
             {responsibilityMode === "ASSIGNED_STUDENT" ? (
               <div className="mt-4 rounded-2xl bg-slate-50 p-4">
                 <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Responsible student
+                  Responsible student <span className="text-rose-600">*</span>
                   <div className="relative mt-2">
                     <UsersRound className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                     <select
@@ -553,6 +568,8 @@ export function RequirementEditorModal({
             ) : null}
           </fieldset>
 
+          {!sizeValid && <p className="text-xs text-rose-700" role="alert">Maximum file size must be greater than zero.</p>}
+          {deadlineEnabled && !deadlineValid && <p className="text-xs text-rose-700" role="alert">Choose a valid future deadline.</p>}
           {requirement?.submissionSummary ? (
             <div className="rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 text-xs leading-5 text-sky-800">
               File rules and submission responsibility changes apply to future
@@ -573,7 +590,7 @@ export function RequirementEditorModal({
           </Button>
           <Button
             variant="primary"
-            disabled={saving || !responsibilityValid}
+            disabled={saving || !formValid}
             onClick={() => void save()}
           >
             {saving

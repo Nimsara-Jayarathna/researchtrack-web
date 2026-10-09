@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   AlertTriangle,
   Archive,
@@ -245,83 +246,111 @@ function RequirementActionsMenu({
   onEdit: () => void;
   onAction: (action: Action) => void;
 }) {
+  // Hooks are unconditional even when archived cards cannot show actions.
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  const [position, setPosition] = useState({ top: 0, left: 0, maxHeight: 320 });
+  const updatePosition = useCallback(() => {
+    const trigger = triggerRef.current;
+    if (!trigger) return;
+    const rect = trigger.getBoundingClientRect();
+    const menuWidth = 208;
+    const margin = 8;
+    const desiredHeight = menuRef.current?.scrollHeight ?? (submission ? 170 : 216);
+    const below = window.innerHeight - rect.bottom - margin;
+    const above = rect.top - margin;
+    const upwards = below < Math.min(desiredHeight, 220) && above > below;
+    const available = Math.max(60, upwards ? above : below);
+    const maxHeight = Math.min(desiredHeight, available);
+    setPosition({
+      top: upwards ? Math.max(margin, rect.top - maxHeight - margin) : rect.bottom + margin,
+      left: Math.max(margin, Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - margin)),
+      maxHeight,
+    });
+  }, [submission]);
+
+  useEffect(() => {
+    if (!open) return;
+    updatePosition();
+    const onPointer = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (!triggerRef.current?.contains(target) && !menuRef.current?.contains(target)) setOpen(false);
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
+    const onScroll = (event: Event) => {
+      if (event.target instanceof Node && menuRef.current?.contains(event.target)) return;
+      updatePosition();
+    };
+    document.addEventListener("pointerdown", onPointer);
+    document.addEventListener("keydown", onKey);
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", onScroll, true);
+    return () => {
+      document.removeEventListener("pointerdown", onPointer);
+      document.removeEventListener("keydown", onKey);
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", onScroll, true);
+    };
+  }, [open, updatePosition]);
+
   if (requirement.status === "ARCHIVED") return null;
-
-  const closeDetails = (target: EventTarget & HTMLElement) => {
-    target.closest("details")?.removeAttribute("open");
+  const choose = (action: () => void) => {
+    setOpen(false);
+    action();
   };
-
+  const itemClass = "flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-500 disabled:opacity-50";
   return (
-    <details className="relative">
-      <summary
+    <>
+      <button
+        ref={triggerRef}
+        type="button"
         aria-label={`Manage ${requirement.title}`}
-        className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 [&::-webkit-details-marker]:hidden"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        disabled={busy}
+        onClick={() => setOpen((value) => !value)}
+        className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
       >
         <MoreHorizontal className="h-4 w-4" />
-      </summary>
-      <div className="absolute right-0 z-30 mt-2 w-52 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl">
-        <button
-          type="button"
-          disabled={busy}
-          onClick={(event) => {
-            closeDetails(event.currentTarget);
-            onEdit();
-          }}
-          className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+      </button>
+      {open && createPortal(
+        <div
+          ref={menuRef}
+          role="menu"
+          aria-label={`Actions for ${requirement.title}`}
+          className="fixed z-[100] w-52 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl"
+          style={{ top: position.top, left: position.left, maxHeight: position.maxHeight }}
         >
-          <Edit3 className="h-4 w-4" /> Edit requirement
-        </button>
-        {requirement.status === "OPEN" ? (
-          <button
-            type="button"
-            disabled={busy}
-            onClick={(event) => {
-              closeDetails(event.currentTarget);
-              onAction("close");
-            }}
-            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-          >
-            <Lock className="h-4 w-4" /> Close requirement
+          <button type="button" role="menuitem" disabled={busy} onClick={() => choose(onEdit)} className={itemClass}>
+            <Edit3 className="h-4 w-4" /> Edit requirement
           </button>
-        ) : (
-          <button
-            type="button"
-            disabled={busy}
-            onClick={(event) => {
-              closeDetails(event.currentTarget);
-              onAction("reopen");
-            }}
-            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-          >
-            <RotateCcw className="h-4 w-4" /> Reopen requirement
+          {requirement.status === "OPEN" ? (
+            <button type="button" role="menuitem" disabled={busy} onClick={() => choose(() => onAction("close"))} className={itemClass}>
+              <Lock className="h-4 w-4" /> Close requirement
+            </button>
+          ) : (
+            <button type="button" role="menuitem" disabled={busy} onClick={() => choose(() => onAction("reopen"))} className={itemClass}>
+              <RotateCcw className="h-4 w-4" /> Reopen requirement
+            </button>
+          )}
+          <button type="button" role="menuitem" disabled={busy} onClick={() => choose(() => onAction("archive"))} className={itemClass}>
+            <Archive className="h-4 w-4" /> Archive requirement
           </button>
-        )}
-        <button
-          type="button"
-          disabled={busy}
-          onClick={(event) => {
-            closeDetails(event.currentTarget);
-            onAction("archive");
-          }}
-          className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-        >
-          <Archive className="h-4 w-4" /> Archive requirement
-        </button>
-        {!submission ? (
-          <button
-            type="button"
-            disabled={busy}
-            onClick={(event) => {
-              closeDetails(event.currentTarget);
-              onAction("delete");
-            }}
-            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50"
-          >
-            <Trash2 className="h-4 w-4" /> Delete unused requirement
-          </button>
-        ) : null}
-      </div>
-    </details>
+          {!submission && (
+            <button type="button" role="menuitem" disabled={busy} onClick={() => choose(() => onAction("delete"))} className={`${itemClass} text-rose-700 hover:bg-rose-50`}>
+              <Trash2 className="h-4 w-4" /> Delete unused requirement
+            </button>
+          )}
+        </div>,
+        document.body,
+      )}
+    </>
   );
 }
 

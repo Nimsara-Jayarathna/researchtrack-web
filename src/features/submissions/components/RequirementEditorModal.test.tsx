@@ -75,8 +75,8 @@ describe("RequirementEditorModal submission responsibility", () => {
       "student-2",
     );
 
-    expect(
-      screen.getByRole("button", { name: "Create requirement" }),
-    ).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Create requirement" })).toBeDisabled();
+    await user.type(screen.getByRole("textbox", { name: /Title/i }), "Progress report");
+    expect(screen.getByRole("button", { name: "Create requirement" })).toBeEnabled();
   });
 });

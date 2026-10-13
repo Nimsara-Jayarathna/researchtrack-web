@@ -1,53 +1,30 @@
-import { FileText, GitCommitHorizontal, Webhook } from "lucide-react";
+import { ArrowUpRight, ClipboardCheck, GitPullRequest, ListChecks, MessagesSquare, Radar, UsersRound } from "lucide-react";
 import type { LandingFeatureCard } from "../types";
-import { FeatureCard } from "./FeatureCard";
 
-const FEATURE_CARDS: LandingFeatureCard[] = [
-  {
-    id: "github-tracking",
-    icon: GitCommitHorizontal,
-    title: "GitHub Tracking",
-    description: "Monitor commits, branches, and pull requests in real time.",
-  },
-  {
-    id: "jira-integration",
-    icon: Webhook,
-    title: "Jira Integration",
-    description: "Sync tasks and action items directly with your Jira board.",
-  },
-  {
-    id: "meeting-minutes",
-    icon: FileText,
-    title: "Meeting Minutes",
-    description: "Record, organize, and share meeting notes effortlessly.",
-  },
+export const FEATURE_CARDS: LandingFeatureCard[] = [
+  { id: "project-health", icon: Radar, title: "Spot what needs attention", description: "Review project health, upcoming milestones, and signals that may need supervisor follow-up." },
+  { id: "milestones", icon: ListChecks, title: "Keep milestones visible", description: "Make the project plan, responsibilities, and delivery checkpoints easier to follow." },
+  { id: "development", icon: GitPullRequest, title: "See development evidence", description: "Explore connected GitHub activity and Jira work from the context of each project." },
+  { id: "meetings", icon: MessagesSquare, title: "Keep decisions traceable", description: "Document meeting records and send student-submitted entries through supervisor review." },
+  { id: "submissions", icon: ClipboardCheck, title: "Close the feedback loop", description: "Set research submission requirements, review uploaded work, and follow revisions." },
+  { id: "teamwork", icon: UsersRound, title: "Give every role clarity", description: "Bring student collaboration and supervisor oversight into dedicated, connected workspaces." },
 ];
 
 export function FeaturesSection() {
   return (
-    <section className="relative overflow-hidden rounded-3xl border border-white/35 bg-white/60 p-6 pt-8 shadow-[0_20px_55px_rgba(15,23,42,0.12)] backdrop-blur-md sm:pt-10">
-      <div className="max-w-2xl">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
-          Built for active supervision
-        </p>
-        <h2 className="mt-2 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-          Keep progress, meetings, and delivery in one shared workflow.
-        </h2>
-        <p className="mt-3 text-sm leading-7 text-muted-foreground sm:text-base">
-          Bring project tracking, supervisor reviews, and student updates into
-          the same working space without jumping between separate tools.
-        </p>
-      </div>
-
-      <div className="mt-6 grid gap-5 sm:grid-cols-3">
-        {FEATURE_CARDS.map((card) => (
-          <FeatureCard
-            key={card.id}
-            icon={card.icon}
-            title={card.title}
-            description={card.description}
-          />
-        ))}
+    <section id="features" aria-labelledby="features-heading" className="scroll-mt-24 bg-[#f6f8fb] py-20 sm:py-24 lg:py-28">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl"><p className="landing-eyebrow">THE COMPLETE WORKFLOW</p><h2 id="features-heading" className="landing-section-heading">Everything behind better supervision, connected.</h2><p className="landing-section-copy">Research projects are more than their repositories. Connect the plan, the work, the conversations, and the decisions in one place.</p></div>
+        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {FEATURE_CARDS.map(({ id, icon: Icon, title, description }, index) => (
+            <article key={id} className="group rounded-[22px] border border-slate-200/80 bg-white p-6 transition duration-300 hover:-translate-y-1 hover:border-sky-200 hover:shadow-[0_18px_40px_-22px_rgba(19,65,112,.23)] sm:p-7">
+              <div className="mb-10 flex items-start justify-between"><span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 text-sky-700"><Icon size={23} strokeWidth={1.8} aria-hidden="true" /></span><span className="text-xs font-semibold tabular-nums text-slate-300">0{index + 1}</span></div>
+              <h3 className="text-lg font-bold tracking-tight text-slate-900">{title}</h3>
+              <p className="mt-3 text-sm leading-7 text-slate-600">{description}</p>
+              <ArrowUpRight size={18} className="mt-5 text-sky-600 opacity-60 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100" aria-hidden="true" />
+            </article>
+          ))}
+        </div>
       </div>
     </section>
   );

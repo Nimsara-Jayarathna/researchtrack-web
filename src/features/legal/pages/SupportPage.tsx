@@ -18,8 +18,14 @@ export function SupportPage() {
           project ID and the time of the failed attempt.
         </p>
         <p>
-          This local environment support page is intended for development and QA
-          usage.
+          For access or registration questions, check with your institution or
+          organization administrator. Available roles and email eligibility may
+          be restricted by your institution.
+        </p>
+        <p>
+          When reporting an issue, include the affected page, approximate time,
+          and a description of the problem. Never share passwords, access
+          tokens, or other secrets in support messages.
         </p>
       </section>
 

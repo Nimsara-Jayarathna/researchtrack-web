@@ -10,6 +10,10 @@ import type { ApiError } from "@/types";
 import { isApiException } from "@/services/apiClient";
 import { getBlockingErrorTitle } from "@/utils/errorSeverity";
 import { FeaturesSection } from "../components/FeaturesSection";
+import { FinalCTASection } from "../components/FinalCTASection";
+import { ProductShowcaseSection } from "../components/ProductShowcaseSection";
+import { WorkflowShowcaseSection } from "../components/WorkflowShowcaseSection";
+import { TrustStrip } from "../components/TrustStrip";
 import { HeroSection } from "../components/HeroSection";
 import { HowItWorksSection } from "../components/HowItWorksSection";
 import { WhoItsForSection } from "../components/WhoItsForSection";
@@ -112,6 +116,7 @@ export function LandingPage({
 
   return (
     <PublicLayout
+      landing
       onLogin={() => setLoginOpen(true)}
       onRegister={() => {
         void handleRegister();
@@ -155,12 +160,14 @@ export function LandingPage({
           }}
         />
       )}
-      <div className="space-y-4 sm:space-y-5">
-        <HeroSection />
-        <FeaturesSection />
-        <HowItWorksSection />
-        <WhoItsForSection />
-      </div>
+      <HeroSection onRegister={() => { void handleRegister(); }} />
+      <ProductShowcaseSection />
+      <FeaturesSection />
+      <WorkflowShowcaseSection />
+      <HowItWorksSection />
+      <WhoItsForSection />
+      <TrustStrip />
+      <FinalCTASection onRegister={() => { void handleRegister(); }} onLogin={() => setLoginOpen(true)} />
     </PublicLayout>
   );
 }

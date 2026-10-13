@@ -1,78 +1,21 @@
-import { Activity, Calendar, FolderPlus, Link2 } from "lucide-react";
+import { FolderPlus, GitBranch, MessagesSquare, ScanEye } from "lucide-react";
 import type { LandingStepCard } from "../types";
 
-const STEPS: LandingStepCard[] = [
-  {
-    id: "create-project",
-    icon: FolderPlus,
-    stepNumber: 1,
-    title: "Create Your Project",
-    description:
-      "Students register their research project and connect GitHub repository.",
-  },
-  {
-    id: "track-development",
-    icon: Activity,
-    stepNumber: 2,
-    title: "Track Development",
-    description:
-      "Supervisors review commits, branches, and pull requests in real-time.",
-  },
-  {
-    id: "manage-meetings",
-    icon: Calendar,
-    stepNumber: 3,
-    title: "Manage Meetings",
-    description:
-      "Record meeting minutes and track action items with your supervisor.",
-  },
-  {
-    id: "sync-jira",
-    icon: Link2,
-    stepNumber: 4,
-    title: "Sync with Jira",
-    description:
-      "Ensure research milestones align with development tasks automatically.",
-  },
+export const STEPS: LandingStepCard[] = [
+  { id: "setup", stepNumber: 1, icon: FolderPlus, title: "Set up the project", description: "A supervisor creates the project, establishes the team, and defines milestones." },
+  { id: "connect", stepNumber: 2, icon: GitBranch, title: "Connect the work", description: "Link GitHub repositories or Jira where integrations are configured and permitted." },
+  { id: "collaborate", stepNumber: 3, icon: MessagesSquare, title: "Collaborate & deliver", description: "Students work toward milestones, record meetings, and submit required research material." },
+  { id: "review", stepNumber: 4, icon: ScanEye, title: "Review & guide", description: "Supervisors check health signals, review submissions, and provide feedback." },
 ];
 
 export function HowItWorksSection() {
   return (
-    <section className="relative overflow-hidden rounded-3xl border border-white/30 bg-slate-50/60 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.1)] backdrop-blur-md">
-      <div className="max-w-2xl">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
-          How it works
-        </p>
-        <h2 className="mt-2 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-          From setup to supervision in four simple steps.
-        </h2>
-      </div>
-
-      <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
-        {STEPS.map(({ id, icon: Icon, stepNumber, title, description }) => (
-          <div
-            key={id}
-            className="relative overflow-hidden rounded-3xl border border-transparent bg-white/55 p-5 shadow-[0_20px_48px_rgba(15,23,42,0.12)] backdrop-blur-md"
-          >
-            <div className="pointer-events-none absolute inset-0 rounded-[inherit] bg-[linear-gradient(145deg,rgba(255,255,255,0.78)_0%,rgba(255,255,255,0.46)_60%,rgba(14,165,233,0.12)_100%)]" />
-            <div className="relative z-10 flex items-start gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-50">
-                <Icon className="h-5 w-5 text-sky-700" />
-              </div>
-              <div>
-                <div className="text-xs font-medium text-sky-700">
-                  Step {stepNumber}
-                </div>
-                <h3 className="mt-1 text-base font-semibold text-foreground">
-                  {title}
-                </h3>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  {description}
-                </p>
-              </div>
-            </div>
-          </div>
-        ))}
+    <section id="steps" aria-labelledby="steps-heading" className="bg-[#f6f8fb] py-20 sm:py-24">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl"><p className="landing-eyebrow">GETTING TO WORK</p><h2 id="steps-heading" className="landing-section-heading">Simple to follow. Connected by design.</h2></div>
+        <ol className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {STEPS.map(({ id, icon: Icon, stepNumber, title, description }) => <li key={id} className="relative rounded-2xl border border-slate-200 bg-white p-6"><div className="flex items-center justify-between"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-950 text-white"><Icon size={19} aria-hidden="true"/></span><span className="text-sm font-semibold text-slate-400">0{stepNumber}</span></div><h3 className="mt-7 text-base font-bold text-slate-950">{title}</h3><p className="mt-3 text-sm leading-7 text-slate-600">{description}</p></li>)}
+        </ol>
       </div>
     </section>
   );

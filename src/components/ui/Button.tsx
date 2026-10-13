@@ -12,7 +12,9 @@ type ButtonVariant =
   | "nav"
   | "nav-primary"
   | "hero"
-  | "hero-outline";
+  | "hero-outline"
+  | "marketing"
+  | "marketing-outline";
 type ButtonSize = "sm" | "md" | "lg";
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -50,6 +52,8 @@ const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   hero: "bg-slate-900 text-white hover:bg-slate-800 active:bg-slate-950",
   "hero-outline":
     "border border-slate-200 bg-white text-foreground hover:bg-slate-50 active:bg-slate-100",
+  marketing: "bg-sky-400 text-slate-950 hover:bg-sky-300 active:bg-sky-500",
+  "marketing-outline": "border border-white/25 bg-transparent text-white hover:bg-white/10 active:bg-white/20",
 };
 
 const SIZE_CLASSES: Record<ButtonSize, string> = {

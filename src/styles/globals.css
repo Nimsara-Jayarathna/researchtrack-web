@@ -79,3 +79,15 @@ body {
     animation: hero-float 4.5s ease-in-out 0.35s infinite;
   }
 }
+
+/* Public marketing page utilities are intentionally scoped away from authenticated UI. */
+@layer components {
+  .landing-eyebrow { @apply mb-3 text-xs font-bold uppercase tracking-[0.2em] text-sky-700; }
+  .landing-section-heading { @apply mt-3 max-w-3xl text-3xl font-semibold leading-tight tracking-tight text-slate-950 sm:text-4xl lg:text-5xl; }
+  .landing-section-copy { @apply mt-5 max-w-2xl text-base leading-8 text-slate-600; }
+}
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .hero-float-in, .hero-gentle-float { animation: none !important; }
+}

@@ -19,6 +19,8 @@ Put other Markdown documents under `docs/`, grouped by subject. Use `submission/
 - [Auth Feature](features/auth.md)
 - [Brand Feature](features/brand.md)
 - [Landing Page Feature](features/landing.md)
+- [Landing v2 release notes](features/LANDING_V2_RELEASE_NOTES.md)
+- [Landing validation results](features/LANDING_VALIDATION_RESULTS.md)
 - [Owner-granted GitHub repository access](features/owner-granted-github-access.md)
 - [Registration .NET API Alignment](features/registration-dotnet-api-alignment.md)
 - [Student Feature](features/student.md)

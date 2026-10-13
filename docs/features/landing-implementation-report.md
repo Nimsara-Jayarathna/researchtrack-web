@@ -24,7 +24,7 @@
 
 The source ZIP contains no installed dependencies. `npm ci --no-audit --no-fund` was attempted but registry fetches failed with `EAI_AGAIN` DNS resolution errors, followed by an npm `Exit handler never called!` error. Therefore `npm run verify`, Vitest and the Vite production bundle **cannot be reported as passing** in this environment. Do not treat the implementation as production-verified until a dependency install and those checks succeed in CI or a connected development machine.
 
-Non-runtime source checks and their actual results are recorded in the companion `LANDING_VALIDATION_RESULTS.md` in the package root.
+Non-runtime source checks and their actual results are recorded in the companion [LANDING_VALIDATION_RESULTS.md](LANDING_VALIDATION_RESULTS.md) in this directory.
 
 ## Remaining launch-critical manual verification
 

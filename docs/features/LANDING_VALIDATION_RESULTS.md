@@ -29,4 +29,4 @@ npm test
 npm run build
 ```
 
-See `docs/features/landing-real-product-visuals.md` for the exact mapping between preview components and the actual authenticated application modules.
+See [landing-real-product-visuals.md](landing-real-product-visuals.md) for the exact mapping between preview components and the actual authenticated application modules.

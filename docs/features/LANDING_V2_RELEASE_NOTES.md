@@ -13,7 +13,7 @@
 - **Four application-shaped workflow snapshots**: real supervisor project creation wizard, GitHub/Jira project analytics, meeting history/approvals, and grouped submission review/revisions. Replaces repetitive abstract stage mockups.
 - **Reusable presentation primitives** in `AppPreviewUI.tsx`, so the marketing mockups stay coherent as authenticated designs evolve.
 - **Regression coverage**: a new Vitest file for the marketing visuals, expanded offline structural checks, and a dependency-light TSX component execution smoke test.
-- **Implementation reference**: `docs/features/landing-real-product-visuals.md` with screen-to-preview mapping and maintenance guidance.
+- **Implementation reference**: [landing-real-product-visuals.md](landing-real-product-visuals.md) with screen-to-preview mapping and maintenance guidance.
 
 ## Real behavior vs illustrative behavior
 
@@ -21,7 +21,7 @@ Public CTA actions still call the existing registration-config-gated flow; sign-
 
 ## Validation limitations
 
-Static-source/TSX structure and offline JSX execution pass. CSS syntax parses. The full TypeScript semantic check, lint, Vitest suite, Vite production bundle and actual rendered browser UI were not completed because project dependencies could not be retrieved in the execution environment. See `LANDING_VALIDATION_RESULTS.md` for exact results and release gating steps.
+Static-source/TSX structure and offline JSX execution pass. CSS syntax parses. The full TypeScript semantic check, lint, Vitest suite, Vite production bundle and actual rendered browser UI were not completed because project dependencies could not be retrieved in the execution environment. See [LANDING_VALIDATION_RESULTS.md](LANDING_VALIDATION_RESULTS.md) for exact results and release gating steps.
 
 ## Release gates (must pass before production)
 

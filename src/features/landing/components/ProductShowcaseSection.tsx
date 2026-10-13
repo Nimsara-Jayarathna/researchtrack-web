@@ -12,7 +12,7 @@ export function ProductShowcaseSection() {
             </ul>
             <a href="#workflow" className="mt-8 inline-flex items-center gap-2 text-sm font-bold text-sky-700 hover:text-sky-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-600">See how it comes together <ArrowUpRight size={16} aria-hidden="true"/></a>
           </div>
-          <div className="relative"><div className="absolute -inset-7 rounded-[48px] bg-gradient-to-br from-sky-100 via-slate-50 to-indigo-100 opacity-80" aria-hidden="true"/><div className="relative"><ProjectJourneyPreview /></div><div className="relative mt-4 inline-flex items-center gap-2 text-xs text-slate-500"><GitBranch size={14} aria-hidden="true"/> Project illustration uses fictional sample details, not live information.</div></div>
+          <div className="relative"><div className="absolute -inset-7 rounded-[48px] bg-gradient-to-br from-sky-100 via-slate-50 to-indigo-100 opacity-80" aria-hidden="true"/><div className="relative"><ProjectJourneyPreview /></div><div className="relative mt-4 inline-flex items-center gap-2 text-xs text-slate-500"><GitBranch size={14} aria-hidden="true"/> App-inspired project preview with fictional sample details, not live information.</div></div>
         </div>
       </div>
     </section>

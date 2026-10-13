@@ -91,3 +91,43 @@ html { scroll-behavior: smooth; }
   html { scroll-behavior: auto; }
   .hero-float-in, .hero-gentle-float { animation: none !important; }
 }
+
+/* Marketing-only brand animation. Keep the authenticated UI unaffected. */
+@keyframes rt-brand-appear { from { opacity: 0; transform: scale(.85) rotate(-9deg); } to { opacity: 1; transform: scale(1) rotate(0); } }
+@keyframes rt-brand-breathe { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+@keyframes rt-brand-ring { to { transform: rotate(360deg); } }
+@keyframes rt-brand-signal { from { opacity: 0; transform: translateY(16px) scale(.92); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes rt-brand-pulse { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
+.landing-brand-center { animation: rt-brand-appear 1.15s cubic-bezier(.18,.8,.2,1) both, rt-brand-breathe 7s ease-in-out 1.3s infinite; }
+.landing-brand-ring-outer { animation: rt-brand-ring 90s linear infinite; }
+.landing-brand-ring-inner { animation: rt-brand-ring 70s linear reverse infinite; }
+.landing-brand-signal { animation: rt-brand-signal .85s cubic-bezier(.18,.8,.2,1) both; }
+.landing-brand-aura, .landing-brand-spark { animation: rt-brand-pulse 5s ease-in-out infinite; }
+.landing-brand-stage:hover .landing-brand-logo { transform: scale(1.045); transition: transform 350ms ease; }
+.landing-brand-signal-left-top { left: 1%; top: 21%; }
+.landing-brand-signal-right-top { right: 0; top: 19%; }
+.landing-brand-signal-left-bottom { left: 0; bottom: 18%; }
+.landing-brand-signal-right-bottom { right: -1%; bottom: 15%; }
+@media (max-width: 440px) {
+ .landing-brand-signal { padding: 6px 8px; font-size: 9px; }
+ .landing-brand-signal-left-top { left: 0; top: 16%; }
+ .landing-brand-signal-right-top { right: 0; top: 16%; }
+ .landing-brand-signal-left-bottom { left: 0; bottom: 12%; }
+ .landing-brand-signal-right-bottom { right: 0; bottom: 12%; }
+}
+@media (prefers-reduced-motion: reduce) {
+ .landing-brand-center, .landing-brand-ring, .landing-brand-signal, .landing-brand-aura, .landing-brand-spark { animation: none !important; }
+ .landing-brand-stage:hover .landing-brand-logo { transform: none; transition: none; }
+}
+
+/* Progressive scroll storytelling: the brand softens as the real-workflow
+   preview becomes prominent. Unsupported browsers retain a fully visible UI. */
+@keyframes rt-brand-exit { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: .65; transform: translateY(20px) scale(.94); } }
+@keyframes rt-preview-enter { from { opacity: .78; transform: translateY(26px); } to { opacity: 1; transform: translateY(0); } }
+@supports (animation-timeline: view()) {
+  .landing-brand-stage { animation: rt-brand-exit linear both; animation-timeline: view(block); animation-range: exit 0% exit 100%; }
+  .landing-preview-reveal { animation: rt-preview-enter linear both; animation-timeline: view(block); animation-range: entry 0% entry 85%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-brand-stage, .landing-preview-reveal { animation: none !important; opacity: 1 !important; transform: none !important; }
+}

@@ -15,6 +15,10 @@ const paths = [
   "src/features/landing/components/LandingHeader.tsx",
   "src/features/landing/components/LandingHeader.test.tsx",
   "src/features/landing/components/HeroSection.tsx",
+  "src/features/landing/components/BrandConstellation.tsx",
+  "src/features/landing/components/AppPreviewUI.tsx",
+  "src/features/landing/components/WorkflowAppSnapshot.tsx",
+  "src/features/landing/components/LandingProductVisuals.test.tsx",
   "src/features/landing/components/ProductPreview.tsx",
   "src/features/landing/components/ProjectJourneyPreview.tsx",
   "src/features/landing/components/ProductShowcaseSection.tsx",
@@ -40,6 +44,10 @@ const page = read("src/features/landing/pages/LandingPage.tsx");
 const header = read("src/features/landing/components/LandingHeader.tsx");
 const landing = [
   "src/features/landing/components/HeroSection.tsx",
+  "src/features/landing/components/BrandConstellation.tsx",
+  "src/features/landing/components/AppPreviewUI.tsx",
+  "src/features/landing/components/WorkflowAppSnapshot.tsx",
+  "src/features/landing/components/LandingProductVisuals.test.tsx",
   "src/features/landing/components/ProductShowcaseSection.tsx",
   "src/features/landing/components/FeaturesSection.tsx",
   "src/features/landing/components/WorkflowShowcaseSection.tsx",
@@ -60,7 +68,18 @@ assert(page.includes("<RegistrationPanel"), "registration UI must remain");
 assert(page.includes("<LoginPanel"), "login UI must remain");
 assert(page.includes("onRetry"), "register configuration error must remain retryable");
 assert(header.includes("aria-expanded") && header.includes("aria-controls"), "mobile menu ARIA attributes required");
-assert(read("src/features/landing/components/ProductPreview.tsx").includes("Fictional sample data"), "preview must disclose illustrative data");
+assert(read("src/features/landing/components/AppPreviewUI.tsx").includes("Fictional sample data"), "all previews must disclose illustrative data");
+assert(read("src/features/landing/components/BrandConstellation.tsx").includes("LogoMark"), "hero animation must use the real ResearchTrack logo asset");
+assert(read("src/features/landing/components/BrandConstellation.tsx").includes("landing-brand-signal"), "brand graphic needs linked capability labels");
+assert(read("src/features/landing/components/HeroSection.tsx").includes("BrandConstellation"), "hero needs animated brand graphic");
+assert(read("src/features/landing/components/ProductPreview.tsx").includes("Project health"), "product preview must reflect actual dashboard project health section");
+assert(read("src/features/landing/components/ProductPreview.tsx").includes("Jira behind"), "product preview must represent actual 7-metric dashboard");
+for (const stage of ['plan', 'connect', 'collaborate', 'review']) {
+  assert(read('src/features/landing/components/WorkflowShowcaseSection.tsx').includes(`stage: "${stage}"`), `missing real workflow snapshot: ${stage}`);
+}
+assert(read('src/features/landing/components/WorkflowAppSnapshot.tsx').includes('PreviewWindow'), 'workflow views must use same app-inspired preview shell');
+assert(read('src/features/landing/components/ProjectJourneyPreview.tsx').includes('PreviewTabs'), 'project preview must reflect actual project tabs');
+assert(read('src/styles/globals.css').includes('.landing-brand-center'), 'marketing-only brand animation CSS missing');
 assert(read("src/features/landing/components/FinalCTASection.tsx").includes('to="/legal/privacy"'), "privacy route required");
 assert(read("src/features/landing/components/FinalCTASection.tsx").includes('to="/support"'), "support route required");
 assert(!landing.includes("Students register their research project"), "incorrect student setup claim still present");

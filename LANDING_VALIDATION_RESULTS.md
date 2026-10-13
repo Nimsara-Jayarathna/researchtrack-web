@@ -1,43 +1,32 @@
-# ResearchTrack landing redesign — validation results
+# ResearchTrack — real-product landing integration validation
 
-**Source:** `researchtrack-web-main(3).zip` (October 10, 2026 snapshot)  
-**Updated:** October 13, 2026
+**Baseline:** the first updated ResearchTrack landing archive (13 October 2026).  
+**Iteration:** animated real-brand hero, application-aligned static product and workflow previews.
 
-## Checks performed in this environment
-
-| Check | Outcome | Evidence / limitation |
+| Validation | Result | Detail |
 | --- | --- | --- |
-| TypeScript/TSX parse of 17 edited/new code and test files | PASS | Local TypeScript 5.8.3 AST diagnostics: no syntax errors |
-| Landing component composition, anchor targets, CTA wiring, auth gate, absence of unsupported claims | PASS | `NODE_PATH=$(npm root -g) npm run landing:check` → **46 checks passed** |
-| Marketing stylesheet PostCSS parse | PASS | Parsed `src/styles/globals.css` with locally available PostCSS |
-| `npm ci --no-audit --no-fund` | BLOCKED | Registry download DNS error `EAI_AGAIN`; npm then reported `Exit handler never called!` |
-| `npm run verify` | BLOCKED | `prettier: not found` (dependencies missing); lint and full semantic typecheck not completed |
-| `npm test` | BLOCKED | `vitest: not found` (dependencies missing) |
-| `npm run build` | BLOCKED | TypeScript cannot resolve `node` and `vite/client` type packages (dependencies missing) |
-| Real browser/device QA | NOT RUN | No working browser preview or backend available in this session |
-| Live backend integration / production smoke test | NOT RUN | This archive is a frontend snapshot, without target deployment credentials or services |
+| TSX parser & structural marketing checks | **PASS** | `NODE_PATH=$(npm root -g) npm run landing:check`: 62 checks, including new hero, real application structure labels, static previews, anchors, legal links and registration gate |
+| Offline TSX view-tree execution | **PASS** | `NODE_PATH=$(npm root -g) npm run landing:smoke`: 9 view trees transpiled and executed, 815 elements; validates static render composition without React runtime |
+| CSS parse | **PASS** | Both global CSS files parse via locally available PostCSS |
+| Real brand asset | **PASS** | Existing `/public/logo.png` used by `LogoMark`; unchanged |
+| npm package install | **BLOCKED** | Package registry unavailable; offline install reports `ENOTCACHED` for `zxcvbn` tarball |
+| Full TypeScript semantic check | **BLOCKED** | `tsc --noEmit`: dependencies missing (`node`, `vite/client` types) |
+| ESLint | **BLOCKED** | `eslint: not found` |
+| Vitest suite | **BLOCKED** | `vitest: not found`; new tests are authored but unexecuted |
+| Vite production build | **BLOCKED** | Build depends on TypeScript and package resolution; no successful production artifact created |
+| Actual browser/responsive/accessibility QA | **NOT RUN** | Static code validated; browser testing of the bundled app still required |
+| Live backend/registered-user journey | **NOT RUN** | No backend or environment access; auth/integrations intentionally not modified |
 
-**Do not interpret the passing static checks as a successful CI build.** Full execution remains required on a networked machine.
-
-## Commands for final verification
+Passing structural and synthetic rendering checks **does not certify production readiness**. Before deploying, execute the complete CI gates below in a networked environment, visually inspect viewport sizes and reduced-motion, and test the real login/registration and supervisor/student flows against staging.
 
 ```bash
 npm ci
-npm run format    # format the updated source before the strict format:check gate
+npm run format
 npm run landing:check
+npm run landing:smoke
 npm run verify
 npm test
 npm run build
 ```
 
-`npm run format` may reformat other existing project files, so inspect the diff before committing. The provided source has been syntax checked but cannot claim Prettier parity without the formatter.
-
-## Manual launch checklist
-
-- Open `/` on desktop (1280px+), tablet (~768px), and mobile (~360px); inspect clipping, navigation, CTA reachability, and visual hierarchy.
-- Confirm `Get started` loads real registration config, handles failure and retry, and respects allowed institutional email restrictions.
-- Confirm sign-in modal and `/login` / `/register` direct routes.
-- Check focus order, mobile menu behavior, accessible contrast, keyboard interactions, and reduced-motion mode.
-- Click all footer links, confirm appropriate organization/legal review of terms, privacy and support content.
-- Verify connected GitHub/Jira/meetings/submissions behavior against backend before adding stronger claims.
-- Replace illustrative data with properly sanitized, authentic product captures before broad public launch if product proof is a requirement.
+See `docs/features/landing-real-product-visuals.md` for the exact mapping between preview components and the actual authenticated application modules.

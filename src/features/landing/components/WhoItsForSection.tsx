@@ -1,66 +1,97 @@
-import { Check, GraduationCap, UserCircle } from "lucide-react";
+import { ArrowUpRight, Check, GraduationCap, UsersRound } from "lucide-react";
 import type { LandingAudienceCard } from "../types";
 
-const AUDIENCES: LandingAudienceCard[] = [
-  {
-    id: "students",
-    icon: UserCircle,
-    title: "For Students",
-    items: [
-      "Track project progress transparently",
-      "Share GitHub activity automatically",
-      "Document meeting outcomes",
-    ],
-  },
+export const AUDIENCES: LandingAudienceCard[] = [
   {
     id: "supervisors",
     icon: GraduationCap,
-    title: "For Supervisors",
+    title: "For supervisors",
     items: [
-      "Monitor student commits in real-time",
-      "Review project milestones efficiently",
-      "Maintain organized meeting records",
+      "Oversee multiple research projects",
+      "Prioritize milestone and project risks",
+      "Review meeting records and submissions",
+      "Provide clear feedback and decisions",
+    ],
+  },
+  {
+    id: "students",
+    icon: UsersRound,
+    title: "For student teams",
+    items: [
+      "Understand assigned project milestones",
+      "See connected project development activity",
+      "Document meeting outcomes",
+      "Submit work and follow supervisor feedback",
     ],
   },
 ];
 
 export function WhoItsForSection() {
   return (
-    <section className="relative overflow-hidden rounded-3xl border border-white/35 bg-white/60 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.1)] backdrop-blur-md">
-      <div className="max-w-2xl">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
-          Who it&apos;s for
-        </p>
-        <h2 className="mt-2 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-          Designed for modern research supervision.
-        </h2>
-      </div>
-
-      <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
-        {AUDIENCES.map(({ id, icon: Icon, title, items }) => (
-          <div
-            key={id}
-            className="relative overflow-hidden rounded-3xl border border-transparent bg-white/55 p-6 shadow-[0_22px_54px_rgba(15,23,42,0.12)] backdrop-blur-md"
-          >
-            <div className="pointer-events-none absolute inset-0 rounded-[inherit] bg-[linear-gradient(155deg,rgba(255,255,255,0.8)_0%,rgba(255,255,255,0.5)_58%,rgba(56,189,248,0.12)_100%)]" />
-            <div className="relative z-10 flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-sky-50">
-                <Icon className="h-6 w-6 text-sky-700" />
+    <section
+      id="audiences"
+      aria-labelledby="audiences-heading"
+      className="scroll-mt-24 bg-white py-20 sm:py-24 lg:py-28"
+    >
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl">
+          <p className="landing-eyebrow">BUILT AROUND PEOPLE</p>
+          <h2 id="audiences-heading" className="landing-section-heading">
+            One platform. Two perspectives that work together.
+          </h2>
+          <p className="landing-section-copy">
+            Students and supervisors need different views of the same research
+            journey. ResearchTrack is designed for both.
+          </p>
+        </div>
+        <div className="mt-12 grid gap-5 md:grid-cols-2">
+          {AUDIENCES.map(({ id, icon: Icon, title, items }) => (
+            <article
+              key={id}
+              className={`rounded-[28px] border p-7 sm:p-9 ${id === "supervisors" ? "border-[#193455] bg-[#0c2342] text-white" : "border-slate-200 bg-slate-50 text-slate-950"}`}
+            >
+              <div
+                className={`mb-8 flex h-14 w-14 items-center justify-center rounded-2xl p-3 ${id === "supervisors" ? "bg-sky-400/20 text-sky-200" : "bg-sky-100 text-sky-700"}`}
+              >
+                <Icon size={25} aria-hidden="true" />
               </div>
-              <h3 className="text-lg font-semibold text-foreground">{title}</h3>
-            </div>
-            <ul className="relative z-10 mt-4 space-y-3">
-              {items.map((item) => (
-                <li key={item} className="flex items-start gap-3">
-                  <Check className="mt-0.5 h-5 w-5 shrink-0 text-sky-600" />
-                  <span className="text-sm leading-6 text-muted-foreground">
-                    {item}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+              <h3 className="text-2xl font-bold tracking-tight">{title}</h3>
+              <ul className="mt-8 space-y-4">
+                {items.map((item) => (
+                  <li
+                    key={item}
+                    className="flex items-start gap-3 text-sm leading-6"
+                  >
+                    <Check
+                      size={18}
+                      className={
+                        id === "supervisors"
+                          ? "mt-0.5 shrink-0 text-sky-300"
+                          : "mt-0.5 shrink-0 text-sky-700"
+                      }
+                      aria-hidden="true"
+                    />
+                    <span
+                      className={
+                        id === "supervisors"
+                          ? "text-slate-200"
+                          : "text-slate-600"
+                      }
+                    >
+                      {item}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <a
+                href="#get-started"
+                className={`mt-9 inline-flex items-center gap-2 text-sm font-semibold focus-visible:outline focus-visible:outline-2 ${id === "supervisors" ? "text-sky-200 hover:text-white" : "text-sky-700 hover:text-sky-900"}`}
+              >
+                Get started <ArrowUpRight size={16} aria-hidden="true" />
+              </a>
+            </article>
+          ))}
+        </div>
       </div>
     </section>
   );

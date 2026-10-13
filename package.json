@@ -17,7 +17,9 @@
     "test": "vitest run --config vitest.config.ts",
     "test:watch": "vitest --config vitest.config.ts",
     "verify": "npm run format:check && npm run lint && npm run typecheck",
-    "ci": "npm run verify && npm test && npm run build"
+    "ci": "npm run verify && npm test && npm run build",
+    "landing:check": "node scripts/landing-source-check.cjs",
+    "landing:smoke": "node scripts/landing-preview-smoke.cjs"
   },
   "dependencies": {
     "lucide-react": "^0.575.0",

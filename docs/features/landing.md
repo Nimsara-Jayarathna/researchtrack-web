@@ -1,66 +1,86 @@
-# Landing Page Feature
+# ResearchTrack landing page — product-led public experience
 
-Public-facing home page served at `/`.
+Updated October 13, 2026. Public URL: `/` for unauthenticated users. Authenticated users retain their existing role-specific routing.
 
-## Route
+## Product positioning
 
-| Path | Component | Layout |
-|------|-----------|--------|
-| `/`  | `LandingPage` | `PublicLayout` |
+**One workspace. Complete visibility into every project.**
 
-## Component Tree
+ResearchTrack is a connected research-supervision and project-delivery workspace for student research teams and academic supervisors. The website leads with outcomes (visibility, accountability, feedback) rather than presenting GitHub, Jira and meeting minutes as its only features.
 
-```
+Product messaging is grounded in frontend code. Claims about real-time updates, autonomous AI insights, universal signup, automatic milestone-to-Jira writeback, institutional endorsements and performance metrics are intentionally absent.
+
+## Component tree
+
+```text
 LandingPage
-├── PublicLayout        — shared top bar shell in public mode
-├── HeroSection         — headline, subtitle, primary/secondary role-switch CTAs
-└── FeaturesSection     — 3-column feature cards grid
-    └── FeatureCard     — icon badge + title + description
+└── PublicLayout(landing)
+    ├── LandingHeader (sticky desktop navigation, mobile menu, auth actions)
+    └── main
+        ├── existing auth config/error modals (unchanged)
+        ├── HeroSection (h1, registration CTA, #platform anchor, ProductPreview)
+        ├── ProductShowcaseSection (#platform)
+        ├── FeaturesSection (#features)
+        ├── WorkflowShowcaseSection (#workflow)
+        ├── HowItWorksSection (#steps)
+        ├── WhoItsForSection (#audiences)
+        ├── TrustStrip
+        └── FinalCTASection (#get-started) + footer
 ```
 
-## Wired Handlers
+`ProductPreview` and `ProjectJourneyPreview` are static illustrations of code-backed supervisor dashboard concepts. **All project names and numeric values are fictional examples**, not live data or a screenshot. It makes no requests and is not connected to a real student, supervisor, or institution. Before a public launch, obtain redacted screenshots from a representative, working deployment and evaluate replacing the static illustration with authentic captures.
 
-The following handlers in `LandingPage` navigate to the auth pages:
+`WorkflowShowcaseSection` also uses explicitly labeled example representations rather than live data.
 
-- `onLogin` → `/login`
-- `onRegister` → `/register`
-- `onStudentPortal` → `/register`
-- `onSupervisorAccess` → `/login`
+## Auth and navigation contracts
 
-## Current UX Notes
+The following existing behaviors are preserved:
 
-- Uses the same `TopBar` component as authenticated pages, but in `public` mode.
-- Reuses the shared app container width and spacing system.
-- Hero CTAs use the shared button component.
-- The landing page is intentionally kept inside the same design system as student and supervisor pages.
+- `Get started` / `Register` calls `authApi.getRegisterConfig()` before opening the existing `RegistrationPanel`, honoring eligibility restrictions.
+- Configuration fetch failures block registration, show the existing `RequestStateModal`, and offer retry.
+- `Sign in` opens the existing `LoginPanel` modal; direct `/login` and `/register` routes still use route-driven modal state and close navigation.
+- Logged-in users still redirect through `RootRoute` to their role home.
+- Header section links scroll to real anchors (`#platform`, `#features`, `#workflow`, `#audiences`). Mobile menu uses actual button actions, aria-expanded and close-on-select.
+- Footer links resolve to existing `/support`, `/legal/privacy`, and `/legal/terms` routes.
 
-## Shared UI References
+The landing-specific header does **not** modify the shared authenticated `TopBar` or role-specific application screens. `PublicLayout` retains its original non-landing public header mode.
 
-### Button system (`src/components/ui/Button.tsx`)
+## Feature claims and source of truth
 
-| Variant | Usage |
-|---------|-------|
-| `primary` | Primary CTA |
-| `secondary` | Secondary CTA / supporting action |
-| `ghost` | Public top bar utility action |
+| Marketing theme | Implementation evidence |
+|---|---|
+| Portfolio health and attention | `src/features/supervisor/components/dashboard/DashboardStatsSection.tsx` and `DashboardAttentionSection.tsx` |
+| Milestone tracking | Supervisor project setup/details and student project details |
+| Connected GitHub activity | Supervisor project GitHub tab and owner-granted access flows |
+| Jira health and task progress | Supervisor Jira project detail components |
+| Meeting record review | `src/features/meetings/components` |
+| Submission requirements, reviews, revisions | `src/features/submissions/components` |
+| Role-aware access | `src/app/routes/routes.tsx` and auth state/guards |
 
-See `docs/ui/button-system.md` for the canonical shared button contract.
+Optional integrations are described as conditional, not required. Source code demonstrates frontend intent and does not prove production API availability or permissions.
 
-### CSS Design Tokens (`src/styles/globals.css`)
+## UX and accessibility
 
-| Token | Value | Purpose |
-|-------|-------|---------|
-| `--primary` | `217 91% 60%` | Brand blue |
-| `--primary-foreground` | `0 0% 100%` | Text on primary |
-| `--background` | `0 0% 100%` | Page background |
-| `--foreground` | `222 47% 11%` | Body text |
-| `--muted` | `210 40% 96%` | Subtle backgrounds |
-| `--muted-foreground` | `215 16% 47%` | Secondary text |
-| `--card` | `0 0% 100%` | Card background |
-| `--border` | `214 32% 91%` | Border color |
-| `--nav-height` | `64px` | Fixed nav bar height |
+- One semantic `h1`; section-specific `h2` and feature-level `h3` headings.
+- Reusable marketing heading classes in `src/styles/globals.css` are scoped to new public classes.
+- Anchor destinations account for sticky navigation via `scroll-mt-24`; native smooth scrolling is disabled when `prefers-reduced-motion` is set.
+- Mobile menu uses buttons, navigation landmarks, aria-expanded/aria-controls, and close-on-navigation behavior.
+- All actions have visible text; decorative icons use `aria-hidden`.
+- Page uses semantic lists and actual `<button>` elements for actions. Avoid fake interactive cards.
 
-- `.gradient-text` applies the brand headline gradient.
-- Hero animation utilities such as `.hero-float-in` and `.hero-gentle-float` are defined here.
+## Validation commands
 
-All tokens are consumed via Tailwind's extended color config (`tailwind.config.ts`).
+```bash
+npm ci
+npm run verify
+npm test
+npm run build
+```
+
+Key regression tests: `src/features/landing/pages/LandingPage.test.tsx` and `src/features/landing/components/LandingHeader.test.tsx`.
+
+Manual checks in a configured environment: 360px/768px/1280px layouts; browser keyboard navigation and Escape behavior in existing auth modals; `prefers-reduced-motion`; failed register config/retry; direct `/login`/`/register` paths; actual privacy/support links; Lighthouse accessibility/performance and production integrations.
+
+## Future capture and claim approval
+
+Replace the illustrative supervisor preview with sanitized actual captures only after validation on a controlled backend. Check the landing copy whenever new features, role permissions, or integration behavior changes. Never publish unverified numerical claims or testimonials.

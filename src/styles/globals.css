@@ -79,3 +79,189 @@ body {
     animation: hero-float 4.5s ease-in-out 0.35s infinite;
   }
 }
+
+/* Public marketing page utilities are intentionally scoped away from authenticated UI. */
+@layer components {
+  .landing-eyebrow {
+    @apply mb-3 text-xs font-bold uppercase tracking-[0.2em] text-sky-700;
+  }
+  .landing-section-heading {
+    @apply mt-3 max-w-3xl text-3xl font-semibold leading-tight tracking-tight text-slate-950 sm:text-4xl lg:text-5xl;
+  }
+  .landing-section-copy {
+    @apply mt-5 max-w-2xl text-base leading-8 text-slate-600;
+  }
+}
+html {
+  scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .hero-float-in,
+  .hero-gentle-float {
+    animation: none !important;
+  }
+}
+
+/* Marketing-only brand animation. Keep the authenticated UI unaffected. */
+@keyframes rt-brand-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.85) rotate(-9deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+@keyframes rt-brand-breathe {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-9px);
+  }
+}
+@keyframes rt-brand-ring {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes rt-brand-signal {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes rt-brand-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.landing-brand-center {
+  animation:
+    rt-brand-appear 1.15s cubic-bezier(0.18, 0.8, 0.2, 1) both,
+    rt-brand-breathe 7s ease-in-out 1.3s infinite;
+}
+.landing-brand-ring-outer {
+  animation: rt-brand-ring 90s linear infinite;
+}
+.landing-brand-ring-inner {
+  animation: rt-brand-ring 70s linear reverse infinite;
+}
+.landing-brand-signal {
+  animation: rt-brand-signal 0.85s cubic-bezier(0.18, 0.8, 0.2, 1) both;
+}
+.landing-brand-aura,
+.landing-brand-spark {
+  animation: rt-brand-pulse 5s ease-in-out infinite;
+}
+.landing-brand-stage:hover .landing-brand-logo {
+  transform: scale(1.045);
+  transition: transform 350ms ease;
+}
+.landing-brand-signal-left-top {
+  left: 1%;
+  top: 21%;
+}
+.landing-brand-signal-right-top {
+  right: 0;
+  top: 19%;
+}
+.landing-brand-signal-left-bottom {
+  left: 0;
+  bottom: 18%;
+}
+.landing-brand-signal-right-bottom {
+  right: -1%;
+  bottom: 15%;
+}
+@media (max-width: 440px) {
+  .landing-brand-signal {
+    padding: 6px 8px;
+    font-size: 9px;
+  }
+  .landing-brand-signal-left-top {
+    left: 0;
+    top: 16%;
+  }
+  .landing-brand-signal-right-top {
+    right: 0;
+    top: 16%;
+  }
+  .landing-brand-signal-left-bottom {
+    left: 0;
+    bottom: 12%;
+  }
+  .landing-brand-signal-right-bottom {
+    right: 0;
+    bottom: 12%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-brand-center,
+  .landing-brand-ring,
+  .landing-brand-signal,
+  .landing-brand-aura,
+  .landing-brand-spark {
+    animation: none !important;
+  }
+  .landing-brand-stage:hover .landing-brand-logo {
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Progressive scroll storytelling: the brand softens as the real-workflow
+   preview becomes prominent. Unsupported browsers retain a fully visible UI. */
+@keyframes rt-brand-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0.65;
+    transform: translateY(20px) scale(0.94);
+  }
+}
+@keyframes rt-preview-enter {
+  from {
+    opacity: 0.78;
+    transform: translateY(26px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@supports (animation-timeline: view()) {
+  .landing-brand-stage {
+    animation: rt-brand-exit linear both;
+    animation-timeline: view(block);
+    animation-range: exit 0% exit 100%;
+  }
+  .landing-preview-reveal {
+    animation: rt-preview-enter linear both;
+    animation-timeline: view(block);
+    animation-range: entry 0% entry 85%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-brand-stage,
+  .landing-preview-reveal {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

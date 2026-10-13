@@ -9,16 +9,25 @@ type PublicLayoutProps = {
   children?: ReactNode;
 };
 
-export function PublicLayout({ onLogin, onRegister, landing = false, children }: PublicLayoutProps) {
+export function PublicLayout({
+  onLogin,
+  onRegister,
+  landing = false,
+  children,
+}: PublicLayoutProps) {
   return (
     <div className="min-h-screen bg-white">
       {landing ? (
         <LandingHeader onLogin={onLogin} onRegister={onRegister} />
       ) : (
-        <TopBar mode="public" homePath="/" actions={[
-          { label: "Login", onClick: onLogin, variant: "ghost" },
-          { label: "Register", onClick: onRegister, variant: "primary" },
-        ]} />
+        <TopBar
+          mode="public"
+          homePath="/"
+          actions={[
+            { label: "Login", onClick: onLogin, variant: "ghost" },
+            { label: "Register", onClick: onRegister, variant: "primary" },
+          ]}
+        />
       )}
       <main id="main-content">{children ?? "Public Layout Placeholder"}</main>
     </div>

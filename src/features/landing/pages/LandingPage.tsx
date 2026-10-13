@@ -160,14 +160,23 @@ export function LandingPage({
           }}
         />
       )}
-      <HeroSection onRegister={() => { void handleRegister(); }} />
+      <HeroSection
+        onRegister={() => {
+          void handleRegister();
+        }}
+      />
       <ProductShowcaseSection />
       <FeaturesSection />
       <WorkflowShowcaseSection />
       <HowItWorksSection />
       <WhoItsForSection />
       <TrustStrip />
-      <FinalCTASection onRegister={() => { void handleRegister(); }} onLogin={() => setLoginOpen(true)} />
+      <FinalCTASection
+        onRegister={() => {
+          void handleRegister();
+        }}
+        onLogin={() => setLoginOpen(true)}
+      />
     </PublicLayout>
   );
 }

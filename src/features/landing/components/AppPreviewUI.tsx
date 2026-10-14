@@ -39,15 +39,18 @@ export function PreviewWindow({
           <strong className="text-xs tracking-tight text-slate-900">
             ResearchTrack
           </strong>
+          <span className="hidden rounded-full bg-indigo-50 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-indigo-700 sm:inline-flex">
+            Supervisor
+          </span>
         </div>
         <div className="hidden items-center gap-1 text-[10px] text-slate-500 sm:flex">
-          <span className="rounded-lg bg-sky-50 px-2.5 py-1.5 font-semibold text-sky-800">
+          <span className="rounded-lg bg-sky-50 px-2.5 py-1.5 font-semibold text-sky-800 ring-1 ring-inset ring-sky-100">
             Dashboard
           </span>
           <span className="px-2.5 py-1.5">Projects</span>
         </div>
         <span
-          className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-100 text-[10px] font-bold text-indigo-800"
+          className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-[10px] font-bold text-emerald-800"
           aria-label="Example supervisor profile"
         >
           S

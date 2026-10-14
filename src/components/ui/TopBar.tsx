@@ -99,8 +99,8 @@ export function TopBar(props: TopBarProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-20 hidden border-b border-slate-200/80 bg-white/95 backdrop-blur-xl md:block">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:flex-row lg:px-8">
+      <header className="sticky top-0 z-20 hidden border-b border-slate-200/80 bg-white/90 backdrop-blur-xl md:block">
+        <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:flex-row lg:px-8 2xl:px-10">
           <div className="flex w-full items-center justify-between gap-3 lg:flex-1 lg:flex-row">
             <div className="flex items-center justify-between gap-4">
               <Link to={homePath} className="inline-flex items-center">
@@ -149,8 +149,8 @@ export function TopBar(props: TopBarProps) {
         </div>
       </header>
 
-      <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/95 backdrop-blur-xl md:hidden">
-        <div className="mx-auto max-w-7xl px-3 py-3 sm:px-6 sm:py-4">
+      <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl md:hidden">
+        <div className="mx-auto max-w-[1600px] px-3 py-3 sm:px-6 sm:py-4">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <Link to={homePath} className="inline-flex items-center">

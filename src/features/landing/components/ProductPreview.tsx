@@ -1,22 +1,20 @@
 import { AlertTriangle, ArrowRight, CalendarDays, Search } from "lucide-react";
+import { DashboardStatCard } from "@/components/ui/DashboardStatCard";
 import { PreviewCard, PreviewStatus, PreviewWindow } from "./AppPreviewUI";
 
 const stats = [
-  { label: "Total projects", value: "08", tone: "border-sky-300 text-sky-700" },
-  { label: "Active", value: "06", tone: "border-emerald-300 text-emerald-700" },
-  { label: "At risk", value: "01", tone: "border-amber-300 text-amber-700" },
-  { label: "Behind", value: "01", tone: "border-rose-300 text-rose-700" },
+  { label: "Total projects", value: "08", tone: "primary", icon: "total" },
+  { label: "Active", value: "06", tone: "success", icon: "active" },
+  { label: "At risk", value: "01", tone: "warning", icon: "risk" },
+  { label: "Behind", value: "01", tone: "danger", icon: "behind" },
   {
     label: "Upcoming milestones",
     value: "05",
-    tone: "border-sky-300 text-sky-700",
+    tone: "info",
+    icon: "milestone",
   },
-  {
-    label: "Jira at risk",
-    value: "01",
-    tone: "border-amber-300 text-amber-700",
-  },
-  { label: "Jira behind", value: "00", tone: "border-rose-300 text-rose-700" },
+  { label: "Jira at risk", value: "01", tone: "warning", icon: "jiraRisk" },
+  { label: "Jira behind", value: "00", tone: "danger", icon: "jiraBehind" },
 ] as const;
 
 const projects = [
@@ -24,6 +22,7 @@ const projects = [
     title: "Project Atlas",
     status: "AT RISK",
     progress: "64%",
+    members: "4",
     milestone: "Proposal review",
     health: "At risk",
     tone: "warning" as const,
@@ -32,6 +31,7 @@ const projects = [
     title: "Project Horizon",
     status: "ACTIVE",
     progress: "78%",
+    members: "3",
     milestone: "Implementation",
     health: "On track",
     tone: "success" as const,
@@ -57,20 +57,28 @@ export function ProductPreview() {
           <Search size={13} aria-hidden="true" /> Search projects
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
-        {stats.map(({ label, value, tone }) => (
-          <div
-            key={label}
-            className={`rounded-xl border border-l-[3px] bg-white p-2.5 shadow-sm sm:p-3 ${tone.split(" ")[0]}`}
-          >
-            <p className="min-h-[24px] text-[9px] font-medium uppercase leading-3 tracking-wide text-slate-500">
-              {label}
-            </p>
-            <p className={`mt-2 text-xl font-semibold ${tone.split(" ")[1]}`}>
-              {value}
-            </p>
-          </div>
-        ))}
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <h4 className="text-[11px] font-semibold text-slate-900">
+          Portfolio overview
+        </h4>
+        <span className="text-[9px] text-slate-500">
+          Delivery &amp; Jira signals
+        </span>
+      </div>
+      <div
+        className="grid gap-2 lg:grid-cols-7"
+        data-testid="marketing-portfolio-metrics"
+      >
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:contents">
+          {stats.slice(0, 4).map((stat) => (
+            <DashboardStatCard key={stat.label} {...stat} preview />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 lg:contents">
+          {stats.slice(4).map((stat) => (
+            <DashboardStatCard key={stat.label} {...stat} compact preview />
+          ))}
+        </div>
       </div>
       <PreviewCard className="mt-3">
         <div className="mb-3 flex items-center justify-between gap-2">
@@ -87,17 +95,19 @@ export function ProductPreview() {
           </span>
         </div>
         <div className="overflow-hidden rounded-xl border border-slate-200">
-          <div className="hidden grid-cols-[2fr_1fr_1fr_1.3fr_1fr] border-b border-slate-100 bg-slate-50 px-3 py-2 text-[9px] font-bold uppercase tracking-wide text-slate-500 sm:grid">
+          <div className="hidden grid-cols-[1.8fr_1fr_.55fr_1.2fr_1fr_1fr_.65fr] border-b border-slate-100 bg-slate-50 px-3 py-2 text-[9px] font-bold uppercase tracking-wide text-slate-500 sm:grid">
             <span>Project</span>
             <span>Status</span>
-            <span>Progress</span>
+            <span>Members</span>
             <span>Milestone</span>
+            <span>Progress</span>
             <span>Jira health</span>
+            <span>Open</span>
           </div>
           {projects.map((project) => (
             <div
               key={project.title}
-              className="flex flex-wrap items-center gap-3 border-b border-slate-100 bg-white px-3 py-3 last:border-b-0 sm:grid sm:grid-cols-[2fr_1fr_1fr_1.3fr_1fr] sm:gap-1"
+              className="flex flex-wrap items-center gap-3 border-b border-slate-100 bg-white px-3 py-3 last:border-b-0 sm:grid sm:grid-cols-[1.8fr_1fr_.55fr_1.2fr_1fr_1fr_.65fr] sm:gap-1"
             >
               <span className="min-w-[105px] flex-1 text-[11px] font-semibold text-slate-900 sm:min-w-0 sm:flex-none">
                 {project.title}
@@ -105,15 +115,27 @@ export function ProductPreview() {
               <span className="text-[10px] font-semibold text-slate-600">
                 {project.status}
               </span>
-              <span className="text-[10px] font-bold text-slate-700">
-                {project.progress}
+              <span className="hidden text-[10px] text-slate-500 sm:block">
+                {project.members}
               </span>
               <span className="hidden text-[10px] text-slate-500 sm:block">
                 {project.milestone}
               </span>
+              <span className="flex min-w-0 flex-col gap-1 text-[10px] font-bold text-slate-700">
+                {project.progress}
+                <span className="hidden h-1.5 w-full rounded-full bg-slate-100 sm:block">
+                  <span
+                    className="block h-full rounded-full bg-sky-500"
+                    style={{ width: project.progress }}
+                  />
+                </span>
+              </span>
               <PreviewStatus tone={project.tone}>
                 {project.health}
               </PreviewStatus>
+              <span className="hidden rounded-md bg-slate-900 px-1.5 py-1 text-center text-[9px] font-semibold text-white sm:block">
+                Open
+              </span>
             </div>
           ))}
         </div>

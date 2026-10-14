@@ -220,16 +220,16 @@ export function DashboardProjectHealthSection({
         </div>
       ) : visibleProjects.length > 0 ? (
         <div className="mt-5 space-y-3">
-          <div className="hidden overflow-x-auto rounded-2xl border border-slate-200 md:block">
-            <table className="workspace-table w-full min-w-[1040px] table-fixed text-left text-sm">
+          <div className="hidden overflow-x-auto rounded-2xl border border-slate-200 xl:block">
+            <table className="workspace-table w-full min-w-[1080px] table-fixed text-left text-sm">
               <colgroup>
-                <col className="w-[30%]" />
-                <col className="w-[14%]" />
-                <col className="w-[8%]" />
+                <col className="w-[25%]" />
                 <col className="w-[12%]" />
-                <col className="w-[13%]" />
-                <col className="w-[13%]" />
-                <col className="w-[10%]" />
+                <col className="w-[8%]" />
+                <col className="w-[14%]" />
+                <col className="w-[15%]" />
+                <col className="w-[15%]" />
+                <col className="w-[11%]" />
               </colgroup>
               <thead className="border-b border-slate-200">
                 <tr>
@@ -299,7 +299,7 @@ export function DashboardProjectHealthSection({
               </tbody>
             </table>
           </div>
-          <div className="space-y-3 md:hidden">
+          <div className="grid gap-3 sm:grid-cols-2 xl:hidden">
             {pagedProjects.map((project) => (
               <ProjectHealthMobileCard key={project.id} project={project} />
             ))}

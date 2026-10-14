@@ -100,7 +100,7 @@ export function HeroSection({ onRegister }: HeroSectionProps) {
           <div className="relative">
             <ProductPreview />
           </div>
-          <div className="pointer-events-none absolute -right-2 top-[13%] hidden items-center gap-2 rounded-xl border border-white/20 bg-[#152d51] px-4 py-3 text-xs font-medium text-sky-100 shadow-xl xl:flex">
+          <div className="mt-4 inline-flex items-center gap-2 rounded-xl border border-white/20 bg-[#152d51] px-4 py-2.5 text-xs font-medium text-sky-100 shadow-lg">
             <MoveUpRight
               size={15}
               className="text-sky-300"

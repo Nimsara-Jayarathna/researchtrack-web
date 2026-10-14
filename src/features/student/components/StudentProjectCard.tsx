@@ -1,19 +1,17 @@
-import { CalendarDays, CircleAlert, ListTodo } from "lucide-react";
+import {
+  ArrowUpRight,
+  CalendarDays,
+  Clock3,
+  GraduationCap,
+  UserRound,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ProgressMeter } from "@/components/ui/ProgressMeter";
-import { parseLocalDateOnly } from "@/lib/dateOnly";
+import { projectDateLabel } from "@/features/projects/utils/projectDateLabel";
 import type { StudentProjectSummary } from "../types";
 
-const dateFormatter = new Intl.DateTimeFormat("en", {
-  month: "short",
-  day: "numeric",
-  year: "numeric",
-});
-
-type StudentProjectCardProps = {
-  project: StudentProjectSummary;
-};
+type StudentProjectCardProps = { project: StudentProjectSummary };
 
 function statusTone(status: StudentProjectSummary["status"]) {
   if (status === "ACTIVE") return "success";
@@ -23,118 +21,99 @@ function statusTone(status: StudentProjectSummary["status"]) {
   return "student";
 }
 
+const activityFormatter = new Intl.DateTimeFormat("en", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+});
+
 export function StudentProjectCard({ project }: StudentProjectCardProps) {
-  const progressValue =
-    typeof project.progressPercent === "number"
-      ? `${project.progressPercent}%`
-      : "-";
-  const title = project.title;
   const summary = project.summary ?? "No summary has been added yet.";
   const supervisorName = project.supervisorName ?? "Not available";
   const batch = project.batch ?? "Batch N/A";
   const semester = project.semester ?? "Semester N/A";
-
-  const milestoneLabel = project.milestoneDate
-    ? (() => {
-        const milestoneDate = parseLocalDateOnly(project.milestoneDate);
-        return `Milestone ${
-          milestoneDate
-            ? dateFormatter.format(milestoneDate)
-            : project.milestoneDate
-        }`;
-      })()
-    : "Milestone not set";
-
-  const activityLabel = project.lastActivityAt
-    ? `Updated ${dateFormatter.format(new Date(project.lastActivityAt))}`
-    : "No activity yet";
+  const activityDate = project.lastActivityAt
+    ? new Date(project.lastActivityAt)
+    : null;
+  const activityLabel =
+    activityDate && !Number.isNaN(activityDate.getTime())
+      ? `Updated ${activityFormatter.format(activityDate)}`
+      : "No activity yet";
 
   return (
     <Link
       to={`/student/projects/${project.id}`}
-      className="workspace-panel workspace-focus group flex h-full min-w-0 flex-col p-4 transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-md sm:p-5"
+      aria-label={`Open project ${project.title}`}
+      className="workspace-panel workspace-focus group flex h-full min-w-0 flex-col p-4 transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-md"
     >
-      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
-        <h3
-          className="min-w-0 truncate text-lg font-semibold text-foreground"
-          title={title}
-        >
-          {title}
-        </h3>
-        <div className="flex shrink-0 items-center gap-2">
-          <StatusBadge
-            tone={statusTone(project.status)}
-            className="shrink-0 whitespace-nowrap tracking-normal"
+      <div className="flex min-w-0 items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <h3
+            className="truncate text-[17px] font-semibold leading-6 tracking-tight text-slate-950"
+            title={project.title}
           >
-            {project.status.replace("_", " ")}
-          </StatusBadge>
-          <span className="inline-flex shrink-0 whitespace-nowrap rounded-xl bg-slate-50 px-2.5 py-1 text-sm font-semibold text-foreground">
-            {progressValue}
-          </span>
+            {project.title}
+          </h3>
+          <p
+            className="mt-1 line-clamp-2 text-[13px] leading-5 text-slate-500"
+            style={{
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+            }}
+            title={summary}
+          >
+            {summary}
+          </p>
         </div>
+        <StatusBadge
+          tone={statusTone(project.status)}
+          className="shrink-0 tracking-normal"
+        >
+          {project.status.replace("_", " ")}
+        </StatusBadge>
       </div>
 
-      <p
-        className="mt-2 min-h-[2.7rem] overflow-hidden text-sm leading-[1.35rem] text-muted-foreground"
-        style={{
-          display: "-webkit-box",
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: "vertical",
-        }}
-        title={summary}
-      >
-        {summary}
-      </p>
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-slate-100 pt-3 text-xs text-slate-600">
+        <span className="inline-flex min-w-0 items-center gap-1.5">
+          <UserRound
+            className="h-3.5 w-3.5 shrink-0 text-slate-400"
+            aria-hidden
+          />
+          <span className="max-w-40 truncate" title={supervisorName}>
+            {supervisorName}
+          </span>
+        </span>
+        <span className="inline-flex items-center gap-1.5" title={batch}>
+          <GraduationCap className="h-3.5 w-3.5 text-slate-400" aria-hidden />
+          {batch}
+        </span>
+        <span className="inline-flex items-center gap-1.5" title={semester}>
+          {semester}
+        </span>
+        <span
+          className="inline-flex items-center gap-1.5"
+          title={`Milestone: ${project.milestoneDate ?? "Not set"}`}
+        >
+          <CalendarDays className="h-3.5 w-3.5 text-slate-400" aria-hidden />
+          {projectDateLabel(project.milestoneDate)}
+        </span>
+      </div>
 
-      <div className="mt-4 border-t border-slate-100 pt-3">
+      <div className="mt-3">
         <ProgressMeter value={project.progressPercent} />
       </div>
-      <div className="mt-4 grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(7rem,0.7fr)]">
-        <div className="flex min-h-14 min-w-0 flex-col justify-center rounded-xl bg-slate-50 px-3 py-2">
-          <p className="truncate text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-            Supervisor
-          </p>
-          <p
-            className="mt-0.5 truncate text-[15px] font-semibold text-foreground"
-            title={supervisorName}
-          >
-            {supervisorName}
-          </p>
-        </div>
-        <div className="flex min-h-14 min-w-0 flex-col justify-center rounded-xl bg-slate-50 px-3 py-2">
-          <p className="truncate text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-            Batch
-          </p>
-          <p
-            className="mt-0.5 truncate text-[15px] font-semibold text-foreground"
-            title={batch}
-          >
-            {batch}
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-3 grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
+      <div className="mt-auto flex items-center justify-between gap-2 pt-3 text-xs">
         <span
-          className="inline-flex min-w-0 items-center gap-2 rounded-xl bg-slate-50 px-3 py-2"
-          title={milestoneLabel}
-        >
-          <CalendarDays className="h-4 w-4 shrink-0" />
-          <span className="truncate">{milestoneLabel}</span>
-        </span>
-        <span
-          className="inline-flex min-w-0 items-center gap-2 rounded-xl bg-slate-50 px-3 py-2"
-          title={semester}
-        >
-          <ListTodo className="h-4 w-4 shrink-0" />
-          <span className="truncate">{semester}</span>
-        </span>
-        <span
-          className="inline-flex min-w-0 items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 sm:col-span-2"
+          className="inline-flex items-center gap-1.5 text-slate-500"
           title={activityLabel}
         >
-          <CircleAlert className="h-4 w-4 shrink-0" />
-          <span className="truncate">{activityLabel}</span>
+          <Clock3 className="h-3.5 w-3.5" aria-hidden />
+          {activityLabel}
+        </span>
+        <span className="inline-flex items-center gap-1 font-semibold text-sky-700 opacity-80 group-hover:opacity-100">
+          Open <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />
         </span>
       </div>
     </Link>

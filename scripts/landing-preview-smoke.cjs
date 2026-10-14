@@ -17,6 +17,8 @@ function getModule(relative) {
   if (relative === "react/jsx-runtime") return runtime;
   if (relative === "@/components/brand/Logo") return { LogoMark: ({ size }) => node("img", { src: "/logo.png", width: size }) };
   if (relative === "@/components/ui/Button") return { Button: ({ children }) => node("button", { children }) };
+  if (relative === "@/components/ui/DashboardStatCard") return load(path.join(root, "src/components/ui/DashboardStatCard.tsx"));
+  if (relative === "@/lib/cn") return { cn: (...classes) => classes.filter(Boolean).join(" ") };
   if (relative === "lucide-react") return new Proxy({}, { get: (_, name) => icon(String(name)) });
   throw Error(`Unexpected external dependency in preview module: ${relative}`);
 }

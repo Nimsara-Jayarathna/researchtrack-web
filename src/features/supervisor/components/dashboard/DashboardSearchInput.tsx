@@ -10,7 +10,7 @@ export function DashboardSearchInput({
   onChange,
 }: DashboardSearchInputProps) {
   return (
-    <label className="relative block w-full min-w-0 max-w-md">
+    <label className="relative block w-full min-w-0 sm:w-64 lg:w-72">
       <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
       <input
         value={query}

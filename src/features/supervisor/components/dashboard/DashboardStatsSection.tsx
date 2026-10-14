@@ -86,12 +86,25 @@ export function DashboardStatsSection({
           Project delivery and connected Jira signals
         </p>
       </div>
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {DASHBOARD_STATS.slice(0, 4).map((stat) => renderStat(stat))}
+      <div
+        className="grid gap-3 2xl:grid-cols-7"
+        data-testid="portfolio-metrics-grid"
+      >
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 2xl:contents">
+          {DASHBOARD_STATS.slice(0, 4).map((stat) => renderStat(stat))}
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 2xl:contents">
+          {DASHBOARD_STATS.slice(4).map((stat) => renderStat(stat, true))}
+        </div>
       </div>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        {DASHBOARD_STATS.slice(4).map((stat) => renderStat(stat, true))}
-      </div>
+      <p
+        className="text-xs leading-5 text-slate-500"
+        id="portfolio-metrics-explanation"
+      >
+        Lifecycle totals reflect saved project statuses. Attention signals also
+        include overdue milestones and inactivity; upcoming counts exclude
+        overdue dates.
+      </p>
     </section>
   );
 
@@ -100,7 +113,12 @@ export function DashboardStatsSection({
       <DashboardStatCard
         key={stat.key}
         label={stat.label}
-        tone={stat.tone}
+        tone={
+          (stat.key === "jiraAtRiskCount" || stat.key === "jiraBehindCount") &&
+          (jiraMetricsUnavailable || !hasConnectedJiraProject)
+            ? "neutral"
+            : stat.tone
+        }
         icon={stat.icon}
         compact={compact}
         value={

@@ -22,7 +22,8 @@
     "landing:smoke": "node scripts/landing-preview-smoke.cjs",
     "workspace:check": "node scripts/workspace-source-check.cjs",
     "v4:check": "node scripts/v4-source-check.cjs",
-    "v4:smoke": "node scripts/v4-preview-smoke.cjs"
+    "v4:smoke": "node scripts/v4-preview-smoke.cjs",
+    "v5:check": "node scripts/v5-source-check.cjs"
   },
   "dependencies": {
     "lucide-react": "^0.575.0",

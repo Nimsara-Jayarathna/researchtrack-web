@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/Card";
+import { FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
 type EmptyStateAction = {
@@ -20,8 +21,11 @@ export function EmptyState({
   secondaryAction,
 }: EmptyStateProps) {
   return (
-    <Card className="border-dashed px-6 py-10">
+    <Card className="border-dashed px-6 py-12">
       <div className="mx-auto max-w-lg text-center">
+        <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 text-sky-700">
+          <FolderOpen aria-hidden="true" className="h-6 w-6" />
+        </span>
         <h2 className="text-xl font-semibold text-foreground">{title}</h2>
         <p className="mt-2 text-sm leading-6 text-muted-foreground sm:text-base">
           {description}

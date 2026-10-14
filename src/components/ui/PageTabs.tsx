@@ -29,10 +29,7 @@ export function PageTabs({
   return (
     <section
       aria-label="Project sections"
-      className={cn(
-        "rounded-3xl border border-border bg-white p-3 shadow-sm",
-        className,
-      )}
+      className={cn("workspace-panel p-2 sm:p-2.5", className)}
     >
       <div className="-mx-1 overflow-x-auto px-1">
         <div
@@ -49,7 +46,7 @@ export function PageTabs({
               aria-selected={value === item.value}
               tabIndex={value === item.value ? 0 : -1}
               className={cn(
-                "min-h-10 shrink-0 whitespace-nowrap rounded-2xl px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2",
+                "min-h-10 shrink-0 whitespace-nowrap rounded-xl px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2",
                 value === item.value
                   ? ACTIVE_TONE_CLASSES[tone]
                   : "bg-transparent text-muted-foreground hover:bg-slate-100 hover:text-foreground",

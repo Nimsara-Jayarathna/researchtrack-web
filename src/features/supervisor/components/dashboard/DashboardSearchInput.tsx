@@ -15,8 +15,9 @@ export function DashboardSearchInput({
       <input
         value={query}
         onChange={(event) => onChange(event.target.value)}
-        placeholder="Search project"
-        className="w-full rounded-2xl border border-border bg-white py-3 pl-11 pr-4 text-sm outline-none transition-colors focus:border-amber-300"
+        placeholder="Search projects"
+        aria-label="Search supervised projects"
+        className="h-11 w-full rounded-xl border border-slate-200 bg-white py-2 pl-11 pr-4 text-sm shadow-sm outline-none transition-colors focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
       />
     </label>
   );

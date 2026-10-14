@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { ProgressMeter } from "@/components/ui/ProgressMeter";
 import { diffDaysDateOnly } from "@/lib/dateOnly";
 import type { SupervisorProjectSummary } from "../types";
 
@@ -55,7 +56,7 @@ export function SupervisorProjectCard({ project }: SupervisorProjectCardProps) {
   return (
     <Link
       to={`/supervisor/projects/${project.id}`}
-      className="group flex h-full flex-col rounded-3xl border border-border bg-white p-4 shadow-sm transition-shadow hover:shadow-md focus:outline-none focus:ring-2 focus:ring-sky-200"
+      className="workspace-panel workspace-focus group flex h-full flex-col p-4 transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-md sm:p-5"
     >
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
         <h2
@@ -68,13 +69,18 @@ export function SupervisorProjectCard({ project }: SupervisorProjectCardProps) {
         <div className="flex items-center gap-2">
           <StatusBadge
             tone={lifecycleTone(project)}
-            className="tracking-[0.08em]"
+            className="tracking-normal"
           >
             {project.lifecycleStatus.replace("_", " ")}
           </StatusBadge>
-          <p className="rounded-2xl bg-slate-50 px-2.5 py-1 text-sm font-semibold text-foreground">
-            {project.progressPercent ?? 0}%
-          </p>
+          <span
+            className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700"
+            title="Reported project progress; lifecycle status is evaluated separately"
+          >
+            {project.progressPercent == null
+              ? "—"
+              : `${project.progressPercent}%`}
+          </span>
         </div>
       </div>
 
@@ -91,7 +97,7 @@ export function SupervisorProjectCard({ project }: SupervisorProjectCardProps) {
       </p>
 
       <div className="mt-2.5 grid gap-2 sm:grid-cols-3">
-        <div className="flex min-h-14 flex-col justify-center rounded-2xl bg-slate-50 px-3 py-1.5">
+        <div className="flex min-h-14 flex-col justify-center rounded-xl bg-slate-50 px-3 py-1.5">
           <p className="truncate text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
             Members
           </p>
@@ -99,7 +105,7 @@ export function SupervisorProjectCard({ project }: SupervisorProjectCardProps) {
             {project.memberCount}
           </p>
         </div>
-        <div className="flex min-h-14 flex-col justify-center rounded-2xl bg-slate-50 px-3 py-1.5">
+        <div className="flex min-h-14 flex-col justify-center rounded-xl bg-slate-50 px-3 py-1.5">
           <p className="truncate text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
             Milestone
           </p>
@@ -110,7 +116,7 @@ export function SupervisorProjectCard({ project }: SupervisorProjectCardProps) {
             {project.milestoneDate ? project.milestoneDate : "Not set"}
           </p>
         </div>
-        <div className="flex min-h-14 flex-col justify-center rounded-2xl bg-slate-50 px-3 py-1.5">
+        <div className="flex min-h-14 flex-col justify-center rounded-xl bg-slate-50 px-3 py-1.5">
           <p className="truncate text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
             Batch
           </p>
@@ -123,7 +129,10 @@ export function SupervisorProjectCard({ project }: SupervisorProjectCardProps) {
         </div>
       </div>
 
-      <div className="mt-2.5 min-h-10 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2">
+      <div className="mt-4 border-t border-slate-100 pt-3">
+        <ProgressMeter value={project.progressPercent} />
+      </div>
+      <div className="mt-3 min-h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
         <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
           Delivery signal
         </p>

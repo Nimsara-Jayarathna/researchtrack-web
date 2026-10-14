@@ -1,3 +1,5 @@
+import { Search } from "lucide-react";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { ErrorState } from "@/components/feedback/ErrorState";
 import { buttonStyles } from "@/components/ui/Button";
@@ -78,45 +80,47 @@ export function ProjectsPageView<TItem>({
 }: ProjectsPageViewProps<TItem>) {
   return (
     <div className={rootClassName}>
-      <section className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
-            {title}
-          </h1>
-          <p className="mt-1.5 text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
-            {subtitle}
-          </p>
-        </div>
-        {action ? (
-          <Link
-            to={action.to}
-            className={buttonStyles({
-              variant: "primary",
-              size: "md",
-              className: "shrink-0 whitespace-nowrap",
-            })}
-          >
-            {action.icon}
-            {action.label}
-          </Link>
-        ) : null}
-      </section>
+      <PageHeader
+        title={title}
+        subtitle={subtitle}
+        actions={
+          action ? (
+            <Link
+              to={action.to}
+              className={buttonStyles({
+                variant: "primary",
+                size: "md",
+                className: "whitespace-nowrap",
+              })}
+            >
+              {action.icon}
+              {action.label}
+            </Link>
+          ) : undefined
+        }
+      />
 
       <section
         className={`grid gap-2.5 sm:gap-3 ${filter ? "md:grid-cols-[minmax(0,1fr)_210px]" : ""} md:gap-4`}
       >
-        <input
-          value={searchValue}
-          onChange={(event) => onSearchChange(event.target.value)}
-          placeholder={searchPlaceholder}
-          aria-label={searchAriaLabel ?? searchPlaceholder}
-          className="h-10 w-full rounded-2xl border border-border bg-white px-4 text-sm outline-none transition-colors focus:border-amber-300"
-        />
+        <div className="relative min-w-0">
+          <Search
+            aria-hidden="true"
+            className="pointer-events-none absolute left-4 top-3.5 h-4 w-4 text-slate-400"
+          />
+          <input
+            value={searchValue}
+            onChange={(event) => onSearchChange(event.target.value)}
+            placeholder={searchPlaceholder}
+            aria-label={searchAriaLabel ?? searchPlaceholder}
+            className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-11 pr-4 text-sm shadow-sm outline-none transition-colors focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+          />
+        </div>
         {filter ? (
           <Select
             value={filter.value}
             onChange={(event) => filter.onChange(event.target.value)}
-            className="h-10 w-full rounded-2xl border border-border bg-white px-4 text-sm outline-none transition-colors focus:border-amber-300"
+            className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm shadow-sm outline-none transition-colors focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
           >
             {filter.options.map((option) => (
               <option key={option.value} value={option.value}>

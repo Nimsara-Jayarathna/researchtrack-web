@@ -45,7 +45,7 @@ export function RoleBadge({
       className={cn(
         "inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs font-semibold",
         config.className,
-        uppercase ? "tracking-[0.16em] uppercase" : "",
+        uppercase ? "tracking-[0.07em] uppercase" : "",
         className,
       )}
     >

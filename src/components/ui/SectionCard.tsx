@@ -17,19 +17,16 @@ export function SectionCard({
   className,
 }: SectionCardProps) {
   return (
-    <section
-      className={cn(
-        "rounded-3xl border border-border bg-white p-6 shadow-sm transition-all hover:shadow-md",
-        className,
-      )}
-    >
+    <section className={cn("workspace-panel p-4 sm:p-6", className)}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-bold tracking-tight text-slate-800">
+          <h2 className="text-lg font-semibold tracking-tight text-slate-900">
             {title}
           </h2>
           {subtitle ? (
-            <div className="text-xs font-medium text-slate-400">{subtitle}</div>
+            <div className="mt-1 text-sm leading-6 text-slate-500">
+              {subtitle}
+            </div>
           ) : null}
         </div>
         {actions ? (

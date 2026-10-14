@@ -114,7 +114,7 @@ export function AppShell({
         clearBlockingError,
       }}
     >
-      <div className="relative min-h-screen overflow-hidden bg-slate-50">
+      <div className="workspace-shell relative min-h-screen overflow-hidden">
         <RequestStateModal
           isOpen={isLogoutPending || Boolean(logoutError)}
           status={isLogoutPending ? "loading" : "error"}
@@ -147,8 +147,8 @@ export function AppShell({
               : undefined
           }
         />
-        <div className="pointer-events-none absolute -left-24 top-16 h-72 w-72 rounded-full bg-sky-200/40 blur-3xl" />
-        <div className="pointer-events-none absolute right-0 top-0 h-80 w-80 rounded-full bg-cyan-100/70 blur-3xl" />
+        <div className="pointer-events-none absolute -left-24 top-16 h-72 w-72 rounded-full bg-sky-200/25 blur-3xl" />
+        <div className="pointer-events-none absolute right-0 top-0 h-80 w-80 rounded-full bg-cyan-100/40 blur-3xl" />
         <TopBar
           role={role}
           homePath={homePath}
@@ -177,7 +177,7 @@ export function AppShell({
           onClose={() => setIsChangePasswordOpen(false)}
           onSubmit={handleChangePassword}
         />
-        <main className="relative z-10 mx-auto w-full max-w-7xl px-3 py-5 sm:px-6 sm:py-8 lg:px-8">
+        <main className="relative z-10 mx-auto w-full max-w-[1600px] px-4 py-5 sm:px-6 sm:py-8 lg:px-8 2xl:px-10">
           {children}
         </main>
       </div>

@@ -18,7 +18,8 @@ const PADDING_CLASSES: Record<CardPadding, string> = {
 };
 
 const SURFACE_CLASSES: Record<CardSurface, string> = {
-  default: "border border-border bg-white shadow-sm",
+  default:
+    "border border-slate-200 bg-white shadow-[0_2px_12px_rgba(15,23,42,0.035)]",
   frosted:
     "overflow-hidden border border-white/35 bg-white/55 backdrop-blur-md shadow-[0_18px_45px_rgba(15,23,42,0.14)]",
 };
@@ -33,7 +34,7 @@ export function Card({
   return (
     <div
       className={cn(
-        "rounded-3xl",
+        "rounded-[22px]",
         SURFACE_CLASSES[surface],
         PADDING_CLASSES[padding],
         className,

@@ -51,6 +51,10 @@ export function SupervisorDashboardPage() {
         totalPages={viewModel.totalPages}
         hasAnyProjects={viewModel.projects.length > 0}
         hasSearchQuery={viewModel.normalizedQuery.length > 0}
+        statusFilter={viewModel.statusFilter}
+        onStatusFilterChange={viewModel.setStatusFilter}
+        sortMode={viewModel.sortMode}
+        onSortModeChange={viewModel.setSortMode}
         pagingStateHandlers={{ setCurrentPage: viewModel.setCurrentPage }}
       />
 
@@ -62,6 +66,9 @@ export function SupervisorDashboardPage() {
         <DashboardUpcomingMilestonesSection
           isLoading={isLoading}
           upcomingProjects={viewModel.upcomingProjects}
+          hasConfiguredMilestones={viewModel.projects.some((project) =>
+            Boolean(project.milestoneDate),
+          )}
         />
       </section>
     </div>

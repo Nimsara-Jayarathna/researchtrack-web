@@ -1,6 +1,7 @@
 import { CalendarDays, Clock3, Users } from "lucide-react";
 import { useRef } from "react";
 import { Select } from "@/components/ui/Select";
+import { ProgressMeter } from "@/components/ui/ProgressMeter";
 import { parseLocalDateOnly } from "@/lib/dateOnly";
 import { dateFormatter, LIFECYCLE_OPTIONS } from "../../projectDetails.shared";
 import type { SupervisorProjectLifecycle } from "../../types";
@@ -35,7 +36,7 @@ export function SupervisorProjectDetailsHeader({
     <>
       <section className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-2xl font-semibold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
+          <h1 className="truncate text-2xl font-bold tracking-[-0.035em] text-slate-950 sm:text-[30px] lg:text-[34px]">
             {title}
           </h1>
           <p
@@ -52,7 +53,7 @@ export function SupervisorProjectDetailsHeader({
         </div>
         <div
           ref={lifecyclePillRef}
-          className="inline-flex shrink-0 items-center rounded-2xl border border-slate-200 bg-white px-4 py-2 shadow-sm transition-all hover:border-amber-200 hover:shadow-md"
+          className="inline-flex shrink-0 items-center rounded-xl border border-slate-200 bg-white px-4 py-2 shadow-sm transition-colors hover:border-sky-200"
         >
           <div className="flex flex-col leading-tight">
             <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
@@ -85,7 +86,7 @@ export function SupervisorProjectDetailsHeader({
 
       <section className="flex flex-wrap items-center gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex items-center gap-2 rounded-2xl bg-white border border-slate-100 px-4 py-2 text-sm text-slate-600 shadow-sm transition-all hover:shadow-md">
+          <div className="inline-flex items-center gap-2 rounded-xl bg-white border border-slate-200 px-4 py-2 text-sm text-slate-600 shadow-sm">
             <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
               <CalendarDays className="h-4 w-4" />
             </div>
@@ -103,7 +104,7 @@ export function SupervisorProjectDetailsHeader({
             </div>
           </div>
 
-          <div className="inline-flex items-center gap-2 rounded-2xl bg-white border border-slate-100 px-4 py-2 text-sm text-slate-600 shadow-sm transition-all hover:shadow-md">
+          <div className="inline-flex items-center gap-2 rounded-xl bg-white border border-slate-200 px-4 py-2 text-sm text-slate-600 shadow-sm">
             <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
               <Users className="h-4 w-4" />
             </div>
@@ -117,7 +118,7 @@ export function SupervisorProjectDetailsHeader({
             </div>
           </div>
 
-          <div className="inline-flex items-center gap-2 rounded-2xl bg-white border border-slate-100 px-4 py-2 text-sm text-slate-600 shadow-sm transition-all hover:shadow-md">
+          <div className="inline-flex items-center gap-2 rounded-xl bg-white border border-slate-200 px-4 py-2 text-sm text-slate-600 shadow-sm">
             <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
               <Clock3 className="h-4 w-4" />
             </div>
@@ -125,9 +126,11 @@ export function SupervisorProjectDetailsHeader({
               <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
                 Progress
               </span>
-              <span className="font-semibold text-slate-700">
-                {progressPercent ?? 0}%
-              </span>
+              <ProgressMeter
+                value={progressPercent}
+                compact
+                className="min-w-24"
+              />
             </div>
           </div>
         </div>

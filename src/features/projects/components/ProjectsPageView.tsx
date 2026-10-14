@@ -1,3 +1,5 @@
+import { Search } from "lucide-react";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { ErrorState } from "@/components/feedback/ErrorState";
 import { buttonStyles } from "@/components/ui/Button";
@@ -50,7 +52,6 @@ type ProjectsPageViewProps<TItem> = {
   items: TItem[];
   renderItem: (item: TItem) => ReactNode;
   renderSkeleton: (index: number) => ReactNode;
-  skeletonCount?: number;
   listGridClassName?: string;
   emptyState: ProjectsPageEmptyState;
   rootClassName?: string;
@@ -71,52 +72,53 @@ export function ProjectsPageView<TItem>({
   items,
   renderItem,
   renderSkeleton,
-  skeletonCount = 4,
   listGridClassName = "grid gap-4 xl:grid-cols-2 2xl:grid-cols-3",
   emptyState,
   rootClassName = "space-y-6",
 }: ProjectsPageViewProps<TItem>) {
   return (
     <div className={rootClassName}>
-      <section className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
-            {title}
-          </h1>
-          <p className="mt-1.5 text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
-            {subtitle}
-          </p>
-        </div>
-        {action ? (
-          <Link
-            to={action.to}
-            className={buttonStyles({
-              variant: "primary",
-              size: "md",
-              className: "shrink-0 whitespace-nowrap",
-            })}
-          >
-            {action.icon}
-            {action.label}
-          </Link>
-        ) : null}
-      </section>
+      <PageHeader
+        title={title}
+        subtitle={subtitle}
+        actions={
+          action ? (
+            <Link
+              to={action.to}
+              className={buttonStyles({
+                variant: "primary",
+                size: "md",
+                className: "whitespace-nowrap",
+              })}
+            >
+              {action.icon}
+              {action.label}
+            </Link>
+          ) : undefined
+        }
+      />
 
       <section
         className={`grid gap-2.5 sm:gap-3 ${filter ? "md:grid-cols-[minmax(0,1fr)_210px]" : ""} md:gap-4`}
       >
-        <input
-          value={searchValue}
-          onChange={(event) => onSearchChange(event.target.value)}
-          placeholder={searchPlaceholder}
-          aria-label={searchAriaLabel ?? searchPlaceholder}
-          className="h-10 w-full rounded-2xl border border-border bg-white px-4 text-sm outline-none transition-colors focus:border-amber-300"
-        />
+        <div className="relative min-w-0">
+          <Search
+            aria-hidden="true"
+            className="pointer-events-none absolute left-4 top-3.5 h-4 w-4 text-slate-400"
+          />
+          <input
+            value={searchValue}
+            onChange={(event) => onSearchChange(event.target.value)}
+            placeholder={searchPlaceholder}
+            aria-label={searchAriaLabel ?? searchPlaceholder}
+            className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-11 pr-4 text-sm shadow-sm outline-none transition-colors focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+          />
+        </div>
         {filter ? (
           <Select
             value={filter.value}
             onChange={(event) => filter.onChange(event.target.value)}
-            className="h-10 w-full rounded-2xl border border-border bg-white px-4 text-sm outline-none transition-colors focus:border-amber-300"
+            className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm shadow-sm outline-none transition-colors focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
           >
             {filter.options.map((option) => (
               <option key={option.value} value={option.value}>
@@ -127,18 +129,45 @@ export function ProjectsPageView<TItem>({
         ) : null}
       </section>
 
-      {isLoading ? (
-        <section className={listGridClassName}>
-          {Array.from({ length: skeletonCount }).map((_, index) =>
-            renderSkeleton(index),
-          )}
+      {isLoading && items.length === 0 ? (
+        <section
+          aria-label="Loading projects"
+          aria-busy="true"
+          className={listGridClassName}
+        >
+          {/* Render one perceived row. Responsive visibility follows the actual grid columns,
+              without pretending to know the number of projects in the API response. */}
+          {Array.from({ length: 3 }, (_, index) => (
+            <div
+              key={`project-loading-slot-${index}`}
+              className={
+                index === 0
+                  ? "min-w-0"
+                  : index === 1
+                    ? "hidden min-w-0 xl:block"
+                    : "hidden min-w-0 2xl:block"
+              }
+            >
+              {renderSkeleton(index)}
+            </div>
+          ))}
+          <span className="sr-only" role="status">
+            Loading projects…
+          </span>
         </section>
       ) : error ? (
         <ErrorState error={error} onRetry={onRetry} />
       ) : items.length > 0 ? (
-        <section className={listGridClassName}>
-          {items.map((item) => renderItem(item))}
-        </section>
+        <>
+          {isLoading ? (
+            <p role="status" className="mb-2 text-xs text-slate-500">
+              Updating projects…
+            </p>
+          ) : null}
+          <section aria-busy={isLoading} className={listGridClassName}>
+            {items.map((item) => renderItem(item))}
+          </section>
+        </>
       ) : (
         <EmptyState
           title={emptyState.title}

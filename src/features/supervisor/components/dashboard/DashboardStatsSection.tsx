@@ -6,30 +6,35 @@ const DASHBOARD_STATS = [
     key: "totalProjects",
     label: "Total projects",
     tone: "primary",
+    icon: "total",
     getValue: (dashboard: SupervisorDashboard) => dashboard.totalProjects,
   },
   {
     key: "activeProjects",
     label: "Active",
     tone: "success",
+    icon: "active",
     getValue: (dashboard: SupervisorDashboard) => dashboard.activeProjects,
   },
   {
     key: "atRiskProjects",
     label: "At risk",
     tone: "warning",
+    icon: "risk",
     getValue: (dashboard: SupervisorDashboard) => dashboard.atRiskProjects,
   },
   {
     key: "behindProjects",
     label: "Behind",
     tone: "danger",
+    icon: "behind",
     getValue: (dashboard: SupervisorDashboard) => dashboard.behindProjects,
   },
   {
     key: "upcomingMilestonesCount",
     label: "Upcoming milestones",
     tone: "info",
+    icon: "milestone",
     getValue: (dashboard: SupervisorDashboard) =>
       dashboard.upcomingMilestonesCount,
   },
@@ -37,12 +42,14 @@ const DASHBOARD_STATS = [
     key: "jiraAtRiskCount",
     label: "Jira at risk",
     tone: "warning",
+    icon: "jiraRisk",
     getValue: (dashboard: SupervisorDashboard) => dashboard.jiraAtRiskCount,
   },
   {
     key: "jiraBehindCount",
     label: "Jira behind",
     tone: "danger",
+    icon: "jiraBehind",
     getValue: (dashboard: SupervisorDashboard) => dashboard.jiraBehindCount,
   },
 ] as const;
@@ -67,33 +74,73 @@ export function DashboardStatsSection({
     ) ?? false;
 
   return (
-    <section className="grid grid-cols-2 auto-rows-fr gap-3 sm:gap-4 xl:grid-cols-7">
-      {DASHBOARD_STATS.map((stat) => (
-        <DashboardStatCard
-          key={stat.key}
-          label={stat.label}
-          tone={stat.tone}
-          value={
-            showSkeleton || !dashboard ? undefined : (stat.key ===
-                "jiraAtRiskCount" ||
-                stat.key === "jiraBehindCount") &&
-              jiraMetricsUnavailable ? (
-              <span className="text-sm font-semibold normal-case tracking-normal text-slate-500">
-                Unavailable
-              </span>
-            ) : (stat.key === "jiraAtRiskCount" ||
-                stat.key === "jiraBehindCount") &&
-              !hasConnectedJiraProject ? (
-              <span className="text-sm font-semibold normal-case tracking-normal text-slate-500">
-                Not linked
-              </span>
-            ) : (
-              stat.getValue(dashboard)
-            )
-          }
-          loading={showSkeleton}
-        />
-      ))}
+    <section aria-labelledby="portfolio-overview-title" className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2
+          id="portfolio-overview-title"
+          className="text-lg font-semibold tracking-tight text-slate-900"
+        >
+          Portfolio overview
+        </h2>
+        <p className="text-xs text-slate-500">
+          Project delivery and connected Jira signals
+        </p>
+      </div>
+      <div
+        className="grid gap-3 2xl:grid-cols-7"
+        data-testid="portfolio-metrics-grid"
+      >
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 2xl:contents">
+          {DASHBOARD_STATS.slice(0, 4).map((stat) => renderStat(stat))}
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 2xl:contents">
+          {DASHBOARD_STATS.slice(4).map((stat) => renderStat(stat, true))}
+        </div>
+      </div>
+      <p
+        className="text-xs leading-5 text-slate-500"
+        id="portfolio-metrics-explanation"
+      >
+        Lifecycle totals reflect saved project statuses. Attention signals also
+        include overdue milestones and inactivity; upcoming counts exclude
+        overdue dates.
+      </p>
     </section>
   );
+
+  function renderStat(stat: (typeof DASHBOARD_STATS)[number], compact = false) {
+    return (
+      <DashboardStatCard
+        key={stat.key}
+        label={stat.label}
+        tone={
+          (stat.key === "jiraAtRiskCount" || stat.key === "jiraBehindCount") &&
+          (jiraMetricsUnavailable || !hasConnectedJiraProject)
+            ? "neutral"
+            : stat.tone
+        }
+        icon={stat.icon}
+        compact={compact}
+        value={
+          showSkeleton || !dashboard ? undefined : (stat.key ===
+              "jiraAtRiskCount" ||
+              stat.key === "jiraBehindCount") &&
+            jiraMetricsUnavailable ? (
+            <span className="text-sm font-semibold normal-case tracking-normal text-slate-500">
+              Unavailable
+            </span>
+          ) : (stat.key === "jiraAtRiskCount" ||
+              stat.key === "jiraBehindCount") &&
+            !hasConnectedJiraProject ? (
+            <span className="text-sm font-semibold normal-case tracking-normal text-slate-500">
+              Not linked
+            </span>
+          ) : (
+            stat.getValue(dashboard)
+          )
+        }
+        loading={showSkeleton}
+      />
+    );
+  }
 }

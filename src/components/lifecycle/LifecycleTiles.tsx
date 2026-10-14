@@ -51,7 +51,7 @@ export function LifecycleTiles({
               if (!selected) onChange(option);
             }}
             className={cn(
-              "inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-xs font-black uppercase tracking-[0.18em] transition-all",
+              "inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold tracking-[0.045em] transition-colors",
               selected
                 ? TONE_TILE_SELECTED[tone]
                 : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-700",

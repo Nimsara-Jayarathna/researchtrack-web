@@ -1,4 +1,5 @@
 import { ArrowRight } from "lucide-react";
+import { ProgressMeter } from "@/components/ui/ProgressMeter";
 import { Link, useNavigate } from "react-router-dom";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { buttonStyles } from "@/components/ui/Button";
@@ -16,7 +17,7 @@ function ProjectHealthMobileCard({
   project: SupervisorDashboardProjectItem;
 }) {
   return (
-    <article className="rounded-2xl border border-slate-200 bg-white px-4 py-3.5 shadow-sm">
+    <article className="workspace-panel px-4 py-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate text-[17px] font-semibold leading-tight text-foreground">
@@ -63,8 +64,8 @@ function ProjectHealthMobileCard({
           <dt className="font-medium uppercase tracking-wide text-slate-500">
             Progress
           </dt>
-          <dd className="text-base font-bold leading-none text-foreground">
-            {project.progressPercent ?? 0}%
+          <dd className="mt-1">
+            <ProgressMeter value={project.progressPercent} compact />
           </dd>
         </div>
         <div className="space-y-1">
@@ -113,6 +114,10 @@ type DashboardProjectHealthSectionProps = {
   totalPages: number;
   hasAnyProjects: boolean;
   hasSearchQuery: boolean;
+  statusFilter?: string;
+  onStatusFilterChange?: (next: string) => void;
+  sortMode?: string;
+  onSortModeChange?: (next: string) => void;
   pagingStateHandlers: PagingStateHandlers;
 };
 
@@ -125,20 +130,25 @@ export function DashboardProjectHealthSection({
   totalPages,
   hasAnyProjects,
   hasSearchQuery,
+  statusFilter = "ALL",
+  onStatusFilterChange,
+  sortMode = "default",
+  onSortModeChange,
   pagingStateHandlers,
 }: DashboardProjectHealthSectionProps) {
   const { setCurrentPage } = pagingStateHandlers;
   const navigate = useNavigate();
 
   return (
-    <section className="rounded-3xl border border-border bg-white p-4 shadow-sm sm:p-6">
+    <section className="workspace-panel p-4 sm:p-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h2 className="text-xl font-semibold text-foreground">
             Project health
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Searchable overview with quick links into each project workspace.
+            Search projects and review delivery health. Reported progress is
+            separate from lifecycle status.
           </p>
         </div>
         <Link
@@ -150,6 +160,55 @@ export function DashboardProjectHealthSection({
         </Link>
       </div>
 
+      {onStatusFilterChange ? (
+        <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4">
+          <label
+            htmlFor="dashboard-lifecycle-filter"
+            className="text-xs font-semibold text-slate-600"
+          >
+            Lifecycle
+          </label>
+          <select
+            id="dashboard-lifecycle-filter"
+            value={statusFilter}
+            onChange={(event) => onStatusFilterChange(event.target.value)}
+            className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+          >
+            <option value="ALL">All statuses</option>
+            <option value="PLANNING">Planning</option>
+            <option value="ACTIVE">Active</option>
+            <option value="AT_RISK">At risk</option>
+            <option value="BEHIND">Behind</option>
+            <option value="COMPLETED">Completed</option>
+          </select>
+          {onSortModeChange ? (
+            <>
+              <label
+                htmlFor="dashboard-sort"
+                className="ml-auto text-xs font-semibold text-slate-600"
+              >
+                Sort
+              </label>
+              <select
+                id="dashboard-sort"
+                value={sortMode}
+                onChange={(event) => onSortModeChange(event.target.value)}
+                className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+              >
+                <option value="default">Default order</option>
+                <option value="risk">Highest lifecycle risk</option>
+                <option value="name">Project name</option>
+                <option value="progress">Reported progress</option>
+              </select>
+            </>
+          ) : null}
+          <span role="status" className="text-xs text-slate-500">
+            {!isLoading
+              ? `${visibleProjects.length} matching`
+              : "Loading projects"}
+          </span>
+        </div>
+      ) : null}
       {isLoading ? (
         <div className="mt-5 space-y-3 animate-pulse">
           {Array.from({ length: 4 }).map((_, index) => (
@@ -161,18 +220,18 @@ export function DashboardProjectHealthSection({
         </div>
       ) : visibleProjects.length > 0 ? (
         <div className="mt-5 space-y-3">
-          <div className="hidden overflow-x-auto md:block">
-            <table className="w-full min-w-[1020px] table-fixed text-left text-sm">
+          <div className="hidden overflow-x-auto rounded-2xl border border-slate-200 md:block">
+            <table className="workspace-table w-full min-w-[1040px] table-fixed text-left text-sm">
               <colgroup>
-                <col className="w-[36%]" />
-                <col className="w-[11%]" />
-                <col className="w-[9%]" />
+                <col className="w-[30%]" />
+                <col className="w-[14%]" />
+                <col className="w-[8%]" />
                 <col className="w-[12%]" />
-                <col className="w-[9%]" />
+                <col className="w-[13%]" />
                 <col className="w-[13%]" />
                 <col className="w-[10%]" />
               </colgroup>
-              <thead className="border-b border-slate-200 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+              <thead className="border-b border-slate-200">
                 <tr>
                   <th className="px-3 py-3">Project</th>
                   <th className="px-3 py-3 whitespace-nowrap">Status</th>
@@ -185,13 +244,10 @@ export function DashboardProjectHealthSection({
               </thead>
               <tbody>
                 {pagedProjects.map((project) => (
-                  <tr
-                    key={project.id}
-                    className="border-b border-slate-100 last:border-0"
-                  >
-                    <td className="min-w-0 px-3 py-4 align-top">
+                  <tr key={project.id} className="group">
+                    <td className="min-w-0 px-3 py-4 align-middle">
                       <p
-                        className="truncate font-medium text-foreground"
+                        className="truncate font-semibold text-slate-900"
                         title={project.title}
                       >
                         {project.title}
@@ -203,35 +259,36 @@ export function DashboardProjectHealthSection({
                         {project.summary ?? "No summary provided yet."}
                       </p>
                     </td>
-                    <td className="px-3 py-4 align-top whitespace-nowrap">
+                    <td className="px-3 py-4 align-middle whitespace-nowrap">
                       <span
-                        className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${statusClasses(project.lifecycleStatus)}`}
+                        className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold ${statusClasses(project.lifecycleStatus)}`}
                       >
                         {project.lifecycleStatus.replace("_", " ")}
                       </span>
                     </td>
-                    <td className="px-3 py-4 align-top whitespace-nowrap text-muted-foreground">
+                    <td className="px-3 py-4 align-middle whitespace-nowrap text-muted-foreground">
                       {project.memberCount}
                     </td>
-                    <td className="px-3 py-4 align-top whitespace-nowrap text-muted-foreground">
+                    <td className="px-3 py-4 align-middle whitespace-nowrap text-muted-foreground">
                       {formatMilestoneDate(project.milestoneDate)}
                     </td>
-                    <td className="px-3 py-4 align-top whitespace-nowrap text-muted-foreground">
-                      {project.progressPercent ?? 0}%
+                    <td className="px-3 py-4 align-middle">
+                      <ProgressMeter value={project.progressPercent} compact />
                     </td>
-                    <td className="px-3 py-4 align-top whitespace-nowrap">
+                    <td className="px-3 py-4 align-middle whitespace-nowrap">
                       <span
-                        className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${jiraIndicatorClasses(project.jiraHealthIndicator)}`}
+                        className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold ${jiraIndicatorClasses(project.jiraHealthIndicator)}`}
                       >
                         {jiraIndicatorLabel(project.jiraHealthIndicator)}
                       </span>
                     </td>
-                    <td className="px-3 py-4 align-top whitespace-nowrap">
+                    <td className="px-3 py-4 align-middle whitespace-nowrap">
                       <Link
                         to={`/supervisor/projects/${project.id}`}
                         className={buttonStyles({
                           variant: "primary",
                           size: "sm",
+                          className: "rounded-lg",
                         })}
                       >
                         Open
@@ -253,29 +310,33 @@ export function DashboardProjectHealthSection({
               {Math.min(safeCurrentPage * pageSize, visibleProjects.length)} of{" "}
               {visibleProjects.length}
             </p>
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                className={buttonStyles({ variant: "secondary", size: "sm" })}
-                onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
-                disabled={safeCurrentPage <= 1}
-              >
-                Previous
-              </button>
-              <span className="text-xs text-muted-foreground">
-                Page {safeCurrentPage} / {totalPages}
-              </span>
-              <button
-                type="button"
-                className={buttonStyles({ variant: "secondary", size: "sm" })}
-                onClick={() =>
-                  setCurrentPage((page) => Math.min(totalPages, page + 1))
-                }
-                disabled={safeCurrentPage >= totalPages}
-              >
-                Next
-              </button>
-            </div>
+            {totalPages > 1 ? (
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  className={buttonStyles({ variant: "secondary", size: "sm" })}
+                  onClick={() =>
+                    setCurrentPage((page) => Math.max(1, page - 1))
+                  }
+                  disabled={safeCurrentPage <= 1}
+                >
+                  Previous
+                </button>
+                <span className="text-xs text-muted-foreground">
+                  Page {safeCurrentPage} / {totalPages}
+                </span>
+                <button
+                  type="button"
+                  className={buttonStyles({ variant: "secondary", size: "sm" })}
+                  onClick={() =>
+                    setCurrentPage((page) => Math.min(totalPages, page + 1))
+                  }
+                  disabled={safeCurrentPage >= totalPages}
+                >
+                  Next
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
       ) : (

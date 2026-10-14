@@ -1,0 +1,93 @@
+/* Authenticated workspace only. Public landing styles deliberately do not inherit these surfaces. */
+.workspace-shell {
+  --workspace-radius: 22px;
+  --workspace-line: #e2e8f0;
+  --workspace-ink: #0f172a;
+  --workspace-subtle: #64748b;
+  background:
+    radial-gradient(
+      ellipse 72% 29% at 93% 0%,
+      rgba(220, 244, 255, 0.42),
+      transparent 78%
+    ),
+    #f7f9fc;
+}
+.workspace-shell .workspace-panel {
+  border: 1px solid var(--workspace-line);
+  border-radius: var(--workspace-radius);
+  background: #fff;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.035),
+    0 10px 30px rgba(15, 23, 42, 0.018);
+}
+.workspace-shell .workspace-eyebrow {
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.075em;
+  line-height: 1.5;
+}
+.workspace-shell .workspace-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.workspace-shell .workspace-table thead {
+  background: #f8fafc;
+}
+.workspace-shell .workspace-table th {
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+  text-align: left;
+  white-space: nowrap;
+}
+.workspace-shell .workspace-table tbody tr {
+  transition: background-color 0.16s ease;
+}
+.workspace-shell .workspace-table tbody tr:hover {
+  background-color: #f8fbff;
+}
+.workspace-shell .workspace-table tbody tr:focus-within {
+  background-color: #f0f9ff;
+}
+.workspace-shell .workspace-table tbody tr:not(:last-child) td {
+  border-bottom: 1px solid #edf2f7;
+}
+.workspace-shell .workspace-focus:focus-visible {
+  outline: 3px solid #7dd3fc;
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .workspace-shell *,
+  .workspace-shell *::before,
+  .workspace-shell *::after {
+    scroll-behavior: auto;
+    transition-duration: 0.01ms !important;
+  }
+}
+/* Bring legacy project panels into the same rhythm without changing their behavior. */
+.workspace-shell section.rounded-3xl.border.bg-white,
+.workspace-shell article.rounded-3xl.border.bg-white {
+  border-color: var(--workspace-line);
+  border-radius: var(--workspace-radius);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.035),
+    0 10px 30px rgba(15, 23, 42, 0.018);
+}
+.workspace-shell section.rounded-3xl.border.bg-white:hover,
+.workspace-shell article.rounded-3xl.border.bg-white:hover {
+  box-shadow: 0 3px 12px rgba(15, 23, 42, 0.055);
+}
+.workspace-shell :is(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid #38bdf8;
+  outline-offset: 3px;
+}
+.workspace-shell
+  :is(input, textarea, select):not([type="checkbox"]):not([type="radio"]) {
+  accent-color: #0284c7;
+}
+.workspace-shell main > div > section h2 {
+  letter-spacing: -0.018em;
+}

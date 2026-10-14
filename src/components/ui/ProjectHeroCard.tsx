@@ -16,15 +16,10 @@ export function ProjectHeroCard({
   rootClassName,
 }: ProjectHeroCardProps) {
   return (
-    <section
-      className={
-        rootClassName ??
-        "rounded-3xl border border-border bg-white p-6 shadow-sm transition-all hover:shadow-md"
-      }
-    >
+    <section className={rootClassName ?? "workspace-panel p-4 sm:p-6"}>
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-2xl font-semibold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
+          <h1 className="truncate text-2xl font-bold tracking-[-0.035em] text-slate-950 sm:text-[30px] lg:text-[34px]">
             {title}
           </h1>
           <p

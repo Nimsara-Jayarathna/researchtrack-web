@@ -8,9 +8,9 @@ type PageHeaderProps = {
 
 export function PageHeader({ title, subtitle, actions }: PageHeaderProps) {
   return (
-    <section className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-start lg:justify-between">
+    <section className="flex flex-col gap-4 sm:gap-5 lg:flex-row lg:items-center lg:justify-between">
       <div className="max-w-3xl min-w-0">
-        <h1 className="break-words text-2xl font-semibold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
+        <h1 className="break-words text-2xl font-bold tracking-[-0.035em] text-slate-950 sm:text-[30px] lg:text-[34px]">
           {title}
         </h1>
         {subtitle ? (

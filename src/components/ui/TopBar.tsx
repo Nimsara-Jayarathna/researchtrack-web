@@ -99,7 +99,7 @@ export function TopBar(props: TopBarProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-20 hidden border-b border-slate-200 bg-white/85 backdrop-blur md:block">
+      <header className="sticky top-0 z-20 hidden border-b border-slate-200/90 bg-white/95 backdrop-blur-md md:block">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
           <div className="flex flex-col gap-3 lg:flex-1 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center justify-between gap-4">
@@ -115,11 +115,12 @@ export function TopBar(props: TopBarProps) {
                   <Link
                     key={item.to}
                     to={item.to}
+                    aria-current={item.active ? "page" : undefined}
                     className={cn(
-                      "rounded-2xl px-4 py-2 text-sm font-medium transition-colors",
+                      "workspace-focus rounded-xl px-4 py-2 text-sm font-medium transition-colors",
                       item.active
                         ? "bg-slate-900 text-white"
-                        : "bg-white text-muted-foreground hover:bg-slate-100 hover:text-foreground",
+                        : "text-muted-foreground hover:bg-slate-100 hover:text-foreground",
                     )}
                   >
                     {item.label}
@@ -130,7 +131,7 @@ export function TopBar(props: TopBarProps) {
               <button
                 type="button"
                 onClick={onOpenAccount}
-                className="inline-flex items-center gap-3 self-start rounded-2xl border border-slate-200 bg-white px-3 py-2 text-left transition hover:bg-slate-50 sm:self-auto"
+                className="workspace-focus inline-flex items-center gap-3 self-start rounded-xl border border-slate-200 bg-white px-3 py-2 text-left transition hover:border-sky-200 hover:bg-slate-50 sm:self-auto"
                 aria-label="Open account menu"
               >
                 <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-xs font-black text-emerald-700">
@@ -145,7 +146,7 @@ export function TopBar(props: TopBarProps) {
         </div>
       </header>
 
-      <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/85 backdrop-blur md:hidden">
+      <header className="sticky top-0 z-20 border-b border-slate-200/90 bg-white/95 backdrop-blur-md md:hidden">
         <div className="mx-auto max-w-7xl px-3 py-3 sm:px-6 sm:py-4">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -193,11 +194,12 @@ export function TopBar(props: TopBarProps) {
                 <Link
                   key={item.to}
                   to={item.to}
+                  aria-current={item.active ? "page" : undefined}
                   className={cn(
-                    "rounded-2xl px-4 py-2 text-sm font-medium transition-colors",
+                    "workspace-focus rounded-xl px-4 py-2 text-sm font-medium transition-colors",
                     item.active
                       ? "bg-slate-900 text-white"
-                      : "bg-white text-muted-foreground hover:bg-slate-100 hover:text-foreground",
+                      : "text-muted-foreground hover:bg-slate-100 hover:text-foreground",
                   )}
                 >
                   {item.label}

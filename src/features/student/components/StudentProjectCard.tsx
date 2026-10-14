@@ -1,6 +1,7 @@
 import { CalendarDays, CircleAlert, ListTodo } from "lucide-react";
 import { Link } from "react-router-dom";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { ProgressMeter } from "@/components/ui/ProgressMeter";
 import { parseLocalDateOnly } from "@/lib/dateOnly";
 import type { StudentProjectSummary } from "../types";
 
@@ -51,7 +52,7 @@ export function StudentProjectCard({ project }: StudentProjectCardProps) {
   return (
     <Link
       to={`/student/projects/${project.id}`}
-      className="group flex h-full min-w-0 flex-col rounded-3xl border border-border bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-sky-200"
+      className="workspace-panel workspace-focus group flex h-full min-w-0 flex-col p-4 transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-md sm:p-5"
     >
       <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
         <h3
@@ -63,11 +64,11 @@ export function StudentProjectCard({ project }: StudentProjectCardProps) {
         <div className="flex shrink-0 items-center gap-2">
           <StatusBadge
             tone={statusTone(project.status)}
-            className="shrink-0 whitespace-nowrap tracking-[0.08em]"
+            className="shrink-0 whitespace-nowrap tracking-normal"
           >
             {project.status.replace("_", " ")}
           </StatusBadge>
-          <span className="inline-flex shrink-0 whitespace-nowrap rounded-2xl bg-slate-50 px-2.5 py-1 text-sm font-semibold text-foreground">
+          <span className="inline-flex shrink-0 whitespace-nowrap rounded-xl bg-slate-50 px-2.5 py-1 text-sm font-semibold text-foreground">
             {progressValue}
           </span>
         </div>
@@ -85,8 +86,11 @@ export function StudentProjectCard({ project }: StudentProjectCardProps) {
         {summary}
       </p>
 
+      <div className="mt-4 border-t border-slate-100 pt-3">
+        <ProgressMeter value={project.progressPercent} />
+      </div>
       <div className="mt-4 grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(7rem,0.7fr)]">
-        <div className="flex min-h-14 min-w-0 flex-col justify-center rounded-2xl bg-slate-50 px-3 py-2">
+        <div className="flex min-h-14 min-w-0 flex-col justify-center rounded-xl bg-slate-50 px-3 py-2">
           <p className="truncate text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
             Supervisor
           </p>
@@ -97,7 +101,7 @@ export function StudentProjectCard({ project }: StudentProjectCardProps) {
             {supervisorName}
           </p>
         </div>
-        <div className="flex min-h-14 min-w-0 flex-col justify-center rounded-2xl bg-slate-50 px-3 py-2">
+        <div className="flex min-h-14 min-w-0 flex-col justify-center rounded-xl bg-slate-50 px-3 py-2">
           <p className="truncate text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
             Batch
           </p>
@@ -112,21 +116,21 @@ export function StudentProjectCard({ project }: StudentProjectCardProps) {
 
       <div className="mt-3 grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
         <span
-          className="inline-flex min-w-0 items-center gap-2 rounded-2xl bg-slate-50 px-3 py-2"
+          className="inline-flex min-w-0 items-center gap-2 rounded-xl bg-slate-50 px-3 py-2"
           title={milestoneLabel}
         >
           <CalendarDays className="h-4 w-4 shrink-0" />
           <span className="truncate">{milestoneLabel}</span>
         </span>
         <span
-          className="inline-flex min-w-0 items-center gap-2 rounded-2xl bg-slate-50 px-3 py-2"
+          className="inline-flex min-w-0 items-center gap-2 rounded-xl bg-slate-50 px-3 py-2"
           title={semester}
         >
           <ListTodo className="h-4 w-4 shrink-0" />
           <span className="truncate">{semester}</span>
         </span>
         <span
-          className="inline-flex min-w-0 items-center gap-2 rounded-2xl bg-slate-50 px-3 py-2 sm:col-span-2"
+          className="inline-flex min-w-0 items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 sm:col-span-2"
           title={activityLabel}
         >
           <CircleAlert className="h-4 w-4 shrink-0" />

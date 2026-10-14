@@ -33,7 +33,7 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
  * - Page-level usage may only add layout classes (for example `w-full`, `justify-start`, `mt-2`), not color classes.
  */
 const BASE_CLASSES =
-  "inline-flex items-center justify-center gap-2 rounded-2xl font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-sky-200 disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   primary: "bg-slate-900 text-white hover:bg-slate-800 active:bg-slate-950",

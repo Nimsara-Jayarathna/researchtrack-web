@@ -52,7 +52,6 @@ type ProjectsPageViewProps<TItem> = {
   items: TItem[];
   renderItem: (item: TItem) => ReactNode;
   renderSkeleton: (index: number) => ReactNode;
-  skeletonCount?: number;
   listGridClassName?: string;
   emptyState: ProjectsPageEmptyState;
   rootClassName?: string;
@@ -73,7 +72,6 @@ export function ProjectsPageView<TItem>({
   items,
   renderItem,
   renderSkeleton,
-  skeletonCount = 4,
   listGridClassName = "grid gap-4 xl:grid-cols-2 2xl:grid-cols-3",
   emptyState,
   rootClassName = "space-y-6",
@@ -131,18 +129,45 @@ export function ProjectsPageView<TItem>({
         ) : null}
       </section>
 
-      {isLoading ? (
-        <section className={listGridClassName}>
-          {Array.from({ length: skeletonCount }).map((_, index) =>
-            renderSkeleton(index),
-          )}
+      {isLoading && items.length === 0 ? (
+        <section
+          aria-label="Loading projects"
+          aria-busy="true"
+          className={listGridClassName}
+        >
+          {/* Render one perceived row. Responsive visibility follows the actual grid columns,
+              without pretending to know the number of projects in the API response. */}
+          {Array.from({ length: 3 }, (_, index) => (
+            <div
+              key={`project-loading-slot-${index}`}
+              className={
+                index === 0
+                  ? "min-w-0"
+                  : index === 1
+                    ? "hidden min-w-0 xl:block"
+                    : "hidden min-w-0 2xl:block"
+              }
+            >
+              {renderSkeleton(index)}
+            </div>
+          ))}
+          <span className="sr-only" role="status">
+            Loading projects…
+          </span>
         </section>
       ) : error ? (
         <ErrorState error={error} onRetry={onRetry} />
       ) : items.length > 0 ? (
-        <section className={listGridClassName}>
-          {items.map((item) => renderItem(item))}
-        </section>
+        <>
+          {isLoading ? (
+            <p role="status" className="mb-2 text-xs text-slate-500">
+              Updating projects…
+            </p>
+          ) : null}
+          <section aria-busy={isLoading} className={listGridClassName}>
+            {items.map((item) => renderItem(item))}
+          </section>
+        </>
       ) : (
         <EmptyState
           title={emptyState.title}

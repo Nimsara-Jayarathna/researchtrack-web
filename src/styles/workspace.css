@@ -1,6 +1,6 @@
 /* Authenticated workspace only. Public landing styles deliberately do not inherit these surfaces. */
 .workspace-shell {
-  --workspace-radius: 22px;
+  --workspace-radius: 18px;
   --workspace-line: #e2e8f0;
   --workspace-ink: #0f172a;
   --workspace-subtle: #64748b;
@@ -90,4 +90,26 @@
 }
 .workspace-shell main > div > section h2 {
   letter-spacing: -0.018em;
+}
+
+/* V4: compact project cards and landing-aligned private navigation. */
+.workspace-shell .workspace-panel:hover {
+  border-color: #d7e6f2;
+}
+.workspace-shell [role="progressbar"] {
+  min-width: 0;
+}
+.workspace-shell header nav a[aria-current="page"] {
+  font-weight: 700;
+}
+.workspace-shell .workspace-panel .line-clamp-2 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+@media (prefers-reduced-motion: reduce) {
+  .workspace-shell .animate-pulse {
+    animation: none;
+  }
 }

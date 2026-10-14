@@ -1,6 +1,6 @@
 import { ProgressMeter } from "@/components/ui/ProgressMeter";
 
-type SupervisorProjectDetailsKpisProps = {
+type ProjectDetailsKpisProps = {
   batch: string | null;
   semester: string | null;
   milestonesCount: number;
@@ -12,37 +12,34 @@ export function SupervisorProjectDetailsKpis({
   semester,
   milestonesCount,
   progressPercent,
-}: SupervisorProjectDetailsKpisProps) {
+}: ProjectDetailsKpisProps) {
+  const details = [
+    { label: "Batch", value: batch ?? "Not set" },
+    { label: "Semester", value: semester ?? "Not set" },
+    { label: "Milestones", value: String(milestonesCount) },
+  ];
   return (
-    <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-      {[
-        { label: "Batch", value: batch ?? "Not set" },
-        { label: "Semester", value: semester ?? "Not set" },
-        { label: "Milestones", value: String(milestonesCount) },
-        {
-          label: "Progress",
-          value:
-            progressPercent == null ? "Not reported" : `${progressPercent}%`,
-        },
-      ].map(({ label, value }) => (
+    <section
+      aria-label="Project facts"
+      className="grid grid-cols-2 gap-2 lg:grid-cols-4"
+    >
+      {details.map(({ label, value }) => (
         <div
           key={label}
-          className="min-w-0 rounded-xl border border-slate-200 bg-slate-50/60 px-4 py-4"
+          className="min-w-0 rounded-xl bg-slate-50 px-3 py-2.5 sm:px-4"
         >
-          <p className="text-xs font-semibold tracking-normal text-slate-500">
-            {label}
-          </p>
+          <p className="text-[11px] font-medium text-slate-500">{label}</p>
           <p
-            className="mt-2 truncate text-xl font-semibold text-slate-900"
+            className="mt-1 truncate text-base font-semibold text-slate-900"
             title={value}
           >
             {value}
           </p>
-          {label === "Progress" ? (
-            <ProgressMeter value={progressPercent} compact className="mt-2" />
-          ) : null}
         </div>
       ))}
+      <div className="min-w-0 rounded-xl bg-slate-50 px-3 py-2.5 sm:px-4">
+        <ProgressMeter value={progressPercent} compact={false} />
+      </div>
     </section>
   );
 }
